@@ -74,13 +74,11 @@
   .scroll.grabbing,.scroll.grabbing *{cursor:grabbing;}
   .inner{position:relative;}
 
-  /* ===== Era strata: band + region tracks + movement segments ===== */
-  /* The band is the calm "backdrop"; macro-blocks are a soft blue wash, movements are opaque cards on top. */
+  /* ===== Era strata =====
+     ERES backbone = pale wash spanning the whole canvas (the "ruler", always on).
+     MARC blocks = opaque bordered cards on top, coloured per marc; the canvas grows with the lanes. */
   .eraPanel{position:absolute;left:0;top:0;background:var(--band);border-bottom:1px solid var(--border);box-shadow:0 8px 14px -10px rgba(40,44,60,.22);}
   .eraTracks{position:absolute;top:0;left:0;}
-  .track{position:absolute;left:0;}
-  .track .rlabel{position:sticky;left:8px;z-index:6;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--struct-ink);background:rgba(255,255,255,.96);padding:4px 11px;border-radius:var(--r-card);border:1px solid var(--border);}
-  .rlabel .rdot{width:9px;height:9px;border-radius:50%;}
   .segwrap{position:absolute;inset:0;}
   .blockzone{position:absolute;top:0;overflow:hidden;pointer-events:none;}
   .blockzone .blabel{position:absolute;top:8px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;opacity:.9;}
@@ -197,18 +195,21 @@ const AREA_COLORS={
 };
 const NOW_YEAR=new Date().getFullYear();
 
-// Region tracks. `blocks` = macro-eras (always visible, the backbone, soft blue wash).
-// `segments` = movements/periods (toggle with the region checkbox; stack in lanes when they overlap).
-const ERA_TRACKS=[
-  {id:'west',region:'Occident (general)',color:'#8B93AD',blockColor:'#5E9FE8',
-  blocks:[
-    {name:'Prehistòria',start:-12000,end:-3300},
-    {name:'Edat Antiga',start:-3300,end:476},
-    {name:'Edat Mitjana',start:476,end:1492},
-    {name:'Edat Moderna',start:1492,end:1789},
-    {name:'Edat Contemporània',start:1789,end:NOW_YEAR}
-  ],
-  segments:[
+// ERES: the always-on backbone — the macro-eras that act as the "ruler" of the timeline.
+// Not a toggleable marc; rendered as a pale wash spanning the whole eras canvas.
+const ERAS_COLOR='#8B93AD';
+const ERAS=[
+  {name:'Prehistòria',start:-12000,end:-3300},
+  {name:'Edat Antiga',start:-3300,end:476},
+  {name:'Edat Mitjana',start:476,end:1492},
+  {name:'Edat Moderna',start:1492,end:1789},
+  {name:'Edat Contemporània',start:1789,end:NOW_YEAR}
+];
+// MARCS: toggleable historical frames. Each is a set of period `blocks`, told apart by colour.
+// All blocks render identically (same size/shape) and share the same stacking area over the eras.
+// Add more frames here later (Amèrica, Àsia…) — each just needs a colour and its blocks.
+const MARCS=[
+  {id:'west',name:'Occident',color:'#5E9FE8',blocks:[
     {name:'Paleolític',start:-12000,end:-9000},
     {name:'Neolític',start:-9000,end:-3000},
     {name:'Edat dels Metalls',start:-3000,end:-800},
@@ -228,7 +229,7 @@ const ERA_TRACKS=[
     {name:'Avantguardes',start:1905,end:1945},
     {name:'Món contemporani',start:1945,end:NOW_YEAR}
   ]},
-  {id:'es',region:'Espanya',color:'#C2A07C',segments:[
+  {id:'es',name:'Espanya',color:'#C2A07C',blocks:[
     {name:'Antic Règim borbònic',start:1700,end:1808},
     {name:'Convulsió liberal',start:1808,end:1874},
     {name:'Restauració',start:1874,end:1931},
@@ -238,7 +239,8 @@ const ERA_TRACKS=[
 ];
 const EVENTS=[
   {id:'revfr',name:'Revolució Francesa',year:1789,wiki:'https://ca.wikipedia.org/wiki/Revolució_Francesa',desc:'Procés revolucionari que va enderrocar l\u0027Antic Règim a França i va escampar per Europa els ideals de llibertat, igualtat i fraternitat.'},
-  {id:'wwi',name:'Inici de la Primera Guerra Mundial',year:1914,wiki:'https://ca.wikipedia.org/wiki/Primera_Guerra_Mundial',desc:'Esclat del primer conflicte a escala global, que va redibuixar el mapa polític i social del segle XX.'}
+  {id:'wwi',name:'Inici de la Primera Guerra Mundial',year:1914,wiki:'https://ca.wikipedia.org/wiki/Primera_Guerra_Mundial',desc:'Esclat del primer conflicte a escala global, que va redibuixar el mapa polític i social del segle XX.'},
+  {id:'delt',name:'Fundació de DELT',year:2022,wiki:'',desc:''}
 ];
 const PEOPLE=[
   {id:'bach',name:'J.S. Bach',birth:1685,death:1750,areas:['Música'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Johann_Sebastian_Bach',desc:'Compositor i organista del Barroc, referent de la música occidental.'},
@@ -258,20 +260,21 @@ const PEOPLE=[
 // [2] RANGE, CONFIG & STATE
 // ============================================================
 // Data extent → the drawable year window (with a little gutter each side).
-const _starts=[...ERA_TRACKS.flatMap(t=>t.segments.map(s=>s.start)),...EVENTS.map(e=>e.year),...PEOPLE.map(p=>p.birth)];
-const _ends=[...ERA_TRACKS.flatMap(t=>t.segments.map(s=>s.end)),...EVENTS.map(e=>e.year),...PEOPLE.map(p=>p.death==null?NOW_YEAR:p.death)];
+const _blocks=[...ERAS,...MARCS.flatMap(m=>m.blocks)];
+const _starts=[..._blocks.map(b=>b.start),...EVENTS.map(e=>e.year),...PEOPLE.map(p=>p.birth)];
+const _ends=[..._blocks.map(b=>b.end),...EVENTS.map(e=>e.year),...PEOPLE.map(p=>p.death==null?NOW_YEAR:p.death)];
 const DATA_MIN=Math.min(..._starts), DATA_MAX=Math.max(..._ends);
 const GUTTER_YEARS=14;
 const RIGHT_PAD_YEARS=18;
 const YEAR_MIN=DATA_MIN-GUTTER_YEARS, YEAR_MAX=DATA_MAX+RIGHT_PAD_YEARS;
 let pxPerYear=4;               // current zoom (pixels per year); set by defaultView()/setZoom()
 const SEED_PINNED=['bernat'];  // always present, never removable
-const DEFAULT_REGIONS=['west'];// regions shown on load / after Reset
+const DEFAULT_MARCS=['west'];  // marcs shown on load / after Reset (the eras backbone is always on)
 const FUTURE_FADE=72;          // px the living bars (and the era band) fade out past "today"
 const deathOf=p=>p.death==null?NOW_YEAR:p.death;
 const isAlive=p=>p.death==null;
 
-const state={present:new Set(),activeCols:new Set(),pinned:new Set(SEED_PINNED),hidden:new Set(),regions:new Set(DEFAULT_REGIONS),showEvents:true,selected:null};
+const state={present:new Set(),activeCols:new Set(),pinned:new Set(SEED_PINNED),hidden:new Set(),marcs:new Set(DEFAULT_MARCS),showEvents:true,selected:null};
 
 // ============================================================
 // [3] DOM REFS & SMALL HELPERS (coords, colours, formatting)
@@ -299,15 +302,14 @@ function deactivateEmptyCols(){[...state.activeCols].forEach(a=>{if(!peopleOfAre
 // ============================================================
 // [4] LAYOUT MATH (lane packing + vertical geometry)
 // ============================================================
-const SEG_H=88, BAND_H=28, MOV_LANE_H=40, MOV_BAR_H=34, MOV_PAD_TOP=8, MOV_PAD_BOT=6, TRACK_GAP=10, ERAS_TOP=16, EVENT_LABEL_H=38, GAP_AFTER=14;
+const MOV_LANE_H=40, MOV_BAR_H=34, MOV_PAD_BOT=6, ERAS_TOP=16, ERA_LABEL_H=26, EVENT_LABEL_H=38, GAP_AFTER=14;
 // Greedy lane assignment so overlapping intervals stack instead of colliding.
 function packSegs(segs){const arr=segs.map((s,idx)=>({idx,start:s.start,end:s.end})).sort((a,b)=>a.start-b.start);const ends=[];const lane=new Array(segs.length).fill(0);for(const it of arr){let placed=false;for(let l=0;l<ends.length;l++){if(it.start>=ends[l]){lane[it.idx]=l;ends[l]=it.end;placed=true;break;}}if(!placed){lane[it.idx]=ends.length;ends.push(it.end);}}return {lane,nLanes:Math.max(1,ends.length)};}
-const showSegs=t=>state.regions.has(t.id);                       // movements visible?
-const hasBlocks=t=>Array.isArray(t.blocks)&&t.blocks.length>0;   // has macro-era backbone?
-function trackH(t){if(hasBlocks(t)){if(!showSegs(t))return BAND_H+16;const pk=packSegs(t.segments);return BAND_H+MOV_PAD_TOP+pk.nLanes*MOV_LANE_H+MOV_PAD_BOT;}return SEG_H;}
-// Tracks with macro-blocks (the backbone) always render; their movements toggle with the region checkbox.
-function activeTracks(){return ERA_TRACKS.filter(t=>state.regions.has(t.id)||hasBlocks(t));}
-function erasBlockH(){const ts=activeTracks();if(!ts.length)return ERAS_TOP;return ERAS_TOP+ts.reduce((a,t)=>a+trackH(t)+TRACK_GAP,0)+2;}
+// All period blocks from the active marcs, pooled into one list and tagged with their marc's colour.
+function activeBlocks(){const out=[];MARCS.forEach(m=>{if(state.marcs.has(m.id))m.blocks.forEach(b=>out.push({name:b.name,start:b.start,end:b.end,color:m.color}));});return out;}
+function blockLanes(){const b=activeBlocks();return b.length?packSegs(b).nLanes:0;}
+// The eras canvas grows with the number of block lanes (just like the people canvas).
+function erasBlockH(){return ERAS_TOP+ERA_LABEL_H+blockLanes()*MOV_LANE_H+MOV_PAD_BOT;}
 function eventLabelTop(){return erasBlockH()+6;}
 function barsTop(){return eventLabelTop()+EVENT_LABEL_H+GAP_AFTER;}
 
@@ -341,57 +343,35 @@ function render(){
   const W=Math.max(totalW(),nowX+FUTURE_FADE+8);   // ensure the future-fade always fits
   inner.style.width=W+'px';
 
-  // --- Era strata ---
-  const tracks=activeTracks();
+  // --- Era strata: always-on eras backbone + pooled marc blocks (canvas grows with lanes) ---
+  const erasH=erasBlockH();
   eraPanel.style.width=W+'px';
-  eraPanel.style.height=erasBlockH()+'px';
-  eraPanel.style.display=tracks.length?'block':'none';
+  eraPanel.style.height=erasH+'px';
   const futureMask=`linear-gradient(to right,#000 ${nowX}px,transparent ${nowX+FUTURE_FADE}px)`;   // band fades out at "today"
   eraPanel.style.webkitMaskImage=futureMask;
   eraPanel.style.maskImage=futureMask;
   eraTracksEl.style.width=W+'px';
+  eraTracksEl.style.height=erasH+'px';
   const gw=x(DATA_MIN), FADE=72;
   const maskGrad=`linear-gradient(to right,transparent ${gw}px,#000 ${gw+FADE}px,#000 ${nowX}px,transparent ${nowX+FUTURE_FADE}px)`;  // fade both ends (past ∞ / future)
   const maskCss=`-webkit-mask-image:${maskGrad};mask-image:${maskGrad};`;
-  let _acc=ERAS_TOP;
-  eraTracksEl.innerHTML=tracks.map((t,i)=>{
-    const th=trackH(t);
-    const top=_acc; _acc+=th+TRACK_GAP;
-    const labelPad=Math.round(t.region.length*7)+60;   // keep first block label clear of the region tag
-    const trackHasBlocks=hasBlocks(t);
-    const bc=t.blockColor||t.color;   // macro-blocks: soft diffused blue wash; movements: opaque tint of it
-    // macro-blocks (background wash)
-    let blockEls='';
-    if(trackHasBlocks){
-      blockEls=t.blocks.map((b,k)=>{
-        const bl=x(b.start),bw=Math.max(x(b.end)-x(b.start),2);
-        const tint=hexA(bc,k%2?0.11:0.05);
-        const dv=k>0?`border-left:1px solid ${hexA(bc,.26)};`:'';
-        const lp=k===0?labelPad:14;
-        return `<div class="blockzone" style="left:${bl}px;width:${bw}px;height:${th}px;background:${tint};${dv}"><span class="blabel" style="left:${lp}px;color:${shade(bc,.55)}">${b.name}</span></div>`;
-      }).join('');
-    }
-    // movements (opaque bordered cards on top; hidden when the region is toggled off)
-    let segs='';
-    if(trackHasBlocks){
-      if(showSegs(t)){
-        const pk=packSegs(t.segments);
-        segs=t.segments.map((s,j)=>{
-          const left=x(s.start),w=Math.max(x(s.end)-x(s.start),2);
-          const rowTop=BAND_H+MOV_PAD_TOP+pk.lane[j]*MOV_LANE_H;
-          return `<div class="seg mov" style="left:${left+1}px;width:${Math.max(w-2,2)}px;top:${rowTop}px;height:${MOV_BAR_H}px;background:${mix(bc,.28)};border:1px solid ${mix(bc,.55)};border-bottom:3px solid ${bc};" title="${s.name} (${fmtY(s.start)}–${fmtY(s.end)})"><span class="segname">${s.name}</span><span class="segyears">${fmtY(s.start)}–${fmtY(s.end)}</span></div>`;
-        }).join('');
-      }
-    }else{
-      // region without a macro-block backbone (e.g. Espanya): full-height segments
-      segs=t.segments.map((s,j)=>{
-        const left=x(s.start),w=Math.max(x(s.end)-x(s.start),2);
-        const pad=j===0?`padding-left:${labelPad}px;`:'';
-        return `<div class="seg" style="left:${left}px;width:${w}px;top:0;height:${th}px;background:${mix(bc,.16)};border-bottom:3px solid ${bc};${pad}" title="${s.name} (${fmtY(s.start)}–${fmtY(s.end)})"><span class="segname">${s.name}</span><span class="segyears">${fmtY(s.start)}–${fmtY(s.end)}</span></div>`;
-      }).join('');
-    }
-    return `<div class="track" style="top:${top}px;width:${W}px;height:${th}px"><div class="segwrap" style="${maskCss}">${blockEls}${segs}</div><span class="rlabel"><span class="rdot" style="background:${t.color}"></span>${t.region}</span></div>`;
+  // eras backbone: the macro-eras as a pale wash spanning the whole canvas, names at the top
+  const backboneEls=ERAS.map((b,k)=>{
+    const bl=x(b.start),bw=Math.max(x(b.end)-x(b.start),2);
+    const tint=hexA(ERAS_COLOR,k%2?0.13:0.06);
+    const dv=k>0?`border-left:1px solid ${hexA(ERAS_COLOR,.26)};`:'';
+    return `<div class="blockzone" style="left:${bl}px;width:${bw}px;height:${erasH}px;background:${tint};${dv}"><span class="blabel" style="left:14px;top:${ERAS_TOP}px;color:${shade(ERAS_COLOR,.55)}">${b.name}</span></div>`;
   }).join('');
+  // marc blocks: every active marc pooled into shared lanes, identical style, coloured per marc
+  const blocks=activeBlocks();
+  const bpk=blocks.length?packSegs(blocks):{lane:[]};
+  const blockEls=blocks.map((b,j)=>{
+    const left=x(b.start),w=Math.max(x(b.end)-x(b.start),2);
+    const rowTop=ERAS_TOP+ERA_LABEL_H+bpk.lane[j]*MOV_LANE_H;
+    const c=b.color;
+    return `<div class="seg mov" style="left:${left+1}px;width:${Math.max(w-2,2)}px;top:${rowTop}px;height:${MOV_BAR_H}px;background:${mix(c,.28)};border:1px solid ${mix(c,.55)};border-bottom:3px solid ${c};" title="${b.name} (${fmtY(b.start)}–${fmtY(b.end)})"><span class="segname">${b.name}</span><span class="segyears">${fmtY(b.start)}–${fmtY(b.end)}</span></div>`;
+  }).join('');
+  eraTracksEl.innerHTML=`<div class="segwrap" style="${maskCss}">${backboneEls}${blockEls}</div>`;
 
   // --- People (measure first so we know the content height) ---
   eventsRail.style.width=W+'px';
@@ -455,7 +435,7 @@ function render(){
 
 // Sidebar lists (rebuilt on every render so counts / checked states stay in sync).
 function renderSidebar(){
-  $('#regions').innerHTML=`<label class="filter"><input type="checkbox" data-events ${state.showEvents?'checked':''}><span class="swatch" style="background:var(--eventc)"></span>Esdeveniments</label>`+ERA_TRACKS.map(t=>`<label class="filter"><input type="checkbox" data-region="${t.id}" ${state.regions.has(t.id)?'checked':''}><span class="swatch" style="background:${t.color}"></span>${t.region}</label>`).join('');
+  $('#regions').innerHTML=`<label class="filter"><input type="checkbox" data-events ${state.showEvents?'checked':''}><span class="swatch" style="background:var(--eventc)"></span>Esdeveniments</label>`+MARCS.map(m=>`<label class="filter"><input type="checkbox" data-marc="${m.id}" ${state.marcs.has(m.id)?'checked':''}><span class="swatch" style="background:${m.color}"></span>${m.name}</label>`).join('');
   $('#filters').innerHTML=Object.keys(AREA_COLORS).map(a=>{
     const pp=peopleOfArea(a);
     const on=state.activeCols.has(a);
@@ -474,11 +454,11 @@ function closeDetailIfGone(){if(state.selected && !state.present.has(state.selec
 
 // Which movement/era a given year falls in (falls back to the macro-block, which has no gaps).
 function eraLabel(year){
-  const w=ERA_TRACKS.find(t=>t.id==='west')||ERA_TRACKS[0];
-  const seg=w.segments.find(e=>year>=e.start&&year<e.end);
-  if(seg)return seg.name;
-  const blk=(w.blocks||[]).find(b=>year>=b.start&&year<b.end);
-  return blk?blk.name:'—';
+  const w=MARCS.find(m=>m.id==='west');
+  const blk=w&&w.blocks.find(b=>year>=b.start&&year<b.end);   // Western movement, if any
+  if(blk)return blk.name;
+  const era=ERAS.find(e=>year>=e.start&&year<e.end);           // else the macro-era backbone
+  return era?era.name:'—';
 }
 
 function openDetail(p){
@@ -538,8 +518,8 @@ document.addEventListener('click',e=>{if(!e.target.closest('.search'))results.cl
 // ============================================================
 $('#regions').addEventListener('change',e=>{
   if(e.target.hasAttribute('data-events')){state.showEvents=e.target.checked;render();return;}   // events on/off
-  const r=e.target.getAttribute('data-region');if(!r)return;
-  if(e.target.checked)state.regions.add(r);else state.regions.delete(r);render();
+  const m=e.target.getAttribute('data-marc');if(!m)return;
+  if(e.target.checked)state.marcs.add(m);else state.marcs.delete(m);render();
 });
 $('#filters').addEventListener('click',e=>{
   const tag=e.target.closest('[data-area]');if(!tag)return;
@@ -583,7 +563,7 @@ function zoomAt(clientX,factor){
 }
 $('#zoomIn').onclick=()=>{const r=scroll.getBoundingClientRect();zoomAt(r.left+scroll.clientWidth/2,1.4);};
 $('#zoomOut').onclick=()=>{const r=scroll.getBoundingClientRect();zoomAt(r.left+scroll.clientWidth/2,1/1.4);};
-$('#reset').onclick=()=>{state.present=new Set();state.activeCols=new Set();state.pinned=new Set(SEED_PINNED);state.hidden=new Set();state.regions=new Set(DEFAULT_REGIONS);state.showEvents=true;state.selected=null;$('#detail').classList.remove('open');defaultView();};
+$('#reset').onclick=()=>{state.present=new Set();state.activeCols=new Set();state.pinned=new Set(SEED_PINNED);state.hidden=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.selected=null;$('#detail').classList.remove('open');defaultView();};
 
 // Trackpad pinch / ⌘+wheel → zoom.
 scroll.addEventListener('wheel',e=>{
