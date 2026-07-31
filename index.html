@@ -15,7 +15,7 @@
     --surface:#F0EFED; --border:#E6E5E3; --blue:#2783DE; --blueSoft:#E5F2FC;
     /* collection (people) colours — the vivid "data" layer */
     --philosophy:#5E9FE8; --music:#BF8EDA; --literature:#DE9255;
-    --science:#72BC8F; --politics:#DF84A8;
+    --science:#72BC8F; --politics:#DF84A8; --painting:#D4A72C; --religion:#A24E5E;
     /* events + structure — the calm layer */
     --eventc:#4B4F57;
     --struct:#8B93AD; --struct-ink:#565D78; --band:#F3F4F7; --r-card:8px; --r-pill:999px;
@@ -38,6 +38,9 @@
   .results.open{display:block;}
   .results .row{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;}
   .results .row:hover{background:var(--soft);}
+  .results .row.active{background:var(--blueSoft);}
+  .results .rowsep{padding:7px 12px 3px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);border-top:1px solid var(--border);}
+  .results .row.loading{color:var(--text2);font-style:italic;cursor:default;}
   .results .row .yr{color:var(--text2);font-size:12px;margin-left:auto;}
   .results .row.disabled{opacity:.5;cursor:default;}
   .controls{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
@@ -74,13 +77,11 @@
   .scroll.grabbing,.scroll.grabbing *{cursor:grabbing;}
   .inner{position:relative;}
 
-  /* ===== Era strata: band + region tracks + movement segments ===== */
-  /* The band is the calm "backdrop"; macro-blocks are a soft blue wash, movements are opaque cards on top. */
+  /* ===== Era strata =====
+     ERES backbone = pale wash spanning the whole canvas (the "ruler", always on).
+     MARC blocks = opaque bordered cards on top, coloured per marc; the canvas grows with the lanes. */
   .eraPanel{position:absolute;left:0;top:0;background:var(--band);border-bottom:1px solid var(--border);box-shadow:0 8px 14px -10px rgba(40,44,60,.22);}
   .eraTracks{position:absolute;top:0;left:0;}
-  .track{position:absolute;left:0;}
-  .track .rlabel{position:sticky;left:8px;z-index:6;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--struct-ink);background:rgba(255,255,255,.96);padding:4px 11px;border-radius:var(--r-card);border:1px solid var(--border);}
-  .rlabel .rdot{width:9px;height:9px;border-radius:50%;}
   .segwrap{position:absolute;inset:0;}
   .blockzone{position:absolute;top:0;overflow:hidden;pointer-events:none;}
   .blockzone .blabel{position:absolute;top:8px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;opacity:.9;}
@@ -106,8 +107,18 @@
   .bar .lbl{pointer-events:none;text-shadow:0 1px 2px rgba(0,0,0,.42);}
   .bar.sel{outline:2px solid var(--text);outline-offset:1px;}
   .bar.alive{box-shadow:none;border-top-right-radius:0;border-bottom-right-radius:0;}
+  @keyframes barPop{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(39,131,222,.6);}6%{transform:scale(1.12);}16%{transform:scale(1);box-shadow:0 0 0 12px rgba(39,131,222,0);}24%{box-shadow:0 0 0 0 rgba(39,131,222,.5);}40%{box-shadow:0 0 0 11px rgba(39,131,222,0);}50%{box-shadow:0 0 0 0 rgba(39,131,222,.42);}68%{box-shadow:0 0 0 11px rgba(39,131,222,0);}78%{box-shadow:0 0 0 0 rgba(39,131,222,.34);}100%{box-shadow:0 0 0 10px rgba(39,131,222,0);}}
+  .bar.justAdded{animation:barPop 4s ease-out;z-index:9;}
+  .bar .menu{position:absolute;right:1px;top:50%;transform:translateY(-50%);display:none;width:20px;height:20px;padding:0;border:none;border-radius:5px;background:rgba(255,255,255,.92);color:var(--text);font-size:15px;line-height:1;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.25);}
+  .bar:hover .menu{display:flex;align-items:center;justify-content:center;}
   .bar .fade{position:absolute;top:0;bottom:0;pointer-events:none;-webkit-mask-image:linear-gradient(to right,#000,transparent);mask-image:linear-gradient(to right,#000,transparent);}
   .emptyState{position:absolute;left:24px;font-size:14px;color:var(--text2);font-style:italic;pointer-events:none;}
+  /* Floating context menu (bar ⋮ button) */
+  .barmenu{position:fixed;display:none;background:#fff;border:1px solid var(--border);border-radius:var(--r-card);box-shadow:0 6px 18px rgba(0,0,0,.14);z-index:30;overflow:hidden;min-width:150px;}
+  .barmenu.open{display:block;}
+  .barmenu button{display:block;width:100%;text-align:left;border:none;background:none;padding:9px 14px;font-size:13px;cursor:pointer;color:var(--text);white-space:nowrap;}
+  .barmenu button:hover{background:var(--soft);}
+  .barmenu button.danger{color:#C0392B;}
 
   /* ===== Hover guide + "today" line ===== */
   .guide{position:absolute;top:0;width:1px;background:var(--blue);pointer-events:none;display:none;z-index:8;}
@@ -134,6 +145,11 @@
   .detail .desc{font-size:14px;margin:14px 0;}
   .detail a.wiki{display:inline-block;margin-top:8px;color:var(--blue);text-decoration:none;font-size:14px;}
   .detail a.wiki:hover{text-decoration:underline;}
+  .detail .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+  .detail .dbtn{border:1px solid var(--border);background:#fff;border-radius:var(--r-card);padding:7px 12px;font-size:13px;cursor:pointer;color:var(--text);}
+  .detail .dbtn:hover{background:var(--soft);}
+  .detail .dbtn.danger{color:#C0392B;border-color:#E7B7B0;}
+  .detail .dbtn.danger:hover{background:#FBEDEB;}
 </style>
 </head>
 <body>
@@ -185,6 +201,7 @@
     <aside class="detail" id="detail"></aside>
   </div>
 </div>
+<div class="barmenu" id="barmenu"></div>
 <script>
 // ============================================================
 // [1] DATA  —  edit here to add eras, events and people.
@@ -193,22 +210,25 @@
 // ============================================================
 const AREA_COLORS={
   'Filosofia':'#5E9FE8','Música':'#BF8EDA','Literatura':'#DE9255',
-  'Ciència':'#72BC8F','Política':'#DF84A8'
+  'Ciència':'#72BC8F','Política':'#DF84A8','Pintura':'#D4A72C','Religió':'#A24E5E'
 };
 const NOW_YEAR=new Date().getFullYear();
 
-// Region tracks. `blocks` = macro-eras (always visible, the backbone, soft blue wash).
-// `segments` = movements/periods (toggle with the region checkbox; stack in lanes when they overlap).
-const ERA_TRACKS=[
-  {id:'west',region:'Occident (general)',color:'#8B93AD',blockColor:'#5E9FE8',
-  blocks:[
-    {name:'Prehistòria',start:-12000,end:-3300},
-    {name:'Edat Antiga',start:-3300,end:476},
-    {name:'Edat Mitjana',start:476,end:1492},
-    {name:'Edat Moderna',start:1492,end:1789},
-    {name:'Edat Contemporània',start:1789,end:NOW_YEAR}
-  ],
-  segments:[
+// ERES: the always-on backbone — the macro-eras that act as the "ruler" of the timeline.
+// Not a toggleable marc; rendered as a pale wash spanning the whole eras canvas.
+const ERAS_COLOR='#8B93AD';
+const ERAS=[
+  {name:'Prehistòria',start:-12000,end:-3300},
+  {name:'Edat Antiga',start:-3300,end:476},
+  {name:'Edat Mitjana',start:476,end:1492},
+  {name:'Edat Moderna',start:1492,end:1789},
+  {name:'Edat Contemporània',start:1789,end:NOW_YEAR}
+];
+// MARCS: toggleable historical frames. Each is a set of period `blocks`, told apart by colour.
+// All blocks render identically (same size/shape) and share the same stacking area over the eras.
+// Add more frames here later (Amèrica, Àsia…) — each just needs a colour and its blocks.
+const MARCS=[
+  {id:'west',name:'Occident',color:'#5E9FE8',blocks:[
     {name:'Paleolític',start:-12000,end:-9000},
     {name:'Neolític',start:-9000,end:-3000},
     {name:'Edat dels Metalls',start:-3000,end:-800},
@@ -228,7 +248,7 @@ const ERA_TRACKS=[
     {name:'Avantguardes',start:1905,end:1945},
     {name:'Món contemporani',start:1945,end:NOW_YEAR}
   ]},
-  {id:'es',region:'Espanya',color:'#C2A07C',segments:[
+  {id:'es',name:'Espanya',color:'#C2A07C',blocks:[
     {name:'Antic Règim borbònic',start:1700,end:1808},
     {name:'Convulsió liberal',start:1808,end:1874},
     {name:'Restauració',start:1874,end:1931},
@@ -238,40 +258,67 @@ const ERA_TRACKS=[
 ];
 const EVENTS=[
   {id:'revfr',name:'Revolució Francesa',year:1789,wiki:'https://ca.wikipedia.org/wiki/Revolució_Francesa',desc:'Procés revolucionari que va enderrocar l\u0027Antic Règim a França i va escampar per Europa els ideals de llibertat, igualtat i fraternitat.'},
-  {id:'wwi',name:'Inici de la Primera Guerra Mundial',year:1914,wiki:'https://ca.wikipedia.org/wiki/Primera_Guerra_Mundial',desc:'Esclat del primer conflicte a escala global, que va redibuixar el mapa polític i social del segle XX.'}
+  {id:'wwi',name:'Inici de la Primera Guerra Mundial',year:1914,wiki:'https://ca.wikipedia.org/wiki/Primera_Guerra_Mundial',desc:'Esclat del primer conflicte a escala global, que va redibuixar el mapa polític i social del segle XX.'},
+  {id:'delt',name:'Fundació de DELT',year:2022,wiki:'https://deltproject.com/',desc:'Projecte sense ànim de lucre que combina intel·ligència artificial i drons per ajudar organitzacions de conservació de fauna, sobretot la detecció i protecció de tortugues marines davant la caça furtiva.'}
 ];
 const PEOPLE=[
-  {id:'bach',name:'J.S. Bach',birth:1685,death:1750,areas:['Música'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Johann_Sebastian_Bach',desc:'Compositor i organista del Barroc, referent de la música occidental.'},
-  {id:'voltaire',name:'Voltaire',birth:1694,death:1778,areas:['Filosofia','Literatura'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Voltaire',desc:'Filòsof i escriptor il·lustrat, defensor de la llibertat d\u0027expressió.'},
-  {id:'franklin',name:'Benjamin Franklin',birth:1706,death:1790,areas:['Ciència','Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Benjamin_Franklin',desc:'Polímata, científic i un dels pares fundadors dels EUA.'},
-  {id:'mozart',name:'Mozart',birth:1756,death:1791,areas:['Música'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Wolfgang_Amadeus_Mozart',desc:'Compositor clàssic prolífic i influent tot i la seva vida breu.'},
-  {id:'wollstonecraft',name:'Mary Wollstonecraft',birth:1759,death:1797,areas:['Filosofia','Literatura'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Mary_Wollstonecraft',desc:'Filòsofa i pionera del pensament feminista modern.'},
-  {id:'austen',name:'Jane Austen',birth:1775,death:1817,areas:['Literatura'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Jane_Austen',desc:'Novel·lista anglesa, mestra de la ironia i la novel·la de costums.'},
-  {id:'darwin',name:'Charles Darwin',birth:1809,death:1882,areas:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Charles_Darwin',desc:'Naturalista, formulà la teoria de l\u0027evolució per selecció natural.'},
-  {id:'lovelace',name:'Ada Lovelace',birth:1815,death:1852,areas:['Ciència'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Ada_Lovelace',desc:'Matemàtica, considerada la primera programadora de la història.'},
-  {id:'curie',name:'Marie Curie',birth:1867,death:1934,areas:['Ciència'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Marie_Curie',desc:'Física i química, pionera de la radioactivitat i doble Nobel.'},
-  {id:'einstein',name:'Albert Einstein',birth:1879,death:1955,areas:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Albert_Einstein',desc:'Físic teòric, autor de la teoria de la relativitat.'},
-  {id:'bernat',name:'Bernat Bas',birth:1991,death:null,areas:[],gender:'',wiki:'',desc:'Neix el 1991.<br>Crea aquesta pàgina el 2026.<br>Encara no ha mort.'}
+  {id:'socrates',wd:'Q913',name:'Sòcrates',birth:-470,death:-399,areas:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Sòcrates',desc:'Filòsof atenès que no deixà escrits propis, considerat el pare de la filosofia occidental i del mètode socràtic.'},
+  {id:'plato',wd:'Q859',name:'Plató',birth:-428,death:-348,areas:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Plató',desc:'Filòsof atenès, deixeble de Sòcrates i fundador de l\u0027Acadèmia, autor de La República.'},
+  {id:'diogenes',wd:'Q59180',name:'Diògenes',birth:-412,death:-323,areas:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Diògenes_de_Sinope',desc:'Filòsof cínic grec, conegut per la seva vida austera i les seves crítiques mordaces a les convencions socials.'},
+  {id:'aristotil',wd:'Q868',name:'Aristòtil',birth:-384,death:-322,areas:['Filosofia','Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Aristòtil',desc:'Filòsof i científic grec, deixeble de Plató i tutor d\u0027Alexandre Magne, sistematitzà gran part del saber antic.'},
+  {id:'alexandre',wd:'Q8409',name:'Alexandre el Gran',birth:-356,death:-323,areas:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Alexandre_el_Gran',desc:'Rei de Macedònia, conquerí un dels imperis més vastos de l\u0027antiguitat abans dels 33 anys.'},
+  {id:'epicur',wd:'Q43216',name:'Epicur',birth:-341,death:-270,areas:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Epicur',desc:'Filòsof grec, fundador de l\u0027epicureisme, defensor d\u0027una vida senzilla orientada a la recerca del plaer moderat.'},
+  {id:'cesar',wd:'Q1048',name:'Juli Cèsar',birth:-100,death:-44,areas:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Juli_Cèsar',desc:'General i dictador romà, la seva figura marca la transició de la República a l\u0027Imperi Romà.'},
+  {id:'cleopatra',wd:'Q635',name:'Cleopatra',birth:-69,death:-30,areas:['Política'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Cleòpatra',desc:'Última reina ptolemaica d\u0027Egipte, coneguda per les seves aliances amb Juli Cèsar i Marc Antoni.'},
+  {id:'jesucrist',wd:'Q302',name:'Jesucrist',birth:-4,death:30,areas:['Religió'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Jesús_de_Natzaret',desc:'Predicador i mestre jueu del segle I, figura central del cristianisme i un dels personatges més influents de la civilització occidental.'},
+  {id:'gengiskhan',wd:'Q720',name:'Gengis Khan',birth:1162,death:1227,areas:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Gengis_Khan',desc:'Fundador i primer gran khan de l\u0027Imperi Mongol, el més extens de la història en superfície contínua.'},
+  {id:'gutenberg',wd:'Q8958',name:'Johannes Gutenberg',birth:1400,death:1468,areas:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Johannes_Gutenberg',desc:'Impressor alemany, inventor de la impremta de tipus mòbils, revolucionà la difusió del coneixement a Europa.'},
+  {id:'joanadarc',wd:'Q7226',name:'Joana d\u0027Arc',birth:1412,death:1431,areas:['Política'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Joana_d\u0027Arc',desc:'Pagesa francesa que liderà l\u0027exèrcit reial durant la Guerra dels Cent Anys, cremada per heretgia i després canonitzada.'},
+  {id:'davinci',wd:'Q762',name:'Leonardo da Vinci',birth:1452,death:1519,areas:['Pintura','Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Leonardo_da_Vinci',desc:'Pintor i polímata del Renaixement, autor de la Gioconda i precursor de la ciència i l\u0027enginyeria modernes.'},
+  {id:'copernic',wd:'Q619',name:'Nicolau Copèrnic',birth:1473,death:1543,areas:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Nicolau_Copèrnic',desc:'Astrònom polonès, formulà el model heliocèntric que revolucionà la comprensió de l\u0027univers.'},
+  {id:'miquelangel',wd:'Q5592',name:'Miquel Àngel',birth:1475,death:1564,areas:['Pintura'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Miquel_Àngel',desc:'Escultor, pintor i arquitecte del Renaixement, autor del David i dels frescos de la Capella Sixtina.'},
+  {id:'galileu',wd:'Q307',name:'Galileu Galilei',birth:1564,death:1642,areas:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Galileu_Galilei',desc:'Astrònom i físic italià, defensà l\u0027heliocentrisme i és considerat el pare del mètode científic modern.'},
+  {id:'shakespeare',wd:'Q692',name:'William Shakespeare',birth:1564,death:1616,areas:['Literatura'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/William_Shakespeare',desc:'Dramaturg i poeta anglès, autor de Hamlet i Romeu i Julieta, el nom més universal de la literatura occidental.'},
+  {id:'newton',wd:'Q935',name:'Isaac Newton',birth:1643,death:1727,areas:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Isaac_Newton',desc:'Físic i matemàtic, formulà les lleis del moviment i la gravitació universal.'},
+  {id:'bach',wd:'Q1339',name:'J.S. Bach',birth:1685,death:1750,areas:['Música'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Johann_Sebastian_Bach',desc:'Compositor i organista del Barroc, referent de la música occidental.'},
+  {id:'voltaire',wd:'Q9068',name:'Voltaire',birth:1694,death:1778,areas:['Filosofia','Literatura'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Voltaire',desc:'Filòsof i escriptor il·lustrat, defensor de la llibertat d\u0027expressió.'},
+  {id:'franklin',wd:'Q34969',name:'Benjamin Franklin',birth:1706,death:1790,areas:['Ciència','Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Benjamin_Franklin',desc:'Polímata, científic i un dels pares fundadors dels EUA.'},
+  {id:'mozart',wd:'Q254',name:'Mozart',birth:1756,death:1791,areas:['Música'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Wolfgang_Amadeus_Mozart',desc:'Compositor clàssic prolífic i influent tot i la seva vida breu.'},
+  {id:'wollstonecraft',wd:'Q101638',name:'Mary Wollstonecraft',birth:1759,death:1797,areas:['Filosofia','Literatura'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Mary_Wollstonecraft',desc:'Filòsofa i pionera del pensament feminista modern.'},
+  {id:'napoleon',wd:'Q517',name:'Napoleó Bonaparte',birth:1769,death:1821,areas:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Napoleó_Bonaparte',desc:'Militar i emperador francès, dominà gran part d\u0027Europa i deixà una petjada duradora en el dret i la política modernes.'},
+  {id:'austen',wd:'Q36322',name:'Jane Austen',birth:1775,death:1817,areas:['Literatura'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Jane_Austen',desc:'Novel·lista anglesa, mestra de la ironia i la novel·la de costums.'},
+  {id:'darwin',wd:'Q1035',name:'Charles Darwin',birth:1809,death:1882,areas:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Charles_Darwin',desc:'Naturalista, formulà la teoria de l\u0027evolució per selecció natural.'},
+  {id:'lovelace',wd:'Q7259',name:'Ada Lovelace',birth:1815,death:1852,areas:['Ciència'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Ada_Lovelace',desc:'Matemàtica, considerada la primera programadora de la història.'},
+  {id:'marx',wd:'Q9061',name:'Karl Marx',birth:1818,death:1883,areas:['Filosofia','Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Karl_Marx',desc:'Filòsof i economista, autor d\u0027El Capital i pare del pensament comunista modern.'},
+  {id:'vangogh',wd:'Q5582',name:'Vincent van Gogh',birth:1853,death:1890,areas:['Pintura'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Vincent_van_Gogh',desc:'Pintor postimpressionista holandès, autor de La nit estrellada, incomprès en vida i icona de l\u0027art modern.'},
+  {id:'curie',wd:'Q7186',name:'Marie Curie',birth:1867,death:1934,areas:['Ciència'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Marie_Curie',desc:'Física i química, pionera de la radioactivitat i doble Nobel.'},
+  {id:'gandhi',wd:'Q1001',name:'Mahatma Gandhi',birth:1869,death:1948,areas:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Mahatma_Gandhi',desc:'Líder independentista indi, promotor de la resistència no violenta i icona global de la lluita pacífica.'},
+  {id:'einstein',wd:'Q937',name:'Albert Einstein',birth:1879,death:1955,areas:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Albert_Einstein',desc:'Físic teòric, autor de la teoria de la relativitat.'},
+  {id:'picasso',wd:'Q5593',name:'Pablo Picasso',birth:1881,death:1973,areas:['Pintura'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Pablo_Picasso',desc:'Pintor i escultor, cofundador del cubisme i l\u0027artista més influent del segle XX.'},
+  {id:'frida',wd:'Q5588',name:'Frida Kahlo',birth:1907,death:1954,areas:['Pintura'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Frida_Kahlo',desc:'Pintora mexicana, coneguda pels seus autoretrats i convertida en icona cultural global.'},
+  {id:'mandela',wd:'Q8023',name:'Nelson Mandela',birth:1918,death:2013,areas:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Nelson_Mandela',desc:'Líder sud-africà, empresonat 27 anys per lluitar contra l\u0027apartheid, president i símbol de reconciliació.'},
+  {id:'bernat',wd:'',name:'Bernat Bas',birth:1991,death:null,areas:[],gender:'',wiki:'',desc:'Neix el 1991.<br>Crea aquesta pàgina el 2026.<br>Encara no ha mort.'}
 ];
 
 // ============================================================
 // [2] RANGE, CONFIG & STATE
 // ============================================================
 // Data extent → the drawable year window (with a little gutter each side).
-const _starts=[...ERA_TRACKS.flatMap(t=>t.segments.map(s=>s.start)),...EVENTS.map(e=>e.year),...PEOPLE.map(p=>p.birth)];
-const _ends=[...ERA_TRACKS.flatMap(t=>t.segments.map(s=>s.end)),...EVENTS.map(e=>e.year),...PEOPLE.map(p=>p.death==null?NOW_YEAR:p.death)];
+const _blocks=[...ERAS,...MARCS.flatMap(m=>m.blocks)];
+const _starts=[..._blocks.map(b=>b.start),...EVENTS.map(e=>e.year),...PEOPLE.map(p=>p.birth)];
+const _ends=[..._blocks.map(b=>b.end),...EVENTS.map(e=>e.year),...PEOPLE.map(p=>p.death==null?NOW_YEAR:p.death)];
 const DATA_MIN=Math.min(..._starts), DATA_MAX=Math.max(..._ends);
 const GUTTER_YEARS=14;
 const RIGHT_PAD_YEARS=18;
 const YEAR_MIN=DATA_MIN-GUTTER_YEARS, YEAR_MAX=DATA_MAX+RIGHT_PAD_YEARS;
 let pxPerYear=4;               // current zoom (pixels per year); set by defaultView()/setZoom()
 const SEED_PINNED=['bernat'];  // always present, never removable
-const DEFAULT_REGIONS=['west'];// regions shown on load / after Reset
+const DEFAULT_MARCS=['west'];  // marcs shown on load / after Reset (the eras backbone is always on)
 const FUTURE_FADE=72;          // px the living bars (and the era band) fade out past "today"
 const deathOf=p=>p.death==null?NOW_YEAR:p.death;
 const isAlive=p=>p.death==null;
 
-const state={present:new Set(),activeCols:new Set(),pinned:new Set(SEED_PINNED),hidden:new Set(),regions:new Set(DEFAULT_REGIONS),showEvents:true,selected:null};
+const state={present:new Set(),activeCols:new Set(),pinned:new Set(SEED_PINNED),hidden:new Set(),marcs:new Set(DEFAULT_MARCS),showEvents:true,selected:null};
 
 // ============================================================
 // [3] DOM REFS & SMALL HELPERS (coords, colours, formatting)
@@ -290,6 +337,7 @@ const hexA=(hex,a)=>{const n=parseInt(hex.slice(1),16);return `rgba(${(n>>16)&25
 const shade=(hex,f)=>{const n=parseInt(hex.slice(1),16);const r=Math.round(((n>>16)&255)*f),g=Math.round(((n>>8)&255)*f),b=Math.round((n&255)*f);return `rgb(${r},${g},${b})`;};   // darken toward black
 const mix=(hex,f)=>{const n=parseInt(hex.slice(1),16);const m=v=>Math.round(255+(v-255)*f);return `rgb(${m((n>>16)&255)},${m((n>>8)&255)},${m(n&255)})`;};   // opaque tint toward white (f=0 white … 1 full colour)
 const fmtY=y=>y<0?(-y)+' aC':''+y;
+const linkLabel=url=>/wikipedia\.org/.test(url)?'Wikipedia':/wikidata\.org/.test(url)?'Wikidata':'Web';   // adaptive label for the detail link
 const peopleOfArea=a=>PEOPLE.filter(p=>p.areas.includes(a));
 
 // Which people are on the timeline right now = (in an active collection OR pinned) AND not hidden.
@@ -299,15 +347,14 @@ function deactivateEmptyCols(){[...state.activeCols].forEach(a=>{if(!peopleOfAre
 // ============================================================
 // [4] LAYOUT MATH (lane packing + vertical geometry)
 // ============================================================
-const SEG_H=88, BAND_H=28, MOV_LANE_H=40, MOV_BAR_H=34, MOV_PAD_TOP=8, MOV_PAD_BOT=6, TRACK_GAP=10, ERAS_TOP=16, EVENT_LABEL_H=38, GAP_AFTER=14;
+const MOV_LANE_H=40, MOV_BAR_H=34, MOV_PAD_BOT=6, ERAS_TOP=16, ERA_LABEL_H=26, EVENT_LABEL_H=38, GAP_AFTER=14;
 // Greedy lane assignment so overlapping intervals stack instead of colliding.
 function packSegs(segs){const arr=segs.map((s,idx)=>({idx,start:s.start,end:s.end})).sort((a,b)=>a.start-b.start);const ends=[];const lane=new Array(segs.length).fill(0);for(const it of arr){let placed=false;for(let l=0;l<ends.length;l++){if(it.start>=ends[l]){lane[it.idx]=l;ends[l]=it.end;placed=true;break;}}if(!placed){lane[it.idx]=ends.length;ends.push(it.end);}}return {lane,nLanes:Math.max(1,ends.length)};}
-const showSegs=t=>state.regions.has(t.id);                       // movements visible?
-const hasBlocks=t=>Array.isArray(t.blocks)&&t.blocks.length>0;   // has macro-era backbone?
-function trackH(t){if(hasBlocks(t)){if(!showSegs(t))return BAND_H+16;const pk=packSegs(t.segments);return BAND_H+MOV_PAD_TOP+pk.nLanes*MOV_LANE_H+MOV_PAD_BOT;}return SEG_H;}
-// Tracks with macro-blocks (the backbone) always render; their movements toggle with the region checkbox.
-function activeTracks(){return ERA_TRACKS.filter(t=>state.regions.has(t.id)||hasBlocks(t));}
-function erasBlockH(){const ts=activeTracks();if(!ts.length)return ERAS_TOP;return ERAS_TOP+ts.reduce((a,t)=>a+trackH(t)+TRACK_GAP,0)+2;}
+// All period blocks from the active marcs, pooled into one list and tagged with their marc's colour.
+function activeBlocks(){const out=[];MARCS.forEach(m=>{if(state.marcs.has(m.id))m.blocks.forEach(b=>out.push({name:b.name,start:b.start,end:b.end,color:m.color}));});return out;}
+function blockLanes(){const b=activeBlocks();return b.length?packSegs(b).nLanes:0;}
+// The eras canvas grows with the number of block lanes (just like the people canvas).
+function erasBlockH(){return ERAS_TOP+ERA_LABEL_H+blockLanes()*MOV_LANE_H+MOV_PAD_BOT;}
 function eventLabelTop(){return erasBlockH()+6;}
 function barsTop(){return eventLabelTop()+EVENT_LABEL_H+GAP_AFTER;}
 
@@ -341,57 +388,35 @@ function render(){
   const W=Math.max(totalW(),nowX+FUTURE_FADE+8);   // ensure the future-fade always fits
   inner.style.width=W+'px';
 
-  // --- Era strata ---
-  const tracks=activeTracks();
+  // --- Era strata: always-on eras backbone + pooled marc blocks (canvas grows with lanes) ---
+  const erasH=erasBlockH();
   eraPanel.style.width=W+'px';
-  eraPanel.style.height=erasBlockH()+'px';
-  eraPanel.style.display=tracks.length?'block':'none';
+  eraPanel.style.height=erasH+'px';
   const futureMask=`linear-gradient(to right,#000 ${nowX}px,transparent ${nowX+FUTURE_FADE}px)`;   // band fades out at "today"
   eraPanel.style.webkitMaskImage=futureMask;
   eraPanel.style.maskImage=futureMask;
   eraTracksEl.style.width=W+'px';
+  eraTracksEl.style.height=erasH+'px';
   const gw=x(DATA_MIN), FADE=72;
   const maskGrad=`linear-gradient(to right,transparent ${gw}px,#000 ${gw+FADE}px,#000 ${nowX}px,transparent ${nowX+FUTURE_FADE}px)`;  // fade both ends (past ∞ / future)
   const maskCss=`-webkit-mask-image:${maskGrad};mask-image:${maskGrad};`;
-  let _acc=ERAS_TOP;
-  eraTracksEl.innerHTML=tracks.map((t,i)=>{
-    const th=trackH(t);
-    const top=_acc; _acc+=th+TRACK_GAP;
-    const labelPad=Math.round(t.region.length*7)+60;   // keep first block label clear of the region tag
-    const trackHasBlocks=hasBlocks(t);
-    const bc=t.blockColor||t.color;   // macro-blocks: soft diffused blue wash; movements: opaque tint of it
-    // macro-blocks (background wash)
-    let blockEls='';
-    if(trackHasBlocks){
-      blockEls=t.blocks.map((b,k)=>{
-        const bl=x(b.start),bw=Math.max(x(b.end)-x(b.start),2);
-        const tint=hexA(bc,k%2?0.11:0.05);
-        const dv=k>0?`border-left:1px solid ${hexA(bc,.26)};`:'';
-        const lp=k===0?labelPad:14;
-        return `<div class="blockzone" style="left:${bl}px;width:${bw}px;height:${th}px;background:${tint};${dv}"><span class="blabel" style="left:${lp}px;color:${shade(bc,.55)}">${b.name}</span></div>`;
-      }).join('');
-    }
-    // movements (opaque bordered cards on top; hidden when the region is toggled off)
-    let segs='';
-    if(trackHasBlocks){
-      if(showSegs(t)){
-        const pk=packSegs(t.segments);
-        segs=t.segments.map((s,j)=>{
-          const left=x(s.start),w=Math.max(x(s.end)-x(s.start),2);
-          const rowTop=BAND_H+MOV_PAD_TOP+pk.lane[j]*MOV_LANE_H;
-          return `<div class="seg mov" style="left:${left+1}px;width:${Math.max(w-2,2)}px;top:${rowTop}px;height:${MOV_BAR_H}px;background:${mix(bc,.28)};border:1px solid ${mix(bc,.55)};border-bottom:3px solid ${bc};" title="${s.name} (${fmtY(s.start)}–${fmtY(s.end)})"><span class="segname">${s.name}</span><span class="segyears">${fmtY(s.start)}–${fmtY(s.end)}</span></div>`;
-        }).join('');
-      }
-    }else{
-      // region without a macro-block backbone (e.g. Espanya): full-height segments
-      segs=t.segments.map((s,j)=>{
-        const left=x(s.start),w=Math.max(x(s.end)-x(s.start),2);
-        const pad=j===0?`padding-left:${labelPad}px;`:'';
-        return `<div class="seg" style="left:${left}px;width:${w}px;top:0;height:${th}px;background:${mix(bc,.16)};border-bottom:3px solid ${bc};${pad}" title="${s.name} (${fmtY(s.start)}–${fmtY(s.end)})"><span class="segname">${s.name}</span><span class="segyears">${fmtY(s.start)}–${fmtY(s.end)}</span></div>`;
-      }).join('');
-    }
-    return `<div class="track" style="top:${top}px;width:${W}px;height:${th}px"><div class="segwrap" style="${maskCss}">${blockEls}${segs}</div><span class="rlabel"><span class="rdot" style="background:${t.color}"></span>${t.region}</span></div>`;
+  // eras backbone: the macro-eras as a pale wash spanning the whole canvas, names at the top
+  const backboneEls=ERAS.map((b,k)=>{
+    const bl=x(b.start),bw=Math.max(x(b.end)-x(b.start),2);
+    const tint=hexA(ERAS_COLOR,k%2?0.13:0.06);
+    const dv=k>0?`border-left:1px solid ${hexA(ERAS_COLOR,.26)};`:'';
+    return `<div class="blockzone" style="left:${bl}px;width:${bw}px;height:${erasH}px;background:${tint};${dv}"><span class="blabel" style="left:14px;top:${ERAS_TOP}px;color:${shade(ERAS_COLOR,.55)}">${b.name}</span></div>`;
   }).join('');
+  // marc blocks: every active marc pooled into shared lanes, identical style, coloured per marc
+  const blocks=activeBlocks();
+  const bpk=blocks.length?packSegs(blocks):{lane:[]};
+  const blockEls=blocks.map((b,j)=>{
+    const left=x(b.start),w=Math.max(x(b.end)-x(b.start),2);
+    const rowTop=ERAS_TOP+ERA_LABEL_H+bpk.lane[j]*MOV_LANE_H;
+    const c=b.color;
+    return `<div class="seg mov" style="left:${left+1}px;width:${Math.max(w-2,2)}px;top:${rowTop}px;height:${MOV_BAR_H}px;background:${mix(c,.28)};border:1px solid ${mix(c,.55)};border-bottom:3px solid ${c};" title="${b.name} (${fmtY(b.start)}–${fmtY(b.end)})"><span class="segname">${b.name}</span><span class="segyears">${fmtY(b.start)}–${fmtY(b.end)}</span></div>`;
+  }).join('');
+  eraTracksEl.innerHTML=`<div class="segwrap" style="${maskCss}">${backboneEls}${blockEls}</div>`;
 
   // --- People (measure first so we know the content height) ---
   eventsRail.style.width=W+'px';
@@ -426,7 +451,7 @@ function render(){
       const pillW=p._pillW, alive=p._alive;
       const col=barBg(p);
       const fade=alive?`<span class="fade" style="left:${pillW}px;width:${FUTURE_FADE}px;background:${col}"></span>`:'';   // future fade for the living
-      return `<div class="bar${alive?' alive':''}${state.selected===p.id?' sel':''}" data-id="${p.id}" style="left:${p._startX}px;top:${top}px;width:${pillW}px;background:${col}">${fade}<span class="lbl">${p.name}</span></div>`;
+      return `<div class="bar${alive?' alive':''}${state.selected===p.id?' sel':''}" data-id="${p.id}" style="left:${p._startX}px;top:${top}px;width:${pillW}px;background:${col}">${fade}<span class="lbl">${p.name}</span><button class="menu" data-menu="${p.id}" title="Opcions">⋮</button></div>`;
     }).join('');
   }else{
     barsLayer.innerHTML=`<div class="emptyState" style="top:6px">Clica una col·lecció a l\u0027esquerra o cerca un personatge — o estudia només els períodes.</div>`;
@@ -455,7 +480,7 @@ function render(){
 
 // Sidebar lists (rebuilt on every render so counts / checked states stay in sync).
 function renderSidebar(){
-  $('#regions').innerHTML=`<label class="filter"><input type="checkbox" data-events ${state.showEvents?'checked':''}><span class="swatch" style="background:var(--eventc)"></span>Esdeveniments</label>`+ERA_TRACKS.map(t=>`<label class="filter"><input type="checkbox" data-region="${t.id}" ${state.regions.has(t.id)?'checked':''}><span class="swatch" style="background:${t.color}"></span>${t.region}</label>`).join('');
+  $('#regions').innerHTML=`<label class="filter"><input type="checkbox" data-events ${state.showEvents?'checked':''}><span class="swatch" style="background:var(--eventc)"></span>Esdeveniments</label>`+MARCS.map(m=>`<label class="filter"><input type="checkbox" data-marc="${m.id}" ${state.marcs.has(m.id)?'checked':''}><span class="swatch" style="background:${m.color}"></span>${m.name}</label>`).join('');
   $('#filters').innerHTML=Object.keys(AREA_COLORS).map(a=>{
     const pp=peopleOfArea(a);
     const on=state.activeCols.has(a);
@@ -474,11 +499,11 @@ function closeDetailIfGone(){if(state.selected && !state.present.has(state.selec
 
 // Which movement/era a given year falls in (falls back to the macro-block, which has no gaps).
 function eraLabel(year){
-  const w=ERA_TRACKS.find(t=>t.id==='west')||ERA_TRACKS[0];
-  const seg=w.segments.find(e=>year>=e.start&&year<e.end);
-  if(seg)return seg.name;
-  const blk=(w.blocks||[]).find(b=>year>=b.start&&year<b.end);
-  return blk?blk.name:'—';
+  const w=MARCS.find(m=>m.id==='west');
+  const blk=w&&w.blocks.find(b=>year>=b.start&&year<b.end);   // Western movement, if any
+  if(blk)return blk.name;
+  const era=ERAS.find(e=>year>=e.start&&year<e.end);           // else the macro-era backbone
+  return era?era.name:'—';
 }
 
 function openDetail(p){
@@ -491,8 +516,15 @@ function openDetail(p){
     <div class="meta">Marc (Occident): ${eraLabel(p.birth)}</div>
     ${p.gender?`<div class="meta">Gènere: ${p.gender}</div>`:''}
     <div class="desc">${p.desc}</div>
-    ${p.wiki?`<a class="wiki" href="${p.wiki}" target="_blank" rel="noopener">🔗 Wikipedia</a>`:''}`;
+    ${p.wiki?`<a class="wiki" href="${p.wiki}" target="_blank" rel="noopener">🔗 ${linkLabel(p.wiki)}</a>`:''}
+    <div class="actions">
+      <button class="dbtn" data-act="context">Mostra context</button>
+      ${SEED_PINNED.includes(p.id)?'':`<button class="dbtn danger" data-act="remove">Elimina</button>`}
+    </div>`;
   $('#closeDetail').onclick=()=>{d.classList.remove('open');state.selected=null;render();};
+  d.querySelectorAll('.dbtn').forEach(btn=>btn.onclick=()=>{
+    if(btn.getAttribute('data-act')==='remove')removePerson(p.id);else showContext(p.id);
+  });
   render();
 }
 
@@ -504,7 +536,7 @@ function openEvent(ev){
     <div class="life">Fita històrica · ${ev.year}</div>
     <div class="meta">Marc (Occident): ${eraLabel(ev.year)}</div>
     ${ev.desc?`<div class="desc">${ev.desc}</div>`:''}
-    ${ev.wiki?`<a class="wiki" href="${ev.wiki}" target="_blank" rel="noopener">🔗 Wikipedia</a>`:''}`;
+    ${ev.wiki?`<a class="wiki" href="${ev.wiki}" target="_blank" rel="noopener">🔗 ${linkLabel(ev.wiki)}</a>`:''}`;
   $('#closeDetail').onclick=()=>{d.classList.remove('open');render();};
   render();
 }
@@ -513,24 +545,84 @@ function openEvent(ev){
 // [7] SEARCH (add a person to the timeline by name)
 // ============================================================
 const q=$('#q'),results=$('#results');
-function runSearch(){
-  const term=q.value.trim().toLowerCase();
+const deaccent=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();   // case- & accent-insensitive
+let searchIdx=-1, wdTerm='', wdResults=[], wdLoading=false, wdTimer=null, wdSeq=0;
+
+const localRow=p=>{const added=state.present.has(p.id);return `<div class="row ${added?'disabled':''}" data-add="${p.id}"><span class="swatch" style="background:${swatchBg(p)}"></span>${p.name}<span class="yr">${added?'ja afegit':p.birth+'\u2013'+(p.death==null?'':p.death)}</span></div>`;};
+const wdRow=w=>`<div class="row" data-wd="${w.qid}"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${w.name}<span class="yr">${w.birth}${w.death!=null?'\u2013'+w.death:'\u2013'}</span></div>`;
+function renderDropdown(){
+  const term=deaccent(q.value.trim());
   if(!term){results.classList.remove('open');return;}
-  const matches=PEOPLE.filter(p=>p.name.toLowerCase().includes(term));
-  results.innerHTML=matches.length?matches.map(p=>{
-    const added=state.present.has(p.id);
-    return `<div class="row ${added?'disabled':''}" data-add="${p.id}"><span class="swatch" style="background:${swatchBg(p)}"></span>${p.name}<span class="yr">${added?'ja afegit':p.birth+'–'+p.death}</span></div>`;
-  }).join(''):'<div class="row disabled">Cap coincidència</div>';
-  results.classList.add('open');
+  const local=PEOPLE.filter(p=>deaccent(p.name).includes(term));
+  let html=local.map(localRow).join('');
+  if((wdResults.length||wdLoading)&&local.length)html+=`<div class="rowsep">Wikidata</div>`;
+  html+=wdResults.map(wdRow).join('');
+  if(wdLoading)html+=`<div class="row loading">Cercant a Wikidata\u2026</div>`;
+  if(!local.length&&!wdResults.length&&!wdLoading)html=`<div class="row disabled">Cap coincid\u00e8ncia</div>`;
+  results.innerHTML=html;results.classList.add('open');highlightSearch(0);
 }
+function runSearch(){
+  const term=q.value.trim();
+  if(!term){results.classList.remove('open');return;}
+  if(deaccent(term)!==wdTerm){wdTerm=deaccent(term);wdResults=[];wdLoading=term.length>=2;scheduleWikidata(term);}
+  renderDropdown();
+}
+// keyboard navigation over both local and Wikidata rows
+const searchRows=()=>[...results.querySelectorAll('.row[data-add]:not(.disabled),.row[data-wd]')];
+function highlightSearch(i){
+  const rows=searchRows();
+  results.querySelectorAll('.row.active').forEach(r=>r.classList.remove('active'));
+  if(!rows.length){searchIdx=-1;return;}
+  searchIdx=(i+rows.length)%rows.length;
+  rows[searchIdx].classList.add('active');
+  rows[searchIdx].scrollIntoView({block:'nearest'});
+}
+function activateRow(r){if(!r)return;if(r.dataset.add)addFromSearch(r.dataset.add);else if(r.dataset.wd)addWikidataPerson(r.dataset.wd);}
+function addFromSearch(id){
+  if(!id||state.present.has(id))return;
+  state.pinned.add(id);state.hidden.delete(id);q.value='';results.classList.remove('open');wdTerm='';wdResults=[];render();revealPerson(id);
+}
+// Wikidata person -> session-only entry in PEOPLE (no category; lost on reload)
+function addWikidataPerson(qid){
+  const w=wdResults.find(x=>x.qid===qid);if(!w||w.birth==null)return;
+  const id='wd_'+qid;
+  if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:qid,name:w.name,birth:w.birth,death:w.death,areas:[],gender:'',wiki:w.article,desc:w.desc||'',_session:true});
+  addFromSearch(id);
+}
+
+// --- Wikidata live search: humans only (P31=Q5), Catalan labels with es/en fallback ---
+const wdYear=iso=>{const m=/^(-?\d+)/.exec(iso);if(!m)return null;const y=parseInt(m[1],10);return y<=0?y-1:y;};   // ISO astronomical -> our aC convention
+function scheduleWikidata(term){clearTimeout(wdTimer);if(term.trim().length<2)return;wdTimer=setTimeout(()=>fetchWikidata(term.trim()),300);}
+function fetchWikidata(term){
+  const seq=++wdSeq, safe=term.replace(/["\\]/g,' ');
+  const query=`SELECT ?item ?itemLabel ?itemDescription ?birth ?death ?article WHERE { SERVICE wikibase:mwapi { bd:serviceParam wikibase:endpoint "www.wikidata.org". bd:serviceParam wikibase:api "EntitySearch". bd:serviceParam mwapi:search "${safe}". bd:serviceParam mwapi:language "ca". ?item wikibase:apiOutputItem mwapi:item. } ?item wdt:P31 wd:Q5. OPTIONAL { ?item wdt:P569 ?birth. } OPTIONAL { ?item wdt:P570 ?death. } OPTIONAL { ?article schema:about ?item ; schema:isPartOf <https://ca.wikipedia.org/> . } SERVICE wikibase:label { bd:serviceParam wikibase:language "ca,es,en". } }`;
+  fetch('https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(query),{headers:{Accept:'application/sparql-results+json'}})
+    .then(r=>r.json())
+    .then(data=>{
+      if(seq!==wdSeq)return;   // a newer search superseded this one
+      const seen=new Set(), inDB=new Set(PEOPLE.map(p=>p.wd).filter(Boolean));
+      const out=[];
+      for(const b of data.results.bindings){
+        const qid=b.item.value.split('/').pop();
+        if(seen.has(qid)||inDB.has(qid)||!b.birth)continue;   // dedup vs DB; need a birth year to place it
+        seen.add(qid);
+        out.push({qid,name:(b.itemLabel&&b.itemLabel.value)||qid,desc:(b.itemDescription&&b.itemDescription.value)||'',birth:wdYear(b.birth.value),death:b.death?wdYear(b.death.value):null,article:(b.article&&b.article.value)||('https://www.wikidata.org/wiki/'+qid)});
+      }
+      wdResults=out;wdLoading=false;renderDropdown();
+    })
+    .catch(()=>{if(seq===wdSeq){wdLoading=false;renderDropdown();}});
+}
+
 q.addEventListener('input',runSearch);
 q.addEventListener('focus',runSearch);
-results.addEventListener('click',e=>{
-  const row=e.target.closest('[data-add]');if(!row)return;
-  const id=row.getAttribute('data-add');
-  if(state.present.has(id))return;
-  state.pinned.add(id);state.hidden.delete(id);q.value='';results.classList.remove('open');render();
+q.addEventListener('keydown',e=>{
+  if(!results.classList.contains('open'))return;
+  if(e.key==='ArrowDown'){e.preventDefault();highlightSearch(searchIdx+1);}
+  else if(e.key==='ArrowUp'){e.preventDefault();highlightSearch(searchIdx-1);}
+  else if(e.key==='Enter'){e.preventDefault();activateRow(searchRows()[searchIdx]);}
+  else if(e.key==='Escape'){results.classList.remove('open');}
 });
+results.addEventListener('click',e=>{const row=e.target.closest('[data-add],[data-wd]');if(row)activateRow(row);});
 document.addEventListener('click',e=>{if(!e.target.closest('.search'))results.classList.remove('open');});
 
 // ============================================================
@@ -538,8 +630,8 @@ document.addEventListener('click',e=>{if(!e.target.closest('.search'))results.cl
 // ============================================================
 $('#regions').addEventListener('change',e=>{
   if(e.target.hasAttribute('data-events')){state.showEvents=e.target.checked;render();return;}   // events on/off
-  const r=e.target.getAttribute('data-region');if(!r)return;
-  if(e.target.checked)state.regions.add(r);else state.regions.delete(r);render();
+  const m=e.target.getAttribute('data-marc');if(!m)return;
+  if(e.target.checked)state.marcs.add(m);else state.marcs.delete(m);render();
 });
 $('#filters').addEventListener('click',e=>{
   const tag=e.target.closest('[data-area]');if(!tag)return;
@@ -550,14 +642,16 @@ $('#filters').addEventListener('click',e=>{
 });
 $('#onview').addEventListener('click',e=>{
   const b=e.target.closest('[data-remove]');if(!b)return;
-  const id=b.getAttribute('data-remove');
-  state.pinned.delete(id);state.hidden.add(id);recomputePresent();deactivateEmptyCols();closeDetailIfGone();render();
+  removePerson(b.getAttribute('data-remove'));
 });
 barsLayer.addEventListener('click',e=>{
   if(suppressClick)return;   // a drag just happened — don't treat the release as a click
+  const mb=e.target.closest('.menu');           // the ⋮ button opens the context menu, not the detail
+  if(mb){e.stopPropagation();openBarMenu(mb.getAttribute('data-menu'),mb);return;}
   const bar=e.target.closest('.bar');if(!bar)return;
   const p=PEOPLE.find(x=>x.id===bar.getAttribute('data-id'));if(p)openDetail(p);
 });
+document.addEventListener('click',e=>{if(!e.target.closest('.barmenu')&&!e.target.closest('.menu'))closeBarMenu();});
 eventsRail.addEventListener('click',e=>{
   const el=e.target.closest('[data-ev]');if(!el)return;   // only the name is clickable (not the year)
   const ev=EVENTS.find(x=>x.id===el.getAttribute('data-ev'));if(ev)openEvent(ev);
@@ -572,6 +666,56 @@ const FOCUS_FROM=1500;
 function focusPx(){const vw=scroll.clientWidth-24;return Math.max(fitPx(),Math.min(20,vw/(YEAR_MAX-FOCUS_FROM)));}   // default focus ~1500→today
 function defaultView(){pxPerYear=focusPx();render();scroll.scrollLeft=Math.max(0,x(FOCUS_FROM)-16);}
 function setZoom(v){pxPerYear=Math.max(fitPx(),Math.min(20,v));render();}
+// Pan (no zoom change) so a person's bar is centred on screen.
+function panToPerson(id){
+  const p=PEOPLE.find(x=>x.id===id);
+  if(!p||p._startX==null)return;
+  const cx=p._startX+p._pillW/2;            // horizontal centre of the bar
+  const cy=barsTop()+p._lane*34+13;         // vertical centre (rowH 34, bar 26 → +13)
+  scroll.scrollTo({left:cx-scroll.clientWidth/2,top:cy-scroll.clientHeight/2,behavior:'smooth'});
+}
+// Flash a bar so it's easy to spot among others.
+function flashBar(id){
+  const b=barsLayer.querySelector(`.bar[data-id="${id}"]`);
+  if(b){b.classList.remove('justAdded');void b.offsetWidth;b.classList.add('justAdded');setTimeout(()=>b.classList.remove('justAdded'),4100);}
+}
+function revealPerson(id){panToPerson(id);flashBar(id);}
+
+// Remove a person from the canvas (same as the × in "A la vista"). Seed-pinned people can't be removed.
+function removePerson(id){
+  if(SEED_PINNED.includes(id))return;
+  state.pinned.delete(id);state.hidden.add(id);
+  recomputePresent();deactivateEmptyCols();closeDetailIfGone();render();
+}
+// "Show context": add every DB person whose life overlaps, or is within 20 years of, this person.
+function showContext(id){
+  const t=PEOPLE.find(p=>p.id===id);if(!t)return;
+  const a1=t.birth,a2=deathOf(t);
+  PEOPLE.forEach(o=>{
+    if(o.id===id||state.present.has(o.id))return;
+    const gap=Math.max(0,Math.max(o.birth-a2,a1-deathOf(o)));   // 0 if the lifespans overlap
+    if(gap<=20){state.pinned.add(o.id);state.hidden.delete(o.id);}
+  });
+  recomputePresent();render();panToPerson(id);
+}
+
+// Little ⋮ menu anchored to a bar (or opened from the detail panel).
+const barmenu=$('#barmenu');
+function openBarMenu(id,anchorEl){
+  const rm=SEED_PINNED.includes(id)?'':`<button class="danger" data-act="remove" data-id="${id}">Elimina</button>`;
+  barmenu.innerHTML=`<button data-act="context" data-id="${id}">Mostra context</button>${rm}`;
+  const r=anchorEl.getBoundingClientRect();
+  barmenu.style.left=Math.min(r.left,window.innerWidth-170)+'px';
+  barmenu.style.top=(r.bottom+4)+'px';
+  barmenu.classList.add('open');
+}
+function closeBarMenu(){barmenu.classList.remove('open');}
+barmenu.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const id=b.getAttribute('data-id');
+  if(b.getAttribute('data-act')==='remove')removePerson(id);else showContext(id);
+  closeBarMenu();
+});
 // Zoom keeping the year under the pointer fixed.
 function zoomAt(clientX,factor){
   const rect=scroll.getBoundingClientRect();
@@ -583,7 +727,7 @@ function zoomAt(clientX,factor){
 }
 $('#zoomIn').onclick=()=>{const r=scroll.getBoundingClientRect();zoomAt(r.left+scroll.clientWidth/2,1.4);};
 $('#zoomOut').onclick=()=>{const r=scroll.getBoundingClientRect();zoomAt(r.left+scroll.clientWidth/2,1/1.4);};
-$('#reset').onclick=()=>{state.present=new Set();state.activeCols=new Set();state.pinned=new Set(SEED_PINNED);state.hidden=new Set();state.regions=new Set(DEFAULT_REGIONS);state.showEvents=true;state.selected=null;$('#detail').classList.remove('open');defaultView();};
+$('#reset').onclick=()=>{state.present=new Set();state.activeCols=new Set();state.pinned=new Set(SEED_PINNED);state.hidden=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.selected=null;$('#detail').classList.remove('open');defaultView();};
 
 // Trackpad pinch / ⌘+wheel → zoom.
 scroll.addEventListener('wheel',e=>{
