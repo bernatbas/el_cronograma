@@ -309,7 +309,7 @@ const _starts=[..._blocks.map(b=>b.start),...EVENTS.map(e=>e.year),...PEOPLE.map
 const _ends=[..._blocks.map(b=>b.end),...EVENTS.map(e=>e.year),...PEOPLE.map(p=>p.death==null?NOW_YEAR:p.death)];
 const DATA_MIN=Math.min(..._starts), DATA_MAX=Math.max(..._ends);
 const GUTTER_YEARS=14;
-const RIGHT_PAD_YEARS=18;
+const RIGHT_PAD_YEARS=150;   // must outlast FUTURE_MARGIN_PX in years at default zoom, or the browser clamps scrollLeft before the margin is reached
 const YEAR_MIN=DATA_MIN-GUTTER_YEARS, YEAR_MAX=DATA_MAX+RIGHT_PAD_YEARS;
 let pxPerYear=4;               // current zoom (pixels per year); set by defaultView()/setZoom()
 const SEED_PINNED=['bernat'];  // always present, never removable
@@ -695,7 +695,8 @@ eventsRail.addEventListener('click',e=>{
 const scroll=$('#scroll');
 function fitPx(){const vw=scroll.clientWidth-24;return Math.max(0.005,vw/(YEAR_MAX-YEAR_MIN));}          // zoom that fits the whole span
 const FOCUS_FROM=1500;
-function focusPx(){const vw=scroll.clientWidth-24;return Math.max(fitPx(),Math.min(20,vw/(YEAR_MAX-FOCUS_FROM)));}   // default focus ~1500→today
+const FUTURE_MARGIN_PX=240;   // fixed px reserved past "today" so grown living-pills + fade never hug/clip the right edge
+function focusPx(){const vw=Math.max(60,scroll.clientWidth-24-FUTURE_MARGIN_PX);return Math.max(fitPx(),Math.min(20,vw/(NOW_YEAR-FOCUS_FROM)));}   // default focus ~1500→today, with future margin
 function defaultView(){pxPerYear=focusPx();render();scroll.scrollLeft=Math.max(0,x(FOCUS_FROM)-16);}
 function setZoom(v){pxPerYear=Math.max(fitPx(),Math.min(20,v));render();}
 // Pan (no zoom change) so a person's bar is centred on screen.
