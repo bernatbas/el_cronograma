@@ -155,6 +155,27 @@
   .detail .dbtn:hover{background:var(--soft);}
   .detail .dbtn.danger{color:#C0392B;border-color:#E7B7B0;}
   .detail .dbtn.danger:hover{background:#FBEDEB;}
+
+  /* ===== Portrait wall (touch devices in portrait: asks to rotate) ===== */
+  .portrait-wall{position:fixed;inset:0;background:var(--canvas);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:40px;}
+  .portrait-wall.on{display:flex;}
+  .portrait-wall .p-icon{font-size:64px;animation:pSpin 2.4s ease-in-out infinite;}
+  @keyframes pSpin{0%,40%,100%{transform:rotate(0deg);}60%,85%{transform:rotate(90deg);}}
+  .portrait-wall h2{font-size:22px;font-weight:600;margin:0;color:var(--text);}
+  .portrait-wall p{color:var(--text2);margin:0;font-size:15px;max-width:280px;}
+
+  /* ===== Responsive topbar (small landscape screens: phone / tablet) ===== */
+  @media (max-width:860px){
+    .topbar{padding:10px 14px;gap:10px;}
+    .brand{font-size:16px;}
+    .search{width:200px;}
+    .btn{min-width:32px;min-height:32px;padding:4px 8px;font-size:13px;}
+  }
+  @media (max-width:600px){
+    .search{width:140px;}
+    .search input{padding:7px 10px;font-size:13px;}
+    .controls .btn:last-child{display:none;}  /* hide Reset on very small screens */
+  }
 </style>
 </head>
 <body>
@@ -211,6 +232,11 @@
   </div>
 </div>
 <div class="barmenu" id="barmenu"></div>
+<div class="portrait-wall" id="portraitWall">
+  <div class="p-icon">📱</div>
+  <h2>Gira el dispositiu</h2>
+  <p>El cronograma es veu millor en horitzontal</p>
+</div>
 <script>
 // ============================================================
 // [1] DATA  —  edit here to add eras, events and people.
@@ -835,7 +861,20 @@ window.addEventListener('mouseup',()=>{
 // ============================================================
 function bootDefault(){if(scroll.clientWidth>0){defaultView();}else{requestAnimationFrame(bootDefault);}}
 bootDefault();
-window.addEventListener('resize',()=>setZoom(pxPerYear));   // re-clamp: a wider window raises the minimum zoom, so plain render() would leave the canvas narrower than the viewport
+window.addEventListener('resize',()=>setZoom(pxPerYear));
+
+// Portrait wall: show overlay on touch devices held in portrait mode.
+const portraitWall=document.getElementById('portraitWall');
+function checkPortrait(){
+  const isTouch='ontouchstart' in window||navigator.maxTouchPoints>0;
+  const isPortrait=window.innerWidth<window.innerHeight;
+  portraitWall.classList.toggle('on',isTouch&&isPortrait);
+}
+window.addEventListener('resize',checkPortrait);
+checkPortrait();
+
+// Sidebar: collapse by default on narrow screens (phone / small tablet in landscape).
+if(window.innerWidth<900){$('.body').classList.add('collapsed');$('#sidebarToggle').textContent='›';}   // re-clamp: a wider window raises the minimum zoom, so plain render() would leave the canvas narrower than the viewport
 </script>
 </body>
 </html>
