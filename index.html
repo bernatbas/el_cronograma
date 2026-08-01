@@ -741,7 +741,6 @@ function setZoom(v){pxPerYear=Math.max(fitPx(),Math.min(20,v));render();clampScr
 // hand back a bogus, far too large limit — which is exactly how the runaway scroll happened.
 function maxScroll(){return Math.max(0,(parseFloat(inner.style.width)||scroll.scrollWidth)-scroll.clientWidth);}
 function clampScroll(){const max=maxScroll();if(scroll.scrollLeft>max)scroll.scrollLeft=max;}   // keep scrollLeft in range so zooming out doesn't leave it parked past the end
-}
 // Pan (no zoom change) so a person's bar is centred on screen.
 function panToPerson(id){
   const p=PEOPLE.find(x=>x.id===id);
