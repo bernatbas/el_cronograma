@@ -24,9 +24,9 @@
 
   /* ===== Base ===== */
   *{box-sizing:border-box;}
-  html,body{margin:0;height:100%;}
+  html,body{margin:0;height:100%;overflow:hidden;}   /* the page itself never scrolls — every overflow lives inside .scroll or .sidebar */
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--text);background:var(--canvas);font-size:14px;line-height:1.5;}
-  .app{display:flex;flex-direction:column;height:100vh;min-height:640px;}
+  .app{display:flex;flex-direction:column;height:100vh;height:100dvh;}   /* no min-height: it forced the app taller than a phone in landscape and pushed the timeline past the fold. dvh follows Safari's collapsing URL bar */
 
   /* ===== Top bar (brand · search · zoom controls) ===== */
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 22px;border-bottom:5px solid rgba(255,255,255,.28);flex:0 0 auto;background:var(--topbar-bg);z-index:5;}
@@ -85,7 +85,7 @@
 
   /* ===== Stage: the scrolling timeline canvas ===== */
   .stage{flex:1 1 auto;position:relative;min-width:0;display:flex;flex-direction:column;}
-  .scroll{flex:1 1 auto;overflow:auto;position:relative;cursor:grab;user-select:none;}
+  .scroll{flex:1 1 auto;overflow:auto;position:relative;cursor:grab;user-select:none;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;}   /* pan-x pan-y: one finger scrolls natively, two fingers are left to our own pinch handler instead of the browser starting a gesture and dropping our events */
   .scroll.grabbing,.scroll.grabbing *{cursor:grabbing;}
   .inner{position:relative;}
 
@@ -98,8 +98,8 @@
   .blockzone{position:absolute;top:0;overflow:hidden;pointer-events:none;}
   .blockzone .blabel{position:absolute;top:8px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;opacity:.9;}
   .seg{position:absolute;top:0;display:flex;flex-direction:column;justify-content:center;padding:0 14px;overflow:hidden;border-right:1px solid rgba(0,0,0,.06);}
-  .seg .segname{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--struct-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25;}
-  .seg .segyears{font-size:11px;font-weight:500;color:var(--text2);white-space:nowrap;margin-top:2px;line-height:1.2;}
+  .seg .segname{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--struct-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25;flex:0 0 auto;}
+  .seg .segyears{font-size:11px;font-weight:500;color:var(--text2);white-space:nowrap;margin-top:2px;line-height:1.2;flex:0 0 auto;}   /* flex:0 0 auto on both: the block has a fixed height, and letting these shrink squashed the glyphs and clipped the name */
   .seg.mov{border-right:none;border-radius:var(--r-card) var(--r-card) 0 0;padding:0 10px;}
   .seg.mov .segname{font-size:12px;letter-spacing:.03em;}
   .seg.mov .segyears{font-size:11px;margin-top:0;}
@@ -115,7 +115,7 @@
 
   /* ===== People bars (the "data": a bar per lifespan; living ones fade to the future) ===== */
   .bars{position:absolute;left:0;}
-  .bar{position:absolute;height:26px;border-radius:var(--r-card);display:flex;align-items:center;padding:0 10px;font-size:12px;font-weight:500;color:#fff;cursor:pointer;white-space:nowrap;overflow:visible;transition:opacity .12s;box-shadow:0 1px 3px rgba(40,44,60,.18);}
+  .bar{position:absolute;height:var(--bar-h,26px);border-radius:var(--r-card);display:flex;align-items:center;padding:0 10px;font-size:12px;font-weight:500;color:#fff;cursor:pointer;white-space:nowrap;overflow:visible;transition:opacity .12s;box-shadow:0 1px 3px rgba(40,44,60,.18);}
   .bar .lbl{pointer-events:none;text-shadow:0 1px 2px rgba(0,0,0,.42);}
   .bar.sel{outline:2px solid var(--text);outline-offset:1px;}
   .bar.alive{box-shadow:none;border-top-right-radius:0;border-bottom-right-radius:0;}
@@ -182,6 +182,35 @@
     .search{width:140px;}
     .search input{padding:7px 10px;font-size:13px;}
     .controls .btn:last-child{display:none;}  /* hide Reset on very small screens */
+  }
+
+  /* ===== Compact vertical metrics (phone in landscape: ~340px of usable height) =====
+     Chrome and topbar were eating the screen the timeline needs. Must stay in sync with
+     applyMetrics() in JS, which keys off this exact same query. */
+  @media (max-height:560px){
+    .topbar{padding:6px 12px;gap:10px;border-bottom-width:3px;}
+    .brand{font-size:15px;}
+    .btn{min-width:30px;min-height:30px;padding:3px 8px;font-size:13px;}
+    .search input{padding:5px 10px;font-size:13px;}
+    .sidebar{width:190px;padding:10px 12px;}
+    .sidebarHandle{left:179px;height:44px;}   /* 190 - 11, keeps the handle straddling the edge */
+    .sidebar h3{font-size:11px;margin:0 0 6px;}
+    .sidebar section{margin-bottom:14px;}
+    .filter{padding:3px 0;font-size:13px;}
+    .filter input{width:15px;height:15px;}
+    .areaList{gap:5px;}
+    .areaTag{padding:5px 9px;font-size:13px;}
+    .onview .item{padding:3px 0;font-size:13px;}
+    .blockzone .blabel{top:5px;font-size:10px;letter-spacing:.06em;}
+    .seg{padding:0 9px;}
+    .seg .segname,.seg.mov .segname{font-size:10.5px;}
+    .seg .segyears,.seg.mov .segyears{font-size:9.5px;margin-top:0;}
+    .bar{font-size:11px;padding:0 8px;}
+    .event .ename{font-size:11px;}
+    .event .eyear{font-size:10px;padding:1px 7px;}
+    .nowline .lbl,.guide .yr{font-size:10px;padding:1px 6px;}
+    .axis{height:26px;}
+    .tick{font-size:10px;}
   }
 </style>
 </head>
@@ -400,7 +429,19 @@ function deactivateEmptyCols(){[...state.activeCols].forEach(a=>{if(!peopleOfAre
 // ============================================================
 // [4] LAYOUT MATH (lane packing + vertical geometry)
 // ============================================================
-const MOV_LANE_H=40, MOV_BAR_H=34, MOV_PAD_BOT=6, ERAS_TOP=16, ERA_LABEL_H=26, EVENT_LABEL_H=38, GAP_AFTER=14;
+let MOV_LANE_H=40, MOV_BAR_H=34, MOV_PAD_BOT=6, ERAS_TOP=16, ERA_LABEL_H=26, EVENT_LABEL_H=38, GAP_AFTER=14, ROW_H=34, BAR_H=26, EVENT_YEAR_BAND=32;
+// Vertical budget is what runs out on a phone in landscape (~340px of usable height), so the eras
+// band, the event rail and the people rows all shrink together. Driven off the same media query as
+// the CSS below — one source of truth, so the JS geometry and the font sizes can never disagree.
+const COMPACT_MQ=window.matchMedia('(max-height:560px)');
+function applyMetrics(){
+  const c=COMPACT_MQ.matches;
+  MOV_LANE_H=c?30:40; MOV_BAR_H=c?26:34; MOV_PAD_BOT=c?4:6;   // 26 is the floor for two lines of block text (name + years) at the compact font sizes
+  ERAS_TOP=c?9:16; ERA_LABEL_H=c?17:26; EVENT_LABEL_H=c?28:38; GAP_AFTER=c?8:14;
+  BAR_H=c?20:26; ROW_H=BAR_H+(c?5:8); EVENT_YEAR_BAND=c?26:32;
+  document.documentElement.style.setProperty('--bar-h',BAR_H+'px');
+}
+applyMetrics();
 // Greedy lane assignment so overlapping intervals stack instead of colliding.
 function packSegs(segs){const arr=segs.map((s,idx)=>({idx,start:s.start,end:s.end})).sort((a,b)=>a.start-b.start);const ends=[];const lane=new Array(segs.length).fill(0);for(const it of arr){let placed=false;for(let l=0;l<ends.length;l++){if(it.start>=ends[l]){lane[it.idx]=l;ends[l]=it.end;placed=true;break;}}if(!placed){lane[it.idx]=ends.length;ends.push(it.end);}}return {lane,nLanes:Math.max(1,ends.length)};}
 // All period blocks from the active marcs, pooled into one list and tagged with their marc's colour.
@@ -476,10 +517,9 @@ function render(){
   eventsRail.style.width=W+'px';
   const people=visiblePeople();
   const lanes=packLanes(people);
-  const rowH=26+8;
+  const rowH=ROW_H;
   const peopleH=people.length?lanes*rowH+16:46;
-  const EVENT_YEAR_BAND=32;   // breathing room so event-year pills clear the lowest bar row
-  const contentH=barsTop()+peopleH+EVENT_YEAR_BAND;
+  const contentH=barsTop()+peopleH+EVENT_YEAR_BAND;   // EVENT_YEAR_BAND = breathing room so event-year pills clear the lowest bar row
 
   // --- Events (name on top, full line, year pill at the foot; two rows to avoid name overlap) ---
   const evNameTop=eventLabelTop(), evYearTop=contentH-24;
@@ -829,21 +869,38 @@ document.addEventListener('wheel',e=>{
 },{passive:false});
 
 // Touch pinch zoom (mobile). Two fingers → zoom around their midpoint.
-let touch2=null;
+// Absolute, not incremental: the gesture pins one year under the fingers and scales from the
+// zoom it started at. Incremental factors (dist/prevDist, compounding) drifted and stuck for
+// good once a frame hit the fitPx()/20 clamp, because the clamped value became the next baseline.
+// The work is also deferred to one rAF per frame — a full render() straight inside touchmove was
+// what made it stutter, since touchmove fires far faster than we can rebuild the canvas.
+let pinch=null,pinchRAF=0;
+const tMid=t=>(t[0].clientX+t[1].clientX)/2;
+const tDist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
 scroll.addEventListener('touchstart',e=>{
-  if(e.touches.length===2){e.preventDefault();touch2={dist:Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY),mx:(e.touches[0].clientX+e.touches[1].clientX)/2};}
-  else{touch2=null;}
+  if(e.touches.length!==2){endPinch();return;}
+  e.preventDefault();
+  const rect=scroll.getBoundingClientRect(),mx=tMid(e.touches);
+  pinch={dist0:Math.max(tDist(e.touches),1),px0:pxPerYear,mx,scale:1,
+         year:YEAR_MIN+((mx-rect.left)+scroll.scrollLeft)/pxPerYear};   // the year under the fingers, held there for the whole gesture
 },{passive:false});
 scroll.addEventListener('touchmove',e=>{
-  if(e.touches.length===2&&touch2){
-    e.preventDefault();
-    const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-    const factor=dist/touch2.dist;
-    zoomAt(touch2.mx,factor);
-    touch2.dist=dist;
-  }
+  if(!pinch||e.touches.length!==2)return;
+  e.preventDefault();
+  pinch.mx=tMid(e.touches);                 // re-read the midpoint: fingers drift, and a stale one drags the anchor toward the centre
+  pinch.scale=tDist(e.touches)/pinch.dist0;
+  if(!pinchRAF)pinchRAF=requestAnimationFrame(applyPinch);
 },{passive:false});
-scroll.addEventListener('touchend',()=>{touch2=null;});
+function applyPinch(){
+  pinchRAF=0;
+  if(!pinch)return;
+  setZoom(pinch.px0*pinch.scale);
+  const rect=scroll.getBoundingClientRect();
+  scroll.scrollLeft=Math.min(Math.max(0,(pinch.year-YEAR_MIN)*pxPerYear-(pinch.mx-rect.left)),maxScroll());
+}
+function endPinch(){pinch=null;if(pinchRAF){cancelAnimationFrame(pinchRAF);pinchRAF=0;}}
+scroll.addEventListener('touchend',endPinch);
+scroll.addEventListener('touchcancel',endPinch);
 
 // Hover guide (vertical year line). Suppressed while dragging.
 scroll.addEventListener('mousemove',e=>{
@@ -882,9 +939,9 @@ window.addEventListener('mouseup',()=>{
 // ============================================================
 // [10] BOOT (wait for a real width before the first fit)
 // ============================================================
-function bootDefault(){if(scroll.clientWidth>0){defaultView();}else{requestAnimationFrame(bootDefault);}}
+function bootDefault(){if(scroll.clientWidth>0){applyMetrics();defaultView();}else{requestAnimationFrame(bootDefault);}}   // re-measure here too: at parse time the viewport height can still be 0 (or mid-settle behind Safari's URL bar), which would lock in the wrong metrics
 bootDefault();
-window.addEventListener('resize',()=>setZoom(pxPerYear));
+window.addEventListener('resize',()=>{applyMetrics();setZoom(pxPerYear);});   // rotating the phone flips the compact threshold, so the geometry has to be recomputed before the redraw
 
 // Portrait wall: show overlay on touch devices held in portrait mode.
 const portraitWall=document.getElementById('portraitWall');
