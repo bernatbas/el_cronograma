@@ -2,7 +2,7 @@
 <html lang="ca">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Cronograma — prova</title>
 <style>
   /* ============================================================
@@ -820,6 +820,23 @@ document.addEventListener('wheel',e=>{
   const inCanvas=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
   zoomAt(inCanvas?e.clientX:r.left+scroll.clientWidth/2,factor);   // pinch outside the canvas → zoom about its centre
 },{passive:false});
+
+// Touch pinch zoom (mobile). Two fingers → zoom around their midpoint.
+let touch2=null;
+scroll.addEventListener('touchstart',e=>{
+  if(e.touches.length===2){e.preventDefault();touch2={dist:Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY),mx:(e.touches[0].clientX+e.touches[1].clientX)/2};}
+  else{touch2=null;}
+},{passive:false});
+scroll.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&touch2){
+    e.preventDefault();
+    const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    const factor=dist/touch2.dist;
+    zoomAt(touch2.mx,factor);
+    touch2.dist=dist;
+  }
+},{passive:false});
+scroll.addEventListener('touchend',()=>{touch2=null;});
 
 // Hover guide (vertical year line). Suppressed while dragging.
 scroll.addEventListener('mousemove',e=>{
