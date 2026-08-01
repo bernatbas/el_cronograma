@@ -2,6 +2,9 @@
 <html lang="ca">
 <head>
 <meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Cronograma — prova</title>
 <style>
@@ -13,7 +16,7 @@
   :root{
     --text:#2C2C2B; --text2:#7D7A75; --canvas:#FFFFFF; --soft:#F9F8F7;
     --surface:#F0EFED; --border:#E6E5E3; --border-strong:#CBC9C4; --blue:#2783DE; --blueSoft:#E5F2FC;
-    --topbar-bg:#6B1D2C;
+    --topbar-bg:#B8503C;
     /* collection (people) colours — the vivid "data" layer */
     --philosophy:#5E9FE8; --music:#BF8EDA; --literature:#DE9255;
     --science:#72BC8F; --politics:#DF84A8; --painting:#D4A72C; --religion:#A24E5E;
@@ -29,7 +32,7 @@
   .app{display:flex;flex-direction:column;height:100vh;height:100dvh;}   /* no min-height: it forced the app taller than a phone in landscape and pushed the timeline past the fold. dvh follows Safari's collapsing URL bar */
 
   /* ===== Top bar (brand · search · zoom controls) ===== */
-  .topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 22px;border-bottom:5px solid rgba(255,255,255,.28);flex:0 0 auto;background:var(--topbar-bg);z-index:5;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 22px;border-bottom:5px solid #612E25;flex:0 0 auto;background:var(--topbar-bg);z-index:5;}
   .topbar .brand{color:#fff;}
   .topbar .btn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);color:#fff;}
   .topbar .btn:hover{background:rgba(255,255,255,.22);}
@@ -38,7 +41,7 @@
   .topbar .search input:focus{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.55);}
   .topbar-left{display:flex;align-items:center;gap:14px;min-width:0;}
   .topbar-right{display:flex;align-items:center;gap:14px;flex:0 0 auto;}
-  .brand{font-weight:600;font-size:20px;white-space:nowrap;}
+  .brand{font-family:'Oswald',sans-serif;font-weight:600;font-size:20px;letter-spacing:.06em;white-space:nowrap;}
   .search{position:relative;width:320px;flex:0 0 auto;}
   .search input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none;background:var(--soft);}
   .search input:focus{border-color:var(--blue);background:#fff;}
@@ -100,8 +103,14 @@
   .seg{position:absolute;top:0;display:flex;flex-direction:column;justify-content:center;padding:0 14px;overflow:hidden;border-right:1px solid rgba(0,0,0,.06);}
   .seg .segname{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--struct-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25;flex:0 0 auto;}
   .seg .segyears{font-size:11px;font-weight:500;color:var(--text2);white-space:nowrap;margin-top:2px;line-height:1.2;flex:0 0 auto;}   /* flex:0 0 auto on both: the block has a fixed height, and letting these shrink squashed the glyphs and clipped the name */
-  .seg.mov{border-right:none;border-radius:var(--r-card) var(--r-card) 0 0;padding:0 10px;}
-  .seg.mov .segname{font-size:12px;letter-spacing:.03em;}
+  /* Radius on all four corners + a left colour spine, so the blocks share the bars' shape language
+     instead of reading as chart columns planted on a baseline (which is what radius-top-only plus a
+     heavy border-bottom did). The spine is an inset shadow, not a border-left: a single-sided border
+     tapers away at the rounded corners, an inset shadow stays a clean 3px. Colour stays washed out —
+     the vivid layer belongs to people and events. --mc/--mink are set per block in render(). */
+  .seg.mov{border:none;border-radius:var(--r-card);padding:0 10px 0 13px;cursor:pointer;box-shadow:inset 3px 0 0 var(--mc),0 1px 3px rgba(40,44,60,.14);transition:box-shadow .12s,filter .12s;}
+  .seg.mov:hover{filter:brightness(.98);box-shadow:inset 3px 0 0 var(--mc),0 3px 8px rgba(40,44,60,.26);}
+  .seg.mov .segname{font-size:12px;letter-spacing:.03em;color:var(--mink,var(--struct-ink));}
   .seg.mov .segyears{font-size:11px;margin-top:0;}
 
   /* ===== Events (vertical markers: name on top, year at the foot) ===== */
@@ -131,6 +140,10 @@
   .barmenu button{display:block;width:100%;text-align:left;border:none;background:none;padding:9px 14px;font-size:13px;cursor:pointer;color:var(--text);white-space:nowrap;}
   .barmenu button:hover{background:var(--soft);}
   .barmenu button.danger{color:#C0392B;}
+  /* Hover tooltip on a person bar. Not a native `title`: that waits ~1s and, zoomed out, the pill is
+     too small to hold a readable label — the name and dates have to be reachable without clicking. */
+  .bartip{position:fixed;display:none;background:var(--text);color:#fff;font-size:12px;font-weight:500;padding:5px 10px;border-radius:var(--r-card);white-space:nowrap;z-index:40;pointer-events:none;box-shadow:0 3px 10px rgba(0,0,0,.24);}
+  .bartip.on{display:block;}
 
   /* ===== Hover guide + "today" line ===== */
   .guide{position:absolute;top:0;width:1px;background:var(--blue);pointer-events:none;display:none;z-index:8;}
@@ -145,11 +158,14 @@
   .tick.tinf{border-left:none;color:var(--text2);font-weight:600;letter-spacing:.05em;}
   .tick.tbound{border-left:2px dashed var(--border);color:var(--text);font-weight:700;}
 
-  /* ===== Detail panel (right side, opens on click) ===== */
-  .detail{flex:0 0 280px;border-left:1px solid var(--border);padding:20px;overflow:auto;background:#fff;display:none;}
-  .detail.open{display:block;}
-  .detail .close{float:right;border:none;background:none;font-size:20px;cursor:pointer;color:var(--text2);}
-  .detail h2{font-size:16px;font-weight:600;margin:0 0 4px;}
+  /* ===== Detail panel — modal popup ===== */
+  .detail-backdrop{position:fixed;inset:0;background:rgba(20,8,10,.3);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);z-index:49;visibility:hidden;opacity:0;transition:opacity .2s,visibility 0s .2s;}
+  .detail-backdrop.open{visibility:visible;opacity:1;transition:opacity .2s,visibility 0s;}
+  .detail{position:fixed;top:30%;left:50%;transform:translate(-50%,-50%) scale(.95);width:min(420px,calc(100vw - 32px));max-height:calc(100dvh - 80px);overflow-y:auto;background:#fff;border-radius:16px;padding:24px 24px 20px;box-shadow:0 24px 64px rgba(0,0,0,.18),0 4px 20px rgba(0,0,0,.08);z-index:50;visibility:hidden;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s,visibility 0s .2s;}
+  .detail.open{visibility:visible;opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);transition:opacity .2s,transform .2s,visibility 0s;}
+  .detail .close{position:absolute;top:14px;right:16px;border:none;background:none;font-size:22px;cursor:pointer;color:var(--text2);line-height:1;padding:2px 6px;border-radius:6px;}
+  .detail .close:hover{background:var(--soft);}
+  .detail h2{font-size:17px;font-weight:600;margin:0 0 4px;padding-right:32px;}
   .detail .life{color:var(--text2);font-size:12px;margin-bottom:14px;}
   .detail .areas{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
   .detail .chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:3px 10px;border-radius:var(--r-card);background:var(--soft);border:1px solid var(--border);}
@@ -202,7 +218,7 @@
     .areaTag{padding:5px 9px;font-size:13px;}
     .onview .item{padding:3px 0;font-size:13px;}
     .blockzone .blabel{top:5px;font-size:10px;letter-spacing:.06em;}
-    .seg{padding:0 9px;}
+    .seg,.seg.mov{padding:0 8px 0 11px;}   /* .seg alone loses to .seg.mov on specificity, so name both or the blocks never tighten on a phone */
     .seg .segname,.seg.mov .segname{font-size:10.5px;}
     .seg .segyears,.seg.mov .segyears{font-size:9.5px;margin-top:0;}
     .bar{font-size:11px;padding:0 8px;}
@@ -221,7 +237,7 @@
 <div class="app">
   <header class="topbar">
     <div class="topbar-left">
-      <div class="brand">Història Basica</div>
+      <div class="brand">HISTÒRIA BÀSICA</div>
     </div>
     <div class="topbar-right">
       <div class="search">
@@ -229,8 +245,8 @@
         <div class="results" id="results"></div>
       </div>
       <div class="controls">
-        <button class="btn" id="zoomOut" title="Allunya">−</button>
-        <button class="btn" id="zoomIn" title="Apropa">+</button>
+        <button class="btn" id="zoomOut" title="Allunya"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><line x1="12.5" y1="12.5" x2="18" y2="18"/><line x1="5.5" y1="8" x2="10.5" y2="8"/></svg></button>
+        <button class="btn" id="zoomIn" title="Apropa"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><line x1="12.5" y1="12.5" x2="18" y2="18"/><line x1="5.8" y1="8" x2="10.2" y2="8"/><line x1="8" y1="5.8" x2="8" y2="10.2"/></svg></button>
         <button class="btn" id="reset" title="Restableix">Reset</button>
       </div>
     </div>
@@ -267,7 +283,9 @@
     <aside class="detail" id="detail"></aside>
   </div>
 </div>
+<div class="detail-backdrop" id="detailBackdrop"></div>
 <div class="barmenu" id="barmenu"></div>
+<div class="bartip" id="bartip"></div>
 <div class="portrait-wall" id="portraitWall">
   <div class="p-icon">📱</div>
   <h2>Gira el dispositiu</h2>
@@ -300,31 +318,31 @@ const ERAS=[
 // Add more frames here later (Amèrica, Àsia…) — each just needs a colour and its blocks.
 const MARCS=[
   {id:'west',name:'Occident',color:'#5E9FE8',blocks:[
-    {name:'Paleolític',start:-12000,end:-9000},
-    {name:'Neolític',start:-9000,end:-3000},
-    {name:'Edat dels Metalls',start:-3000,end:-800},
-    {name:'Primeres civilitzacions',start:-3300,end:-500},
-    {name:'Grècia clàssica',start:-800,end:-323},
-    {name:'Hel·lenisme',start:-323,end:-31},
-    {name:'República romana',start:-509,end:-27},
-    {name:'Imperi Romà',start:-27,end:476},
-    {name:'Alta edat mitjana',start:476,end:1000},
-    {name:'Plena edat mitjana',start:1000,end:1300},
-    {name:'Baixa edat mitjana',start:1300,end:1492},
-    {name:'Renaixement',start:1400,end:1600},
-    {name:'Barroc',start:1600,end:1750},
-    {name:'Il·lustració',start:1685,end:1789},
-    {name:'Romanticisme',start:1800,end:1850},
-    {name:'Realisme i positivisme',start:1850,end:1900},
-    {name:'Avantguardes',start:1905,end:1945},
-    {name:'Món contemporani',start:1945,end:NOW_YEAR}
+    {name:'Paleolític',start:-12000,end:-9000,wiki:'https://ca.wikipedia.org/wiki/Paleolític'},
+    {name:'Neolític',start:-9000,end:-3000,wiki:'https://ca.wikipedia.org/wiki/Neolític'},
+    {name:'Edat dels Metalls',start:-3000,end:-800,wiki:'https://ca.wikipedia.org/wiki/Edat_dels_metalls'},
+    {name:'Primeres civilitzacions',start:-3300,end:-500,wiki:'https://ca.wikipedia.org/wiki/Bressol_de_la_civilització'},
+    {name:'Grècia clàssica',start:-800,end:-323,wiki:'https://ca.wikipedia.org/wiki/Antiga_Grècia'},
+    {name:'Hel·lenisme',start:-323,end:-31,wiki:'https://ca.wikipedia.org/wiki/Hel·lenisme'},
+    {name:'República romana',start:-509,end:-27,wiki:'https://ca.wikipedia.org/wiki/República_Romana'},
+    {name:'Imperi Romà',start:-27,end:476,wiki:'https://ca.wikipedia.org/wiki/Imperi_Romà'},
+    {name:'Alta edat mitjana',start:476,end:1000,wiki:'https://ca.wikipedia.org/wiki/Alta_edat_mitjana'},
+    {name:'Plena edat mitjana',start:1000,end:1300,wiki:'https://ca.wikipedia.org/wiki/Plena_edat_mitjana'},
+    {name:'Baixa edat mitjana',start:1300,end:1492,wiki:'https://ca.wikipedia.org/wiki/Baixa_edat_mitjana'},
+    {name:'Renaixement',start:1400,end:1600,wiki:'https://ca.wikipedia.org/wiki/Renaixement'},
+    {name:'Barroc',start:1600,end:1750,wiki:'https://ca.wikipedia.org/wiki/Barroc'},
+    {name:'Il·lustració',start:1685,end:1789,wiki:'https://ca.wikipedia.org/wiki/Il·lustració'},
+    {name:'Romanticisme',start:1800,end:1850,wiki:'https://ca.wikipedia.org/wiki/Romanticisme'},
+    {name:'Realisme i positivisme',start:1850,end:1900,wiki:'https://ca.wikipedia.org/wiki/Realisme'},
+    {name:'Avantguardes',start:1905,end:1945,wiki:'https://ca.wikipedia.org/wiki/Avantguardisme'},
+    {name:'Món contemporani',start:1945,end:NOW_YEAR,wiki:'https://ca.wikipedia.org/wiki/Edat_contemporània'}
   ]},
   {id:'es',name:'Espanya',color:'#C2A07C',blocks:[
-    {name:'Antic Règim borbònic',start:1700,end:1808},
-    {name:'Convulsió liberal',start:1808,end:1874},
-    {name:'Restauració',start:1874,end:1931},
-    {name:'II República',start:1931,end:1939},
-    {name:'Franquisme',start:1939,end:1975}
+    {name:'Antic Règim borbònic',start:1700,end:1808,wiki:'https://ca.wikipedia.org/wiki/Antic_Règim'},
+    {name:'Construcció de l’estat liberal a Espanya',start:1808,end:1874,wiki:'https://ca.wikipedia.org/wiki/Construcci%C3%B3_de_l%27estat_liberal_a_Espanya'},
+    {name:'Restauració',start:1874,end:1931,wiki:'https://ca.wikipedia.org/wiki/Restauració_borbònica'},
+    {name:'II República',start:1931,end:1939,wiki:'https://ca.wikipedia.org/wiki/Segona_República_Espanyola'},
+    {name:'Franquisme',start:1939,end:1975,wiki:'https://ca.wikipedia.org/wiki/Franquisme'}
   ]}
 ];
 const EVENTS=[
@@ -395,7 +413,9 @@ const state={present:new Set(),activeCols:new Set(),pinned:new Set(SEED_PINNED),
 // [3] DOM REFS & SMALL HELPERS (coords, colours, formatting)
 // ============================================================
 const $=s=>document.querySelector(s);
-const inner=$('#inner'),barsLayer=$('#barsLayer'),eraTracksEl=$('#eraTracks'),eraPanel=$('#eraPanel'),eventsRail=$('#eventsRail'),axisEl=$('#axis'),axisInner=$('#axisInner'),guide=$('#guide'),nowline=$('#nowline');
+const inner=$('#inner'),barsLayer=$('#barsLayer'),eraTracksEl=$('#eraTracks'),eraPanel=$('#eraPanel'),eventsRail=$('#eventsRail'),axisEl=$('#axis'),axisInner=$('#axisInner'),guide=$('#guide'),nowline=$('#nowline'),scroll=$('#scroll'),detailBackdrop=$('#detailBackdrop');
+function hideDetail(){$('#detail').classList.remove('open');detailBackdrop.classList.remove('open');}
+$('#detailBackdrop').addEventListener('click',()=>{hideDetail();state.selected=null;render();});
 const x=y=>(y-YEAR_MIN)*pxPerYear;                 // year → x px
 const totalW=()=>(YEAR_MAX-YEAR_MIN)*pxPerYear;    // full canvas width px
 
@@ -445,7 +465,9 @@ applyMetrics();
 // Greedy lane assignment so overlapping intervals stack instead of colliding.
 function packSegs(segs){const arr=segs.map((s,idx)=>({idx,start:s.start,end:s.end})).sort((a,b)=>a.start-b.start);const ends=[];const lane=new Array(segs.length).fill(0);for(const it of arr){let placed=false;for(let l=0;l<ends.length;l++){if(it.start>=ends[l]){lane[it.idx]=l;ends[l]=it.end;placed=true;break;}}if(!placed){lane[it.idx]=ends.length;ends.push(it.end);}}return {lane,nLanes:Math.max(1,ends.length)};}
 // All period blocks from the active marcs, pooled into one list and tagged with their marc's colour.
-function activeBlocks(){const out=[];MARCS.forEach(m=>{if(state.marcs.has(m.id))m.blocks.forEach(b=>out.push({name:b.name,start:b.start,end:b.end,color:m.color}));});return out;}
+// `key` (marc id + index) is the click identity: blocks have no id of their own in DATA, and the
+// pooled list is rebuilt on every render, so the DOM needs something stable to look them back up by.
+function activeBlocks(){const out=[];MARCS.forEach(m=>{if(state.marcs.has(m.id))m.blocks.forEach((b,i)=>out.push({name:b.name,start:b.start,end:b.end,color:m.color,key:m.id+':'+i,marcName:m.name,wiki:b.wiki,desc:b.desc}));});return out;}
 function blockLanes(){const b=activeBlocks();return b.length?packSegs(b).nLanes:0;}
 // The eras canvas grows with the number of block lanes (just like the people canvas).
 function erasBlockH(){return ERAS_TOP+ERA_LABEL_H+blockLanes()*MOV_LANE_H+MOV_PAD_BOT;}
@@ -509,7 +531,13 @@ function render(){
     const left=x(b.start),w=Math.max(x(b.end)-x(b.start),2);
     const rowTop=ERAS_TOP+ERA_LABEL_H+bpk.lane[j]*MOV_LANE_H;
     const c=b.color;
-    return `<div class="seg mov" style="left:${left+1}px;width:${Math.max(w-2,2)}px;top:${rowTop}px;height:${MOV_BAR_H}px;background:${mix(c,.28)};border:1px solid ${mix(c,.55)};border-bottom:3px solid ${c};" title="${b.name} (${fmtY(b.start)}–${fmtY(b.end)})"><span class="segname">${b.name}</span><span class="segyears">${fmtY(b.start)}–${fmtY(b.end)}</span></div>`;
+    // Gradient fades to the right for direction; the spine marks where the period starts, and the
+    // right edge stays crisp so you can still read where it ends. Shadow matches .bar so both layers
+    // sit on the canvas the same way. Name takes the marc's own darkened tone (as the era labels do).
+    // --mc/--mink carry the marc's colour into the stylesheet so the spine, the ink and the :hover
+    // shadow all live in CSS. Inline box-shadow would win over :hover and kill the hover feedback.
+    const grad=`linear-gradient(to right,${mix(c,.28)},${mix(c,.13)})`;
+    return `<div class="seg mov" data-blk="${b.key}" style="left:${left+1}px;width:${Math.max(w-2,2)}px;top:${rowTop}px;height:${MOV_BAR_H}px;background:${grad};--mc:${c};--mink:${shade(c,.55)};" title="${b.name} (${fmtY(b.start)}–${fmtY(b.end)})"><span class="segname">${b.name}</span><span class="segyears">${fmtY(b.start)}–${fmtY(b.end)}</span></div>`;
   }).join('');
   eraTracksEl.innerHTML=`<div class="segwrap" style="${maskCss}">${backboneEls}${blockEls}</div>`;
 
@@ -533,7 +561,7 @@ function render(){
   eventsRail.innerHTML=state.showEvents?evPlaced.map(o=>{
     const ev=o.ev,left=o.left,nameTop=evNameTop+o.row*16,dotTop=nameTop+18,lineTop=dotTop+3;
     const lineH=Math.max(evYearTop-lineTop-2,0);
-    return `<div class="event" style="left:${left}px"><div class="ename" data-ev="${ev.id}" style="top:${nameTop}px">${ev.name}</div><div class="edot" style="top:${dotTop}px"></div><div class="eline" style="top:${lineTop}px;height:${lineH}px"></div><div class="eyear" style="top:${evYearTop}px">${ev.year}</div></div>`;
+    return `<div class="event" style="left:${left}px"><div class="ename" data-ev="${ev.id}" style="top:${nameTop}px">${ev.name}</div><div class="edot" style="top:${dotTop}px"></div><div class="eline" style="top:${lineTop}px;height:${lineH}px"></div><div class="eyear" style="top:${evYearTop}px">${fmtY(ev.year)}</div></div>`;
   }).join(''):'';
 
   // --- People bars ---
@@ -590,7 +618,7 @@ function renderSidebar(){
 // ============================================================
 // [6] DETAIL PANEL
 // ============================================================
-function closeDetailIfGone(){if(state.selected && !state.present.has(state.selected)){state.selected=null;$('#detail').classList.remove('open');}}
+function closeDetailIfGone(){if(state.selected && !state.present.has(state.selected)){state.selected=null;hideDetail();}}
 
 // Which movement/era a given year falls in (falls back to the macro-block, which has no gaps).
 function eraLabel(year){
@@ -603,10 +631,10 @@ function eraLabel(year){
 
 function openDetail(p){
   state.selected=p.id;
-  const d=$('#detail');d.classList.add('open');
+  const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   d.innerHTML=`<button class="close" id="closeDetail">×</button>
     <h2>${p.name}</h2>
-    <div class="life">${p.birth} – ${isAlive(p)?'actualitat':p.death}</div>
+    <div class="life">${fmtY(p.birth)} – ${isAlive(p)?'actualitat':fmtY(p.death)}</div>
     <div class="areas">${hasCat(p)?p.areas.map(a=>`<span class="chip"><span class="swatch" style="background:${AREA_COLORS[a]}"></span>${a}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>Sense categoria</span>`}</div>
     <div class="meta">Marc (Occident): ${eraLabel(p.birth)}</div>
     ${p.gender?`<div class="meta">Gènere: ${p.gender}</div>`:''}
@@ -616,7 +644,7 @@ function openDetail(p){
       <button class="dbtn" data-act="context">Mostra context</button>
       ${SEED_PINNED.includes(p.id)?'':`<button class="dbtn danger" data-act="remove">Elimina</button>`}
     </div>`;
-  $('#closeDetail').onclick=()=>{d.classList.remove('open');state.selected=null;render();};
+  $('#closeDetail').onclick=()=>{hideDetail();state.selected=null;render();};
   d.querySelectorAll('.dbtn').forEach(btn=>btn.onclick=()=>{
     if(btn.getAttribute('data-act')==='remove')removePerson(p.id);else showContext(p.id);
   });
@@ -625,14 +653,29 @@ function openDetail(p){
 
 function openEvent(ev){
   state.selected=null;
-  const d=$('#detail');d.classList.add('open');
+  const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   d.innerHTML=`<button class="close" id="closeDetail">×</button>
     <h2>${ev.name}</h2>
-    <div class="life">Fita històrica · ${ev.year}</div>
+    <div class="life">Fita històrica · ${fmtY(ev.year)}</div>
     <div class="meta">Marc (Occident): ${eraLabel(ev.year)}</div>
     ${ev.desc?`<div class="desc">${ev.desc}</div>`:''}
     ${ev.wiki?`<a class="wiki" href="${ev.wiki}" target="_blank" rel="noopener">🔗 ${linkLabel(ev.wiki)}</a>`:''}`;
-  $('#closeDetail').onclick=()=>{d.classList.remove('open');render();};
+  $('#closeDetail').onclick=()=>{hideDetail();render();};
+  render();
+}
+
+// Movement/period block. Same panel as people and events, so the three layers behave alike.
+function openBlock(b){
+  state.selected=null;
+  const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
+  d.innerHTML=`<button class="close" id="closeDetail">×</button>
+    <h2>${b.name}</h2>
+    <div class="life">${fmtY(b.start)} – ${fmtY(b.end)}</div>
+    <div class="areas"><span class="chip"><span class="swatch" style="background:${b.color}"></span>${b.marcName}</span></div>
+    <div class="meta">Durada: ${b.end-b.start} anys</div>
+    ${b.desc?`<div class="desc">${b.desc}</div>`:''}
+    ${b.wiki?`<a class="wiki" href="${b.wiki}" target="_blank" rel="noopener">🔗 ${linkLabel(b.wiki)}</a>`:''}`;
+  $('#closeDetail').onclick=()=>{hideDetail();render();};
   render();
 }
 
@@ -768,15 +811,56 @@ barsLayer.addEventListener('click',e=>{
   const p=PEOPLE.find(x=>x.id===bar.getAttribute('data-id'));if(p)openDetail(p);
 });
 document.addEventListener('click',e=>{if(!e.target.closest('.barmenu')&&!e.target.closest('.menu'))closeBarMenu();});
+
+// Bar hover tooltip: name + lifespan, so you can identify a pill without clicking it. Delegated on
+// barsLayer because render() replaces every bar. Same date wording as the detail panel (fmtY → "aC").
+const bartip=$('#bartip');
+function hideBartip(){bartip.classList.remove('on');}
+barsLayer.addEventListener('mousemove',e=>{
+  if(drag&&drag.moved){hideBartip();return;}          // panning: a label chasing the cursor is just noise
+  const bar=e.target.closest('.bar');
+  if(!bar){hideBartip();return;}
+  const p=PEOPLE.find(x=>x.id===bar.getAttribute('data-id'));
+  if(!p){hideBartip();return;}
+  bartip.textContent=`${p.name} · ${fmtY(p.birth)} – ${isAlive(p)?'actualitat':fmtY(p.death)}`;
+  bartip.classList.add('on');
+  const w=bartip.offsetWidth,h=bartip.offsetHeight;   // measure after the text is in, then keep it on screen
+  bartip.style.left=Math.max(4,Math.min(e.clientX+14,window.innerWidth-w-4))+'px';
+  bartip.style.top=(e.clientY-h-12<4?e.clientY+18:e.clientY-h-12)+'px';
+});
+barsLayer.addEventListener('mouseleave',hideBartip);
+eraTracksEl.addEventListener('mousemove',e=>{
+  if(drag&&drag.moved){hideBartip();return;}
+  const el=e.target.closest('[data-blk]');
+  if(!el){hideBartip();return;}
+  const b=activeBlocks().find(x=>x.key===el.getAttribute('data-blk'));
+  if(!b){hideBartip();return;}
+  bartip.textContent=`${b.name} · ${fmtY(b.start)} – ${fmtY(b.end)}`;
+  bartip.classList.add('on');
+  const w=bartip.offsetWidth,h=bartip.offsetHeight;
+  bartip.style.left=Math.max(4,Math.min(e.clientX+14,window.innerWidth-w-4))+'px';
+  bartip.style.top=(e.clientY-h-12<4?e.clientY+18:e.clientY-h-12)+'px';
+});
+eraTracksEl.addEventListener('mouseleave',hideBartip);
+scroll.addEventListener('scroll',hideBartip);
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  const d=$('#detail');
+  if(d.classList.contains('open')){hideDetail();state.selected=null;render();}
+});
 eventsRail.addEventListener('click',e=>{
   const el=e.target.closest('[data-ev]');if(!el)return;   // only the name is clickable (not the year)
   const ev=EVENTS.find(x=>x.id===el.getAttribute('data-ev'));if(ev)openEvent(ev);
+});
+eraTracksEl.addEventListener('click',e=>{
+  if(suppressClick)return;   // the blocks are a big target and dragging across them pans the canvas — don't open a detail on the release
+  const el=e.target.closest('[data-blk]');if(!el)return;
+  const b=activeBlocks().find(x=>x.key===el.getAttribute('data-blk'));if(b)openBlock(b);
 });
 
 // ============================================================
 // [9] ZOOM & PAN
 // ============================================================
-const scroll=$('#scroll');
 function fitPx(){const vw=scroll.clientWidth-24;return Math.max(0.005,vw/(YEAR_MAX-YEAR_MIN));}          // zoom that fits the whole span
 const FOCUS_FROM=1500;
 const FUTURE_MARGIN_PX=240;   // fixed px reserved past "today" so grown living-pills + fade never hug/clip the right edge
@@ -825,7 +909,9 @@ function showContext(id){
 const barmenu=$('#barmenu');
 function openBarMenu(id,anchorEl){
   const rm=SEED_PINNED.includes(id)?'':`<button class="danger" data-act="remove" data-id="${id}">Elimina</button>`;
-  barmenu.innerHTML=`<button data-act="context" data-id="${id}">Mostra context</button>${rm}`;
+  // "Veure detall" first: zoomed far out a bar can shrink to just its ⋮ button, leaving no pill left
+  // to click, so the menu has to offer the same thing clicking the bar would.
+  barmenu.innerHTML=`<button data-act="detail" data-id="${id}">Veure detall</button><button data-act="context" data-id="${id}">Mostra context</button>${rm}`;
   const r=anchorEl.getBoundingClientRect();
   barmenu.style.left=Math.min(r.left,window.innerWidth-170)+'px';
   barmenu.style.top=(r.bottom+4)+'px';
@@ -834,8 +920,10 @@ function openBarMenu(id,anchorEl){
 function closeBarMenu(){barmenu.classList.remove('open');}
 barmenu.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
-  const id=b.getAttribute('data-id');
-  if(b.getAttribute('data-act')==='remove')removePerson(id);else showContext(id);
+  const id=b.getAttribute('data-id'),act=b.getAttribute('data-act');
+  if(act==='remove')removePerson(id);
+  else if(act==='detail'){const p=PEOPLE.find(x=>x.id===id);if(p)openDetail(p);}
+  else showContext(id);
   closeBarMenu();
 });
 // Zoom keeping the year under the pointer fixed.
