@@ -338,6 +338,17 @@ const shade=(hex,f)=>{const n=parseInt(hex.slice(1),16);const r=Math.round(((n>>
 const mix=(hex,f)=>{const n=parseInt(hex.slice(1),16);const m=v=>Math.round(255+(v-255)*f);return `rgb(${m((n>>16)&255)},${m((n>>8)&255)},${m(n&255)})`;};   // opaque tint toward white (f=0 white … 1 full colour)
 const fmtY=y=>y<0?(-y)+' aC':''+y;
 const linkLabel=url=>/wikipedia\.org/.test(url)?'Wikipedia':/wikidata\.org/.test(url)?'Wikidata':'Web';   // adaptive label for the detail link
+
+// Guess categories from Wikidata itemDescription (conservative keyword matching)
+const guessAreas=desc=>{if(!desc)return[];const d=desc.toLowerCase(),a=[];
+  if(/filòsof|filósofo|philosopher/.test(d))a.push('Filosofia');
+  if(/compositor|composer|música|music/.test(d))a.push('Música');
+  if(/escriptor|escritor|writer|poeta|poet|dramaturgo|dramaturg|novel·lista|novelist/.test(d))a.push('Literatura');
+  if(/físic|physicist|matemàtic|mathematician|astrònom|astronomer|científic|scientist|naturalista|naturalist/.test(d))a.push('Ciència');
+  if(/rei|king|emperador|emperor|dictador|dictator|militar|military|president|independentista/.test(d))a.push('Política');
+  if(/pintor|painter|escultor|sculptor/.test(d))a.push('Pintura');
+  if(/profeta|prophet|religiós|religious|sant|saint/.test(d))a.push('Religió');
+  return [...new Set(a)];};
 const peopleOfArea=a=>PEOPLE.filter(p=>p.areas.includes(a));
 
 // Which people are on the timeline right now = (in an active collection OR pinned) AND not hidden.
@@ -586,31 +597,52 @@ function addFromSearch(id){
 function addWikidataPerson(qid){
   const w=wdResults.find(x=>x.qid===qid);if(!w||w.birth==null)return;
   const id='wd_'+qid;
-  if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:qid,name:w.name,birth:w.birth,death:w.death,areas:[],gender:'',wiki:w.article,desc:w.desc||'',_session:true});
+  if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:qid,name:w.name,birth:w.birth,death:w.death,areas:guessAreas(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_session:true});
   addFromSearch(id);
 }
 
 // --- Wikidata live search: humans only (P31=Q5), Catalan labels with es/en fallback ---
 const wdYear=iso=>{const m=/^(-?\d+)/.exec(iso);if(!m)return null;const y=parseInt(m[1],10);return y<=0?y-1:y;};   // ISO astronomical -> our aC convention
+const WDQ='https://query.wikidata.org/sparql?format=json&query=';
+const WD_FIELDS='OPTIONAL { ?item wdt:P569 ?birth. } OPTIONAL { ?item wdt:P570 ?death. } OPTIONAL { ?article schema:about ?item ; schema:isPartOf <https://ca.wikipedia.org/> . } SERVICE wikibase:label { bd:serviceParam wikibase:language "ca,es,en". }';
 function scheduleWikidata(term){clearTimeout(wdTimer);if(term.trim().length<2)return;wdTimer=setTimeout(()=>fetchWikidata(term.trim()),300);}
+function wdParse(data){
+  const binds=(data&&data.results&&data.results.bindings)||[], seen=new Set(), inDB=new Set(PEOPLE.map(p=>p.wd).filter(Boolean)), out=[];
+  for(const b of binds){
+    const qid=b.item.value.split('/').pop();
+    if(seen.has(qid)||inDB.has(qid)||!b.birth)continue;   // dedup vs DB; need a birth year to place it
+    seen.add(qid);
+    out.push({qid,name:(b.itemLabel&&b.itemLabel.value)||qid,desc:(b.itemDescription&&b.itemDescription.value)||'',birth:wdYear(b.birth.value),death:b.death?wdYear(b.death.value):null,article:(b.article&&b.article.value)||('https://www.wikidata.org/wiki/'+qid)});
+  }
+  return out;
+}
+// resolve a list of Q-ids to {name,dates,article} via a fast VALUES query (optionally keep only humans)
+function byIds(ids,humansOnly){
+  if(!ids.length)return Promise.resolve([]);
+  const query=`SELECT ?item ?itemLabel ?itemDescription ?birth ?death ?article WHERE { VALUES ?item { ${ids.map(q=>'wd:'+q).join(' ')} } ${humansOnly?'?item wdt:P31 wd:Q5.':''} ${WD_FIELDS} }`;
+  return fetch(WDQ+encodeURIComponent(query),{headers:{Accept:'application/sparql-results+json'}}).then(r=>r.json()).then(data=>{
+    const byq={};wdParse(data).forEach(x=>byq[x.qid]=x);
+    return ids.map(q=>byq[q]).filter(Boolean);   // preserve the search-relevance order
+  }).catch(()=>[]);
+}
+// primary: fast label/alias autocomplete (great ranking), then keep only humans
+function entitySearch(term){
+  const url='https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&origin=*&type=item&limit=15&language=ca&uselang=ca&search='+encodeURIComponent(term);
+  return fetch(url).then(r=>r.json()).then(d=>byIds(((d.search||[]).map(x=>x.id).filter(t=>/^Q\d+$/.test(t))),true)).catch(()=>[]);
+}
+// fallback: full-text search (finds people by surname / mid-name that the autocomplete buries under common words)
+function fulltextSearch(term){
+  const safe=term.replace(/[^\p{L}\p{N} ]/gu,'').trim();if(!safe)return Promise.resolve([]);
+  const url='https://www.wikidata.org/w/api.php?action=query&format=json&origin=*&list=search&srnamespace=0&srlimit=10&srsearch='+encodeURIComponent(safe+'* haswbstatement:P31=Q5');
+  return fetch(url).then(r=>r.json()).then(d=>byIds((((d.query&&d.query.search)||[]).map(x=>x.title).filter(t=>/^Q\d+$/.test(t))),false)).catch(()=>[]);
+}
 function fetchWikidata(term){
-  const seq=++wdSeq, safe=term.replace(/["\\]/g,' ');
-  const query=`SELECT ?item ?itemLabel ?itemDescription ?birth ?death ?article WHERE { SERVICE wikibase:mwapi { bd:serviceParam wikibase:endpoint "www.wikidata.org". bd:serviceParam wikibase:api "EntitySearch". bd:serviceParam mwapi:search "${safe}". bd:serviceParam mwapi:language "ca". ?item wikibase:apiOutputItem mwapi:item. } ?item wdt:P31 wd:Q5. OPTIONAL { ?item wdt:P569 ?birth. } OPTIONAL { ?item wdt:P570 ?death. } OPTIONAL { ?article schema:about ?item ; schema:isPartOf <https://ca.wikipedia.org/> . } SERVICE wikibase:label { bd:serviceParam wikibase:language "ca,es,en". } }`;
-  fetch('https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(query),{headers:{Accept:'application/sparql-results+json'}})
-    .then(r=>r.json())
-    .then(data=>{
-      if(seq!==wdSeq)return;   // a newer search superseded this one
-      const seen=new Set(), inDB=new Set(PEOPLE.map(p=>p.wd).filter(Boolean));
-      const out=[];
-      for(const b of data.results.bindings){
-        const qid=b.item.value.split('/').pop();
-        if(seen.has(qid)||inDB.has(qid)||!b.birth)continue;   // dedup vs DB; need a birth year to place it
-        seen.add(qid);
-        out.push({qid,name:(b.itemLabel&&b.itemLabel.value)||qid,desc:(b.itemDescription&&b.itemDescription.value)||'',birth:wdYear(b.birth.value),death:b.death?wdYear(b.death.value):null,article:(b.article&&b.article.value)||('https://www.wikidata.org/wiki/'+qid)});
-      }
-      wdResults=out;wdLoading=false;renderDropdown();
-    })
-    .catch(()=>{if(seq===wdSeq){wdLoading=false;renderDropdown();}});
+  const seq=++wdSeq;
+  entitySearch(term).then(out=>{
+    if(seq!==wdSeq)return;   // a newer search superseded this one
+    if(out.length){wdResults=out;wdLoading=false;renderDropdown();return;}
+    fulltextSearch(term).then(out2=>{if(seq!==wdSeq)return;wdResults=out2;wdLoading=false;renderDropdown();});
+  });
 }
 
 q.addEventListener('input',runSearch);
