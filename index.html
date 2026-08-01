@@ -13,6 +13,7 @@
   :root{
     --text:#2C2C2B; --text2:#7D7A75; --canvas:#FFFFFF; --soft:#F9F8F7;
     --surface:#F0EFED; --border:#E6E5E3; --border-strong:#CBC9C4; --blue:#2783DE; --blueSoft:#E5F2FC;
+    --topbar-bg:#521925;
     /* collection (people) colours — the vivid "data" layer */
     --philosophy:#5E9FE8; --music:#BF8EDA; --literature:#DE9255;
     --science:#72BC8F; --politics:#DF84A8; --painting:#D4A72C; --religion:#A24E5E;
@@ -28,7 +29,13 @@
   .app{display:flex;flex-direction:column;height:100vh;min-height:640px;}
 
   /* ===== Top bar (brand · search · zoom controls) ===== */
-  .topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 22px;border-bottom:3px solid var(--border-strong);flex:0 0 auto;background:var(--canvas);z-index:5;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 22px;border-bottom:3px solid rgba(0,0,0,.25);flex:0 0 auto;background:var(--topbar-bg);z-index:5;}
+  .topbar .brand{color:#fff;}
+  .topbar .btn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);color:#fff;}
+  .topbar .btn:hover{background:rgba(255,255,255,.22);}
+  .topbar .search input{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.25);color:#fff;}
+  .topbar .search input::placeholder{color:rgba(255,255,255,.55);}
+  .topbar .search input:focus{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.55);}
   .topbar-left{display:flex;align-items:center;gap:14px;min-width:0;}
   .topbar-right{display:flex;align-items:center;gap:14px;flex:0 0 auto;}
   .brand{font-weight:600;font-size:20px;white-space:nowrap;}
