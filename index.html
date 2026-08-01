@@ -866,7 +866,7 @@ window.addEventListener('resize',()=>setZoom(pxPerYear));
 // Portrait wall: show overlay on touch devices held in portrait mode.
 const portraitWall=document.getElementById('portraitWall');
 function checkPortrait(){
-  const isTouch='ontouchstart' in window||navigator.maxTouchPoints>0;
+  const isTouch=window.matchMedia('(pointer:coarse)').matches;
   const isPortrait=window.innerWidth<window.innerHeight;
   portraitWall.classList.toggle('on',isTouch&&isPortrait);
 }
