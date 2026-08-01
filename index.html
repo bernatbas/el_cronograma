@@ -12,7 +12,7 @@
      ============================================================ */
   :root{
     --text:#2C2C2B; --text2:#7D7A75; --canvas:#FFFFFF; --soft:#F9F8F7;
-    --surface:#F0EFED; --border:#E6E5E3; --blue:#2783DE; --blueSoft:#E5F2FC;
+    --surface:#F0EFED; --border:#E6E5E3; --border-strong:#CBC9C4; --blue:#2783DE; --blueSoft:#E5F2FC;
     /* collection (people) colours — the vivid "data" layer */
     --philosophy:#5E9FE8; --music:#BF8EDA; --literature:#DE9255;
     --science:#72BC8F; --politics:#DF84A8; --painting:#D4A72C; --religion:#A24E5E;
@@ -28,11 +28,12 @@
   .app{display:flex;flex-direction:column;height:100vh;min-height:640px;}
 
   /* ===== Top bar (brand · search · zoom controls) ===== */
-  .topbar{display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid var(--border);flex:0 0 auto;background:var(--canvas);z-index:5;}
-  .brand{font-weight:600;font-size:16px;white-space:nowrap;}
-  .brand .sub{color:var(--text2);font-weight:400;font-size:13px;margin-left:6px;}
-  .search{position:relative;flex:1 1 auto;max-width:420px;}
-  .search input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none;background:var(--soft);}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 22px;border-bottom:3px solid var(--border-strong);flex:0 0 auto;background:var(--canvas);z-index:5;}
+  .topbar-left{display:flex;align-items:center;gap:14px;min-width:0;}
+  .topbar-right{display:flex;align-items:center;gap:14px;flex:0 0 auto;}
+  .brand{font-weight:600;font-size:20px;white-space:nowrap;}
+  .search{position:relative;width:320px;flex:0 0 auto;}
+  .search input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none;background:var(--soft);}
   .search input:focus{border-color:var(--blue);background:#fff;}
   .results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.06);max-height:280px;overflow:auto;display:none;z-index:20;}
   .results.open{display:block;}
@@ -44,13 +45,17 @@
   .results .row .yr{color:var(--text2);font-size:12px;margin-left:auto;}
   .results .row.disabled{opacity:.5;cursor:default;}
   .controls{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
-  .hint{font-size:11px;color:var(--text2);white-space:nowrap;margin-left:2px;}
-  .btn{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer;color:var(--text);min-width:36px;min-height:36px;}
+  .btn{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer;color:var(--text);min-width:38px;min-height:38px;}
   .btn:hover{background:var(--soft);}
 
   /* ===== Sidebar (marcs · col·leccions · a la vista) ===== */
-  .body{display:flex;flex:1 1 auto;min-height:0;}
-  .sidebar{flex:0 0 240px;border-right:1px solid var(--border);padding:16px;overflow:auto;background:var(--soft);}
+  .body{display:flex;flex:1 1 auto;min-height:0;position:relative;}
+  .sidebar{position:absolute;top:0;left:0;bottom:0;width:240px;border-right:2px solid var(--border-strong);padding:16px;overflow:auto;background:var(--soft);transition:width .18s ease,padding .18s ease;z-index:10;box-shadow:3px 0 14px rgba(0,0,0,.07);}   /* overlays the canvas instead of pushing it — the stage never resizes */
+  .body.collapsed .sidebar{width:14px;padding:0;overflow:hidden;box-shadow:none;}   /* thin strip stays visible as a "something's hidden here" cue */
+  .body.collapsed .sidebar>*{display:none;}                        /* hide content instead of letting it reflow/wrap inside the strip */
+  .sidebarHandle{position:absolute;top:50%;left:229px;transform:translateY(-50%);width:24px;height:52px;border:1.5px solid var(--border-strong);border-left:none;background:var(--surface);border-radius:0 10px 10px 0;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);font-size:16px;line-height:1;padding:0;z-index:10;box-shadow:2px 0 6px rgba(0,0,0,.08);transition:left .18s ease;}
+  .sidebarHandle:hover{background:#fff;border-color:var(--blue);color:var(--blue);}
+  .body.collapsed .sidebarHandle{left:3px;}
   .sidebar h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin:0 0 10px;font-weight:600;}
   .sidebar section{margin-bottom:24px;}
   .filter{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:14px;}
@@ -158,16 +163,19 @@
      ============================================================ -->
 <div class="app">
   <header class="topbar">
-    <div class="brand">🕰️ Cronograma<span class="sub">prova · Il·lustració → s. XX</span></div>
-    <div class="search">
-      <input id="q" type="text" placeholder="Cerca i afegeix un personatge…" autocomplete="off" />
-      <div class="results" id="results"></div>
+    <div class="topbar-left">
+      <div class="brand">🕰️ Cronograma</div>
     </div>
-    <div class="controls">
-      <button class="btn" id="zoomOut" title="Allunya">−</button>
-      <button class="btn" id="zoomIn" title="Apropa">+</button>
-      <button class="btn" id="reset" title="Restableix">Reset</button>
-      <span class="hint">⌘/pinça per fer zoom</span>
+    <div class="topbar-right">
+      <div class="search">
+        <input id="q" type="text" placeholder="Cerca i afegeix un personatge…" autocomplete="off" />
+        <div class="results" id="results"></div>
+      </div>
+      <div class="controls">
+        <button class="btn" id="zoomOut" title="Allunya">−</button>
+        <button class="btn" id="zoomIn" title="Apropa">+</button>
+        <button class="btn" id="reset" title="Restableix">Reset</button>
+      </div>
     </div>
   </header>
   <div class="body">
@@ -185,6 +193,7 @@
         <div class="onview" id="onview"></div>
       </section>
     </aside>
+    <button class="sidebarHandle" id="sidebarToggle" title="Amaga la barra lateral">‹</button>
     <main class="stage">
       <div class="scroll" id="scroll">
         <div class="inner" id="inner">
@@ -309,7 +318,7 @@ const _starts=[..._blocks.map(b=>b.start),...EVENTS.map(e=>e.year),...PEOPLE.map
 const _ends=[..._blocks.map(b=>b.end),...EVENTS.map(e=>e.year),...PEOPLE.map(p=>p.death==null?NOW_YEAR:p.death)];
 const DATA_MIN=Math.min(..._starts), DATA_MAX=Math.max(..._ends);
 const GUTTER_YEARS=14;
-const RIGHT_PAD_YEARS=150;   // must outlast FUTURE_MARGIN_PX in years at default zoom, or the browser clamps scrollLeft before the margin is reached
+const RIGHT_PAD_YEARS=20;   // just enough for the axis to keep ticking a bit past "today" — the real scroll margin is capped in px by FUTURE_MARGIN_PX in render(), not by this
 const YEAR_MIN=DATA_MIN-GUTTER_YEARS, YEAR_MAX=DATA_MAX+RIGHT_PAD_YEARS;
 let pxPerYear=4;               // current zoom (pixels per year); set by defaultView()/setZoom()
 const SEED_PINNED=['bernat'];  // always present, never removable
@@ -395,8 +404,9 @@ function packLanes(people){
 // ============================================================
 function render(){
   recomputePresent();
+  if(scroll.clientWidth>0)pxPerYear=Math.max(fitPx(),Math.min(20,pxPerYear));   // safety net: whatever path got us here (pinch, resize, page zoom), never draw at a zoom below the fit floor — that's what left a white gap and runaway scroll
   const nowX=x(NOW_YEAR);
-  const W=Math.max(totalW(),nowX+FUTURE_FADE+8);   // ensure the future-fade always fits
+  const W=Math.max(Math.min(totalW(),nowX+FUTURE_MARGIN_PX),nowX+FUTURE_FADE+8,scroll.clientWidth);   // cap the scrollable canvas to a fixed px margin past "today" (not a year count, or it balloons at high zoom), but never narrower than the viewport (white gap) nor than the future-fade
   inner.style.width=W+'px';
 
   // --- Era strata: always-on eras backbone + pooled marc blocks (canvas grows with lanes) ---
@@ -482,9 +492,10 @@ function render(){
   for(const st of STEPS){if(st*pxPerYear>=70){step=st;break;}}
   let ticks=`<div class="tick tinf" style="left:2px">∞···</div><div class="tick tbound" style="left:${x(DATA_MIN)}px">${fmtY(DATA_MIN)}</div>`;
   const firstTick=Math.ceil((DATA_MIN+step*0.4)/step)*step;
-  for(let y=firstTick;y<=YEAR_MAX;y+=step){ticks+=`<div class="tick" style="left:${x(y)}px">${fmtY(y)}</div>`;}
+  for(let y=firstTick;y<=YEAR_MAX&&x(y)<=W;y+=step){ticks+=`<div class="tick" style="left:${x(y)}px">${fmtY(y)}</div>`;}   // stop at the px-capped canvas edge (W) as well as the year range, so high zoom can't push a tick past the canvas and inflate scrollWidth
   axisInner.innerHTML=ticks;
   guide.style.height=contentH+'px';
+  if(parseFloat(guide.style.left||0)>W)hideGuide();   // a guide left over at an old (larger) zoom keeps the scrollable area inflated → runaway scroll + blank right side
 
   renderSidebar();
 }
@@ -697,8 +708,14 @@ function fitPx(){const vw=scroll.clientWidth-24;return Math.max(0.005,vw/(YEAR_M
 const FOCUS_FROM=1500;
 const FUTURE_MARGIN_PX=240;   // fixed px reserved past "today" so grown living-pills + fade never hug/clip the right edge
 function focusPx(){const vw=Math.max(60,scroll.clientWidth-24-FUTURE_MARGIN_PX);return Math.max(fitPx(),Math.min(20,vw/(NOW_YEAR-FOCUS_FROM)));}   // default focus ~1500→today, with future margin
-function defaultView(){pxPerYear=focusPx();render();scroll.scrollLeft=Math.max(0,x(FOCUS_FROM)-16);}
-function setZoom(v){pxPerYear=Math.max(fitPx(),Math.min(20,v));render();}
+function defaultView(){pxPerYear=focusPx();render();scroll.scrollLeft=Math.min(Math.max(0,x(FOCUS_FROM)-16),maxScroll());}   // clamp: the focus target can sit past the canvas end and leave a sliver of blank on the right
+function setZoom(v){pxPerYear=Math.max(fitPx(),Math.min(20,v));render();clampScroll();}
+// Max scroll is measured against OUR canvas width, not scrollWidth: any stray absolutely-positioned
+// leftover (a hover guide parked at an old zoom, an overflowing label) inflates scrollWidth and would
+// hand back a bogus, far too large limit — which is exactly how the runaway scroll happened.
+function maxScroll(){return Math.max(0,(parseFloat(inner.style.width)||scroll.scrollWidth)-scroll.clientWidth);}
+function clampScroll(){const max=maxScroll();if(scroll.scrollLeft>max)scroll.scrollLeft=max;}   // keep scrollLeft in range so zooming out doesn't leave it parked past the end
+}
 // Pan (no zoom change) so a person's bar is centred on screen.
 function panToPerson(id){
   const p=PEOPLE.find(x=>x.id===id);
@@ -756,18 +773,27 @@ function zoomAt(clientX,factor){
   const yearAt=YEAR_MIN+pointerInner/pxPerYear;
   setZoom(pxPerYear*factor);
   const newInner=(yearAt-YEAR_MIN)*pxPerYear;
-  scroll.scrollLeft=newInner-(clientX-rect.left);
+  scroll.scrollLeft=Math.min(Math.max(0,newInner-(clientX-rect.left)),maxScroll());   // must be clamped: during a fast pinch this lands against not-yet-reflowed layout and an out-of-range value sticks, parking the view past the end of the canvas (blank right side, endless-feeling scroll)
 }
 $('#zoomIn').onclick=()=>{const r=scroll.getBoundingClientRect();zoomAt(r.left+scroll.clientWidth/2,1.4);};
 $('#zoomOut').onclick=()=>{const r=scroll.getBoundingClientRect();zoomAt(r.left+scroll.clientWidth/2,1/1.4);};
 $('#reset').onclick=()=>{state.present=new Set();state.activeCols=new Set();state.pinned=new Set(SEED_PINNED);state.hidden=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.selected=null;$('#detail').classList.remove('open');defaultView();};
+$('#sidebarToggle').onclick=e=>{
+  const collapsed=$('.body').classList.toggle('collapsed');
+  e.currentTarget.textContent=collapsed?'›':'‹';
+  e.currentTarget.title=collapsed?'Mostra la barra lateral':'Amaga la barra lateral';
+};
 
-// Trackpad pinch / ⌘+wheel → zoom.
-scroll.addEventListener('wheel',e=>{
+// Trackpad pinch / ⌘+wheel → zoom. (Chrome/Firefox deliver pinch as ctrl+wheel.)
+// Bound to the document, not to #scroll: the sidebar overlays the canvas and the topbar sits above it,
+// so a pinch with the cursor over either would otherwise escape us and become a browser page zoom.
+document.addEventListener('wheel',e=>{
   if(!e.ctrlKey)return;
   e.preventDefault();
   const factor=Math.exp(-e.deltaY*0.01);
-  zoomAt(e.clientX,factor);
+  const r=scroll.getBoundingClientRect();
+  const inCanvas=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
+  zoomAt(inCanvas?e.clientX:r.left+scroll.clientWidth/2,factor);   // pinch outside the canvas → zoom about its centre
 },{passive:false});
 
 // Hover guide (vertical year line). Suppressed while dragging.
@@ -775,26 +801,27 @@ scroll.addEventListener('mousemove',e=>{
   if(drag)return;
   const rect=inner.getBoundingClientRect();
   const offX=e.clientX-rect.left;
-  if(offX<0||offX>totalW()){guide.style.display='none';return;}
+  if(offX<0||offX>totalW()){hideGuide();return;}
   const year=Math.round(YEAR_MIN+offX/pxPerYear);
   guide.style.display='block';
   guide.style.left=offX+'px';
   guide.querySelector('.yr').textContent=year;
 });
-scroll.addEventListener('mouseleave',()=>{guide.style.display='none';});
+function hideGuide(){guide.style.display='none';guide.style.left='0px';}   // reset left too: a stale far-right offset keeps inflating the scrollable area after a zoom-out
+scroll.addEventListener('mouseleave',hideGuide);
 
 // Click-and-drag panning. Not started over a person bar (there, click = open detail).
 let drag=null,suppressClick=false;
 scroll.addEventListener('mousedown',e=>{
   if(e.button!==0)return;
   if(e.target.closest('.bar'))return;
-  guide.style.display='none';
+  hideGuide();
   drag={x:e.clientX,y:e.clientY,sl:scroll.scrollLeft,st:scroll.scrollTop,moved:false};
 });
 window.addEventListener('mousemove',e=>{
   if(!drag)return;
   const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
-  if(!drag.moved&&Math.hypot(dx,dy)>4){drag.moved=true;scroll.classList.add('grabbing');guide.style.display='none';}
+  if(!drag.moved&&Math.hypot(dx,dy)>4){drag.moved=true;scroll.classList.add('grabbing');hideGuide();}
   if(drag.moved){scroll.scrollLeft=drag.sl-dx;scroll.scrollTop=drag.st-dy;e.preventDefault();}
 });
 window.addEventListener('mouseup',()=>{
@@ -808,7 +835,7 @@ window.addEventListener('mouseup',()=>{
 // ============================================================
 function bootDefault(){if(scroll.clientWidth>0){defaultView();}else{requestAnimationFrame(bootDefault);}}
 bootDefault();
-window.addEventListener('resize',render);
+window.addEventListener('resize',()=>setZoom(pxPerYear));   // re-clamp: a wider window raises the minimum zoom, so plain render() would leave the canvas narrower than the viewport
 </script>
 </body>
 </html>
