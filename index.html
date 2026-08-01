@@ -22,7 +22,7 @@
     --science:#72BC8F; --politics:#DF84A8; --painting:#D4A72C; --religion:#A24E5E;
     /* events + structure — the calm layer */
     --eventc:#4B4F57;
-    --struct:#8B93AD; --struct-ink:#565D78; --band:#F3F4F7; --r-card:8px; --r-pill:999px;
+    --struct:#8B93AD; --struct-ink:#565D78; --band:#F3F4F7; --r-card:8px; --r-pill:999px; --axis-h:32px;
   }
 
   /* ===== Base ===== */
@@ -72,18 +72,39 @@
   .filter input{width:16px;height:16px;accent-color:var(--blue);}
   .swatch{width:12px;height:12px;border-radius:3px;flex:0 0 auto;}
 
-  .areaList{display:flex;flex-direction:column;gap:7px;}
-  .areaTag{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:var(--r-card);border:1px solid var(--border);cursor:pointer;font-size:14px;user-select:none;background:#fff;transition:opacity .12s,background .12s,border-color .12s,box-shadow .12s;}
-  .areaTag .swatch{width:13px;height:13px;border-radius:3px;}
-  .areaTag .cnt{margin-left:auto;font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums;}
-  .areaTag.on{font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.06);}
-  .areaTag.off{opacity:.4;filter:grayscale(.5);}
-  .areaTag.off:hover{opacity:.7;}
-  .areaTag.on:hover{filter:brightness(.98);}
+  /* ===== Category legend (below the timeline) =====
+     Passive reading aid, not a control: it lists only the categories actually painted on the
+     canvas right now, so it appears on the first search and empties again when you clear. */
+  .legend{position:absolute;left:256px;bottom:calc(var(--axis-h) + 12px);z-index:8;display:flex;flex-direction:column;gap:6px;max-width:40vw;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-card);background:rgba(255,255,255,.84);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 4px 16px rgba(40,44,60,.13);transition:left .18s ease;pointer-events:none;}
+  /* Floats over the canvas so it costs zero layout height — vertical space is the scarcest thing on
+     a phone. Tucked against the sidebar (240px + gutter), which overlays the stage rather than
+     shrinking it, so it has to follow the sidebar open/closed. Always open and non-interactive:
+     pointer-events:none means it can never block a bar in a low lane that it happens to overlap. */
+  .body.collapsed .legend{left:30px;}
+  .legend:empty{display:none;}                 /* nothing painted → no floating card at all */
+  .legend .lgi{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);white-space:nowrap;}
+  .legend .swatch{width:10px;height:10px;border-radius:3px;flex:0 0 auto;}
 
   .onview .item{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:14px;}
-  .onview .item .x{margin-left:auto;color:var(--text2);cursor:pointer;border:none;background:none;font-size:16px;line-height:1;padding:2px 6px;border-radius:6px;}
-  .onview .item .x:hover{background:var(--surface);color:var(--text);}
+  .onview .item .nm{flex:1 1 auto;cursor:pointer;border:none;background:none;font:inherit;color:inherit;text-align:left;padding:2px 4px;margin-left:-4px;border-radius:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .onview .item .nm:hover{background:var(--surface);text-decoration:underline;}
+  .onview .item .x,.onview .item .rp{flex:0 0 auto;color:var(--text2);cursor:pointer;border:none;background:none;font-size:16px;line-height:1;padding:2px 5px;border-radius:6px;}
+  .onview .item .rp{font-size:12px;opacity:.55;}
+  .onview .item .x:hover,.onview .item .rp:hover{background:var(--surface);color:var(--text);opacity:1;}
+  #collections{display:flex;flex-direction:column;gap:6px;}
+  /* Every collection button is IDENTICAL — collections carry no colour of their own (that is what
+     categories and the legend are for), so the only thing that varies is on/off. */
+  .colitem{display:flex;align-items:center;gap:9px;width:100%;border:1px solid var(--border-strong);border-radius:var(--r-card);padding:9px 11px;font-size:14px;font-family:inherit;color:var(--text);cursor:pointer;text-align:left;background:linear-gradient(135deg,#FFFFFF,#F6F2ED);box-shadow:0 1px 3px rgba(40,44,60,.10);transition:box-shadow .14s,background .14s,border-color .14s;}
+  .colitem:hover{border-color:#B0ADA7;box-shadow:0 2px 8px rgba(40,44,60,.16);}
+  .colitem .ico{flex:0 0 auto;width:16px;height:16px;opacity:.45;}
+  .colitem .cnt{margin-left:auto;font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums;}
+  .colitem .extlink{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;opacity:.35;border-radius:3px;text-decoration:none;color:inherit;transition:opacity .15s;}
+  .colitem .extlink:hover{opacity:.85;background:rgba(0,0,0,.06);}
+  .colitem.on .extlink{opacity:.6;}
+  .colitem.on{background:linear-gradient(135deg,#F7E5E0,#EFD4CC);border-color:var(--topbar-bg);box-shadow:inset 3px 0 0 var(--topbar-bg),0 1px 3px rgba(40,44,60,.13);font-weight:600;}
+  .colitem.on .ico{opacity:.8;}
+  .newcol{width:100%;border:1px dashed var(--border-strong);background:none;border-radius:var(--r-card);padding:8px 10px;font-size:13px;color:var(--text2);cursor:pointer;font-family:inherit;}
+  .newcol:hover{background:var(--surface);color:var(--text);}
   .onview .empty{color:var(--text2);font-size:13px;font-style:italic;}
 
   /* ===== Stage: the scrolling timeline canvas ===== */
@@ -142,6 +163,9 @@
   .barmenu button.danger{color:#C0392B;}
   /* Hover tooltip on a person bar. Not a native `title`: that waits ~1s and, zoomed out, the pill is
      too small to hold a readable label — the name and dates have to be reachable without clicking. */
+  /* ===== Toast (feedback curt per accions encara no implementades) ===== */
+  .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,12px);background:var(--text);color:#fff;font-size:13px;padding:10px 18px;border-radius:var(--r-card);z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.26);opacity:0;visibility:hidden;transition:opacity .18s,transform .18s,visibility 0s .18s;pointer-events:none;}
+  .toast.on{opacity:1;visibility:visible;transform:translate(-50%,0);transition:opacity .18s,transform .18s,visibility 0s;}
   .bartip{position:fixed;display:none;background:var(--text);color:#fff;font-size:12px;font-weight:500;padding:5px 10px;border-radius:var(--r-card);white-space:nowrap;z-index:40;pointer-events:none;box-shadow:0 3px 10px rgba(0,0,0,.24);}
   .bartip.on{display:block;}
 
@@ -152,7 +176,7 @@
   .nowline .lbl{position:absolute;top:2px;left:5px;background:var(--text);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-card);white-space:nowrap;}
 
   /* ===== Axis (sticks to the viewport bottom when content overflows) ===== */
-  .axis{position:sticky;bottom:0;height:32px;border-top:1px solid var(--border);background:var(--canvas);z-index:7;}
+  .axis{position:sticky;bottom:0;height:var(--axis-h);border-top:1px solid var(--border);background:var(--canvas);z-index:7;}
   .axis .inner2{position:absolute;top:0;left:0;height:100%;}
   .tick{position:absolute;top:0;height:100%;border-left:1px solid var(--border);padding-left:5px;font-size:11px;color:var(--text2);display:flex;align-items:center;}
   .tick.tinf{border-left:none;color:var(--text2);font-weight:600;letter-spacing:.05em;}
@@ -167,7 +191,7 @@
   .detail .close:hover{background:var(--soft);}
   .detail h2{font-size:17px;font-weight:600;margin:0 0 4px;padding-right:32px;}
   .detail .life{color:var(--text2);font-size:12px;margin-bottom:14px;}
-  .detail .areas{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+  .detail .chiprow{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
   .detail .chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:3px 10px;border-radius:var(--r-card);background:var(--soft);border:1px solid var(--border);}
   .detail .meta{font-size:12px;color:var(--text2);margin:6px 0;}
   .detail .desc{font-size:14px;margin:14px 0;}
@@ -204,6 +228,7 @@
      Chrome and topbar were eating the screen the timeline needs. Must stay in sync with
      applyMetrics() in JS, which keys off this exact same query. */
   @media (max-height:560px){
+    :root{--axis-h:26px;}   /* keeps the floating legend resting just above the shorter axis */
     .topbar{padding:6px 12px;gap:10px;border-bottom-width:3px;}
     .brand{font-size:15px;}
     .btn{min-width:30px;min-height:30px;padding:3px 8px;font-size:13px;}
@@ -214,8 +239,10 @@
     .sidebar section{margin-bottom:14px;}
     .filter{padding:3px 0;font-size:13px;}
     .filter input{width:15px;height:15px;}
-    .areaList{gap:5px;}
-    .areaTag{padding:5px 9px;font-size:13px;}
+    .legend{left:202px;padding:6px 10px;gap:5px;max-width:60vw;}   /* 190px compact sidebar + gutter */
+    .body.collapsed .legend{left:26px;}
+    .legend .lgi{font-size:11px;gap:6px;}
+    .legend .lgi{font-size:11px;gap:5px;}
     .onview .item{padding:3px 0;font-size:13px;}
     .blockzone .blabel{top:5px;font-size:10px;letter-spacing:.06em;}
     .seg,.seg.mov{padding:0 8px 0 11px;}   /* .seg alone loses to .seg.mov on specificity, so name both or the blocks never tighten on a phone */
@@ -247,6 +274,7 @@
       <div class="controls">
         <button class="btn" id="zoomOut" title="Allunya"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><line x1="12.5" y1="12.5" x2="18" y2="18"/><line x1="5.5" y1="8" x2="10.5" y2="8"/></svg></button>
         <button class="btn" id="zoomIn" title="Apropa"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><line x1="12.5" y1="12.5" x2="18" y2="18"/><line x1="5.8" y1="8" x2="10.2" y2="8"/><line x1="8" y1="5.8" x2="8" y2="10.2"/></svg></button>
+        <button class="btn" id="fitAll" title="Ajusta el zoom per encabir tots els visibles">Veure tot</button>
         <button class="btn" id="reset" title="Restableix">Reset</button>
       </div>
     </div>
@@ -258,8 +286,8 @@
         <div id="regions"></div>
       </section>
       <section>
-        <h3>Col·leccions · clica per activar</h3>
-        <div class="areaList" id="filters"></div>
+        <h3>Col·leccions</h3>
+        <div id="collections"></div>
       </section>
       <section>
         <h3>A la vista</h3>
@@ -279,6 +307,7 @@
         </div>
         <div class="axis" id="axis"><div class="inner2" id="axisInner"></div></div>
       </div>
+      <div class="legend" id="legend"></div>
     </main>
     <aside class="detail" id="detail"></aside>
   </div>
@@ -286,6 +315,7 @@
 <div class="detail-backdrop" id="detailBackdrop"></div>
 <div class="barmenu" id="barmenu"></div>
 <div class="bartip" id="bartip"></div>
+<div class="toast" id="toast"></div>
 <div class="portrait-wall" id="portraitWall">
   <div class="p-icon">📱</div>
   <h2>Gira el dispositiu</h2>
@@ -297,11 +327,52 @@
 // Years: negative = aC. A person with death:null is alive (fades to the future).
 // Apostrophes inside these strings MUST be written ' (single-quoted JS literals).
 // ============================================================
-const AREA_COLORS={
+const CAT_COLORS={
   'Filosofia':'#5E9FE8','Música':'#BF8EDA','Literatura':'#DE9255',
-  'Ciència':'#72BC8F','Política':'#DF84A8','Pintura':'#D4A72C','Religió':'#A24E5E'
+  'Ciència':'#72BC8F','Política':'#DF84A8','Pintura':'#D4A72C','Religió':'#A24E5E',
+  'Esport':'#94AD3C'
 };
 const NOW_YEAR=new Date().getFullYear();
+
+// COL·LECCIONS: playlists de persones. Guarden **Q-ids, no persones** — la mateixa referència
+// resol a una entrada de PEOPLE si la tenim en local, i es baixa de Wikidata si no, així una
+// col·lecció pot incloure qualsevol (aquí Descartes, Camus i Sartre no són a la DB local).
+const COLLECTIONS=[
+  {id:'filosofs',name:'Els meus filòsofs',wds:[
+    'Q913',   // Sòcrates      (local)
+    'Q859',   // Plató         (local)
+    'Q868',   // Aristòtil     (local)
+    'Q59180', // Diògenes      (local)
+    'Q2054',  // Sèneca        ~4aC–65
+    'Q183144',// Epictet        50–135
+    'Q1430',  // Marc Aureli   121–180
+    'Q9438',  // Tomàs d'Aquino 1225–1274
+    'Q1399',  // Maquiavel     1469–1527
+    'Q9191',  // René Descartes 1596–1650
+    'Q37621', // Thomas Hobbes 1588–1679
+    'Q37160', // David Hume    1711–1776
+    'Q6527',  // Rousseau      1712–1778
+    'Q9312',  // Immanuel Kant 1724–1804
+    'Q9235',  // Hegel         1770–1831
+    'Q9358',  // Nietzsche     1844–1900
+    'Q34670', // Albert Camus  1913–1960
+    'Q9364'   // Jean-Paul Sartre 1905–1980
+  ]},
+  {id:'maricashistoria',name:'Grandes Maricas de la Historia',url:'https://grandesmaricasdelahistoria.es/',wds:[
+    'Q1762',  // Heliogàbal          203–222
+    'Q762',   // Leonardo da Vinci   1452–1519
+    'Q5592',  // Miquel Àngel        1475–1564
+    'Q692',   // Shakespeare         1564–1616
+    'Q183074',// Sor Juana Inés      1649–1695
+    'Q33550', // Frederic II Prússia 1712–1786
+    'Q5679',  // Lord Byron          1788–1824
+    'Q7315',  // Txaikovski          1840–1893
+    'Q30875', // Oscar Wilde         1854–1900
+    'Q40909', // Virginia Woolf      1882–1941
+    'Q41408', // García Lorca        1898–1936
+    'Q7251'   // Alan Turing         1912–1954
+  ]}
+];
 
 // ERES: the always-on backbone — the macro-eras that act as the "ruler" of the timeline.
 // Not a toggleable marc; rendered as a pale wash spanning the whole eras canvas.
@@ -346,47 +417,59 @@ const MARCS=[
   ]}
 ];
 const EVENTS=[
-  {id:'revfr',name:'Revolució Francesa',year:1789,wiki:'https://ca.wikipedia.org/wiki/Revolució_Francesa',desc:'Procés revolucionari que va enderrocar l\u0027Antic Règim a França i va escampar per Europa els ideals de llibertat, igualtat i fraternitat.'},
+  {id:'agricultura',name:'Revolució agrícola',year:-10000,wiki:'https://ca.wikipedia.org/wiki/Neol%C3%ADtic',desc:'Transició dels grups humans de la caça i la recol’lecció a l’agricultura sedentària; origen de les primeres civilitzacions.'},
+  {id:'roda',name:'Invenció de la roda',year:-3500,wiki:'https://ca.wikipedia.org/wiki/Roda',desc:'La roda i l’eix apareixen a la Mesopotàmia, transformant el transport, la manufactura i la guerra.'},
+  {id:'escriptura',name:'Invenció de l’escriptura',year:-3300,wiki:'https://ca.wikipedia.org/wiki/Escriptura',desc:'Els sumeris inventen els primers sistemes d’escriptura cuneïforme, marcant el pas de la Prehistòria a l’Edat Antiga.'},
+  {id:'romaFund',name:'Fundació de Roma',year:-753,wiki:'https://ca.wikipedia.org/wiki/Roma_antiga',desc:'Fundació llegendària de Roma per Ròmul, origen d’una de les civilitzacions més influents de la història occidental.'},
+  {id:'caigudaimp',name:'Caiguda de l’Imperi Romà',year:476,wiki:'https://ca.wikipedia.org/wiki/Caiguda_de_l%27Imperi_Rom%C3%A0_d%27Occident',desc:'Odoacre deposa l’últim emperador romà d’Occident. Marca l’inici convencional de l’Edat Mitjana.'},
+  {id:'hegira',name:'Hègira de Mahoma',year:622,wiki:'https://ca.wikipedia.org/wiki/H%C3%A8gira',desc:'Mahoma emigra de la Meca a Medina; inici del calendari islàmic i d’una expansió que transformarà el Mediterrani i l’Orient Pròxim.'},
+  {id:'pestaNegra',name:'Pesta Negra',year:1347,wiki:'https://ca.wikipedia.org/wiki/Pesta_negra',desc:'Epidèmia de pesta bubònica que mata entre un terç i la meitat de la població europea, accelerant la fi del feudalisme medieval.'},
+  {id:'descamerica',name:'Descobriment d’Amèrica',year:1492,wiki:'https://ca.wikipedia.org/wiki/Descoberta_d%27Am%C3%A8rica',desc:'Cristòfor Colom arriba a les Amèriques el 12 d’octubre, obrint l’era dels grans imperis colonials. Inici convencional de l’Edat Moderna.'},
+  {id:'reformaprot',name:'Reforma Protestant',year:1517,wiki:'https://ca.wikipedia.org/wiki/Reforma_protestant',desc:'Martí Luter publica les 95 tesis, trencant la unitat del cristianisme occidental i desencadenant guerres religioses arreu d’Europa.'},
+  {id:'revolindust',name:'Revolució Industrial',year:1760,wiki:'https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Industrial',desc:'L’aparició de la màquina de vapor a Anglaterra transforma l’economia, la societat i el paisatge urbà del món.'},
+  {id:'revfr',name:'Revolució Francesa',year:1789,wiki:'https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Francesa',desc:'Procés revolucionari que va enderrocar l’Antic Règim a França i va escampar per Europa els ideals de llibertat, igualtat i fraternitat.'},
   {id:'wwi',name:'Inici de la Primera Guerra Mundial',year:1914,wiki:'https://ca.wikipedia.org/wiki/Primera_Guerra_Mundial',desc:'Esclat del primer conflicte a escala global, que va redibuixar el mapa polític i social del segle XX.'},
+  {id:'wwii',name:'Segona Guerra Mundial',year:1939,wiki:'https://ca.wikipedia.org/wiki/Segona_Guerra_Mundial',desc:'El conflicte més devastador de la història, amb 70-85 milions de víctimes. Acabà amb la creació de l’ONU i l’ordre bipolar de la Guerra Freda.'},
+  {id:'murberlin',name:'Caiguda del Mur de Berlín',year:1989,wiki:'https://ca.wikipedia.org/wiki/Caiguda_del_mur_de_Berl%C3%ADn',desc:'El novembre de 1989 cau el símbol de la Guerra Freda, obrint camí a la reunificació alemanya i la dissolució del bloc soviètic.'},
   {id:'delt',name:'Fundació de DELT',year:2022,wiki:'https://deltproject.com/',desc:'Projecte sense ànim de lucre que combina intel·ligència artificial i drons per ajudar organitzacions de conservació de fauna, sobretot la detecció i protecció de tortugues marines davant la caça furtiva.'}
 ];
 const PEOPLE=[
-  {id:'socrates',wd:'Q913',name:'Sòcrates',birth:-470,death:-399,areas:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Sòcrates',desc:'Filòsof atenès que no deixà escrits propis, considerat el pare de la filosofia occidental i del mètode socràtic.'},
-  {id:'plato',wd:'Q859',name:'Plató',birth:-428,death:-348,areas:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Plató',desc:'Filòsof atenès, deixeble de Sòcrates i fundador de l\u0027Acadèmia, autor de La República.'},
-  {id:'diogenes',wd:'Q59180',name:'Diògenes',birth:-412,death:-323,areas:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Diògenes_de_Sinope',desc:'Filòsof cínic grec, conegut per la seva vida austera i les seves crítiques mordaces a les convencions socials.'},
-  {id:'aristotil',wd:'Q868',name:'Aristòtil',birth:-384,death:-322,areas:['Filosofia','Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Aristòtil',desc:'Filòsof i científic grec, deixeble de Plató i tutor d\u0027Alexandre Magne, sistematitzà gran part del saber antic.'},
-  {id:'alexandre',wd:'Q8409',name:'Alexandre el Gran',birth:-356,death:-323,areas:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Alexandre_el_Gran',desc:'Rei de Macedònia, conquerí un dels imperis més vastos de l\u0027antiguitat abans dels 33 anys.'},
-  {id:'epicur',wd:'Q43216',name:'Epicur',birth:-341,death:-270,areas:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Epicur',desc:'Filòsof grec, fundador de l\u0027epicureisme, defensor d\u0027una vida senzilla orientada a la recerca del plaer moderat.'},
-  {id:'cesar',wd:'Q1048',name:'Juli Cèsar',birth:-100,death:-44,areas:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Juli_Cèsar',desc:'General i dictador romà, la seva figura marca la transició de la República a l\u0027Imperi Romà.'},
-  {id:'cleopatra',wd:'Q635',name:'Cleopatra',birth:-69,death:-30,areas:['Política'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Cleòpatra',desc:'Última reina ptolemaica d\u0027Egipte, coneguda per les seves aliances amb Juli Cèsar i Marc Antoni.'},
-  {id:'jesucrist',wd:'Q302',name:'Jesucrist',birth:-4,death:30,areas:['Religió'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Jesús_de_Natzaret',desc:'Predicador i mestre jueu del segle I, figura central del cristianisme i un dels personatges més influents de la civilització occidental.'},
-  {id:'gengiskhan',wd:'Q720',name:'Gengis Khan',birth:1162,death:1227,areas:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Gengis_Khan',desc:'Fundador i primer gran khan de l\u0027Imperi Mongol, el més extens de la història en superfície contínua.'},
-  {id:'gutenberg',wd:'Q8958',name:'Johannes Gutenberg',birth:1400,death:1468,areas:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Johannes_Gutenberg',desc:'Impressor alemany, inventor de la impremta de tipus mòbils, revolucionà la difusió del coneixement a Europa.'},
-  {id:'joanadarc',wd:'Q7226',name:'Joana d\u0027Arc',birth:1412,death:1431,areas:['Política'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Joana_d\u0027Arc',desc:'Pagesa francesa que liderà l\u0027exèrcit reial durant la Guerra dels Cent Anys, cremada per heretgia i després canonitzada.'},
-  {id:'davinci',wd:'Q762',name:'Leonardo da Vinci',birth:1452,death:1519,areas:['Pintura','Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Leonardo_da_Vinci',desc:'Pintor i polímata del Renaixement, autor de la Gioconda i precursor de la ciència i l\u0027enginyeria modernes.'},
-  {id:'copernic',wd:'Q619',name:'Nicolau Copèrnic',birth:1473,death:1543,areas:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Nicolau_Copèrnic',desc:'Astrònom polonès, formulà el model heliocèntric que revolucionà la comprensió de l\u0027univers.'},
-  {id:'miquelangel',wd:'Q5592',name:'Miquel Àngel',birth:1475,death:1564,areas:['Pintura'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Miquel_Àngel',desc:'Escultor, pintor i arquitecte del Renaixement, autor del David i dels frescos de la Capella Sixtina.'},
-  {id:'galileu',wd:'Q307',name:'Galileu Galilei',birth:1564,death:1642,areas:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Galileu_Galilei',desc:'Astrònom i físic italià, defensà l\u0027heliocentrisme i és considerat el pare del mètode científic modern.'},
-  {id:'shakespeare',wd:'Q692',name:'William Shakespeare',birth:1564,death:1616,areas:['Literatura'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/William_Shakespeare',desc:'Dramaturg i poeta anglès, autor de Hamlet i Romeu i Julieta, el nom més universal de la literatura occidental.'},
-  {id:'newton',wd:'Q935',name:'Isaac Newton',birth:1643,death:1727,areas:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Isaac_Newton',desc:'Físic i matemàtic, formulà les lleis del moviment i la gravitació universal.'},
-  {id:'bach',wd:'Q1339',name:'J.S. Bach',birth:1685,death:1750,areas:['Música'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Johann_Sebastian_Bach',desc:'Compositor i organista del Barroc, referent de la música occidental.'},
-  {id:'voltaire',wd:'Q9068',name:'Voltaire',birth:1694,death:1778,areas:['Filosofia','Literatura'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Voltaire',desc:'Filòsof i escriptor il·lustrat, defensor de la llibertat d\u0027expressió.'},
-  {id:'franklin',wd:'Q34969',name:'Benjamin Franklin',birth:1706,death:1790,areas:['Ciència','Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Benjamin_Franklin',desc:'Polímata, científic i un dels pares fundadors dels EUA.'},
-  {id:'mozart',wd:'Q254',name:'Mozart',birth:1756,death:1791,areas:['Música'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Wolfgang_Amadeus_Mozart',desc:'Compositor clàssic prolífic i influent tot i la seva vida breu.'},
-  {id:'wollstonecraft',wd:'Q101638',name:'Mary Wollstonecraft',birth:1759,death:1797,areas:['Filosofia','Literatura'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Mary_Wollstonecraft',desc:'Filòsofa i pionera del pensament feminista modern.'},
-  {id:'napoleon',wd:'Q517',name:'Napoleó Bonaparte',birth:1769,death:1821,areas:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Napoleó_Bonaparte',desc:'Militar i emperador francès, dominà gran part d\u0027Europa i deixà una petjada duradora en el dret i la política modernes.'},
-  {id:'austen',wd:'Q36322',name:'Jane Austen',birth:1775,death:1817,areas:['Literatura'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Jane_Austen',desc:'Novel·lista anglesa, mestra de la ironia i la novel·la de costums.'},
-  {id:'darwin',wd:'Q1035',name:'Charles Darwin',birth:1809,death:1882,areas:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Charles_Darwin',desc:'Naturalista, formulà la teoria de l\u0027evolució per selecció natural.'},
-  {id:'lovelace',wd:'Q7259',name:'Ada Lovelace',birth:1815,death:1852,areas:['Ciència'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Ada_Lovelace',desc:'Matemàtica, considerada la primera programadora de la història.'},
-  {id:'marx',wd:'Q9061',name:'Karl Marx',birth:1818,death:1883,areas:['Filosofia','Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Karl_Marx',desc:'Filòsof i economista, autor d\u0027El Capital i pare del pensament comunista modern.'},
-  {id:'vangogh',wd:'Q5582',name:'Vincent van Gogh',birth:1853,death:1890,areas:['Pintura'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Vincent_van_Gogh',desc:'Pintor postimpressionista holandès, autor de La nit estrellada, incomprès en vida i icona de l\u0027art modern.'},
-  {id:'curie',wd:'Q7186',name:'Marie Curie',birth:1867,death:1934,areas:['Ciència'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Marie_Curie',desc:'Física i química, pionera de la radioactivitat i doble Nobel.'},
-  {id:'gandhi',wd:'Q1001',name:'Mahatma Gandhi',birth:1869,death:1948,areas:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Mahatma_Gandhi',desc:'Líder independentista indi, promotor de la resistència no violenta i icona global de la lluita pacífica.'},
-  {id:'einstein',wd:'Q937',name:'Albert Einstein',birth:1879,death:1955,areas:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Albert_Einstein',desc:'Físic teòric, autor de la teoria de la relativitat.'},
-  {id:'picasso',wd:'Q5593',name:'Pablo Picasso',birth:1881,death:1973,areas:['Pintura'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Pablo_Picasso',desc:'Pintor i escultor, cofundador del cubisme i l\u0027artista més influent del segle XX.'},
-  {id:'frida',wd:'Q5588',name:'Frida Kahlo',birth:1907,death:1954,areas:['Pintura'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Frida_Kahlo',desc:'Pintora mexicana, coneguda pels seus autoretrats i convertida en icona cultural global.'},
-  {id:'mandela',wd:'Q8023',name:'Nelson Mandela',birth:1918,death:2013,areas:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Nelson_Mandela',desc:'Líder sud-africà, empresonat 27 anys per lluitar contra l\u0027apartheid, president i símbol de reconciliació.'},
-  {id:'bernat',wd:'',name:'Bernat B.',birth:1991,death:null,areas:[],gender:'',wiki:'',desc:'Neix el 1991.<br>Crea aquesta pàgina el 2026.<br>Encara no ha mort.'}
+  {id:'socrates',wd:'Q913',name:'Sòcrates',birth:-470,death:-399,cats:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Sòcrates',desc:'Filòsof atenès que no deixà escrits propis, considerat el pare de la filosofia occidental i del mètode socràtic.'},
+  {id:'plato',wd:'Q859',name:'Plató',birth:-428,death:-348,cats:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Plató',desc:'Filòsof atenès, deixeble de Sòcrates i fundador de l\u0027Acadèmia, autor de La República.'},
+  {id:'diogenes',wd:'Q59180',name:'Diògenes',birth:-412,death:-323,cats:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Diògenes_de_Sinope',desc:'Filòsof cínic grec, conegut per la seva vida austera i les seves crítiques mordaces a les convencions socials.'},
+  {id:'aristotil',wd:'Q868',name:'Aristòtil',birth:-384,death:-322,cats:['Filosofia','Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Aristòtil',desc:'Filòsof i científic grec, deixeble de Plató i tutor d\u0027Alexandre Magne, sistematitzà gran part del saber antic.'},
+  {id:'alexandre',wd:'Q8409',name:'Alexandre el Gran',birth:-356,death:-323,cats:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Alexandre_el_Gran',desc:'Rei de Macedònia, conquerí un dels imperis més vastos de l\u0027antiguitat abans dels 33 anys.'},
+  {id:'epicur',wd:'Q43216',name:'Epicur',birth:-341,death:-270,cats:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Epicur',desc:'Filòsof grec, fundador de l\u0027epicureisme, defensor d\u0027una vida senzilla orientada a la recerca del plaer moderat.'},
+  {id:'cesar',wd:'Q1048',name:'Juli Cèsar',birth:-100,death:-44,cats:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Juli_Cèsar',desc:'General i dictador romà, la seva figura marca la transició de la República a l\u0027Imperi Romà.'},
+  {id:'cleopatra',wd:'Q635',name:'Cleopatra',birth:-69,death:-30,cats:['Política'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Cleòpatra',desc:'Última reina ptolemaica d\u0027Egipte, coneguda per les seves aliances amb Juli Cèsar i Marc Antoni.'},
+  {id:'jesucrist',wd:'Q302',name:'Jesucrist',birth:-4,death:30,cats:['Religió'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Jesús_de_Natzaret',desc:'Predicador i mestre jueu del segle I, figura central del cristianisme i un dels personatges més influents de la civilització occidental.'},
+  {id:'gengiskhan',wd:'Q720',name:'Gengis Khan',birth:1162,death:1227,cats:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Gengis_Khan',desc:'Fundador i primer gran khan de l\u0027Imperi Mongol, el més extens de la història en superfície contínua.'},
+  {id:'gutenberg',wd:'Q8958',name:'Johannes Gutenberg',birth:1400,death:1468,cats:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Johannes_Gutenberg',desc:'Impressor alemany, inventor de la impremta de tipus mòbils, revolucionà la difusió del coneixement a Europa.'},
+  {id:'joanadarc',wd:'Q7226',name:'Joana d\u0027Arc',birth:1412,death:1431,cats:['Política'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Joana_d\u0027Arc',desc:'Pagesa francesa que liderà l\u0027exèrcit reial durant la Guerra dels Cent Anys, cremada per heretgia i després canonitzada.'},
+  {id:'davinci',wd:'Q762',name:'Leonardo da Vinci',birth:1452,death:1519,cats:['Pintura','Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Leonardo_da_Vinci',desc:'Pintor i polímata del Renaixement, autor de la Gioconda i precursor de la ciència i l\u0027enginyeria modernes.'},
+  {id:'copernic',wd:'Q619',name:'Nicolau Copèrnic',birth:1473,death:1543,cats:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Nicolau_Copèrnic',desc:'Astrònom polonès, formulà el model heliocèntric que revolucionà la comprensió de l\u0027univers.'},
+  {id:'miquelangel',wd:'Q5592',name:'Miquel Àngel',birth:1475,death:1564,cats:['Pintura'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Miquel_Àngel',desc:'Escultor, pintor i arquitecte del Renaixement, autor del David i dels frescos de la Capella Sixtina.'},
+  {id:'galileu',wd:'Q307',name:'Galileu Galilei',birth:1564,death:1642,cats:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Galileu_Galilei',desc:'Astrònom i físic italià, defensà l\u0027heliocentrisme i és considerat el pare del mètode científic modern.'},
+  {id:'shakespeare',wd:'Q692',name:'William Shakespeare',birth:1564,death:1616,cats:['Literatura'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/William_Shakespeare',desc:'Dramaturg i poeta anglès, autor de Hamlet i Romeu i Julieta, el nom més universal de la literatura occidental.'},
+  {id:'newton',wd:'Q935',name:'Isaac Newton',birth:1643,death:1727,cats:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Isaac_Newton',desc:'Físic i matemàtic, formulà les lleis del moviment i la gravitació universal.'},
+  {id:'bach',wd:'Q1339',name:'J.S. Bach',birth:1685,death:1750,cats:['Música'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Johann_Sebastian_Bach',desc:'Compositor i organista del Barroc, referent de la música occidental.'},
+  {id:'voltaire',wd:'Q9068',name:'Voltaire',birth:1694,death:1778,cats:['Filosofia','Literatura'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Voltaire',desc:'Filòsof i escriptor il·lustrat, defensor de la llibertat d\u0027expressió.'},
+  {id:'franklin',wd:'Q34969',name:'Benjamin Franklin',birth:1706,death:1790,cats:['Ciència','Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Benjamin_Franklin',desc:'Polímata, científic i un dels pares fundadors dels EUA.'},
+  {id:'mozart',wd:'Q254',name:'Mozart',birth:1756,death:1791,cats:['Música'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Wolfgang_Amadeus_Mozart',desc:'Compositor clàssic prolífic i influent tot i la seva vida breu.'},
+  {id:'wollstonecraft',wd:'Q101638',name:'Mary Wollstonecraft',birth:1759,death:1797,cats:['Filosofia','Literatura'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Mary_Wollstonecraft',desc:'Filòsofa i pionera del pensament feminista modern.'},
+  {id:'napoleon',wd:'Q517',name:'Napoleó Bonaparte',birth:1769,death:1821,cats:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Napoleó_Bonaparte',desc:'Militar i emperador francès, dominà gran part d\u0027Europa i deixà una petjada duradora en el dret i la política modernes.'},
+  {id:'austen',wd:'Q36322',name:'Jane Austen',birth:1775,death:1817,cats:['Literatura'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Jane_Austen',desc:'Novel·lista anglesa, mestra de la ironia i la novel·la de costums.'},
+  {id:'darwin',wd:'Q1035',name:'Charles Darwin',birth:1809,death:1882,cats:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Charles_Darwin',desc:'Naturalista, formulà la teoria de l\u0027evolució per selecció natural.'},
+  {id:'lovelace',wd:'Q7259',name:'Ada Lovelace',birth:1815,death:1852,cats:['Ciència'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Ada_Lovelace',desc:'Matemàtica, considerada la primera programadora de la història.'},
+  {id:'marx',wd:'Q9061',name:'Karl Marx',birth:1818,death:1883,cats:['Filosofia','Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Karl_Marx',desc:'Filòsof i economista, autor d\u0027El Capital i pare del pensament comunista modern.'},
+  {id:'vangogh',wd:'Q5582',name:'Vincent van Gogh',birth:1853,death:1890,cats:['Pintura'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Vincent_van_Gogh',desc:'Pintor postimpressionista holandès, autor de La nit estrellada, incomprès en vida i icona de l\u0027art modern.'},
+  {id:'curie',wd:'Q7186',name:'Marie Curie',birth:1867,death:1934,cats:['Ciència'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Marie_Curie',desc:'Física i química, pionera de la radioactivitat i doble Nobel.'},
+  {id:'gandhi',wd:'Q1001',name:'Mahatma Gandhi',birth:1869,death:1948,cats:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Mahatma_Gandhi',desc:'Líder independentista indi, promotor de la resistència no violenta i icona global de la lluita pacífica.'},
+  {id:'einstein',wd:'Q937',name:'Albert Einstein',birth:1879,death:1955,cats:['Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Albert_Einstein',desc:'Físic teòric, autor de la teoria de la relativitat.'},
+  {id:'picasso',wd:'Q5593',name:'Pablo Picasso',birth:1881,death:1973,cats:['Pintura'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Pablo_Picasso',desc:'Pintor i escultor, cofundador del cubisme i l\u0027artista més influent del segle XX.'},
+  {id:'frida',wd:'Q5588',name:'Frida Kahlo',birth:1907,death:1954,cats:['Pintura'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Frida_Kahlo',desc:'Pintora mexicana, coneguda pels seus autoretrats i convertida en icona cultural global.'},
+  {id:'mandela',wd:'Q8023',name:'Nelson Mandela',birth:1918,death:2013,cats:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Nelson_Mandela',desc:'Líder sud-africà, empresonat 27 anys per lluitar contra l\u0027apartheid, president i símbol de reconciliació.'},
+  {id:'bernat',wd:'',name:'Bernat B.',birth:1991,death:null,cats:[],gender:'',wiki:'',desc:'Neix el 1991.<br>Crea aquesta pàgina el 2026.<br>Encara no ha mort.'}
 ];
 
 // ============================================================
@@ -401,29 +484,32 @@ const GUTTER_YEARS=14;
 const RIGHT_PAD_YEARS=20;   // just enough for the axis to keep ticking a bit past "today" — the real scroll margin is capped in px by FUTURE_MARGIN_PX in render(), not by this
 const YEAR_MIN=DATA_MIN-GUTTER_YEARS, YEAR_MAX=DATA_MAX+RIGHT_PAD_YEARS;
 let pxPerYear=4;               // current zoom (pixels per year); set by defaultView()/setZoom()
-const SEED_PINNED=['bernat'];  // always present, never removable
+const SEED_PINNED=['bernat'];  // always present, never removable — "empty screen" means without the other 35, not without him
 const DEFAULT_MARCS=['west'];  // marcs shown on load / after Reset (the eras backbone is always on)
 const FUTURE_FADE=72;          // px the living bars (and the era band) fade out past "today"
 const deathOf=p=>p.death==null?NOW_YEAR:p.death;
 const isAlive=p=>p.death==null;
 
-const state={present:new Set(),activeCols:new Set(),pinned:new Set(SEED_PINNED),hidden:new Set(),marcs:new Set(DEFAULT_MARCS),showEvents:true,selected:null};
+const state={present:new Set(),pinned:new Set(SEED_PINNED),collections:new Set(),marcs:new Set(DEFAULT_MARCS),showEvents:true,selected:null};
 
 // ============================================================
 // [3] DOM REFS & SMALL HELPERS (coords, colours, formatting)
 // ============================================================
 const $=s=>document.querySelector(s);
-const inner=$('#inner'),barsLayer=$('#barsLayer'),eraTracksEl=$('#eraTracks'),eraPanel=$('#eraPanel'),eventsRail=$('#eventsRail'),axisEl=$('#axis'),axisInner=$('#axisInner'),guide=$('#guide'),nowline=$('#nowline'),scroll=$('#scroll'),detailBackdrop=$('#detailBackdrop');
+const inner=$('#inner'),barsLayer=$('#barsLayer'),eraTracksEl=$('#eraTracks'),eraPanel=$('#eraPanel'),eventsRail=$('#eventsRail'),axisEl=$('#axis'),axisInner=$('#axisInner'),guide=$('#guide'),nowline=$('#nowline'),scroll=$('#scroll'),legendEl=$('#legend'),detailBackdrop=$('#detailBackdrop'),toastEl=$('#toast');
+let toastTimer=null;
+function showToast(msg){toastEl.textContent=msg;toastEl.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('on'),2200);}
+const WIP=()=>showToast('🚧 En construcció');
 function hideDetail(){$('#detail').classList.remove('open');detailBackdrop.classList.remove('open');}
 $('#detailBackdrop').addEventListener('click',()=>{hideDetail();state.selected=null;render();});
 const x=y=>(y-YEAR_MIN)*pxPerYear;                 // year → x px
 const totalW=()=>(YEAR_MAX-YEAR_MIN)*pxPerYear;    // full canvas width px
 
-const NOCAT_COLOR='#4FB0A6';                        // people without a collection
-const hasCat=p=>Array.isArray(p.areas)&&p.areas.length>0;
+const NOCAT_COLOR='#4FB0A6';                        // people with no category at all
+const hasCat=p=>Array.isArray(p.cats)&&p.cats.length>0;
 const stripeBg=(cols,seg)=>cols.length<2?cols[0]:`repeating-linear-gradient(135deg, ${cols.map((c,i)=>`${c} ${i*seg}px ${(i+1)*seg}px`).join(', ')})`;
-const barBg=p=>hasCat(p)?stripeBg(p.areas.map(a=>AREA_COLORS[a]),14):NOCAT_COLOR;   // multi-collection → diagonal stripes
-const swatchBg=p=>hasCat(p)?stripeBg(p.areas.map(a=>AREA_COLORS[a]),7):NOCAT_COLOR;
+const barBg=p=>hasCat(p)?stripeBg(p.cats.map(a=>CAT_COLORS[a]),14):NOCAT_COLOR;   // two categories → diagonal stripes
+const swatchBg=p=>hasCat(p)?stripeBg(p.cats.map(a=>CAT_COLORS[a]),7):NOCAT_COLOR;
 const hexA=(hex,a)=>{const n=parseInt(hex.slice(1),16);return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;};                                   // hex → translucent rgba
 const shade=(hex,f)=>{const n=parseInt(hex.slice(1),16);const r=Math.round(((n>>16)&255)*f),g=Math.round(((n>>8)&255)*f),b=Math.round((n&255)*f);return `rgb(${r},${g},${b})`;};   // darken toward black
 const mix=(hex,f)=>{const n=parseInt(hex.slice(1),16);const m=v=>Math.round(255+(v-255)*f);return `rgb(${m((n>>16)&255)},${m((n>>8)&255)},${m(n&255)})`;};   // opaque tint toward white (f=0 white … 1 full colour)
@@ -431,7 +517,7 @@ const fmtY=y=>y<0?(-y)+' aC':''+y;
 const linkLabel=url=>/wikipedia\.org/.test(url)?'Wikipedia':/wikidata\.org/.test(url)?'Wikidata':'Web';   // adaptive label for the detail link
 
 // Guess categories from Wikidata itemDescription (conservative keyword matching)
-const guessAreas=desc=>{if(!desc)return[];const d=desc.toLowerCase(),a=[];
+const guessCats=desc=>{if(!desc)return[];const d=desc.toLowerCase(),a=[];
   if(/filòsof|filósofo|philosopher/.test(d))a.push('Filosofia');
   if(/compositor|composer|música|music/.test(d))a.push('Música');
   if(/escriptor|escritor|writer|poeta|poet|dramaturgo|dramaturg|novel·lista|novelist/.test(d))a.push('Literatura');
@@ -439,12 +525,13 @@ const guessAreas=desc=>{if(!desc)return[];const d=desc.toLowerCase(),a=[];
   if(/rei|king|emperador|emperor|dictador|dictator|militar|military|president|independentista/.test(d))a.push('Política');
   if(/pintor|painter|escultor|sculptor/.test(d))a.push('Pintura');
   if(/profeta|prophet|religiós|religious|sant|saint/.test(d))a.push('Religió');
-  return [...new Set(a)];};
-const peopleOfArea=a=>PEOPLE.filter(p=>p.areas.includes(a));
+  if(/futbolista|jugador de futbol|footballer|football player|tennista|tenista|tennis player|jugador de tennis|basquetbol|bàsquet|baloncestista|basketball|boxejador|boxeador|boxer|atleta|athlete|track and field|velocista|sprinter|gimnasta|gymnast|nedador|nadador|swimmer|ciclista|cyclist|golfista|golfer|automobilista|racing driver|motorcycle racer/.test(d)
+     ||/(pilot|piloto)[^,;.]{0,18}(autom|motocicl)/.test(d))a.push('Esport');   // "pilot" sol cauria sobre aviadors, així que exigim context de motor
+  return [...new Set(a)].slice(0,2);};   // 0–2 per persona: una descripció tipus "filòsof, escriptor i naturalista" dispararia tres regles
 
-// Which people are on the timeline right now = (in an active collection OR pinned) AND not hidden.
-function recomputePresent(){const s=new Set();PEOPLE.forEach(p=>{const inActive=p.areas.some(a=>state.activeCols.has(a));if((inActive||state.pinned.has(p.id))&&!state.hidden.has(p.id))s.add(p.id);});state.present=s;}
-function deactivateEmptyCols(){[...state.activeCols].forEach(a=>{if(!peopleOfArea(a).some(p=>state.present.has(p.id)))state.activeCols.delete(a);});}
+// Who is on the timeline = whoever you put there. Categories only colour the bars; they never
+// decide membership, so `pinned` is the whole story (no more activeCols/hidden bookkeeping).
+function recomputePresent(){state.present=new Set([...state.pinned].filter(id=>PEOPLE.some(p=>p.id===id)));}
 
 // ============================================================
 // [4] LAYOUT MATH (lane packing + vertical geometry)
@@ -599,20 +686,35 @@ function render(){
   if(parseFloat(guide.style.left||0)>W)hideGuide();   // a guide left over at an old (larger) zoom keeps the scrollable area inflated → runaway scroll + blank right side
 
   renderSidebar();
+  renderLegend();
 }
+
+// Category legend: derived from what is painted, never the other way round. Walks CAT_COLORS so the
+// order stays stable as people come and go, and counts both colours of a two-category (striped) bar.
+function renderLegend(){
+  const present=PEOPLE.filter(p=>state.present.has(p.id));
+  const live=new Set(present.flatMap(p=>hasCat(p)?p.cats:[]));
+  const items=Object.keys(CAT_COLORS).filter(c=>live.has(c)).map(c=>[c,CAT_COLORS[c]]);
+  if(present.some(p=>!hasCat(p)))items.push(['Sense categoria',NOCAT_COLOR]);   // the teal bars need a key too
+  if(!items.length){legendEl.innerHTML='';return;}   // :empty hides the card entirely
+  legendEl.innerHTML=items.map(([n,c])=>`<span class="lgi"><span class="swatch" style="background:${c}"></span>${n}</span>`).join('');
+  // The axis is sticky-bottom inside .scroll, but whenever the canvas is shorter than the viewport
+  // it falls back into normal flow partway up — so its position is variable and has to be measured,
+  // not assumed from --axis-h, or the card ends up sitting on top of the year ticks.
+  const sb=scroll.getBoundingClientRect().bottom,at=axisEl.getBoundingClientRect().top;
+  legendEl.style.bottom=Math.max(12,Math.round(sb-at+10))+'px';
+}
+
 
 // Sidebar lists (rebuilt on every render so counts / checked states stay in sync).
 function renderSidebar(){
   $('#regions').innerHTML=`<label class="filter"><input type="checkbox" data-events ${state.showEvents?'checked':''}><span class="swatch" style="background:var(--eventc)"></span>Esdeveniments</label>`+MARCS.map(m=>`<label class="filter"><input type="checkbox" data-marc="${m.id}" ${state.marcs.has(m.id)?'checked':''}><span class="swatch" style="background:${m.color}"></span>${m.name}</label>`).join('');
-  $('#filters').innerHTML=Object.keys(AREA_COLORS).map(a=>{
-    const pp=peopleOfArea(a);
-    const on=state.activeCols.has(a);
-    const onCount=pp.filter(p=>state.present.has(p.id)).length;
-    const style=on?`background:${hexA(AREA_COLORS[a],.16)};border-color:${AREA_COLORS[a]};`:'';
-    return `<div class="areaTag ${on?'on':'off'}" data-area="${a}" style="${style}"><span class="swatch" style="background:${AREA_COLORS[a]}"></span>${a}<span class="cnt">${onCount}/${pp.length}</span></div>`;
-  }).join('');
+  const colIco='<svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 4.5h9M2 8h9M2 11.5h6"/><circle cx="12.5" cy="11" r="2.2"/></svg>';
+  const extIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3H3a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1v-3"/><path d="M10 2h4v4M14 2L8 8"/></svg>';
+  $('#collections').innerHTML=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}${c.name}<span class="cnt">${c.wds.length}</span>${c.url?`<a class="extlink" href="${c.url}" target="_blank" rel="noopener" title="Obre el lloc web" onclick="event.stopPropagation()">${extIco}</a>`:''}</button>`).join('')
+    +`<button class="newcol" data-newcol>+ Nova col·lecció</button>`;
   const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>a.name.localeCompare(b.name,'ca'));   // always alphabetical
-  $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span>${p.name}${SEED_PINNED.includes(p.id)?'':`<button class="x" data-remove="${p.id}" title="Treu">×</button>`}</div>`).join(''):'<div class="empty">Cap personatge. Clica una col·lecció o cerca\u0027n un.</div>';
+  $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}" title="Centra\u0027l a la vista">${p.name}</button>${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}">⚠</button><button class="x" data-remove="${p.id}" title="Treu">×</button>`}</div>`).join(''):'<div class="empty">Cap personatge encara. Cerca\u0027n un a dalt.</div>';
 }
 
 // ============================================================
@@ -635,18 +737,20 @@ function openDetail(p){
   d.innerHTML=`<button class="close" id="closeDetail">×</button>
     <h2>${p.name}</h2>
     <div class="life">${fmtY(p.birth)} – ${isAlive(p)?'actualitat':fmtY(p.death)}</div>
-    <div class="areas">${hasCat(p)?p.areas.map(a=>`<span class="chip"><span class="swatch" style="background:${AREA_COLORS[a]}"></span>${a}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>Sense categoria</span>`}</div>
+    <div class="chiprow">${hasCat(p)?p.cats.map(a=>`<span class="chip"><span class="swatch" style="background:${CAT_COLORS[a]}"></span>${a}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>Sense categoria</span>`}</div>
     <div class="meta">Marc (Occident): ${eraLabel(p.birth)}</div>
     ${p.gender?`<div class="meta">Gènere: ${p.gender}</div>`:''}
     <div class="desc">${p.desc}</div>
     ${p.wiki?`<a class="wiki" href="${p.wiki}" target="_blank" rel="noopener">🔗 ${linkLabel(p.wiki)}</a>`:''}
     <div class="actions">
       <button class="dbtn" data-act="context">Mostra context</button>
+      <button class="dbtn" data-act="report">Reportar error</button>
       ${SEED_PINNED.includes(p.id)?'':`<button class="dbtn danger" data-act="remove">Elimina</button>`}
     </div>`;
   $('#closeDetail').onclick=()=>{hideDetail();state.selected=null;render();};
   d.querySelectorAll('.dbtn').forEach(btn=>btn.onclick=()=>{
-    if(btn.getAttribute('data-act')==='remove')removePerson(p.id);else showContext(p.id);
+    const act=btn.getAttribute('data-act');
+    if(act==='remove')removePerson(p.id);else if(act==='report')WIP();else showContext(p.id);
   });
   render();
 }
@@ -671,7 +775,7 @@ function openBlock(b){
   d.innerHTML=`<button class="close" id="closeDetail">×</button>
     <h2>${b.name}</h2>
     <div class="life">${fmtY(b.start)} – ${fmtY(b.end)}</div>
-    <div class="areas"><span class="chip"><span class="swatch" style="background:${b.color}"></span>${b.marcName}</span></div>
+    <div class="chiprow"><span class="chip"><span class="swatch" style="background:${b.color}"></span>${b.marcName}</span></div>
     <div class="meta">Durada: ${b.end-b.start} anys</div>
     ${b.desc?`<div class="desc">${b.desc}</div>`:''}
     ${b.wiki?`<a class="wiki" href="${b.wiki}" target="_blank" rel="noopener">🔗 ${linkLabel(b.wiki)}</a>`:''}`;
@@ -718,13 +822,13 @@ function highlightSearch(i){
 function activateRow(r){if(!r)return;if(r.dataset.add)addFromSearch(r.dataset.add);else if(r.dataset.wd)addWikidataPerson(r.dataset.wd);}
 function addFromSearch(id){
   if(!id||state.present.has(id))return;
-  state.pinned.add(id);state.hidden.delete(id);q.value='';results.classList.remove('open');wdTerm='';wdResults=[];render();revealPerson(id);
+  state.pinned.add(id);q.value='';results.classList.remove('open');wdTerm='';wdResults=[];render();revealPerson(id);
 }
 // Wikidata person -> session-only entry in PEOPLE (no category; lost on reload)
 function addWikidataPerson(qid){
   const w=wdResults.find(x=>x.qid===qid);if(!w||w.birth==null)return;
   const id='wd_'+qid;
-  if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:qid,name:w.name,birth:w.birth,death:w.death,areas:guessAreas(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_session:true});
+  if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:qid,name:w.name,birth:w.birth,death:w.death,cats:guessCats(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_session:true});
   addFromSearch(id);
 }
 
@@ -792,14 +896,15 @@ $('#regions').addEventListener('change',e=>{
   const m=e.target.getAttribute('data-marc');if(!m)return;
   if(e.target.checked)state.marcs.add(m);else state.marcs.delete(m);render();
 });
-$('#filters').addEventListener('click',e=>{
-  const tag=e.target.closest('[data-area]');if(!tag)return;
-  const a=tag.getAttribute('data-area');
-  if(state.activeCols.has(a)){state.activeCols.delete(a);}
-  else{state.activeCols.add(a);peopleOfArea(a).forEach(p=>state.hidden.delete(p.id));}
-  recomputePresent();closeDetailIfGone();render();
+$('#onview').addEventListener('mousemove',e=>{   // same styled tooltip as the bars, so a bare ⚠ is discoverable
+  const rp=e.target.closest('[data-report]');
+  if(rp)placeBartip('Reportar error',e.clientX,e.clientY);else hideBartip();
 });
+$('#onview').addEventListener('mouseleave',hideBartip);
 $('#onview').addEventListener('click',e=>{
+  const g=e.target.closest('[data-goto]');
+  if(g){revealPerson(g.getAttribute('data-goto'));return;}   // clicking a name pans it to the centre
+  if(e.target.closest('[data-report]')){WIP();return;}
   const b=e.target.closest('[data-remove]');if(!b)return;
   removePerson(b.getAttribute('data-remove'));
 });
@@ -816,17 +921,19 @@ document.addEventListener('click',e=>{if(!e.target.closest('.barmenu')&&!e.targe
 // barsLayer because render() replaces every bar. Same date wording as the detail panel (fmtY → "aC").
 const bartip=$('#bartip');
 function hideBartip(){bartip.classList.remove('on');}
+function placeBartip(txt,clientX,clientY){
+  bartip.textContent=txt;bartip.classList.add('on');
+  const w=bartip.offsetWidth,h=bartip.offsetHeight;   // measure after the text is in, then keep it on screen
+  bartip.style.left=Math.max(4,Math.min(clientX+14,window.innerWidth-w-4))+'px';
+  bartip.style.top=(clientY-h-12<4?clientY+18:clientY-h-12)+'px';
+}
 barsLayer.addEventListener('mousemove',e=>{
   if(drag&&drag.moved){hideBartip();return;}          // panning: a label chasing the cursor is just noise
   const bar=e.target.closest('.bar');
   if(!bar){hideBartip();return;}
   const p=PEOPLE.find(x=>x.id===bar.getAttribute('data-id'));
   if(!p){hideBartip();return;}
-  bartip.textContent=`${p.name} · ${fmtY(p.birth)} – ${isAlive(p)?'actualitat':fmtY(p.death)}`;
-  bartip.classList.add('on');
-  const w=bartip.offsetWidth,h=bartip.offsetHeight;   // measure after the text is in, then keep it on screen
-  bartip.style.left=Math.max(4,Math.min(e.clientX+14,window.innerWidth-w-4))+'px';
-  bartip.style.top=(e.clientY-h-12<4?e.clientY+18:e.clientY-h-12)+'px';
+  placeBartip(`${p.name} · ${fmtY(p.birth)} – ${isAlive(p)?'actualitat':fmtY(p.death)}`,e.clientX,e.clientY);
 });
 barsLayer.addEventListener('mouseleave',hideBartip);
 eraTracksEl.addEventListener('mousemove',e=>{
@@ -835,11 +942,7 @@ eraTracksEl.addEventListener('mousemove',e=>{
   if(!el){hideBartip();return;}
   const b=activeBlocks().find(x=>x.key===el.getAttribute('data-blk'));
   if(!b){hideBartip();return;}
-  bartip.textContent=`${b.name} · ${fmtY(b.start)} – ${fmtY(b.end)}`;
-  bartip.classList.add('on');
-  const w=bartip.offsetWidth,h=bartip.offsetHeight;
-  bartip.style.left=Math.max(4,Math.min(e.clientX+14,window.innerWidth-w-4))+'px';
-  bartip.style.top=(e.clientY-h-12<4?e.clientY+18:e.clientY-h-12)+'px';
+  placeBartip(`${b.name} · ${fmtY(b.start)} – ${fmtY(b.end)}`,e.clientX,e.clientY);
 });
 eraTracksEl.addEventListener('mouseleave',hideBartip);
 scroll.addEventListener('scroll',hideBartip);
@@ -890,8 +993,8 @@ function revealPerson(id){panToPerson(id);flashBar(id);}
 // Remove a person from the canvas (same as the × in "A la vista"). Seed-pinned people can't be removed.
 function removePerson(id){
   if(SEED_PINNED.includes(id))return;
-  state.pinned.delete(id);state.hidden.add(id);
-  recomputePresent();deactivateEmptyCols();closeDetailIfGone();render();
+  state.pinned.delete(id);
+  recomputePresent();closeDetailIfGone();render();
 }
 // "Show context": add every DB person whose life overlaps, or is within 20 years of, this person.
 function showContext(id){
@@ -900,7 +1003,7 @@ function showContext(id){
   PEOPLE.forEach(o=>{
     if(o.id===id||state.present.has(o.id))return;
     const gap=Math.max(0,Math.max(o.birth-a2,a1-deathOf(o)));   // 0 if the lifespans overlap
-    if(gap<=20){state.pinned.add(o.id);state.hidden.delete(o.id);}
+    if(gap<=20)state.pinned.add(o.id);
   });
   recomputePresent();render();panToPerson(id);
 }
@@ -911,7 +1014,7 @@ function openBarMenu(id,anchorEl){
   const rm=SEED_PINNED.includes(id)?'':`<button class="danger" data-act="remove" data-id="${id}">Elimina</button>`;
   // "Veure detall" first: zoomed far out a bar can shrink to just its ⋮ button, leaving no pill left
   // to click, so the menu has to offer the same thing clicking the bar would.
-  barmenu.innerHTML=`<button data-act="detail" data-id="${id}">Veure detall</button><button data-act="context" data-id="${id}">Mostra context</button>${rm}`;
+  barmenu.innerHTML=`<button data-act="detail" data-id="${id}">Veure detall</button><button data-act="context" data-id="${id}">Mostra context</button><button data-act="report" data-id="${id}">Reportar error</button>${rm}`;
   const r=anchorEl.getBoundingClientRect();
   barmenu.style.left=Math.min(r.left,window.innerWidth-170)+'px';
   barmenu.style.top=(r.bottom+4)+'px';
@@ -923,9 +1026,62 @@ barmenu.addEventListener('click',e=>{
   const id=b.getAttribute('data-id'),act=b.getAttribute('data-act');
   if(act==='remove')removePerson(id);
   else if(act==='detail'){const p=PEOPLE.find(x=>x.id===id);if(p)openDetail(p);}
+  else if(act==='report')WIP();
   else showContext(id);
   closeBarMenu();
 });
+$('#collections').addEventListener('click',e=>{
+  if(e.target.closest('[data-newcol]')){WIP();return;}
+  const b=e.target.closest('[data-col]');if(b)toggleCollection(b.getAttribute('data-col'));
+});
+// A collection is a list of Q-ids: resolve each against the local DB first, fetch the rest from
+// Wikidata (byIds already drops anything we hold locally), then frame the view around the result —
+// without it "Els meus filòsofs" would land off-screen, since the default view starts at 1500.
+async function toggleCollection(cid){
+  const c=COLLECTIONS.find(x=>x.id===cid);if(!c)return;
+  if(state.collections.has(cid)){                  // same button takes it away again
+    state.collections.delete(cid);
+    const stillWanted=new Set([...state.collections].flatMap(id=>(COLLECTIONS.find(x=>x.id===id)||{wds:[]}).wds));
+    c.wds.forEach(q=>{
+      if(stillWanted.has(q))return;                // someone another active collection also holds
+      const p=PEOPLE.find(x=>x.wd===q);
+      if(p&&!SEED_PINNED.includes(p.id))state.pinned.delete(p.id);
+    });
+    recomputePresent();closeDetailIfGone();render();return;
+  }
+  state.collections.add(cid);
+  const local=new Map(PEOPLE.filter(p=>p.wd).map(p=>[p.wd,p]));
+  c.wds.forEach(q=>{const p=local.get(q);if(p)state.pinned.add(p.id);});
+  const missing=c.wds.filter(q=>!local.has(q));
+  recomputePresent();render();
+  if(missing.length){
+    showToast(`${c.name}: carregant ${missing.length} de Wikidata…`);
+    const got=await byIds(missing,true);
+    got.forEach(w=>{
+      if(w.birth==null)return;                       // no birth year → nowhere to place the bar
+      const id='wd_'+w.qid;
+      if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:w.qid,name:w.name,birth:w.birth,death:w.death,cats:guessCats(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_session:true});
+      state.pinned.add(id);
+    });
+    recomputePresent();
+    const lost=missing.length-got.filter(w=>w.birth!=null).length;
+    showToast(lost?`${c.name} · ${lost} no s'han pogut carregar`:c.name);
+  }
+  render();   // deliberately no zoom change: a collection snapping the zoom was jarring — that's what "Veure tot" is for
+}
+// Zoom + pan so everyone currently on the canvas fits.
+// The sidebar OVERLAYS the stage rather than shrinking it, so the leftmost strip of the canvas is
+// hidden: fitting against the full clientWidth would park the oldest person behind the sidebar
+// (exactly what happened with Sòcrates). Measure the occluded strip and start the content after it.
+function fitToPresent(){
+  const pp=PEOPLE.filter(p=>state.present.has(p.id)&&!SEED_PINNED.includes(p.id));
+  if(!pp.length)return;                            // only the always-pinned ones → nothing you chose to frame, so don't move
+  const y1=Math.min(...pp.map(p=>p.birth)), y2=Math.max(...pp.map(p=>deathOf(p)));
+  const pad=Math.max(10,(y2-y1)*0.06);
+  const blind=Math.max(0,$('.sidebar').getBoundingClientRect().right-scroll.getBoundingClientRect().left);
+  setZoom(Math.max(60,scroll.clientWidth-blind-24)/((y2-y1)+2*pad));
+  scroll.scrollLeft=Math.min(Math.max(0,x(y1-pad)-blind),maxScroll());
+}
 // Zoom keeping the year under the pointer fixed.
 function zoomAt(clientX,factor){
   const rect=scroll.getBoundingClientRect();
@@ -937,7 +1093,8 @@ function zoomAt(clientX,factor){
 }
 $('#zoomIn').onclick=()=>{const r=scroll.getBoundingClientRect();zoomAt(r.left+scroll.clientWidth/2,1.4);};
 $('#zoomOut').onclick=()=>{const r=scroll.getBoundingClientRect();zoomAt(r.left+scroll.clientWidth/2,1/1.4);};
-$('#reset').onclick=()=>{state.present=new Set();state.activeCols=new Set();state.pinned=new Set(SEED_PINNED);state.hidden=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.selected=null;$('#detail').classList.remove('open');defaultView();};
+$('#fitAll').onclick=()=>fitToPresent();
+$('#reset').onclick=()=>{state.present=new Set();state.pinned=new Set(SEED_PINNED);state.collections=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.selected=null;$('#detail').classList.remove('open');defaultView();};
 $('#sidebarToggle').onclick=e=>{
   const collapsed=$('.body').classList.toggle('collapsed');
   e.currentTarget.textContent=collapsed?'›':'‹';
