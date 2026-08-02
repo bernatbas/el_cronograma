@@ -185,7 +185,7 @@
   /* ===== Detail panel — modal popup ===== */
   .detail-backdrop{position:fixed;inset:0;background:rgba(20,8,10,.3);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);z-index:49;visibility:hidden;opacity:0;transition:opacity .2s,visibility 0s .2s;}
   .detail-backdrop.open{visibility:visible;opacity:1;transition:opacity .2s,visibility 0s;}
-  .detail{position:fixed;top:30%;left:50%;transform:translate(-50%,-50%) scale(.95);width:min(420px,calc(100vw - 32px));max-height:calc(100dvh - 80px);overflow-y:auto;background:#fff;border-radius:16px;padding:24px 24px 20px;box-shadow:0 24px 64px rgba(0,0,0,.18),0 4px 20px rgba(0,0,0,.08);z-index:50;visibility:hidden;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s,visibility 0s .2s;}
+  .detail{position:fixed;top:50dvh;left:50%;transform:translate(-50%,-50%) scale(.95);width:min(420px,calc(100vw - 32px));max-height:calc(100dvh - 80px);overflow-y:auto;background:#fff;border-radius:16px;padding:24px 24px 20px;box-shadow:0 24px 64px rgba(0,0,0,.18),0 4px 20px rgba(0,0,0,.08);z-index:50;visibility:hidden;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s,visibility 0s .2s;}
   .detail.open{visibility:visible;opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);transition:opacity .2s,transform .2s,visibility 0s;}
   .detail .close{position:absolute;top:14px;right:16px;border:none;background:none;font-size:22px;cursor:pointer;color:var(--text2);line-height:1;padding:2px 6px;border-radius:6px;}
   .detail .close:hover{background:var(--soft);}
