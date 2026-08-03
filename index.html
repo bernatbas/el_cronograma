@@ -35,6 +35,7 @@
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 22px;border-bottom:5px solid #612E25;flex:0 0 auto;background:var(--topbar-bg);z-index:5;}
   .topbar .brand{color:#fff;}
   .topbar .btn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);color:#fff;}
+  .topbar .btn.on{background:#fff;color:#B23A2E;border-color:#fff;font-weight:600;box-shadow:inset 0 0 0 1px #fff;}
   .topbar .btn:hover{background:rgba(255,255,255,.22);}
   .topbar .search input{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.25);color:#fff;}
   .topbar .search input::placeholder{color:rgba(255,255,255,.55);}
@@ -142,6 +143,14 @@
   .event .ename{position:absolute;left:10px;white-space:nowrap;font-size:12px;font-weight:600;color:var(--eventc);cursor:pointer;pointer-events:auto;}
   .event .ename:hover{text-decoration:underline;}
   .event .eyear{position:absolute;left:0;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:600;color:var(--eventc);background:#fff;border:1.5px solid var(--eventc);padding:2px 9px;border-radius:var(--r-card);font-variant-numeric:tabular-nums;}
+  .event.dotonly .edot{pointer-events:auto;cursor:pointer;width:6px;height:6px;box-shadow:0 0 0 3px rgba(44,44,43,.10);opacity:.5;transition:opacity .15s ease,transform .15s ease;}
+  .event.dotonly .edot:hover{opacity:1;transform:translateX(-50%) scale(1.35);}
+  .event.focus{z-index:8;}
+  .event.focus .edot{background:#2783DE;box-shadow:0 0 0 5px rgba(39,131,222,.25);opacity:1;width:9px;height:9px;}
+  .event.focus .ename{color:#2783DE;text-decoration:underline;}
+  .event.focus .eyear{color:#2783DE;border-color:#2783DE;}
+  .event.evPop .edot{animation:evPop 4s ease-out;}
+  @keyframes evPop{0%{box-shadow:0 0 0 0 rgba(39,131,222,.6);}6%{transform:translateX(-50%) scale(1.5);}16%{transform:translateX(-50%) scale(1);box-shadow:0 0 0 12px rgba(39,131,222,0);}24%{box-shadow:0 0 0 0 rgba(39,131,222,.5);}40%{box-shadow:0 0 0 11px rgba(39,131,222,0);}50%{box-shadow:0 0 0 0 rgba(39,131,222,.42);}68%{box-shadow:0 0 0 11px rgba(39,131,222,0);}78%{box-shadow:0 0 0 0 rgba(39,131,222,.34);}100%{box-shadow:0 0 0 10px rgba(39,131,222,0);}}
 
   /* ===== People bars (the "data": a bar per lifespan; living ones fade to the future) ===== */
   .bars{position:absolute;left:0;}
@@ -274,7 +283,7 @@
       <div class="controls">
         <button class="btn" id="zoomOut" title="Allunya"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><line x1="12.5" y1="12.5" x2="18" y2="18"/><line x1="5.5" y1="8" x2="10.5" y2="8"/></svg></button>
         <button class="btn" id="zoomIn" title="Apropa"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><line x1="12.5" y1="12.5" x2="18" y2="18"/><line x1="5.8" y1="8" x2="10.2" y2="8"/><line x1="8" y1="5.8" x2="8" y2="10.2"/></svg></button>
-        <button class="btn" id="fitAll" title="Ajusta el zoom per encabir tots els visibles">Veure tot</button>
+        <button class="btn" id="fitAll" title="Ajusta el zoom per encabir tot el visible; torna a clicar per desfer">Vista global</button>
         <button class="btn" id="reset" title="Restableix">Reset</button>
       </div>
     </div>
@@ -417,22 +426,28 @@ const MARCS=[
   ]}
 ];
 const EVENTS=[
-  {id:'agricultura',name:'Revolució agrícola',year:-10000,wiki:'https://ca.wikipedia.org/wiki/Neol%C3%ADtic',desc:'Transició dels grups humans de la caça i la recol’lecció a l’agricultura sedentària; origen de les primeres civilitzacions.'},
-  {id:'roda',name:'Invenció de la roda',year:-3500,wiki:'https://ca.wikipedia.org/wiki/Roda',desc:'La roda i l’eix apareixen a la Mesopotàmia, transformant el transport, la manufactura i la guerra.'},
-  {id:'escriptura',name:'Invenció de l’escriptura',year:-3300,wiki:'https://ca.wikipedia.org/wiki/Escriptura',desc:'Els sumeris inventen els primers sistemes d’escriptura cuneïforme, marcant el pas de la Prehistòria a l’Edat Antiga.'},
-  {id:'romaFund',name:'Fundació de Roma',year:-753,wiki:'https://ca.wikipedia.org/wiki/Roma_antiga',desc:'Fundació llegendària de Roma per Ròmul, origen d’una de les civilitzacions més influents de la història occidental.'},
-  {id:'caigudaimp',name:'Caiguda de l’Imperi Romà',year:476,wiki:'https://ca.wikipedia.org/wiki/Caiguda_de_l%27Imperi_Rom%C3%A0_d%27Occident',desc:'Odoacre deposa l’últim emperador romà d’Occident. Marca l’inici convencional de l’Edat Mitjana.'},
-  {id:'hegira',name:'Hègira de Mahoma',year:622,wiki:'https://ca.wikipedia.org/wiki/H%C3%A8gira',desc:'Mahoma emigra de la Meca a Medina; inici del calendari islàmic i d’una expansió que transformarà el Mediterrani i l’Orient Pròxim.'},
-  {id:'pestaNegra',name:'Pesta Negra',year:1347,wiki:'https://ca.wikipedia.org/wiki/Pesta_negra',desc:'Epidèmia de pesta bubònica que mata entre un terç i la meitat de la població europea, accelerant la fi del feudalisme medieval.'},
-  {id:'descamerica',name:'Descobriment d’Amèrica',year:1492,wiki:'https://ca.wikipedia.org/wiki/Descoberta_d%27Am%C3%A8rica',desc:'Cristòfor Colom arriba a les Amèriques el 12 d’octubre, obrint l’era dels grans imperis colonials. Inici convencional de l’Edat Moderna.'},
-  {id:'reformaprot',name:'Reforma Protestant',year:1517,wiki:'https://ca.wikipedia.org/wiki/Reforma_protestant',desc:'Martí Luter publica les 95 tesis, trencant la unitat del cristianisme occidental i desencadenant guerres religioses arreu d’Europa.'},
-  {id:'revolindust',name:'Revolució Industrial',year:1760,wiki:'https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Industrial',desc:'L’aparició de la màquina de vapor a Anglaterra transforma l’economia, la societat i el paisatge urbà del món.'},
-  {id:'revfr',name:'Revolució Francesa',year:1789,wiki:'https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Francesa',desc:'Procés revolucionari que va enderrocar l’Antic Règim a França i va escampar per Europa els ideals de llibertat, igualtat i fraternitat.'},
-  {id:'wwi',name:'Inici de la Primera Guerra Mundial',year:1914,wiki:'https://ca.wikipedia.org/wiki/Primera_Guerra_Mundial',desc:'Esclat del primer conflicte a escala global, que va redibuixar el mapa polític i social del segle XX.'},
-  {id:'wwii',name:'Segona Guerra Mundial',year:1939,wiki:'https://ca.wikipedia.org/wiki/Segona_Guerra_Mundial',desc:'El conflicte més devastador de la història, amb 70-85 milions de víctimes. Acabà amb la creació de l’ONU i l’ordre bipolar de la Guerra Freda.'},
-  {id:'murberlin',name:'Caiguda del Mur de Berlín',year:1989,wiki:'https://ca.wikipedia.org/wiki/Caiguda_del_mur_de_Berl%C3%ADn',desc:'El novembre de 1989 cau el símbol de la Guerra Freda, obrint camí a la reunificació alemanya i la dissolució del bloc soviètic.'},
-  {id:'delt',name:'Fundació de DELT',year:2022,wiki:'https://deltproject.com/',desc:'Projecte sense ànim de lucre que combina intel·ligència artificial i drons per ajudar organitzacions de conservació de fauna, sobretot la detecció i protecció de tortugues marines davant la caça furtiva.'}
+  {id:'agricultura',name:'Revolució agrícola',year:-10000,wiki:'https://ca.wikipedia.org/wiki/Neol%C3%ADtic',sitelinks:128,desc:'Transició dels grups humans de la caça i la recol·lecció a l’agricultura sedentària; origen de les primeres civilitzacions.'},
+  {id:'roda',name:'Invenció de la roda',year:-3500,wiki:'https://ca.wikipedia.org/wiki/Roda',sitelinks:180,desc:'La roda i l’eix apareixen a la Mesopotàmia, transformant el transport, la manufactura i la guerra.'},
+  {id:'escriptura',name:'Invenció de l’escriptura',year:-3300,wiki:'https://ca.wikipedia.org/wiki/Hist%C3%B2ria_de_l%27escriptura',sitelinks:42,desc:'Els sumeris inventen els primers sistemes d’escriptura cuneïforme, marcant el pas de la Prehistòria a l’Edat Antiga.'},
+  {id:'romaFund',name:'Fundació de Roma',year:-753,wiki:'https://ca.wikipedia.org/wiki/Fundaci%C3%B3_de_Roma',sitelinks:45,desc:'Fundació llegendària de Roma per Ròmul, origen d’una de les civilitzacions més influents de la història occidental.'},
+  {id:'caigudaimp',name:'Caiguda de l’Imperi Romà',year:476,wiki:'https://ca.wikipedia.org/wiki/Caiguda_de_l%27Imperi_Rom%C3%A0_d%27Occident',sitelinks:56,desc:'Odoacre deposa l’últim emperador romà d’Occident. Marca l’inici convencional de l’Edat Mitjana.'},
+  {id:'hegira',name:'Hègira de Mahoma',year:622,wiki:'https://ca.wikipedia.org/wiki/H%C3%A8gira',sitelinks:93,desc:'Mahoma emigra de la Meca a Medina; inici del calendari islàmic i d’una expansió que transformarà el Mediterrani i l’Orient Pròxim.'},
+  {id:'pestaNegra',name:'Pesta Negra',year:1347,wiki:'https://ca.wikipedia.org/wiki/Pesta_negra',sitelinks:127,desc:'Epidèmia de pesta bubònica que mata entre un terç i la meitat de la població europea, accelerant la fi del feudalisme medieval.'},
+  {id:'descamerica',name:'Descobriment d’Amèrica',year:1492,wiki:'https://ca.wikipedia.org/wiki/Descoberta_d%27Am%C3%A8rica',sitelinks:48,desc:'Cristòfor Colom arriba a les Amèriques el 12 d’octubre, obrint l’era dels grans imperis colonials. Inici convencional de l’Edat Moderna.'},
+  {id:'reformaprot',name:'Reforma Protestant',year:1517,wiki:'https://ca.wikipedia.org/wiki/Reforma_protestant',sitelinks:154,desc:'Martí Luter publica les 95 tesis, trencant la unitat del cristianisme occidental i desencadenant guerres religioses arreu d’Europa.'},
+  {id:'revolindust',name:'Revolució Industrial',year:1760,wiki:'https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Industrial',sitelinks:161,desc:'L’aparició de la màquina de vapor a Anglaterra transforma l’economia, la societat i el paisatge urbà del món.'},
+  {id:'revfr',name:'Revolució Francesa',year:1789,wiki:'https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Francesa',sitelinks:193,desc:'Procés revolucionari que va enderrocar l’Antic Règim a França i va escampar per Europa els ideals de llibertat, igualtat i fraternitat.'},
+  {id:'wwi',name:'Inici de la Primera Guerra Mundial',year:1914,wiki:'https://ca.wikipedia.org/wiki/Primera_Guerra_Mundial',sitelinks:264,desc:'Esclat del primer conflicte a escala global, que va redibuixar el mapa polític i social del segle XX.'},
+  {id:'wwii',name:'Segona Guerra Mundial',year:1939,wiki:'https://ca.wikipedia.org/wiki/Segona_Guerra_Mundial',sitelinks:292,desc:'El conflicte més devastador de la història, amb 70-85 milions de víctimes. Acabà amb la creació de l’ONU i l’ordre bipolar de la Guerra Freda.'},
+  {id:'murberlin',name:'Caiguda del Mur de Berlín',year:1989,wiki:'https://ca.wikipedia.org/wiki/Caiguda_del_mur_de_Berl%C3%ADn',sitelinks:38,desc:'El novembre de 1989 cau el símbol de la Guerra Freda, obrint camí a la reunificació alemanya i la dissolució del bloc soviètic.'},
+  {id:'delt',name:'Fundació de DELT',year:2022,wiki:'https://deltproject.com/',sitelinks:0,imp:8,desc:'Projecte sense ànim de lucre que combina intel·ligència artificial i drons per ajudar organitzacions de conservació de fauna, sobretot la detecció i protecció de tortugues marines davant la caça furtiva.'}
 ];
+// Importance metric is DERIVED from sitelinks/imp and never persisted. Compute it ONCE here at load
+// (in RAM, as ev._m) instead of on every render — it only depends on the event's own static data.
+// Change the formula in one place and every _m refreshes on the next page load; zero staleness risk.
+const IMP_REF=Math.log(300);   // reference: ~300 Wikidata languages ≈ score 100
+function metricOf(ev){return typeof ev.imp==='number'?ev.imp:((ev.sitelinks||0)>1?Math.round(100*Math.log(ev.sitelinks)/IMP_REF):0);}
+EVENTS.forEach(ev=>{ev._m=metricOf(ev);});
 const PEOPLE=[
   {id:'socrates',wd:'Q913',name:'Sòcrates',birth:-470,death:-399,cats:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Sòcrates',desc:'Filòsof atenès que no deixà escrits propis, considerat el pare de la filosofia occidental i del mètode socràtic.'},
   {id:'plato',wd:'Q859',name:'Plató',birth:-428,death:-348,cats:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Plató',desc:'Filòsof atenès, deixeble de Sòcrates i fundador de l\u0027Acadèmia, autor de La República.'},
@@ -490,18 +505,42 @@ const FUTURE_FADE=72;          // px the living bars (and the era band) fade out
 const deathOf=p=>p.death==null?NOW_YEAR:p.death;
 const isAlive=p=>p.death==null;
 
-const state={present:new Set(),pinned:new Set(SEED_PINNED),collections:new Set(),marcs:new Set(DEFAULT_MARCS),showEvents:true,selected:null};
+const state={present:new Set(),pinned:new Set(SEED_PINNED),collections:new Set(),marcs:new Set(DEFAULT_MARCS),showEvents:true,selected:null,selectedEvent:null};
 
 // ============================================================
 // [3] DOM REFS & SMALL HELPERS (coords, colours, formatting)
 // ============================================================
 const $=s=>document.querySelector(s);
 const inner=$('#inner'),barsLayer=$('#barsLayer'),eraTracksEl=$('#eraTracks'),eraPanel=$('#eraPanel'),eventsRail=$('#eventsRail'),axisEl=$('#axis'),axisInner=$('#axisInner'),guide=$('#guide'),nowline=$('#nowline'),scroll=$('#scroll'),legendEl=$('#legend'),detailBackdrop=$('#detailBackdrop'),toastEl=$('#toast');
+
+// ============================================================
+// Persistència local (per navegador): recupera la vista i els
+// canvis fets en reobrir la pàgina al mateix navegador.
+// ============================================================
+const LS_KEY='historiabasica.state.v1';
+let lsReady=false,saveTimer=null,restoredView=null;
+function saveNow(){
+  if(!lsReady)return;
+  try{localStorage.setItem(LS_KEY,JSON.stringify({v:1,pinned:[...state.pinned],collections:[...state.collections],marcs:[...state.marcs],showEvents:state.showEvents,extraPeople:PEOPLE.filter(p=>p._session),view:{px:pxPerYear,left:scroll.scrollLeft}}));}catch(e){}
+}
+function scheduleSave(){if(!lsReady)return;clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,400);}   // debounced: render() and scroll fire often
+function restoreState(){
+  let d;try{d=JSON.parse(localStorage.getItem(LS_KEY)||'null');}catch(e){d=null;}
+  if(!d||d.v!==1)return;
+  (d.extraPeople||[]).forEach(p=>{if(p&&p.id&&!PEOPLE.some(x=>x.id===p.id))PEOPLE.push(p);});   // re-add people fetched from Wikidata last session
+  state.pinned=new Set([...SEED_PINNED,...(Array.isArray(d.pinned)?d.pinned:[])]);
+  state.collections=new Set(Array.isArray(d.collections)?d.collections:[]);
+  state.marcs=new Set(Array.isArray(d.marcs)?d.marcs:DEFAULT_MARCS);
+  state.showEvents=d.showEvents!==false;
+  if(d.view&&typeof d.view.px==='number')restoredView=d.view;
+  recomputePresent();
+}
+scroll.addEventListener('scroll',scheduleSave);   // persist pan position (no-op until lsReady)
 let toastTimer=null;
 function showToast(msg){toastEl.textContent=msg;toastEl.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('on'),2200);}
 const WIP=()=>showToast('🚧 En construcció');
 function hideDetail(){$('#detail').classList.remove('open');detailBackdrop.classList.remove('open');}
-$('#detailBackdrop').addEventListener('click',()=>{hideDetail();state.selected=null;render();});
+$('#detailBackdrop').addEventListener('click',()=>{hideDetail();state.selected=null;state.selectedEvent=null;render();});
 const x=y=>(y-YEAR_MIN)*pxPerYear;                 // year → x px
 const totalW=()=>(YEAR_MAX-YEAR_MIN)*pxPerYear;    // full canvas width px
 
@@ -638,17 +677,43 @@ function render(){
 
   // --- Events (name on top, full line, year pill at the foot; two rows to avoid name overlap) ---
   const evNameTop=eventLabelTop(), evYearTop=contentH-24;
-  const evRowRight=[-1e9,-1e9];
-  const evPlaced=EVENTS.map(ev=>({ev,left:x(ev.year),w:ev.name.length*7+16})).sort((a,b)=>a.left-b.left);
+  const evPlaced=EVENTS.map(ev=>({ev,left:x(ev.year),w:ev.name.length*7+16,m:ev._m})).sort((a,b)=>a.left-b.left);   // m: precomputed once at load (see metricOf near EVENTS)
+  // --- Semantic zoom (Google-Maps style): importance = PRIORITY, local density = the real GATE ---
+  // Allocate name-labels by descending importance into the 2 rows; whatever fits without colliding at
+  // the current zoom keeps a full label, the rest fall back to a bare dot. Empty stretches keep even a
+  // low-importance label (nothing to collide with); crowded stretches keep only the top ones. So
+  // importance decides WHEN a name shows, never IF the event exists — zoom in and space opens for more.
+  const LBL_GAP=12, FADE_PX=46, DOT_GAP=7;
+  const rowIv=[[],[]];
+  const fitsRow=(r,l,w)=>{for(const iv of rowIv[r]){if(!(l+w+LBL_GAP<iv.l||l>iv.r+LBL_GAP))return false;}return true;};
+  const byImp=[...evPlaced].sort((a,b)=>b.m-a.m||a.left-b.left);
+  // A searched/selected event is FORCED to keep its label at any zoom (explicit user intent beats the gate):
+  // pre-place it in row 0 so everyone else yields around it, even if that means overlapping a neighbour.
+  const forcedEv=state.selectedEvent?evPlaced.find(o=>o.ev.id===state.selectedEvent):null;
+  if(forcedEv){const iv={l:forcedEv.left,r:forcedEv.left+forcedEv.w};rowIv[0].push(iv);forcedEv.row=0;forcedEv.iv=iv;forcedEv.labeled=true;}
+  byImp.forEach(o=>{if(o.labeled)return;for(let r=0;r<2;r++){if(fitsRow(r,o.left,o.w)){const iv={l:o.left,r:o.left+o.w};rowIv[r].push(iv);o.row=r;o.iv=iv;o.labeled=true;break;}}});
+  // Dot de-dup: a dot-only event is hidden if a higher-priority dot already sits within DOT_GAP px, so
+  // dense stretches don't smear into a solid bar of dots. Labelled events always keep their dot.
+  const dotX=byImp.filter(o=>o.labeled).map(o=>o.left);
+  byImp.forEach(o=>{if(o.labeled){o.showDot=true;return;}if(dotX.some(dx=>Math.abs(dx-o.left)<DOT_GAP)){o.showDot=false;}else{o.showDot=true;dotX.push(o.left);}});
+  // Organic fade: a label that only just fits comes in dim and brightens as zoom opens space around it.
   evPlaced.forEach(o=>{
-    let row=evRowRight.findIndex(r=>r+12<o.left);
-    if(row===-1)row=evRowRight[0]<=evRowRight[1]?0:1;
-    o.row=row;evRowRight[row]=o.left+o.w;
+    if(!o.labeled||o.ev.id===state.selectedEvent){o.op=1;return;}
+    let gap=Infinity;
+    for(const iv of rowIv[o.row]){if(iv===o.iv)continue;if(iv.r<=o.left)gap=Math.min(gap,o.left-iv.r);else if(iv.l>=o.left+o.w)gap=Math.min(gap,iv.l-(o.left+o.w));}
+    o.op=gap===Infinity?1:Math.max(.45,Math.min(1,gap/FADE_PX));
   });
   eventsRail.innerHTML=state.showEvents?evPlaced.map(o=>{
-    const ev=o.ev,left=o.left,nameTop=evNameTop+o.row*16,dotTop=nameTop+18,lineTop=dotTop+3;
+    const ev=o.ev,left=o.left;
+    ev._x=left;
+    if(!o.labeled){
+      if(!o.showDot)return '';
+      return `<div class="event dotonly" style="left:${left}px"><div class="edot" data-ev="${ev.id}" title="${ev.name}" style="top:${evNameTop+18}px"></div></div>`;
+    }
+    const nameTop=evNameTop+o.row*16,dotTop=nameTop+18,lineTop=dotTop+3;
     const lineH=Math.max(evYearTop-lineTop-2,0);
-    return `<div class="event" style="left:${left}px"><div class="ename" data-ev="${ev.id}" style="top:${nameTop}px">${ev.name}</div><div class="edot" style="top:${dotTop}px"></div><div class="eline" style="top:${lineTop}px;height:${lineH}px"></div><div class="eyear" style="top:${evYearTop}px">${fmtY(ev.year)}</div></div>`;
+    const foc=state.selectedEvent===ev.id?' focus':'';
+    return `<div class="event${foc}" style="left:${left}px;opacity:${o.op.toFixed(2)}"><div class="ename" data-ev="${ev.id}" style="top:${nameTop}px">${ev.name}</div><div class="edot" style="top:${dotTop}px"></div><div class="eline" style="top:${lineTop}px;height:${lineH}px"></div><div class="eyear" style="top:${evYearTop}px">${fmtY(ev.year)}</div></div>`;
   }).join(''):'';
 
   // --- People bars ---
@@ -687,6 +752,7 @@ function render(){
 
   renderSidebar();
   renderLegend();
+  scheduleSave();
 }
 
 // Category legend: derived from what is painted, never the other way round. Walks CAT_COLORS so the
@@ -732,7 +798,7 @@ function eraLabel(year){
 }
 
 function openDetail(p){
-  state.selected=p.id;
+  state.selected=p.id;state.selectedEvent=null;
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   d.innerHTML=`<button class="close" id="closeDetail">×</button>
     <h2>${p.name}</h2>
@@ -756,7 +822,7 @@ function openDetail(p){
 }
 
 function openEvent(ev){
-  state.selected=null;
+  state.selected=null;state.selectedEvent=ev.id;
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   d.innerHTML=`<button class="close" id="closeDetail">×</button>
     <h2>${ev.name}</h2>
@@ -770,7 +836,7 @@ function openEvent(ev){
 
 // Movement/period block. Same panel as people and events, so the three layers behave alike.
 function openBlock(b){
-  state.selected=null;
+  state.selected=null;state.selectedEvent=null;
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   d.innerHTML=`<button class="close" id="closeDetail">×</button>
     <h2>${b.name}</h2>
@@ -792,15 +858,18 @@ let searchIdx=-1, wdTerm='', wdResults=[], wdLoading=false, wdTimer=null, wdSeq=
 
 const localRow=p=>{const added=state.present.has(p.id);return `<div class="row ${added?'disabled':''}" data-add="${p.id}"><span class="swatch" style="background:${swatchBg(p)}"></span>${p.name}<span class="yr">${added?'ja afegit':p.birth+'\u2013'+(p.death==null?'':p.death)}</span></div>`;};
 const wdRow=w=>`<div class="row" data-wd="${w.qid}"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${w.name}<span class="yr">${w.birth}${w.death!=null?'\u2013'+w.death:'\u2013'}</span></div>`;
+const evSearchRow=ev=>`<div class="row evrow" data-evsearch="${ev.id}"><span class="swatch" style="background:var(--eventc)"></span>${ev.name}<span class="yr">${fmtY(ev.year)}</span></div>`;
 function renderDropdown(){
   const term=deaccent(q.value.trim());
   if(!term){results.classList.remove('open');return;}
   const local=PEOPLE.filter(p=>deaccent(p.name).includes(term));
+  const localEv=EVENTS.filter(ev=>deaccent(ev.name).includes(term));
   let html=local.map(localRow).join('');
-  if((wdResults.length||wdLoading)&&local.length)html+=`<div class="rowsep">Wikidata</div>`;
+  if(localEv.length)html+=`<div class="rowsep">Esdeveniments</div>`+localEv.map(evSearchRow).join('');
+  if((wdResults.length||wdLoading)&&(local.length||localEv.length))html+=`<div class="rowsep">Wikidata</div>`;
   html+=wdResults.map(wdRow).join('');
   if(wdLoading)html+=`<div class="row loading">Cercant a Wikidata\u2026</div>`;
-  if(!local.length&&!wdResults.length&&!wdLoading)html=`<div class="row disabled">Cap coincid\u00e8ncia</div>`;
+  if(!local.length&&!localEv.length&&!wdResults.length&&!wdLoading)html=`<div class="row disabled">Cap coincid\u00e8ncia</div>`;
   results.innerHTML=html;results.classList.add('open');highlightSearch(0);
 }
 function runSearch(){
@@ -810,7 +879,7 @@ function runSearch(){
   renderDropdown();
 }
 // keyboard navigation over both local and Wikidata rows
-const searchRows=()=>[...results.querySelectorAll('.row[data-add]:not(.disabled),.row[data-wd]')];
+const searchRows=()=>[...results.querySelectorAll('.row[data-add]:not(.disabled),.row[data-evsearch],.row[data-wd]')];
 function highlightSearch(i){
   const rows=searchRows();
   results.querySelectorAll('.row.active').forEach(r=>r.classList.remove('active'));
@@ -819,10 +888,10 @@ function highlightSearch(i){
   rows[searchIdx].classList.add('active');
   rows[searchIdx].scrollIntoView({block:'nearest'});
 }
-function activateRow(r){if(!r)return;if(r.dataset.add)addFromSearch(r.dataset.add);else if(r.dataset.wd)addWikidataPerson(r.dataset.wd);}
+function activateRow(r){if(!r)return;if(r.dataset.add)addFromSearch(r.dataset.add);else if(r.dataset.evsearch)focusEvent(r.dataset.evsearch);else if(r.dataset.wd)addWikidataPerson(r.dataset.wd);}
 function addFromSearch(id){
   if(!id||state.present.has(id))return;
-  state.pinned.add(id);q.value='';results.classList.remove('open');wdTerm='';wdResults=[];render();revealPerson(id);
+  state.selectedEvent=null;state.pinned.add(id);q.value='';results.classList.remove('open');wdTerm='';wdResults=[];render();revealPerson(id);
 }
 // Wikidata person -> session-only entry in PEOPLE (no category; lost on reload)
 function addWikidataPerson(qid){
@@ -885,7 +954,7 @@ q.addEventListener('keydown',e=>{
   else if(e.key==='Enter'){e.preventDefault();activateRow(searchRows()[searchIdx]);}
   else if(e.key==='Escape'){results.classList.remove('open');}
 });
-results.addEventListener('click',e=>{const row=e.target.closest('[data-add],[data-wd]');if(row)activateRow(row);});
+results.addEventListener('click',e=>{const row=e.target.closest('[data-add],[data-evsearch],[data-wd]');if(row)activateRow(row);});
 document.addEventListener('click',e=>{if(!e.target.closest('.search'))results.classList.remove('open');});
 
 // ============================================================
@@ -972,7 +1041,7 @@ function defaultView(){pxPerYear=focusPx();render();scroll.scrollLeft=Math.min(M
 function setZoom(v){pxPerYear=Math.max(fitPx(),Math.min(20,v));render();clampScroll();}
 // Max scroll is measured against OUR canvas width, not scrollWidth: any stray absolutely-positioned
 // leftover (a hover guide parked at an old zoom, an overflowing label) inflates scrollWidth and would
-// hand back a bogus, far too large limit — which is exactly how the runaway scroll happened.
+// hand back a bogus, far too large limit ��� which is exactly how the runaway scroll happened.
 function maxScroll(){return Math.max(0,(parseFloat(inner.style.width)||scroll.scrollWidth)-scroll.clientWidth);}
 function clampScroll(){const max=maxScroll();if(scroll.scrollLeft>max)scroll.scrollLeft=max;}   // keep scrollLeft in range so zooming out doesn't leave it parked past the end
 // Pan (no zoom change) so a person's bar is centred on screen.
@@ -989,6 +1058,24 @@ function flashBar(id){
   if(b){b.classList.remove('justAdded');void b.offsetWidth;b.classList.add('justAdded');setTimeout(()=>b.classList.remove('justAdded'),4100);}
 }
 function revealPerson(id){panToPerson(id);flashBar(id);}
+// --- Event equivalents of pan/flash/reveal (same effect + marking as people; scroll only, no zoom) ---
+function panToEvent(id){
+  const e=EVENTS.find(ev=>ev.id===id);if(!e||e._x==null)return;
+  scroll.scrollTo({left:e._x-scroll.clientWidth/2,top:0,behavior:'smooth'});
+}
+function flashEvent(id){
+  const node=eventsRail.querySelector(`.ename[data-ev="${id}"],.edot[data-ev="${id}"]`);
+  const box=node&&node.closest('.event');
+  if(box){box.classList.remove('evPop');void box.offsetWidth;box.classList.add('evPop');setTimeout(()=>box.classList.remove('evPop'),4100);}
+}
+function revealEvent(id){panToEvent(id);requestAnimationFrame(()=>flashEvent(id));}
+// A DB event chosen from the search box: turn the layer on, mark it, force-paint it, then locate + flash.
+function focusEvent(id){
+  if(!EVENTS.some(ev=>ev.id===id))return;
+  state.showEvents=true;state.selectedEvent=id;
+  q.value='';results.classList.remove('open');wdTerm='';wdResults=[];
+  render();revealEvent(id);
+}
 
 // Remove a person from the canvas (same as the × in "A la vista"). Seed-pinned people can't be removed.
 function removePerson(id){
@@ -1083,7 +1170,7 @@ function fitToPresent(){
   scroll.scrollLeft=Math.min(Math.max(0,x(y1-pad)-blind),maxScroll());
 }
 // Zoom keeping the year under the pointer fixed.
-function zoomAt(clientX,factor){
+function zoomAt(clientX,factor){clearFitLatch();
   const rect=scroll.getBoundingClientRect();
   const pointerInner=(clientX-rect.left)+scroll.scrollLeft;
   const yearAt=YEAR_MIN+pointerInner/pxPerYear;
@@ -1093,8 +1180,18 @@ function zoomAt(clientX,factor){
 }
 $('#zoomIn').onclick=()=>{const r=scroll.getBoundingClientRect();zoomAt(r.left+scroll.clientWidth/2,1.4);};
 $('#zoomOut').onclick=()=>{const r=scroll.getBoundingClientRect();zoomAt(r.left+scroll.clientWidth/2,1/1.4);};
-$('#fitAll').onclick=()=>fitToPresent();
-$('#reset').onclick=()=>{state.present=new Set();state.pinned=new Set(SEED_PINNED);state.collections=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.selected=null;$('#detail').classList.remove('open');defaultView();};
+// "Veure tot": botó de doble estat. 1r clic → zoom out per encabir tot el visible i queda marcat;
+// 2n clic → desfà el zoom out i torna a la vista anterior.
+let fitPrev=null;
+function fitLatch(on){$('#fitAll').classList.toggle('on',on);}
+function clearFitLatch(){fitPrev=null;fitLatch(false);}
+$('#fitAll').onclick=()=>{
+  if(fitPrev){pxPerYear=Math.max(fitPx(),Math.min(20,fitPrev.px));render();scroll.scrollLeft=Math.min(Math.max(0,fitPrev.left),maxScroll());clearFitLatch();return;}
+  const before={px:pxPerYear,left:scroll.scrollLeft};
+  fitToPresent();
+  if(pxPerYear!==before.px||scroll.scrollLeft!==before.left){fitPrev=before;fitLatch(true);}   // only latch if it actually moved
+};
+$('#reset').onclick=()=>{state.present=new Set();state.pinned=new Set(SEED_PINNED);state.collections=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.selected=null;state.selectedEvent=null;$('#detail').classList.remove('open');clearFitLatch();defaultView();};
 $('#sidebarToggle').onclick=e=>{
   const collapsed=$('.body').classList.toggle('collapsed');
   e.currentTarget.textContent=collapsed?'›':'‹';
@@ -1136,7 +1233,7 @@ scroll.addEventListener('touchmove',e=>{
   pinch.scale=tDist(e.touches)/pinch.dist0;
   if(!pinchRAF)pinchRAF=requestAnimationFrame(applyPinch);
 },{passive:false});
-function applyPinch(){
+function applyPinch(){clearFitLatch();
   pinchRAF=0;
   if(!pinch)return;
   setZoom(pinch.px0*pinch.scale);
@@ -1184,7 +1281,8 @@ window.addEventListener('mouseup',()=>{
 // ============================================================
 // [10] BOOT (wait for a real width before the first fit)
 // ============================================================
-function bootDefault(){if(scroll.clientWidth>0){applyMetrics();defaultView();}else{requestAnimationFrame(bootDefault);}}   // re-measure here too: at parse time the viewport height can still be 0 (or mid-settle behind Safari's URL bar), which would lock in the wrong metrics
+function bootDefault(){if(scroll.clientWidth>0){applyMetrics();if(restoredView){pxPerYear=Math.max(fitPx(),Math.min(20,restoredView.px));render();scroll.scrollLeft=Math.min(Math.max(0,restoredView.left||0),maxScroll());}else{defaultView();}lsReady=true;saveNow();}else{requestAnimationFrame(bootDefault);}}   // re-measure here too: at parse time the viewport height can still be 0 (or mid-settle behind Safari's URL bar), which would lock in the wrong metrics
+restoreState();
 bootDefault();
 window.addEventListener('resize',()=>{applyMetrics();setZoom(pxPerYear);});   // rotating the phone flips the compact threshold, so the geometry has to be recomputed before the redraw
 
