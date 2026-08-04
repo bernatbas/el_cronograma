@@ -321,7 +321,7 @@
     .filter input{width:19px;height:19px;}
     .onview .item{padding:9px 0;}
     .colitem{min-height:44px;}
-    .bar .menu{display:none;}   /* al mòbil, tot el que fa el ⋮ ja ho fa la fitxa de detall en obrir-la */
+    .bar .menu,.bar:hover .menu{display:none!important;}   /* al mòbil, fora el ⋮ (ha de guanyar al :hover, que en tàctil s'enganxa amb un sol toc); tot ho fa la fitxa en obrir el personatge */
     /* Feedback tàctil (sense hover, el toc s'ha de notar) */
     .btn:active{filter:brightness(.92);}
     .results .row:active{background:var(--blueSoft);}
@@ -600,7 +600,7 @@ const GUTTER_YEARS=14;
 const RIGHT_PAD_YEARS=20;   // just enough for the axis to keep ticking a bit past "today" — the real scroll margin is capped in px by FUTURE_MARGIN_PX in render(), not by this
 const YEAR_MIN=DATA_MIN-GUTTER_YEARS, YEAR_MAX=DATA_MAX+RIGHT_PAD_YEARS;
 let pxPerYear=4;               // current zoom (pixels per year); set by defaultView()/setZoom()
-const SEED_PINNED=['bernat'];  // always present, never removable — "empty screen" means without the other 35, not without him
+const SEED_PINNED=[];  // ningú no ve fixat per defecte: la vista comença buida i tots els personatges (Bernat inclòs) es poden treure/reportar com la resta
 const DEFAULT_MARCS=(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches)?[]:['west'];  // al mòbil no mostrem Occident per defecte (ocupa massa); al desktop sí. Marcs a l'inici / després de Reset (la columna d'eres sempre és activa)
 const FUTURE_FADE=72;          // px the living bars (and the era band) fade out past "today"
 const deathOf=p=>p.death==null?NOW_YEAR:p.death;
@@ -1242,6 +1242,7 @@ function removePerson(id){
 // "Show context": add every DB person whose life overlaps, or is within 20 years of, this person.
 function showContext(id){
   const t=PEOPLE.find(p=>p.id===id);if(!t)return;
+  hideDetail();   // tanca el panell de detall perquè es vegi el context que s'afegeix (mòbil i desktop)
   const a1=t.birth,a2=deathOf(t);
   PEOPLE.forEach(o=>{
     if(o.id===id||state.present.has(o.id))return;
