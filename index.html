@@ -163,7 +163,6 @@
   .event .eyear{position:absolute;left:0;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:600;color:var(--eventc);background:#fff;border:1.5px solid var(--eventc);padding:2px 9px;border-radius:var(--r-card);font-variant-numeric:tabular-nums;}
   .event.dotonly .edot{pointer-events:auto;cursor:pointer;width:6px;height:6px;box-shadow:0 0 0 3px rgba(44,44,43,.10);opacity:.5;transition:opacity .15s ease,transform .15s ease;}
   .event.dotonly .edot:hover{opacity:1;transform:translateX(-50%) scale(1.35);}
-  .event.dotonly .eline{opacity:.45;}
   .event.focus{z-index:8;}
   .event.focus .edot{background:#2C2C2B;box-shadow:0 0 0 5px rgba(44,44,43,.22);opacity:1;width:9px;height:9px;}
   .event.focus .ename{color:#2C2C2B;text-decoration:underline;}
@@ -220,6 +219,9 @@
   .detail h2{font-size:17px;font-weight:600;margin:0 0 4px;padding-right:32px;}
   .detail .life{color:var(--text2);font-size:12px;margin-bottom:14px;}
   .detail .chiprow{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+  .detail .dhead{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 14px;}
+  .detail .dhead .life{margin:0;}
+  .detail .chip.era{background:var(--surface);color:var(--text2);}
   .detail .chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:3px 10px;border-radius:var(--r-card);background:var(--soft);border:1px solid var(--border);}
   .detail .meta{font-size:12px;color:var(--text2);margin:6px 0;}
   .detail .desc{font-size:14px;margin:14px 0;}
@@ -319,7 +321,7 @@
     .filter input{width:19px;height:19px;}
     .onview .item{padding:9px 0;}
     .colitem{min-height:44px;}
-    .bar .menu{display:flex;align-items:center;justify-content:center;width:26px;height:26px;}
+    .bar .menu{display:none;}   /* al mòbil, tot el que fa el ⋮ ja ho fa la fitxa de detall en obrir-la */
     /* Feedback tàctil (sense hover, el toc s'ha de notar) */
     .btn:active{filter:brightness(.92);}
     .results .row:active{background:var(--blueSoft);}
@@ -332,6 +334,13 @@
     .detail h2{margin-top:6px;}
     .detail .close{top:12px;right:12px;min-width:40px;min-height:40px;display:flex;align-items:center;justify-content:center;font-size:26px;}
     .detail .dbtn{min-height:44px;padding:11px 14px;}
+    /* Fitxa compacta i horitzontal al mòbil: menys aire, capçalera a tota amplada, menys scroll. */
+    .detail{max-height:72dvh;padding:16px 16px calc(14px + env(safe-area-inset-bottom));}
+    .detail h2{font-size:18px;margin:6px 0 2px;}
+    .detail .dhead{margin-bottom:10px;gap:6px;}
+    .detail .meta{margin:2px 0;}
+    .detail .desc{font-size:13px;line-height:1.45;margin:10px 0;}
+    .detail .actions{margin-top:14px;padding-top:12px;}
     /* Llegenda: que no ocupi massa amplada en pantalla petita */
     .legend{max-width:52vw;}
   }
@@ -544,7 +553,7 @@ const PEOPLE=[
   {id:'socrates',wd:'Q913',name:'Sòcrates',birth:-470,death:-399,cats:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Sòcrates',desc:'Filòsof atenès que no deixà escrits propis, considerat el pare de la filosofia occidental i del mètode socràtic.'},
   {id:'plato',wd:'Q859',name:'Plató',birth:-428,death:-348,cats:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Plató',desc:'Filòsof atenès, deixeble de Sòcrates i fundador de l\u0027Acadèmia, autor de La República.'},
   {id:'diogenes',wd:'Q59180',name:'Diògenes',birth:-412,death:-323,cats:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Diògenes_de_Sinope',desc:'Filòsof cínic grec, conegut per la seva vida austera i les seves crítiques mordaces a les convencions socials.'},
-  {id:'aristotil',wd:'Q868',name:'Aristòtil',birth:-384,death:-322,cats:['Filosofia','Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Aristòtil',desc:'Filòsof i científic grec, deixeble de Plató i tutor d\u0027Alexandre Magne, sistematitzà gran part del saber antic.'},
+  {id:'aristotil',wd:'Q868',name:'Aristòtil',birth:-384,death:-322,cats:['Filosofia','Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Aristòtil',desc:'Filòsof i científic grec, deixeble de Plat�� i tutor d\u0027Alexandre Magne, sistematitzà gran part del saber antic.'},
   {id:'alexandre',wd:'Q8409',name:'Alexandre el Gran',birth:-356,death:-323,cats:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Alexandre_el_Gran',desc:'Rei de Macedònia, conquerí un dels imperis més vastos de l\u0027antiguitat abans dels 33 anys.'},
   {id:'epicur',wd:'Q43216',name:'Epicur',birth:-341,death:-270,cats:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Epicur',desc:'Filòsof grec, fundador de l\u0027epicureisme, defensor d\u0027una vida senzilla orientada a la recerca del plaer moderat.'},
   {id:'cesar',wd:'Q1048',name:'Juli Cèsar',birth:-100,death:-44,cats:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Juli_Cèsar',desc:'General i dictador romà, la seva figura marca la transició de la República a l\u0027Imperi Romà.'},
@@ -592,7 +601,7 @@ const RIGHT_PAD_YEARS=20;   // just enough for the axis to keep ticking a bit pa
 const YEAR_MIN=DATA_MIN-GUTTER_YEARS, YEAR_MAX=DATA_MAX+RIGHT_PAD_YEARS;
 let pxPerYear=4;               // current zoom (pixels per year); set by defaultView()/setZoom()
 const SEED_PINNED=['bernat'];  // always present, never removable — "empty screen" means without the other 35, not without him
-const DEFAULT_MARCS=['west'];  // marcs shown on load / after Reset (the eras backbone is always on)
+const DEFAULT_MARCS=(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches)?[]:['west'];  // al mòbil no mostrem Occident per defecte (ocupa massa); al desktop sí. Marcs a l'inici / després de Reset (la columna d'eres sempre és activa)
 const FUTURE_FADE=72;          // px the living bars (and the era band) fade out past "today"
 const deathOf=p=>p.death==null?NOW_YEAR:p.death;
 const isAlive=p=>p.death==null;
@@ -770,6 +779,7 @@ function render(){
     return `<div class="seg mov" data-blk="${b.key}" style="left:${left+1}px;width:${Math.max(w-2,2)}px;top:${rowTop}px;height:${MOV_BAR_H}px;background:${grad};--mc:${c};--mink:${shade(c,.55)};" title="${b.name} (${fmtY(b.start)}–${fmtY(b.end)})"><span class="segname">${b.name}</span><span class="segyears">${fmtY(b.start)}–${fmtY(b.end)}</span></div>`;
   }).join('');
   eraTracksEl.innerHTML=`<div class="segwrap" style="${maskCss}">${backboneEls}${blockEls}</div>`;
+  stickLabels();   // manté els noms d'eres/blocs visibles encara que facis zoom i el bloc surti de pantalla
 
   // --- People (measure first so we know the content height) ---
   eventsRail.style.width=W+'px';
@@ -786,7 +796,7 @@ function render(){
   // A name shows the moment the zoom (pxPerYear) reaches its precomputed _revealPPY, always in its fixed
   // _row. So zooming only ADDS names — no flicker (a name never toggles on/off at a fixed zoom) and no
   // up/down swap. A searched/selected event is FORCED to show at any zoom (explicit intent beats the gate).
-  const FADE_PX=46, DOT_GAP=7;
+  const FADE_PX=22, DOT_GAP=7;   // finestra de fade més curta = aparició més brusca en fer zoom
   evPlaced.forEach(o=>{o.labeled=(o.ev.id===state.selectedEvent)||pxPerYear>=o.ev._revealPPY;o.row=o.ev._row;});
   // Importance order (stable) drives the dot de-dup so dense stretches don't smear into a solid bar of dots.
   const byImp=[...evPlaced].sort((a,b)=>b.ev._m-a.ev._m||a.left-b.left);
@@ -800,14 +810,15 @@ function render(){
     let gap=Infinity;
     if(i>0)gap=Math.min(gap,o.left-(list[i-1].left+list[i-1].w));
     if(i<list.length-1)gap=Math.min(gap,list[i+1].left-(o.left+o.w));
-    o.op=gap===Infinity?1:Math.max(.45,Math.min(1,gap/FADE_PX));
+    o.op=gap===Infinity?1:Math.max(.55,Math.min(1,gap/FADE_PX));
   });});
   eventsRail.innerHTML=state.showEvents?evPlaced.map(o=>{
     const ev=o.ev,left=o.left;
     ev._x=left;
     if(!o.labeled){
       if(!o.showDot)return '';
-      return `<div class="event dotonly" style="left:${left}px"><div class="edot" data-ev="${ev.id}" title="${ev.name}" style="top:${evNameTop+18}px"></div><div class="eline" style="top:${evNameTop+21}px;height:${Math.max(evYearTop-(evNameTop+21)-2,0)}px"></div></div>`;
+      const dTop=evNameTop+o.row*16+18;   // segueix la fila permanent: en tornar-se punt NO salta de fila. Sense pal: només el punt.
+      return `<div class="event dotonly" style="left:${left}px"><div class="edot" data-ev="${ev.id}" title="${ev.name}" style="top:${dTop}px"></div></div>`;
     }
     const nameTop=evNameTop+o.row*16,dotTop=nameTop+18,lineTop=dotTop+3;
     const lineH=Math.max(evYearTop-lineTop-2,0);
@@ -901,9 +912,7 @@ function openDetail(p){
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   d.innerHTML=`<button class="close" id="closeDetail">×</button>
     <h2>${p.name}</h2>
-    <div class="life">${fmtY(p.birth)} – ${isAlive(p)?'actualitat':fmtY(p.death)}</div>
-    <div class="chiprow">${hasCat(p)?p.cats.map(a=>`<span class="chip"><span class="swatch" style="background:${CAT_COLORS[a]}"></span>${a}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>Sense categoria</span>`}</div>
-    <div class="meta">Marc (Occident): ${eraLabel(p.birth)}</div>
+    <div class="dhead"><span class="life">${fmtY(p.birth)} – ${isAlive(p)?'actualitat':fmtY(p.death)}</span>${hasCat(p)?p.cats.map(a=>`<span class="chip"><span class="swatch" style="background:${CAT_COLORS[a]}"></span>${a}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>Sense categoria</span>`}<span class="chip era">${eraLabel(p.birth)}</span></div>
     ${p.gender?`<div class="meta">Gènere: ${p.gender}</div>`:''}
     <div class="desc">${p.desc}</div>
     ${p.wiki?`<a class="wiki" href="${p.wiki}" target="_blank" rel="noopener">🔗 ${linkLabel(p.wiki)}</a>`:''}
@@ -925,8 +934,7 @@ function openEvent(ev){
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   d.innerHTML=`<button class="close" id="closeDetail">×</button>
     <h2>${ev.name}</h2>
-    <div class="life">Fita històrica · ${fmtY(ev.year)}</div>
-    <div class="meta">Marc (Occident): ${eraLabel(ev.year)}</div>
+    <div class="dhead"><span class="life">Fita històrica · ${fmtY(ev.year)}</span><span class="chip era">${eraLabel(ev.year)}</span></div>
     ${ev.desc?`<div class="desc">${ev.desc}</div>`:''}
     ${ev.wiki?`<a class="wiki" href="${ev.wiki}" target="_blank" rel="noopener">🔗 ${linkLabel(ev.wiki)}</a>`:''}`;
   $('#closeDetail').onclick=()=>{hideDetail();render();};
@@ -1141,6 +1149,28 @@ eraTracksEl.addEventListener('mousemove',e=>{
 });
 eraTracksEl.addEventListener('mouseleave',hideBartip);
 scroll.addEventListener('scroll',hideBartip);
+// Etiquetes «sticky»: quan un bloc (era o marc) és més ample que la pantalla i hi fas zoom/scroll,
+// el nom segueix el marge esquerre visible en lloc de marxar amb l'inici del bloc (deixant una caixa buida).
+// Si el bloc és més estret que el nom, no es mou (evita comportaments estranys).
+function stickLabels(){
+  const sl=scroll.scrollLeft;
+  eraTracksEl.querySelectorAll('.blockzone').forEach(bz=>{
+    const lab=bz.querySelector('.blabel');if(!lab)return;
+    const pad=14,room=bz.offsetWidth-lab.offsetWidth-pad*2;
+    const s=Math.max(0,Math.min(sl-bz.offsetLeft,room));
+    lab.style.left=(pad+s)+'px';
+  });
+  eraTracksEl.querySelectorAll('.seg').forEach(sg=>{
+    const name=sg.querySelector('.segname');if(!name)return;
+    const years=sg.querySelector('.segyears');
+    const pad=13,room=sg.offsetWidth-name.offsetWidth-pad*2;
+    const s=Math.max(0,Math.min(sl-sg.offsetLeft,room));
+    const tx=s>0?`translateX(${s}px)`:'';
+    name.style.transform=tx;if(years)years.style.transform=tx;
+  });
+}
+let _stickRAF=0;
+scroll.addEventListener('scroll',()=>{if(_stickRAF)return;_stickRAF=requestAnimationFrame(()=>{_stickRAF=0;stickLabels();});});
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
   const d=$('#detail');
