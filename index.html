@@ -4,8 +4,9 @@
 <meta charset="utf-8" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=swap" rel="stylesheet">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=swap"></noscript>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>Cronograma — prova</title>
 <style>
   /* ============================================================
@@ -37,17 +38,24 @@
   .topbar .btn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);color:#fff;}
   .topbar .btn.on{background:#fff;color:#B23A2E;border-color:#fff;font-weight:600;box-shadow:inset 0 0 0 1px #fff;}
   .topbar .btn:hover{background:rgba(255,255,255,.22);}
+  .topbar .btn.on:hover{background:#F7E5E0;color:#B23A2E;box-shadow:inset 0 0 0 2px #B23A2E;}
+  /* Keep "Vista global" a fixed width so toggling to bold (.on) never reflows the top bar. */
+  /* Ghost label (::after) reserves the BOLD width; the visible label sits within it at any weight. */
+  #fitAll{display:inline-grid;place-items:center;place-content:center;}
+  #fitAll::after{content:"Vista global";font-weight:600;height:0;overflow:hidden;visibility:hidden;pointer-events:none;}
+  .btn-ic{display:none;}
   .topbar .search input{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.25);color:#fff;}
   .topbar .search input::placeholder{color:rgba(255,255,255,.55);}
   .topbar .search input:focus{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.55);}
   .topbar-left{display:flex;align-items:center;gap:14px;min-width:0;}
   .topbar-right{display:flex;align-items:center;gap:14px;flex:0 0 auto;}
-  .brand{font-family:'Oswald',sans-serif;font-weight:600;font-size:20px;letter-spacing:.06em;white-space:nowrap;}
+  .brand{font-family:'Oswald','Roboto Condensed','Arial Narrow','Helvetica Neue',Arial,sans-serif;font-weight:600;font-size:20px;letter-spacing:.06em;white-space:nowrap;}
   .search{position:relative;width:320px;flex:0 0 auto;}
   .search input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none;background:var(--soft);}
   .search input:focus{border-color:var(--blue);background:#fff;}
   .results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.06);max-height:280px;overflow:auto;display:none;z-index:20;}
   .results.open{display:block;}
+  .qclear{position:absolute;top:50%;right:6px;transform:translateY(-50%);display:none;width:34px;height:34px;border:none;background:none;font-size:22px;line-height:1;color:var(--text2);cursor:pointer;align-items:center;justify-content:center;border-radius:8px;padding:0;}
   .results .row{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;}
   .results .row:hover{background:var(--soft);}
   .results .row.active{background:var(--blueSoft);}
@@ -55,6 +63,16 @@
   .results .row.loading{color:var(--text2);font-style:italic;cursor:default;}
   .results .row .yr{color:var(--text2);font-size:12px;margin-left:auto;}
   .results .row.disabled{opacity:.5;cursor:default;}
+  .results .row.loading::before{content:"";width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--text2);border-radius:50%;display:inline-block;margin-right:8px;vertical-align:-2px;animation:wdspin .7s linear infinite;}
+  @keyframes wdspin{to{transform:rotate(360deg);}}
+  .canvas-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:40;background:rgba(255,255,255,.35);opacity:0;visibility:hidden;transition:opacity .15s,visibility 0s .15s;pointer-events:none;}
+  .canvas-loading.on{opacity:1;visibility:visible;transition:opacity .15s,visibility 0s;pointer-events:auto;}
+  .canvas-loading .cl-box{display:flex;flex-direction:column;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:var(--r-card);padding:18px 22px;box-shadow:0 8px 26px rgba(0,0,0,.12);}
+  .canvas-loading .cl-spin{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--text2);border-radius:50%;animation:wdspin .7s linear infinite;}
+  .canvas-loading .cl-txt{font-size:13px;color:var(--text2);}
+  .results .row.wderror{color:#B23A2E;font-style:normal;cursor:default;}
+  .results .row.wderror .retry{margin-left:auto;border:1px solid #B23A2E;background:#fff;color:#B23A2E;border-radius:6px;padding:3px 9px;font-size:12px;line-height:1;cursor:pointer;font-family:inherit;}
+  .results .row.wderror .retry:hover{background:#F7E5E0;}
   .controls{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
   .btn{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer;color:var(--text);min-width:38px;min-height:38px;}
   .btn:hover{background:var(--soft);}
@@ -145,12 +163,13 @@
   .event .eyear{position:absolute;left:0;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:600;color:var(--eventc);background:#fff;border:1.5px solid var(--eventc);padding:2px 9px;border-radius:var(--r-card);font-variant-numeric:tabular-nums;}
   .event.dotonly .edot{pointer-events:auto;cursor:pointer;width:6px;height:6px;box-shadow:0 0 0 3px rgba(44,44,43,.10);opacity:.5;transition:opacity .15s ease,transform .15s ease;}
   .event.dotonly .edot:hover{opacity:1;transform:translateX(-50%) scale(1.35);}
+  .event.dotonly .eline{opacity:.45;}
   .event.focus{z-index:8;}
-  .event.focus .edot{background:#2783DE;box-shadow:0 0 0 5px rgba(39,131,222,.25);opacity:1;width:9px;height:9px;}
-  .event.focus .ename{color:#2783DE;text-decoration:underline;}
-  .event.focus .eyear{color:#2783DE;border-color:#2783DE;}
+  .event.focus .edot{background:#2C2C2B;box-shadow:0 0 0 5px rgba(44,44,43,.22);opacity:1;width:9px;height:9px;}
+  .event.focus .ename{color:#2C2C2B;text-decoration:underline;}
+  .event.focus .eyear{color:#2C2C2B;border-color:#2C2C2B;}
   .event.evPop .edot{animation:evPop 4s ease-out;}
-  @keyframes evPop{0%{box-shadow:0 0 0 0 rgba(39,131,222,.6);}6%{transform:translateX(-50%) scale(1.5);}16%{transform:translateX(-50%) scale(1);box-shadow:0 0 0 12px rgba(39,131,222,0);}24%{box-shadow:0 0 0 0 rgba(39,131,222,.5);}40%{box-shadow:0 0 0 11px rgba(39,131,222,0);}50%{box-shadow:0 0 0 0 rgba(39,131,222,.42);}68%{box-shadow:0 0 0 11px rgba(39,131,222,0);}78%{box-shadow:0 0 0 0 rgba(39,131,222,.34);}100%{box-shadow:0 0 0 10px rgba(39,131,222,0);}}
+  @keyframes evPop{0%{box-shadow:0 0 0 0 rgba(44,44,43,.6);}6%{transform:translateX(-50%) scale(1.5);}16%{transform:translateX(-50%) scale(1);box-shadow:0 0 0 12px rgba(44,44,43,0);}24%{box-shadow:0 0 0 0 rgba(44,44,43,.5);}40%{box-shadow:0 0 0 11px rgba(44,44,43,0);}50%{box-shadow:0 0 0 0 rgba(44,44,43,.42);}68%{box-shadow:0 0 0 11px rgba(44,44,43,0);}78%{box-shadow:0 0 0 0 rgba(44,44,43,.34);}100%{box-shadow:0 0 0 10px rgba(44,44,43,0);}}
 
   /* ===== People bars (the "data": a bar per lifespan; living ones fade to the future) ===== */
   .bars{position:absolute;left:0;}
@@ -212,13 +231,14 @@
   .detail .dbtn.danger{color:#C0392B;border-color:#E7B7B0;}
   .detail .dbtn.danger:hover{background:#FBEDEB;}
 
-  /* ===== Portrait wall (touch devices in portrait: asks to rotate) ===== */
-  .portrait-wall{position:fixed;inset:0;background:var(--canvas);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:40px;}
-  .portrait-wall.on{display:flex;}
-  .portrait-wall .p-icon{font-size:64px;animation:pSpin 2.4s ease-in-out infinite;}
+  /* ===== Rotate hint (touch devices in portrait: a dismissible suggestion, not a blocker) ===== */
+  .rotate-hint{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.94);width:calc(100vw - 32px);max-width:560px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;background:var(--text);color:#fff;padding:34px 26px calc(34px + env(safe-area-inset-bottom));border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.42);z-index:70;opacity:0;visibility:hidden;transition:opacity .25s,transform .25s,visibility 0s .25s;}
+  .rotate-hint.on{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1);transition:opacity .25s,transform .25s,visibility 0s;}
+  .rotate-hint .p-icon{font-size:46px;animation:pSpin 2.4s ease-in-out infinite;}
   @keyframes pSpin{0%,40%,100%{transform:rotate(0deg);}60%,85%{transform:rotate(90deg);}}
-  .portrait-wall h2{font-size:22px;font-weight:600;margin:0;color:var(--text);}
-  .portrait-wall p{color:var(--text2);margin:0;font-size:15px;max-width:280px;}
+  .rotate-hint .rh-txt{font-size:18px;line-height:1.4;font-weight:600;max-width:24ch;}
+  .rotate-hint .rh-x{position:absolute;top:10px;right:10px;border:none;background:rgba(255,255,255,.16);color:#fff;width:40px;height:40px;min-width:40px;border-radius:10px;font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
+  .rotate-hint .rh-x:active{background:rgba(255,255,255,.32);}
 
   /* ===== Responsive topbar (small landscape screens: phone / tablet) ===== */
   @media (max-width:860px){
@@ -264,6 +284,57 @@
     .axis{height:26px;}
     .tick{font-size:10px;}
   }
+
+  /* ===== Touch / mobile (landscape-first). Gated on a coarse pointer so desktop stays untouched. ===== */
+  @media (pointer:coarse){
+    /* Barra superior fineta: només marca + cerca (ample complet) + Reset/Vista global compactes. El zoom es fa amb els dits. */
+    .topbar{gap:10px;padding-top:3px;padding-bottom:3px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));border-bottom-width:2px;}
+    .brand{font-size:15px;letter-spacing:.04em;}
+    .topbar-right{flex:1 1 auto;min-width:0;gap:8px;}
+    .search{flex:1 1 auto;width:auto;min-width:0;}
+    .search input{min-height:30px;padding-top:4px;padding-bottom:4px;padding-right:38px;font-size:14px;}
+    .search.has-text .qclear{display:flex;}
+    .qclear{color:rgba(255,255,255,.9);width:28px;height:28px;font-size:20px;}
+    /* Reset + Vista global: es queden a la barra superior (no tapen el canvas); només s'amaga el zoom ±. */
+    .controls{gap:8px;}
+    .controls #zoomIn,.controls #zoomOut{display:none;}
+    .controls #reset{display:inline-flex;}
+    .controls .btn{min-height:30px;min-width:30px;padding:3px 10px;font-size:13px;display:inline-flex;align-items:center;justify-content:center;}
+    /* Vista global + Reset com a icones (el text es reserva per al desktop). */
+    .controls #fitAll{display:inline-flex;}
+    .controls #fitAll::after{display:none;}
+    .controls #fitAll .btn-tx,.controls #reset .btn-tx{display:none;}
+    .controls #fitAll .btn-ic,.controls #reset .btn-ic{display:inline-flex;align-items:center;justify-content:center;}
+    .controls #fitAll,.controls #reset{display:inline-flex;align-items:center;justify-content:center;padding:3px 8px;min-width:36px;}
+    .controls #fitAll .btn-ic,.controls #reset .btn-ic{display:block;}
+    /* L'eix sempre enganxat a baix: el contingut omple l'alçada disponible encara que hi hagi poques files. */
+    .inner{min-height:calc(100% - var(--axis-h));}
+    /* Targets grans arreu on es toca */
+    .btn{min-height:44px;min-width:44px;}
+    .results{max-height:min(52vh,360px);}
+    .results .row{min-height:44px;padding:11px 14px;}
+    .results .rowsep{padding:9px 14px 4px;}
+    .sidebarHandle{height:56px;}
+    .filter{padding:9px 0;}
+    .filter input{width:19px;height:19px;}
+    .onview .item{padding:9px 0;}
+    .colitem{min-height:44px;}
+    .bar .menu{display:flex;align-items:center;justify-content:center;width:26px;height:26px;}
+    /* Feedback tàctil (sense hover, el toc s'ha de notar) */
+    .btn:active{filter:brightness(.92);}
+    .results .row:active{background:var(--blueSoft);}
+    .colitem:active,.onview .nm:active{filter:brightness(.96);}
+    .seg.mov:active{filter:brightness(.96);}
+    /* Fitxa de detall com a bottom-sheet: puja des de baix, ample complet, fàcil de tancar */
+    .detail{top:auto;bottom:0;left:0;right:auto;transform:translateY(100%);width:100%;max-width:100%;max-height:82dvh;border-radius:18px 18px 0 0;padding:22px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px rgba(0,0,0,.24);}
+    .detail.open{transform:translateY(0);}
+    .detail::before{content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);width:42px;height:4px;border-radius:2px;background:var(--border-strong);}
+    .detail h2{margin-top:6px;}
+    .detail .close{top:12px;right:12px;min-width:40px;min-height:40px;display:flex;align-items:center;justify-content:center;font-size:26px;}
+    .detail .dbtn{min-height:44px;padding:11px 14px;}
+    /* Llegenda: que no ocupi massa amplada en pantalla petita */
+    .legend{max-width:52vw;}
+  }
 </style>
 </head>
 <body>
@@ -278,13 +349,14 @@
     <div class="topbar-right">
       <div class="search">
         <input id="q" type="text" placeholder="Cerca i afegeix un personatge…" autocomplete="off" />
+        <button class="qclear" id="qclear" type="button" aria-label="Esborra la cerca">×</button>
         <div class="results" id="results"></div>
       </div>
       <div class="controls">
         <button class="btn" id="zoomOut" title="Allunya"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><line x1="12.5" y1="12.5" x2="18" y2="18"/><line x1="5.5" y1="8" x2="10.5" y2="8"/></svg></button>
         <button class="btn" id="zoomIn" title="Apropa"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><line x1="12.5" y1="12.5" x2="18" y2="18"/><line x1="5.8" y1="8" x2="10.2" y2="8"/><line x1="8" y1="5.8" x2="8" y2="10.2"/></svg></button>
-        <button class="btn" id="fitAll" title="Ajusta el zoom per encabir tot el visible; torna a clicar per desfer">Vista global</button>
-        <button class="btn" id="reset" title="Restableix">Reset</button>
+        <button class="btn" id="fitAll" title="Ajusta el zoom per encabir tot el visible; torna a clicar per desfer"><span class="btn-tx">Vista global</span><svg class="btn-ic" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V3h4"/><path d="M17 7V3h-4"/><path d="M3 13v4h4"/><path d="M17 13v4h-4"/></svg></button>
+        <button class="btn" id="reset" title="Restableix"><span class="btn-tx">Reset</span><svg class="btn-ic" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 6.2A6 6 0 1 0 16 10"/><path d="M15.8 3v3.4h-3.4"/></svg></button>
       </div>
     </div>
   </header>
@@ -317,6 +389,7 @@
         <div class="axis" id="axis"><div class="inner2" id="axisInner"></div></div>
       </div>
       <div class="legend" id="legend"></div>
+      <div class="canvas-loading" id="collOverlay"><div class="cl-box"><div class="cl-spin"></div><div class="cl-txt">Carregant…</div></div></div>
     </main>
     <aside class="detail" id="detail"></aside>
   </div>
@@ -325,10 +398,10 @@
 <div class="barmenu" id="barmenu"></div>
 <div class="bartip" id="bartip"></div>
 <div class="toast" id="toast"></div>
-<div class="portrait-wall" id="portraitWall">
-  <div class="p-icon">📱</div>
-  <h2>Gira el dispositiu</h2>
-  <p>El cronograma es veu millor en horitzontal</p>
+<div class="rotate-hint" id="portraitWall">
+  <span class="p-icon">📱</span>
+  <span class="rh-txt">Gira el mòbil per veure millor el cronograma</span>
+  <button class="rh-x" id="rotateDismiss" type="button" aria-label="Tanca l'avís">×</button>
 </div>
 <script>
 // ============================================================
@@ -448,6 +521,25 @@ const EVENTS=[
 const IMP_REF=Math.log(300);   // reference: ~300 Wikidata languages ≈ score 100
 function metricOf(ev){return typeof ev.imp==='number'?ev.imp:((ev.sitelinks||0)>1?Math.round(100*Math.log(ev.sitelinks)/IMP_REF):0);}
 EVENTS.forEach(ev=>{ev._m=metricOf(ev);});
+// Stable label LAYOUT for the semantic zoom, precomputed ONCE here (zoom-independent), like _m above.
+// Each event gets a PERMANENT row (_row) + the minimum zoom (_revealPPY, px/year) at which its name may
+// show. Processed by descending importance: higher-priority events claim their spot first; a lower one
+// only reveals once the zoom opens enough gap beside the more-important labels already in its row (so it
+// can never overlap them). Net effect: zooming only ADDS names — no flicker, and an event never swaps
+// rows. Row 1 is spillover, used only when row 0 would delay the reveal a lot (e.g. two very close, very
+// important events like the two World Wars).
+(function(){
+  const GAP=12, ROW_BIAS=0.8, wOf=ev=>ev.name.length*7+16;
+  const placed=[[],[]];
+  const thrIn=(row,ev,w)=>{let t=0;for(const n of placed[row]){const dy=Math.abs(ev.year-n.year);if(dy===0)return Infinity;const need=(n.year<=ev.year?n.w:w)+GAP;t=Math.max(t,need/dy);}return t;};
+  [...EVENTS].sort((a,b)=>b._m-a._m||a.year-b.year).forEach(ev=>{
+    const w=wOf(ev),t0=thrIn(0,ev,w),t1=thrIn(1,ev,w);
+    let row=(t1<t0*ROW_BIAS)?1:0;
+    if((row===0?t0:t1)===Infinity&&(row===0?t1:t0)!==Infinity)row=1-row;
+    ev._row=row; ev._revealPPY=(row===0?t0:t1);
+    placed[row].push({year:ev.year,w});
+  });
+})();
 const PEOPLE=[
   {id:'socrates',wd:'Q913',name:'Sòcrates',birth:-470,death:-399,cats:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Sòcrates',desc:'Filòsof atenès que no deixà escrits propis, considerat el pare de la filosofia occidental i del mètode socràtic.'},
   {id:'plato',wd:'Q859',name:'Plató',birth:-428,death:-348,cats:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Plató',desc:'Filòsof atenès, deixeble de Sòcrates i fundador de l\u0027Acadèmia, autor de La República.'},
@@ -511,7 +603,7 @@ const state={present:new Set(),pinned:new Set(SEED_PINNED),collections:new Set()
 // [3] DOM REFS & SMALL HELPERS (coords, colours, formatting)
 // ============================================================
 const $=s=>document.querySelector(s);
-const inner=$('#inner'),barsLayer=$('#barsLayer'),eraTracksEl=$('#eraTracks'),eraPanel=$('#eraPanel'),eventsRail=$('#eventsRail'),axisEl=$('#axis'),axisInner=$('#axisInner'),guide=$('#guide'),nowline=$('#nowline'),scroll=$('#scroll'),legendEl=$('#legend'),detailBackdrop=$('#detailBackdrop'),toastEl=$('#toast');
+const inner=$('#inner'),barsLayer=$('#barsLayer'),eraTracksEl=$('#eraTracks'),eraPanel=$('#eraPanel'),eventsRail=$('#eventsRail'),axisEl=$('#axis'),axisInner=$('#axisInner'),guide=$('#guide'),nowline=$('#nowline'),scroll=$('#scroll'),legendEl=$('#legend'),detailBackdrop=$('#detailBackdrop'),toastEl=$('#toast'),collOverlay=$('#collOverlay');
 
 // ============================================================
 // Persistència local (per navegador): recupera la vista i els
@@ -537,10 +629,22 @@ function restoreState(){
 }
 scroll.addEventListener('scroll',scheduleSave);   // persist pan position (no-op until lsReady)
 let toastTimer=null;
-function showToast(msg){toastEl.textContent=msg;toastEl.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('on'),2200);}
+// Amplada del canvas tapada per la barra lateral (0 si està minimitzada). Serveix per centrar
+// overlays/toasts respecte el canvas VISIBLE i no respecte la pantalla sencera.
+function canvasBlind(){const sb=document.querySelector('.sidebar');return sb?Math.max(0,sb.getBoundingClientRect().right-scroll.getBoundingClientRect().left):0;}
+function showToast(msg){const bl=canvasBlind();toastEl.style.left='calc(50% + '+(bl/2)+'px)';toastEl.textContent=msg;toastEl.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('on'),2200);}
 const WIP=()=>showToast('🚧 En construcció');
 function hideDetail(){$('#detail').classList.remove('open');detailBackdrop.classList.remove('open');}
 $('#detailBackdrop').addEventListener('click',()=>{hideDetail();state.selected=null;state.selectedEvent=null;render();});
+// Bottom-sheet a mòbil: llisca cap avall (des de dalt del full) per tancar
+const detailEl=$('#detail');
+let dSwipe=null;
+detailEl.addEventListener('touchstart',e=>{dSwipe=(e.touches.length===1)?{y:e.touches[0].clientY,top:detailEl.scrollTop}:null;},{passive:true});
+detailEl.addEventListener('touchend',e=>{
+  if(!dSwipe)return;const dy=e.changedTouches[0].clientY-dSwipe.y;
+  if(dy>70&&dSwipe.top<=0){hideDetail();state.selected=null;state.selectedEvent=null;render();}
+  dSwipe=null;
+},{passive:true});
 const x=y=>(y-YEAR_MIN)*pxPerYear;                 // year → x px
 const totalW=()=>(YEAR_MAX-YEAR_MIN)*pxPerYear;    // full canvas width px
 
@@ -677,38 +781,33 @@ function render(){
 
   // --- Events (name on top, full line, year pill at the foot; two rows to avoid name overlap) ---
   const evNameTop=eventLabelTop(), evYearTop=contentH-24;
-  const evPlaced=EVENTS.map(ev=>({ev,left:x(ev.year),w:ev.name.length*7+16,m:ev._m})).sort((a,b)=>a.left-b.left);   // m: precomputed once at load (see metricOf near EVENTS)
-  // --- Semantic zoom (Google-Maps style): importance = PRIORITY, local density = the real GATE ---
-  // Allocate name-labels by descending importance into the 2 rows; whatever fits without colliding at
-  // the current zoom keeps a full label, the rest fall back to a bare dot. Empty stretches keep even a
-  // low-importance label (nothing to collide with); crowded stretches keep only the top ones. So
-  // importance decides WHEN a name shows, never IF the event exists — zoom in and space opens for more.
-  const LBL_GAP=12, FADE_PX=46, DOT_GAP=7;
-  const rowIv=[[],[]];
-  const fitsRow=(r,l,w)=>{for(const iv of rowIv[r]){if(!(l+w+LBL_GAP<iv.l||l>iv.r+LBL_GAP))return false;}return true;};
-  const byImp=[...evPlaced].sort((a,b)=>b.m-a.m||a.left-b.left);
-  // A searched/selected event is FORCED to keep its label at any zoom (explicit user intent beats the gate):
-  // pre-place it in row 0 so everyone else yields around it, even if that means overlapping a neighbour.
-  const forcedEv=state.selectedEvent?evPlaced.find(o=>o.ev.id===state.selectedEvent):null;
-  if(forcedEv){const iv={l:forcedEv.left,r:forcedEv.left+forcedEv.w};rowIv[0].push(iv);forcedEv.row=0;forcedEv.iv=iv;forcedEv.labeled=true;}
-  byImp.forEach(o=>{if(o.labeled)return;for(let r=0;r<2;r++){if(fitsRow(r,o.left,o.w)){const iv={l:o.left,r:o.left+o.w};rowIv[r].push(iv);o.row=r;o.iv=iv;o.labeled=true;break;}}});
-  // Dot de-dup: a dot-only event is hidden if a higher-priority dot already sits within DOT_GAP px, so
-  // dense stretches don't smear into a solid bar of dots. Labelled events always keep their dot.
+  const evPlaced=EVENTS.map(ev=>({ev,left:x(ev.year),w:ev.name.length*7+16})).sort((a,b)=>a.left-b.left);
+  // --- Stable semantic zoom: PERMANENT rows + MONOTONIC reveal (see the _row/_revealPPY precompute) ---
+  // A name shows the moment the zoom (pxPerYear) reaches its precomputed _revealPPY, always in its fixed
+  // _row. So zooming only ADDS names — no flicker (a name never toggles on/off at a fixed zoom) and no
+  // up/down swap. A searched/selected event is FORCED to show at any zoom (explicit intent beats the gate).
+  const FADE_PX=46, DOT_GAP=7;
+  evPlaced.forEach(o=>{o.labeled=(o.ev.id===state.selectedEvent)||pxPerYear>=o.ev._revealPPY;o.row=o.ev._row;});
+  // Importance order (stable) drives the dot de-dup so dense stretches don't smear into a solid bar of dots.
+  const byImp=[...evPlaced].sort((a,b)=>b.ev._m-a.ev._m||a.left-b.left);
   const dotX=byImp.filter(o=>o.labeled).map(o=>o.left);
   byImp.forEach(o=>{if(o.labeled){o.showDot=true;return;}if(dotX.some(dx=>Math.abs(dx-o.left)<DOT_GAP)){o.showDot=false;}else{o.showDot=true;dotX.push(o.left);}});
-  // Organic fade: a label that only just fits comes in dim and brightens as zoom opens space around it.
-  evPlaced.forEach(o=>{
-    if(!o.labeled||o.ev.id===state.selectedEvent){o.op=1;return;}
+  // Organic fade: a name that only just cleared its row-neighbours comes in dim and brightens with zoom.
+  const rowLbl=[[],[]];
+  evPlaced.forEach(o=>{if(o.labeled)rowLbl[o.row].push(o);});
+  rowLbl.forEach(list=>{list.sort((a,b)=>a.left-b.left);list.forEach((o,i)=>{
+    if(o.ev.id===state.selectedEvent){o.op=1;return;}
     let gap=Infinity;
-    for(const iv of rowIv[o.row]){if(iv===o.iv)continue;if(iv.r<=o.left)gap=Math.min(gap,o.left-iv.r);else if(iv.l>=o.left+o.w)gap=Math.min(gap,iv.l-(o.left+o.w));}
+    if(i>0)gap=Math.min(gap,o.left-(list[i-1].left+list[i-1].w));
+    if(i<list.length-1)gap=Math.min(gap,list[i+1].left-(o.left+o.w));
     o.op=gap===Infinity?1:Math.max(.45,Math.min(1,gap/FADE_PX));
-  });
+  });});
   eventsRail.innerHTML=state.showEvents?evPlaced.map(o=>{
     const ev=o.ev,left=o.left;
     ev._x=left;
     if(!o.labeled){
       if(!o.showDot)return '';
-      return `<div class="event dotonly" style="left:${left}px"><div class="edot" data-ev="${ev.id}" title="${ev.name}" style="top:${evNameTop+18}px"></div></div>`;
+      return `<div class="event dotonly" style="left:${left}px"><div class="edot" data-ev="${ev.id}" title="${ev.name}" style="top:${evNameTop+18}px"></div><div class="eline" style="top:${evNameTop+21}px;height:${Math.max(evYearTop-(evNameTop+21)-2,0)}px"></div></div>`;
     }
     const nameTop=evNameTop+o.row*16,dotTop=nameTop+18,lineTop=dotTop+3;
     const lineH=Math.max(evYearTop-lineTop-2,0);
@@ -854,7 +953,9 @@ function openBlock(b){
 // ============================================================
 const q=$('#q'),results=$('#results');
 const deaccent=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();   // case- & accent-insensitive
-let searchIdx=-1, wdTerm='', wdResults=[], wdLoading=false, wdTimer=null, wdSeq=0;
+let searchIdx=-1, wdTerm='', wdResults=[], wdStatus='idle', wdTimer=null, wdSeq=0;
+const wdCache=new Map();   // cau de resultats de cerca per terme normalitzat (només memòria): repetir una cerca és instantani, sense xarxa
+const dropKnown=arr=>{const inDB=new Set(PEOPLE.map(p=>p.wd).filter(Boolean));return arr.filter(w=>!inDB.has(w.qid));};   // del cau, treu qui ja tinguem/afegit
 
 const localRow=p=>{const added=state.present.has(p.id);return `<div class="row ${added?'disabled':''}" data-add="${p.id}"><span class="swatch" style="background:${swatchBg(p)}"></span>${p.name}<span class="yr">${added?'ja afegit':p.birth+'\u2013'+(p.death==null?'':p.death)}</span></div>`;};
 const wdRow=w=>`<div class="row" data-wd="${w.qid}"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${w.name}<span class="yr">${w.birth}${w.death!=null?'\u2013'+w.death:'\u2013'}</span></div>`;
@@ -866,16 +967,29 @@ function renderDropdown(){
   const localEv=EVENTS.filter(ev=>deaccent(ev.name).includes(term));
   let html=local.map(localRow).join('');
   if(localEv.length)html+=`<div class="rowsep">Esdeveniments</div>`+localEv.map(evSearchRow).join('');
-  if((wdResults.length||wdLoading)&&(local.length||localEv.length))html+=`<div class="rowsep">Wikidata</div>`;
-  html+=wdResults.map(wdRow).join('');
-  if(wdLoading)html+=`<div class="row loading">Cercant a Wikidata\u2026</div>`;
-  if(!local.length&&!localEv.length&&!wdResults.length&&!wdLoading)html=`<div class="row disabled">Cap coincid\u00e8ncia</div>`;
+  // Wikidata: mostrem l'estat de la xarxa (engegat només a partir de 2 lletres ��� wdStatus!=='idle')
+  if(wdStatus!=='idle'){
+    if(local.length||localEv.length)html+=`<div class="rowsep">Wikidata</div>`;
+    if(wdStatus==='loading')html+=`<div class="row loading">Cercant a Wikidata…</div>`;
+    else if(wdStatus==='error')html+=`<div class="row wderror"><span>⚠ No s'ha pogut connectar a Wikidata</span><button type="button" class="retry" data-retry>Torna-ho a provar</button></div>`;
+    else if(wdStatus==='done'){html+=wdResults.map(wdRow).join('');if(!wdResults.length)html+=`<div class="row disabled">Cap persona trobada a Wikidata</div>`;}
+  }
+  if(!html)html=`<div class="row disabled">Cap coincidència</div>`;
   results.innerHTML=html;results.classList.add('open');highlightSearch(0);
 }
 function runSearch(){
   const term=q.value.trim();
   if(!term){results.classList.remove('open');return;}
-  if(deaccent(term)!==wdTerm){wdTerm=deaccent(term);wdResults=[];wdLoading=term.length>=2;scheduleWikidata(term);}
+  const norm=deaccent(term);
+  if(norm!==wdTerm){
+    wdTerm=norm;wdResults=[];
+    if(term.length>=2&&wdCache.has(norm)){          // cau: servim a l'instant, sense crida ni spinner
+      clearTimeout(wdTimer);wdSeq++;                 // cancel·la el debounce pendent i invalida respostes en vol
+      wdResults=dropKnown(wdCache.get(norm));wdStatus='done';
+    }else{
+      wdStatus=term.length>=2?'loading':'idle';scheduleWikidata(term);
+    }
+  }
   renderDropdown();
 }
 // keyboard navigation over both local and Wikidata rows
@@ -897,7 +1011,7 @@ function addFromSearch(id){
 function addWikidataPerson(qid){
   const w=wdResults.find(x=>x.qid===qid);if(!w||w.birth==null)return;
   const id='wd_'+qid;
-  if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:qid,name:w.name,birth:w.birth,death:w.death,cats:guessCats(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_session:true});
+  if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:qid,name:w.name,birth:w.birth,death:w.death,cats:guessCats(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_session:true,_ts:Date.now()});
   addFromSearch(id);
 }
 
@@ -906,43 +1020,51 @@ const wdYear=iso=>{const m=/^(-?\d+)/.exec(iso);if(!m)return null;const y=parseI
 const WDQ='https://query.wikidata.org/sparql?format=json&query=';
 const WD_FIELDS='OPTIONAL { ?item wdt:P569 ?birth. } OPTIONAL { ?item wdt:P570 ?death. } OPTIONAL { ?article schema:about ?item ; schema:isPartOf <https://ca.wikipedia.org/> . } SERVICE wikibase:label { bd:serviceParam wikibase:language "ca,es,en". }';
 function scheduleWikidata(term){clearTimeout(wdTimer);if(term.trim().length<2)return;wdTimer=setTimeout(()=>fetchWikidata(term.trim()),300);}
-function wdParse(data){
+function wdParse(data,keepKnown){
   const binds=(data&&data.results&&data.results.bindings)||[], seen=new Set(), inDB=new Set(PEOPLE.map(p=>p.wd).filter(Boolean)), out=[];
   for(const b of binds){
     const qid=b.item.value.split('/').pop();
-    if(seen.has(qid)||inDB.has(qid)||!b.birth)continue;   // dedup vs DB; need a birth year to place it
+    if(seen.has(qid)||(!keepKnown&&inDB.has(qid))||!b.birth)continue;   // dedup vs DB (excepte en refresc de dades que ja tenim); need a birth year to place it
     seen.add(qid);
     out.push({qid,name:(b.itemLabel&&b.itemLabel.value)||qid,desc:(b.itemDescription&&b.itemDescription.value)||'',birth:wdYear(b.birth.value),death:b.death?wdYear(b.death.value):null,article:(b.article&&b.article.value)||('https://www.wikidata.org/wiki/'+qid)});
   }
   return out;
 }
+// one place for network policy: 9 s timeout + non-2xx = failure, so the UI can tell a real error from "no results"
+function wdFetch(url,opts){
+  const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),9000);
+  return fetch(url,Object.assign({signal:ctl.signal},opts||{}))
+    .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .finally(()=>clearTimeout(t));
+}
 // resolve a list of Q-ids to {name,dates,article} via a fast VALUES query (optionally keep only humans)
-function byIds(ids,humansOnly){
+function byIds(ids,humansOnly,keepKnown){
   if(!ids.length)return Promise.resolve([]);
   const query=`SELECT ?item ?itemLabel ?itemDescription ?birth ?death ?article WHERE { VALUES ?item { ${ids.map(q=>'wd:'+q).join(' ')} } ${humansOnly?'?item wdt:P31 wd:Q5.':''} ${WD_FIELDS} }`;
-  return fetch(WDQ+encodeURIComponent(query),{headers:{Accept:'application/sparql-results+json'}}).then(r=>r.json()).then(data=>{
-    const byq={};wdParse(data).forEach(x=>byq[x.qid]=x);
+  return wdFetch(WDQ+encodeURIComponent(query),{headers:{Accept:'application/sparql-results+json'}}).then(data=>{
+    const byq={};wdParse(data,keepKnown).forEach(x=>byq[x.qid]=x);
     return ids.map(q=>byq[q]).filter(Boolean);   // preserve the search-relevance order
-  }).catch(()=>[]);
+  });
 }
 // primary: fast label/alias autocomplete (great ranking), then keep only humans
 function entitySearch(term){
   const url='https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&origin=*&type=item&limit=15&language=ca&uselang=ca&search='+encodeURIComponent(term);
-  return fetch(url).then(r=>r.json()).then(d=>byIds(((d.search||[]).map(x=>x.id).filter(t=>/^Q\d+$/.test(t))),true)).catch(()=>[]);
+  return wdFetch(url).then(d=>byIds(((d.search||[]).map(x=>x.id).filter(t=>/^Q\d+$/.test(t))),true));
 }
 // fallback: full-text search (finds people by surname / mid-name that the autocomplete buries under common words)
 function fulltextSearch(term){
   const safe=term.replace(/[^\p{L}\p{N} ]/gu,'').trim();if(!safe)return Promise.resolve([]);
   const url='https://www.wikidata.org/w/api.php?action=query&format=json&origin=*&list=search&srnamespace=0&srlimit=10&srsearch='+encodeURIComponent(safe+'* haswbstatement:P31=Q5');
-  return fetch(url).then(r=>r.json()).then(d=>byIds((((d.query&&d.query.search)||[]).map(x=>x.title).filter(t=>/^Q\d+$/.test(t))),false)).catch(()=>[]);
+  return wdFetch(url).then(d=>byIds((((d.query&&d.query.search)||[]).map(x=>x.title).filter(t=>/^Q\d+$/.test(t))),false));
 }
 function fetchWikidata(term){
+  const key=deaccent(term.trim());
   const seq=++wdSeq;
   entitySearch(term).then(out=>{
     if(seq!==wdSeq)return;   // a newer search superseded this one
-    if(out.length){wdResults=out;wdLoading=false;renderDropdown();return;}
-    fulltextSearch(term).then(out2=>{if(seq!==wdSeq)return;wdResults=out2;wdLoading=false;renderDropdown();});
-  });
+    if(out.length){wdResults=out;wdStatus='done';wdCache.set(key,out);renderDropdown();return;}
+    return fulltextSearch(term).then(out2=>{if(seq!==wdSeq)return;wdResults=out2;wdStatus='done';wdCache.set(key,out2);renderDropdown();});
+  }).catch(()=>{if(seq!==wdSeq)return;wdResults=[];wdStatus='error';renderDropdown();});   // els errors NO es cachegen: torna a intentar-ho la propera vegada
 }
 
 q.addEventListener('input',runSearch);
@@ -954,8 +1076,12 @@ q.addEventListener('keydown',e=>{
   else if(e.key==='Enter'){e.preventDefault();activateRow(searchRows()[searchIdx]);}
   else if(e.key==='Escape'){results.classList.remove('open');}
 });
-results.addEventListener('click',e=>{const row=e.target.closest('[data-add],[data-evsearch],[data-wd]');if(row)activateRow(row);});
+results.addEventListener('click',e=>{if(e.target.closest('[data-retry]')){const t=q.value.trim();if(t.length>=2){wdStatus='loading';renderDropdown();fetchWikidata(t);}return;}const row=e.target.closest('[data-add],[data-evsearch],[data-wd]');if(row)activateRow(row);});
 document.addEventListener('click',e=>{if(!e.target.closest('.search'))results.classList.remove('open');});
+// Botó ✕ per esborrar i tancar la cerca (sobretot a mòbil, on l'input és ample)
+function syncQClear(){document.querySelector('.search').classList.toggle('has-text',q.value.length>0);}
+q.addEventListener('input',syncQClear);
+$('#qclear').addEventListener('click',()=>{q.value='';syncQClear();results.classList.remove('open');q.blur();});
 
 // ============================================================
 // [8] EVENT LISTENERS (sidebar toggles · bar & event clicks)
@@ -1034,7 +1160,7 @@ eraTracksEl.addEventListener('click',e=>{
 // [9] ZOOM & PAN
 // ============================================================
 function fitPx(){const vw=scroll.clientWidth-24;return Math.max(0.005,vw/(YEAR_MAX-YEAR_MIN));}          // zoom that fits the whole span
-const FOCUS_FROM=1500;
+const FOCUS_FROM=window.matchMedia('(pointer:coarse)').matches?1760:1500;   // phones: start more zoomed-in (fewer years across the smaller screen)
 const FUTURE_MARGIN_PX=240;   // fixed px reserved past "today" so grown living-pills + fade never hug/clip the right edge
 function focusPx(){const vw=Math.max(60,scroll.clientWidth-24-FUTURE_MARGIN_PX);return Math.max(fitPx(),Math.min(20,vw/(NOW_YEAR-FOCUS_FROM)));}   // default focus ~1500→today, with future margin
 function defaultView(){pxPerYear=focusPx();render();scroll.scrollLeft=Math.min(Math.max(0,x(FOCUS_FROM)-16),maxScroll());}   // clamp: the focus target can sit past the canvas end and leave a sliver of blank on the right
@@ -1124,6 +1250,38 @@ $('#collections').addEventListener('click',e=>{
 // A collection is a list of Q-ids: resolve each against the local DB first, fetch the rest from
 // Wikidata (byIds already drops anything we hold locally), then frame the view around the result —
 // without it "Els meus filòsofs" would land off-screen, since the default view starts at 1500.
+let collLoads=0, collSpinTimer=null;
+// Spinner centrat sobre el canvas mentre carreguen membres remots d'una col·lecció.
+// Llindar curt perquè les càrregues ràpides/en cau no facin flash, i comptador perquè
+// diverses càrregues simultànies comparteixin un sol overlay que només marxa quan totes acaben.
+function beginCollLoading(){
+  collLoads++;
+  if(collLoads===1 && !collSpinTimer){
+    collSpinTimer=setTimeout(()=>{collSpinTimer=null; if(collLoads>0){collOverlay.style.left=canvasBlind()+'px'; collOverlay.classList.add('on');}},250);
+  }
+  return function endCollLoading(){
+    collLoads=Math.max(0,collLoads-1);
+    if(collLoads===0){
+      if(collSpinTimer){clearTimeout(collSpinTimer);collSpinTimer=null;}
+      collOverlay.classList.remove('on');
+    }
+  };
+}
+const COLL_TTL=30*24*3600*1000;   // 30 dies: passat aquest temps una persona del cau es refresca de Wikidata en segon pla
+// Refresca en segon pla (sense spinner ni bloqueig) les persones de sessió caducades. Sense xarxa,
+// es conserva silenciosament la còpia vella: millor una dada caducada que cap.
+function refreshStale(qids){
+  if(!qids||!qids.length)return;
+  byIds(qids,true,true).then(list=>{
+    let changed=false;
+    list.forEach(w=>{
+      if(w.birth==null)return;
+      const p=PEOPLE.find(x=>x.wd===w.qid);if(!p)return;
+      p.name=w.name;p.birth=w.birth;p.death=w.death;p.wiki=w.article;p.desc=w.desc||p.desc;p.cats=guessCats(w.desc);p._ts=Date.now();changed=true;
+    });
+    if(changed){recomputePresent();render();scheduleSave();}
+  }).catch(()=>{});
+}
 async function toggleCollection(cid){
   const c=COLLECTIONS.find(x=>x.id===cid);if(!c)return;
   if(state.collections.has(cid)){                  // same button takes it away again
@@ -1138,23 +1296,35 @@ async function toggleCollection(cid){
   }
   state.collections.add(cid);
   const local=new Map(PEOPLE.filter(p=>p.wd).map(p=>[p.wd,p]));
-  c.wds.forEach(q=>{const p=local.get(q);if(p)state.pinned.add(p.id);});
+  const localIds=c.wds.map(q=>local.get(q)).filter(Boolean).map(p=>p.id);
   const missing=c.wds.filter(q=>!local.has(q));
-  recomputePresent();render();
-  if(missing.length){
-    showToast(`${c.name}: carregant ${missing.length} de Wikidata…`);
-    const got=await byIds(missing,true);
-    got.forEach(w=>{
-      if(w.birth==null)return;                       // no birth year → nowhere to place the bar
-      const id='wd_'+w.qid;
-      if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:w.qid,name:w.name,birth:w.birth,death:w.death,cats:guessCats(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_session:true});
-      state.pinned.add(id);
-    });
-    recomputePresent();
-    const lost=missing.length-got.filter(w=>w.birth!=null).length;
-    showToast(lost?`${c.name} · ${lost} no s'han pogut carregar`:c.name);
+  const stale=c.wds.filter(q=>{const p=local.get(q);return p&&p._session&&(!p._ts||Date.now()-p._ts>COLL_TTL);});   // membres del cau caducats → refresc silenciós
+  if(!missing.length){                             // tot és local → mostrar-ho de cop, sense spinner
+    localIds.forEach(id=>state.pinned.add(id));
+    recomputePresent();render();
+    refreshStale(stale);                           // en segon pla, sense bloquejar l'aparició instantània
+    return;
   }
-  render();   // deliberately no zoom change: a collection snapping the zoom was jarring — that's what "Veure tot" is for
+  render();                                         // marca el botó com a actiu ja; els membres apareixen junts quan estigui tot
+  const endLoading=beginCollLoading();             // spinner sobre el canvas (després d'un llindar curt)
+  let got=null, failed=false;
+  try{got=await byIds(missing,true);}
+  catch(e){failed=true;}
+  finally{endLoading();}
+  if(!state.collections.has(cid))return;           // desactivada (o canviada) mentre carregava → descarta el resultat zombie
+  localIds.forEach(id=>state.pinned.add(id));       // revela els locals ara — també és el fallback si la petició falla
+  if(failed){recomputePresent();render();showToast(`${c.name} · no s'ha pogut connectar a Wikidata`);return;}
+  got.forEach(w=>{
+    if(w.birth==null)return;                        // no birth year → nowhere to place the bar
+    const id='wd_'+w.qid;
+    if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:w.qid,name:w.name,birth:w.birth,death:w.death,cats:guessCats(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_session:true,_ts:Date.now()});
+    state.pinned.add(id);
+  });
+  recomputePresent();
+  const lost=missing.length-got.filter(w=>w.birth!=null).length;
+  render();                                         // revela tothom de cop (s'acaba el pop-in de 2 fases)
+  showToast(lost?`${c.name} · ${lost} no s'han pogut carregar`:c.name);
+  refreshStale(stale);                             // refresca també, en segon pla, els caducats que ja teníem
 }
 // Zoom + pan so everyone currently on the canvas fits.
 // The sidebar OVERLAYS the stage rather than shrinking it, so the leftmost strip of the canvas is
@@ -1243,6 +1413,18 @@ function applyPinch(){clearFitLatch();
 function endPinch(){pinch=null;if(pinchRAF){cancelAnimationFrame(pinchRAF);pinchRAF=0;}}
 scroll.addEventListener('touchend',endPinch);
 scroll.addEventListener('touchcancel',endPinch);
+// Doble-tap amb un dit → apropa al punt tocat (complementa el pinch). Ignora tocs sobre elements interactius.
+let tStart=null,lastTap=0,lastTapX=0,lastTapY=0;
+scroll.addEventListener('touchstart',e=>{tStart=(e.touches.length===1)?{x:e.touches[0].clientX,y:e.touches[0].clientY,moved:false}:null;},{passive:true});
+scroll.addEventListener('touchmove',e=>{if(tStart&&e.touches.length===1){const t=e.touches[0];if(Math.hypot(t.clientX-tStart.x,t.clientY-tStart.y)>10)tStart.moved=true;}},{passive:true});
+scroll.addEventListener('touchend',e=>{
+  if(pinch||!tStart||tStart.moved||e.changedTouches.length!==1)return;
+  const t=e.changedTouches[0];
+  if(e.target.closest('.bar,.event,.seg.mov,.menu,button,a,input,.results'))return;   // deixa que el toc obri detalls / actuï normal
+  const now=Date.now();
+  if(now-lastTap<300&&Math.abs(t.clientX-lastTapX)<32&&Math.abs(t.clientY-lastTapY)<32){e.preventDefault();zoomAt(t.clientX,1.8);lastTap=0;}
+  else{lastTap=now;lastTapX=t.clientX;lastTapY=t.clientY;}
+},{passive:false});
 
 // Hover guide (vertical year line). Suppressed while dragging.
 scroll.addEventListener('mousemove',e=>{
@@ -1286,13 +1468,15 @@ restoreState();
 bootDefault();
 window.addEventListener('resize',()=>{applyMetrics();setZoom(pxPerYear);});   // rotating the phone flips the compact threshold, so the geometry has to be recomputed before the redraw
 
-// Portrait wall: show overlay on touch devices held in portrait mode.
+// Rotate hint: a dismissible suggestion (not a blocker) on touch devices held in portrait.
 const portraitWall=document.getElementById('portraitWall');
+let rotateDismissed=false;
 function checkPortrait(){
   const isTouch=window.matchMedia('(pointer:coarse)').matches;
   const isPortrait=window.innerWidth<window.innerHeight;
-  portraitWall.classList.toggle('on',isTouch&&isPortrait);
+  portraitWall.classList.toggle('on',isTouch&&isPortrait&&!rotateDismissed);
 }
+$('#rotateDismiss').addEventListener('click',()=>{rotateDismissed=true;portraitWall.classList.remove('on');});
 window.addEventListener('resize',checkPortrait);
 checkPortrait();
 
