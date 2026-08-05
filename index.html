@@ -82,9 +82,9 @@
   .sidebar{position:absolute;top:0;left:0;bottom:0;width:240px;border-right:2px solid var(--border-strong);padding:16px;overflow:hidden;background:var(--soft);transition:width .18s ease,padding .18s ease;z-index:10;box-shadow:3px 0 14px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:18px;}   /* overlays the canvas instead of pushing it — the stage never resizes */
   .body.collapsed .sidebar{width:14px;padding:0;overflow:hidden;box-shadow:none;}   /* thin strip stays visible as a "something's hidden here" cue */
   .body.collapsed .sidebar>*{display:none;}                        /* hide content instead of letting it reflow/wrap inside the strip */
-  /* Tirador de la barra: estil DIFERENT de les targetes de col·lecció (slate ple, fletxa blanca, sense vora de targeta) perquè es llegeixi com un control i no es confongui amb el que té al costat. */
-  .sidebarHandle{position:absolute;top:50%;left:230px;transform:translateY(-50%);width:22px;height:48px;border:none;background:var(--struct-ink);border-radius:0 11px 11px 0;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:15px;line-height:1;padding:0;z-index:10;box-shadow:2px 0 10px rgba(40,44,60,.30);transition:left .18s ease,background .14s ease;}
-  .sidebarHandle:hover{background:var(--topbar-bg);color:#fff;}
+  /* Tirador de la barra: botó RODÓ en color corporatiu (terracota) amb fletxa blanca, que cavalca la vora dreta. Forma + color diferents de les targetes de col·lecció → no es confon, i queda integrat sobre la línia de la vora. */
+  .sidebarHandle{position:absolute;top:50%;left:225px;transform:translateY(-50%);width:30px;height:30px;border:1.5px solid var(--topbar-bg);background:var(--topbar-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:15px;line-height:1;padding:0;z-index:10;box-shadow:0 2px 7px rgba(40,44,60,.22);transition:left .18s ease,filter .14s ease,box-shadow .14s ease;}
+  .sidebarHandle:hover{filter:brightness(1.08);box-shadow:0 3px 11px rgba(40,44,60,.30);}
   .body.collapsed .sidebarHandle{left:3px;}
   .sidebar h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin:0 0 10px;font-weight:600;}
   /* Cada secció: títol fix + cos amb scroll propi. Amb poc contingut prenen l'alçada natural (sense forçar aire);
@@ -104,6 +104,19 @@
   .sidebar section>div:hover::-webkit-scrollbar-thumb{background:#B0ADA7;}
   .sidebar section>div::-webkit-scrollbar-track{background:transparent;}
   .sidebar section:last-child{flex-grow:1;flex-shrink:1000;min-height:80px;}   /* «A la vista» cedeix espai PRIMER: marcs i col·leccions es mantenen senceres fins que aquesta arriba al mínim; si elles també desborden, aleshores fan el seu scroll intern */
+  /* ===== Acordió (NOMÉS mòbil) — el JS afegeix .accordion a .sidebar en pointer:coarse =====
+     Al mòbil no és pràctic que les 3 seccions competeixin per l'alçada: es comporten com un
+     acordió d'una sola secció oberta, que ocupa tot l'espai amb el seu scroll (+ indicador). El
+     desktop no es toca (les regles .accordion van DESPRÉS i guanyen per ordre en cas d'empat). */
+  .sidebar.accordion{gap:0;}
+  .sidebar.accordion section{flex:0 0 auto;min-height:0;border-top:1px solid var(--border);}
+  .sidebar.accordion section:first-child{border-top:none;}
+  .sidebar.accordion section:not(.open)>div{display:none!important;}   /* !important: #collections porta display:flex per id i, sense això, guanyaria per especificitat i no es plegaria */
+  .sidebar.accordion section.open{flex:0 1 auto;min-height:0;}   /* la secció oberta pren la seva alçada NATURAL (les capçaleres següents queden just a sota); només si el contingut no cap, s'encongeix i el seu cos fa scroll intern */
+  .sidebar.accordion h3{margin:0;padding:13px 2px;display:flex;align-items:center;gap:8px;cursor:pointer;-webkit-user-select:none;user-select:none;color:var(--text2);flex:0 0 auto;}
+  .sidebar.accordion section.open h3{color:var(--text);}
+  .sidebar.accordion h3 .acc-chev{margin-left:auto;font-size:10px;color:var(--text2);transition:transform .18s ease;}
+  .sidebar.accordion section.open h3 .acc-chev{transform:rotate(90deg);}
   .filter{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:14px;}
   .filter input{width:16px;height:16px;accent-color:var(--blue);}
   .swatch{width:12px;height:12px;border-radius:3px;flex:0 0 auto;}
@@ -283,7 +296,7 @@
     .btn{min-width:30px;min-height:30px;padding:3px 8px;font-size:13px;}
     .search input{padding:5px 10px;font-size:13px;}
     .sidebar{width:190px;padding:10px 12px;}
-    .sidebarHandle{left:179px;height:44px;}   /* 190 - 11, keeps the handle straddling the edge */
+    .sidebarHandle{left:175px;}   /* sidebar 190 − 15 (radi del botó rodó) → cercle centrat sobre la vora */
     .sidebar h3{font-size:11px;margin:0 0 6px;}
     .sidebar section{margin-bottom:0;}
     .filter{padding:3px 0;font-size:13px;}
@@ -334,7 +347,7 @@
     .results{max-height:min(52vh,360px);}
     .results .row{min-height:44px;padding:11px 14px;}
     .results .rowsep{padding:9px 14px 4px;}
-    .sidebarHandle{height:56px;}
+    .sidebarHandle{width:34px;height:34px;font-size:16px;}   /* target tàctil una mica més gran */
     .sidebar{gap:12px;}
     .sidebar h3{margin:0 0 6px;}
     .filter{padding:5px 0;font-size:13px;}
@@ -1534,6 +1547,28 @@ checkPortrait();
 
 // Sidebar: collapse by default on narrow screens (phone / small tablet in landscape).
 if(window.innerWidth<900){$('.body').classList.add('collapsed');$('#sidebarToggle').textContent='›';}   // re-clamp: a wider window raises the minimum zoom, so plain render() would leave the canvas narrower than the viewport
+
+// ===== Acordió de la barra lateral (NOMÉS mòbil) =====
+// En pointer:coarse, les 3 seccions es comporten com un acordió: només una oberta a la vegada,
+// que ocupa tota l'alçada amb el seu scroll. Tornar a clicar la capçalera oberta les plega totes
+// (vista de només títols). Al desktop no s'activa (queda com sempre).
+const ACC_MQ=window.matchMedia('(pointer:coarse)');
+function openAccSection(sec){
+  const secs=[...document.querySelectorAll('.sidebar section')];
+  const wasOpen=sec.classList.contains('open');
+  secs.forEach(s=>s.classList.remove('open'));
+  if(!wasOpen)sec.classList.add('open');
+}
+function setupAccordion(){
+  const sb=$('.sidebar');const secs=[...document.querySelectorAll('.sidebar section')];
+  if(ACC_MQ.matches){
+    sb.classList.add('accordion');
+    secs.forEach(s=>{const h=s.querySelector('h3');if(h&&!h.dataset.acc){h.dataset.acc='1';const c=document.createElement('span');c.className='acc-chev';c.textContent='\u25b8';h.appendChild(c);h.addEventListener('click',()=>openAccSection(s));}});
+    if(!sb.querySelector('section.open'))openAccSection(secs[secs.length-1]);   // per defecte: «A la vista» oberta
+  }else{sb.classList.remove('accordion');secs.forEach(s=>s.classList.remove('open'));}
+}
+setupAccordion();
+if(ACC_MQ.addEventListener)ACC_MQ.addEventListener('change',setupAccordion);
 </script>
 </body>
 </html>
