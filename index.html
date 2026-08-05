@@ -79,14 +79,31 @@
 
   /* ===== Sidebar (marcs · col·leccions · a la vista) ===== */
   .body{display:flex;flex:1 1 auto;min-height:0;position:relative;}
-  .sidebar{position:absolute;top:0;left:0;bottom:0;width:240px;border-right:2px solid var(--border-strong);padding:16px;overflow:auto;background:var(--soft);transition:width .18s ease,padding .18s ease;z-index:10;box-shadow:3px 0 14px rgba(0,0,0,.07);}   /* overlays the canvas instead of pushing it — the stage never resizes */
+  .sidebar{position:absolute;top:0;left:0;bottom:0;width:240px;border-right:2px solid var(--border-strong);padding:16px;overflow:hidden;background:var(--soft);transition:width .18s ease,padding .18s ease;z-index:10;box-shadow:3px 0 14px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:18px;}   /* overlays the canvas instead of pushing it — the stage never resizes */
   .body.collapsed .sidebar{width:14px;padding:0;overflow:hidden;box-shadow:none;}   /* thin strip stays visible as a "something's hidden here" cue */
   .body.collapsed .sidebar>*{display:none;}                        /* hide content instead of letting it reflow/wrap inside the strip */
-  .sidebarHandle{position:absolute;top:50%;left:229px;transform:translateY(-50%);width:24px;height:52px;border:1.5px solid var(--border-strong);border-left:none;background:var(--surface);border-radius:0 10px 10px 0;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);font-size:16px;line-height:1;padding:0;z-index:10;box-shadow:2px 0 6px rgba(0,0,0,.08);transition:left .18s ease;}
-  .sidebarHandle:hover{background:#fff;border-color:var(--blue);color:var(--blue);}
+  /* Tirador de la barra: estil DIFERENT de les targetes de col·lecció (slate ple, fletxa blanca, sense vora de targeta) perquè es llegeixi com un control i no es confongui amb el que té al costat. */
+  .sidebarHandle{position:absolute;top:50%;left:230px;transform:translateY(-50%);width:22px;height:48px;border:none;background:var(--struct-ink);border-radius:0 11px 11px 0;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:15px;line-height:1;padding:0;z-index:10;box-shadow:2px 0 10px rgba(40,44,60,.30);transition:left .18s ease,background .14s ease;}
+  .sidebarHandle:hover{background:var(--topbar-bg);color:#fff;}
   .body.collapsed .sidebarHandle{left:3px;}
   .sidebar h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin:0 0 10px;font-weight:600;}
-  .sidebar section{margin-bottom:24px;}
+  /* Cada secció: títol fix + cos amb scroll propi. Amb poc contingut prenen l'alçada natural (sense forçar aire);
+     quan la suma no cap, el flexbox les encongeix (les més plenes cedeixen més espai) i cada cos fa scroll intern.
+     min-height garanteix que els 3 títols + un tros de llista quedin sempre visibles. */
+  .sidebar section{margin-bottom:0;display:flex;flex-direction:column;min-height:56px;flex:0 1 auto;}
+  .sidebar section>div{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;
+    /* Indicador "hi ha més": ombres de scroll (tècnica Lea Verou). L'ombra de dalt/baix només apareix quan es pot desplaçar en aquell sentit; funciona també a iOS Safari, on la scrollbar nativa està amagada. */
+    background:
+      linear-gradient(var(--soft) 28%, rgba(249,248,247,0)) top/100% 24px no-repeat,
+      linear-gradient(rgba(249,248,247,0), var(--soft) 72%) bottom/100% 24px no-repeat,
+      radial-gradient(farthest-side at 50% 0, rgba(40,44,60,.30), rgba(40,44,60,0)) top/100% 12px no-repeat,
+      radial-gradient(farthest-side at 50% 100%, rgba(40,44,60,.30), rgba(40,44,60,0)) bottom/100% 12px no-repeat;
+    background-attachment:local,local,scroll,scroll;}
+  .sidebar section>div::-webkit-scrollbar{width:8px;}
+  .sidebar section>div::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:4px;}
+  .sidebar section>div:hover::-webkit-scrollbar-thumb{background:#B0ADA7;}
+  .sidebar section>div::-webkit-scrollbar-track{background:transparent;}
+  .sidebar section:last-child{flex-grow:1;flex-shrink:1000;min-height:80px;}   /* «A la vista» cedeix espai PRIMER: marcs i col·leccions es mantenen senceres fins que aquesta arriba al mínim; si elles també desborden, aleshores fan el seu scroll intern */
   .filter{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:14px;}
   .filter input{width:16px;height:16px;accent-color:var(--blue);}
   .swatch{width:12px;height:12px;border-radius:3px;flex:0 0 auto;}
@@ -116,6 +133,7 @@
   .colitem{display:flex;align-items:center;gap:9px;width:100%;border:1px solid var(--border-strong);border-radius:var(--r-card);padding:9px 11px;font-size:14px;font-family:inherit;color:var(--text);cursor:pointer;text-align:left;background:linear-gradient(135deg,#FFFFFF,#F6F2ED);box-shadow:0 1px 3px rgba(40,44,60,.10);transition:box-shadow .14s,background .14s,border-color .14s;}
   .colitem:hover{border-color:#B0ADA7;box-shadow:0 2px 8px rgba(40,44,60,.16);}
   .colitem .ico{flex:0 0 auto;width:16px;height:16px;opacity:.45;}
+  .colitem .cname{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}   /* nom en una sola línia; si no cap, punts suspensius */
   .colitem .cnt{margin-left:auto;font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums;}
   .colitem .extlink{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;opacity:.35;border-radius:3px;text-decoration:none;color:inherit;transition:opacity .15s;}
   .colitem .extlink:hover{opacity:.85;background:rgba(0,0,0,.06);}
@@ -267,7 +285,7 @@
     .sidebar{width:190px;padding:10px 12px;}
     .sidebarHandle{left:179px;height:44px;}   /* 190 - 11, keeps the handle straddling the edge */
     .sidebar h3{font-size:11px;margin:0 0 6px;}
-    .sidebar section{margin-bottom:14px;}
+    .sidebar section{margin-bottom:0;}
     .filter{padding:3px 0;font-size:13px;}
     .filter input{width:15px;height:15px;}
     .legend{left:202px;padding:6px 10px;gap:5px;max-width:60vw;}   /* 190px compact sidebar + gutter */
@@ -317,10 +335,13 @@
     .results .row{min-height:44px;padding:11px 14px;}
     .results .rowsep{padding:9px 14px 4px;}
     .sidebarHandle{height:56px;}
-    .filter{padding:9px 0;}
-    .filter input{width:19px;height:19px;}
-    .onview .item{padding:9px 0;}
-    .colitem{min-height:44px;}
+    .sidebar{gap:12px;}
+    .sidebar h3{margin:0 0 6px;}
+    .filter{padding:5px 0;font-size:13px;}
+    .filter input{width:17px;height:17px;}
+    .onview .item{padding:5px 0;font-size:13px;}
+    #collections{gap:5px;}
+    .colitem{min-height:32px;padding:6px 11px;font-size:12px;}
     .bar .menu,.bar:hover .menu{display:none!important;}   /* al mòbil, fora el ⋮ (ha de guanyar al :hover, que en tàctil s'enganxa amb un sol toc); tot ho fa la fitxa en obrir el personatge */
     /* Feedback tàctil (sense hover, el toc s'ha de notar) */
     .btn:active{filter:brightness(.92);}
@@ -600,7 +621,7 @@ const GUTTER_YEARS=14;
 const RIGHT_PAD_YEARS=20;   // just enough for the axis to keep ticking a bit past "today" — the real scroll margin is capped in px by FUTURE_MARGIN_PX in render(), not by this
 const YEAR_MIN=DATA_MIN-GUTTER_YEARS, YEAR_MAX=DATA_MAX+RIGHT_PAD_YEARS;
 let pxPerYear=4;               // current zoom (pixels per year); set by defaultView()/setZoom()
-const SEED_PINNED=[];  // ningú no ve fixat per defecte: la vista comença buida i tots els personatges (Bernat inclòs) es poden treure/reportar com la resta
+const SEED_PINNED=[];  // ningú no ve fixat per defecte: la vista comença buida i tots els personatges (Bernat incl��s) es poden treure/reportar com la resta
 const DEFAULT_MARCS=(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches)?[]:['west'];  // al mòbil no mostrem Occident per defecte (ocupa massa); al desktop sí. Marcs a l'inici / després de Reset (la columna d'eres sempre és activa)
 const FUTURE_FADE=72;          // px the living bars (and the era band) fade out past "today"
 const deathOf=p=>p.death==null?NOW_YEAR:p.death;
@@ -887,7 +908,7 @@ function renderSidebar(){
   $('#regions').innerHTML=`<label class="filter"><input type="checkbox" data-events ${state.showEvents?'checked':''}><span class="swatch" style="background:var(--eventc)"></span>Esdeveniments</label>`+MARCS.map(m=>`<label class="filter"><input type="checkbox" data-marc="${m.id}" ${state.marcs.has(m.id)?'checked':''}><span class="swatch" style="background:${m.color}"></span>${m.name}</label>`).join('');
   const colIco='<svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 4.5h9M2 8h9M2 11.5h6"/><circle cx="12.5" cy="11" r="2.2"/></svg>';
   const extIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3H3a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1v-3"/><path d="M10 2h4v4M14 2L8 8"/></svg>';
-  $('#collections').innerHTML=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}${c.name}<span class="cnt">${c.wds.length}</span>${c.url?`<a class="extlink" href="${c.url}" target="_blank" rel="noopener" title="Obre el lloc web" onclick="event.stopPropagation()">${extIco}</a>`:''}</button>`).join('')
+  $('#collections').innerHTML=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}<span class="cname">${c.name}</span><span class="cnt">${c.wds.length}</span>${c.url?`<a class="extlink" href="${c.url}" target="_blank" rel="noopener" title="Obre el lloc web" onclick="event.stopPropagation()">${extIco}</a>`:''}</button>`).join('')
     +`<button class="newcol" data-newcol>+ Nova col·lecció</button>`;
   const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>a.name.localeCompare(b.name,'ca'));   // always alphabetical
   $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}" title="Centra\u0027l a la vista">${p.name}</button>${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}">⚠</button><button class="x" data-remove="${p.id}" title="Treu">×</button>`}</div>`).join(''):'<div class="empty">Cap personatge encara. Cerca\u0027n un a dalt.</div>';
@@ -912,7 +933,7 @@ function openDetail(p){
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   d.innerHTML=`<button class="close" id="closeDetail">×</button>
     <h2>${p.name}</h2>
-    <div class="dhead"><span class="life">${fmtY(p.birth)} – ${isAlive(p)?'actualitat':fmtY(p.death)}</span>${hasCat(p)?p.cats.map(a=>`<span class="chip"><span class="swatch" style="background:${CAT_COLORS[a]}"></span>${a}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>Sense categoria</span>`}<span class="chip era">${eraLabel(p.birth)}</span></div>
+    <div class="dhead"><span class="life">${fmtY(p.birth)} �� ${isAlive(p)?'actualitat':fmtY(p.death)}</span>${hasCat(p)?p.cats.map(a=>`<span class="chip"><span class="swatch" style="background:${CAT_COLORS[a]}"></span>${a}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>Sense categoria</span>`}<span class="chip era">${eraLabel(p.birth)}</span></div>
     ${p.gender?`<div class="meta">Gènere: ${p.gender}</div>`:''}
     <div class="desc">${p.desc}</div>
     ${p.wiki?`<a class="wiki" href="${p.wiki}" target="_blank" rel="noopener">🔗 ${linkLabel(p.wiki)}</a>`:''}
