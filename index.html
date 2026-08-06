@@ -183,6 +183,10 @@
   .seg.mov:hover{filter:brightness(.98);box-shadow:inset 3px 0 0 var(--mc),0 3px 8px rgba(40,44,60,.26);}
   .seg.mov .segname{font-size:12px;letter-spacing:.03em;color:var(--mink,var(--struct-ink));}
   .seg.mov .segyears{font-size:11px;margin-top:0;}
+  /* «+N»: control per expandir/recollir els tiers profunds d'un marc. Mateix hue del marc però amb forma de
+     CONTROL (píndola contornejada), clarament diferent d'un bloc perquè no es confonguin mai. */
+  .marcchip{position:absolute;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;line-height:1;letter-spacing:.02em;border:1px solid var(--mc);border-radius:999px;cursor:pointer;padding:0 8px;box-shadow:0 1px 2px rgba(40,44,60,.12);transition:box-shadow .12s,filter .12s;white-space:nowrap;overflow:hidden;z-index:60;}
+  .marcchip:hover{box-shadow:0 2px 7px rgba(40,44,60,.24);filter:brightness(.99);}
 
   /* ===== Events (vertical markers: name on top, year at the foot) ===== */
   .eventsRail{position:absolute;left:0;top:0;pointer-events:none;}
@@ -310,6 +314,7 @@
     .seg,.seg.mov{padding:0 8px 0 11px;}   /* .seg alone loses to .seg.mov on specificity, so name both or the blocks never tighten on a phone */
     .seg .segname,.seg.mov .segname{font-size:10.5px;}
     .seg .segyears,.seg.mov .segyears{font-size:9.5px;margin-top:0;}
+    .marcchip{font-size:9.5px;padding:0 6px;}
     .bar{font-size:11px;padding:0 8px;}
     .event .ename{font-size:11px;}
     .event .eyear{font-size:10px;padding:1px 7px;}
@@ -356,6 +361,7 @@
     #collections{gap:5px;}
     .colitem{min-height:32px;padding:6px 11px;font-size:12px;}
     .bar .menu,.bar:hover .menu{display:none!important;}   /* al mòbil, fora el ⋮ (ha de guanyar al :hover, que en tàctil s'enganxa amb un sol toc); tot ho fa la fitxa en obrir el personatge */
+    .bar.sel{outline:none;}   /* al mòbil no marquem la barra seleccionada amb contorn negre: la fitxa de detall ja indica quin personatge estàs mirant */
     /* Feedback tàctil (sense hover, el toc s'ha de notar) */
     .btn:active{filter:brightness(.92);}
     .results .row:active{background:var(--blueSoft);}
@@ -550,7 +556,7 @@ const EVENTS=[
   {id:'hegira',name:'Hègira de Mahoma',year:622,wiki:'https://ca.wikipedia.org/wiki/H%C3%A8gira',sitelinks:93,desc:'Mahoma emigra de la Meca a Medina; inici del calendari islàmic i d’una expansió que transformarà el Mediterrani i l’Orient Pròxim.'},
   {id:'pestaNegra',name:'Pesta Negra',year:1347,wiki:'https://ca.wikipedia.org/wiki/Pesta_negra',sitelinks:127,desc:'Epidèmia de pesta bubònica que mata entre un terç i la meitat de la població europea, accelerant la fi del feudalisme medieval.'},
   {id:'descamerica',name:'Descobriment d’Amèrica',year:1492,wiki:'https://ca.wikipedia.org/wiki/Descoberta_d%27Am%C3%A8rica',sitelinks:48,desc:'Cristòfor Colom arriba a les Amèriques el 12 d’octubre, obrint l’era dels grans imperis colonials. Inici convencional de l’Edat Moderna.'},
-  {id:'reformaprot',name:'Reforma Protestant',year:1517,wiki:'https://ca.wikipedia.org/wiki/Reforma_protestant',sitelinks:154,desc:'Martí Luter publica les 95 tesis, trencant la unitat del cristianisme occidental i desencadenant guerres religioses arreu d’Europa.'},
+  {id:'reformaprot',name:'Reforma Protestant',year:1517,wiki:'https://ca.wikipedia.org/wiki/Reforma_protestant',sitelinks:154,desc:'Martí Luter publica les 95 tesis, trencant la unitat del cristianisme occidental i desencadenant guerres religioses arreu d��Europa.'},
   {id:'revolindust',name:'Revolució Industrial',year:1760,wiki:'https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Industrial',sitelinks:161,desc:'L’aparició de la màquina de vapor a Anglaterra transforma l’economia, la societat i el paisatge urbà del món.'},
   {id:'revfr',name:'Revolució Francesa',year:1789,wiki:'https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Francesa',sitelinks:193,desc:'Procés revolucionari que va enderrocar l’Antic Règim a França i va escampar per Europa els ideals de llibertat, igualtat i fraternitat.'},
   {id:'wwi',name:'Inici de la Primera Guerra Mundial',year:1914,wiki:'https://ca.wikipedia.org/wiki/Primera_Guerra_Mundial',sitelinks:264,desc:'Esclat del primer conflicte a escala global, que va redibuixar el mapa polític i social del segle XX.'},
@@ -640,7 +646,7 @@ const FUTURE_FADE=72;          // px the living bars (and the era band) fade out
 const deathOf=p=>p.death==null?NOW_YEAR:p.death;
 const isAlive=p=>p.death==null;
 
-const state={present:new Set(),pinned:new Set(SEED_PINNED),collections:new Set(),marcs:new Set(DEFAULT_MARCS),showEvents:true,selected:null,selectedEvent:null};
+const state={present:new Set(),pinned:new Set(SEED_PINNED),collections:new Set(),marcs:new Set(DEFAULT_MARCS),showEvents:true,focus:null,selected:null,selectedEvent:null,expandedClusters:new Set()};   // focus = l'ORIGINAL (de qui es demana context): es manté al carril de dalt
 
 // ============================================================
 // [3] DOM REFS & SMALL HELPERS (coords, colours, formatting)
@@ -656,7 +662,7 @@ const LS_KEY='historiabasica.state.v1';
 let lsReady=false,saveTimer=null,restoredView=null;
 function saveNow(){
   if(!lsReady)return;
-  try{localStorage.setItem(LS_KEY,JSON.stringify({v:1,pinned:[...state.pinned],collections:[...state.collections],marcs:[...state.marcs],showEvents:state.showEvents,extraPeople:PEOPLE.filter(p=>p._session),view:{px:pxPerYear,left:scroll.scrollLeft}}));}catch(e){}
+  try{localStorage.setItem(LS_KEY,JSON.stringify({v:1,pinned:[...state.pinned],collections:[...state.collections],marcs:[...state.marcs],showEvents:state.showEvents,focus:state.focus,extraPeople:PEOPLE.filter(p=>p._session),view:{px:pxPerYear,left:scroll.scrollLeft}}));}catch(e){}
 }
 function scheduleSave(){if(!lsReady)return;clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,400);}   // debounced: render() and scroll fire often
 function restoreState(){
@@ -667,6 +673,7 @@ function restoreState(){
   state.collections=new Set(Array.isArray(d.collections)?d.collections:[]);
   state.marcs=new Set(Array.isArray(d.marcs)?d.marcs:DEFAULT_MARCS);
   state.showEvents=d.showEvents!==false;
+  state.focus=(typeof d.focus==='string')?d.focus:null;
   if(d.view&&typeof d.view.px==='number')restoredView=d.view;
   recomputePresent();
 }
@@ -723,6 +730,8 @@ function recomputePresent(){state.present=new Set([...state.pinned].filter(id=>P
 // [4] LAYOUT MATH (lane packing + vertical geometry)
 // ============================================================
 let MOV_LANE_H=40, MOV_BAR_H=34, MOV_PAD_BOT=6, ERAS_TOP=16, ERA_LABEL_H=26, EVENT_LABEL_H=38, GAP_AFTER=14, ROW_H=34, BAR_H=26, EVENT_YEAR_BAND=32;
+let MARC_TIER_CAP=2;                 // nivells (tiers) visibles per marc abans de col·lapsar la resta en «+N». Parametritzable.
+let TIER_STEP=15, MARC_GAP=8, MCHIP_H=15, MCHIP_GAP=4;   // desplaçament vertical entre tiers · separació entre marcs · mida del xip «+N»
 // Vertical budget is what runs out on a phone in landscape (~340px of usable height), so the eras
 // band, the event rail and the people rows all shrink together. Driven off the same media query as
 // the CSS below — one source of truth, so the JS geometry and the font sizes can never disagree.
@@ -731,6 +740,7 @@ function applyMetrics(){
   const c=COMPACT_MQ.matches;
   MOV_LANE_H=c?30:40; MOV_BAR_H=c?26:34; MOV_PAD_BOT=c?4:6;   // 26 is the floor for two lines of block text (name + years) at the compact font sizes
   ERAS_TOP=c?9:16; ERA_LABEL_H=c?17:26; EVENT_LABEL_H=c?28:38; GAP_AFTER=c?8:14;
+  TIER_STEP=c?12:15; MARC_GAP=c?6:8; MCHIP_H=c?13:15; MCHIP_GAP=c?3:4;
   BAR_H=c?20:26; ROW_H=BAR_H+(c?5:8); EVENT_YEAR_BAND=c?26:32;
   document.documentElement.style.setProperty('--bar-h',BAR_H+'px');
 }
@@ -741,9 +751,45 @@ function packSegs(segs){const arr=segs.map((s,idx)=>({idx,start:s.start,end:s.en
 // `key` (marc id + index) is the click identity: blocks have no id of their own in DATA, and the
 // pooled list is rebuilt on every render, so the DOM needs something stable to look them back up by.
 function activeBlocks(){const out=[];MARCS.forEach(m=>{if(state.marcs.has(m.id))m.blocks.forEach((b,i)=>out.push({name:b.name,start:b.start,end:b.end,color:m.color,key:m.id+':'+i,marcName:m.name,wiki:b.wiki,desc:b.desc}));});return out;}
-function blockLanes(){const b=activeBlocks();return b.length?packSegs(b).nLanes:0;}
-// The eras canvas grows with the number of block lanes (just like the people canvas).
-function erasBlockH(){return ERAS_TOP+ERA_LABEL_H+blockLanes()*MOV_LANE_H+MOV_PAD_BOT;}
+// ── Layout de marcs: cada marc actiu s'organitza en TIERS PROPIS (interval-partition) ──
+// Regla mare: dos blocs comparteixen carril NOMÉS si no comparteixen cap any (tocar-se hi val).
+// El de durada més gran va al tier de dalt (context, to més clar); els solapats baixen i s'enfosqueixen.
+function _assignTiers(blocks){
+  const arr=blocks.slice().sort((a,b)=>(b.end-b.start)-(a.end-a.start)||a.start-b.start);   // durada gran primer → tier de dalt
+  const tiers=[];
+  arr.forEach(b=>{
+    let t=0;
+    for(;t<tiers.length;t++){if(tiers[t].every(iv=>b.start>=iv.end||b.end<=iv.start))break;}   // sense solapament real (solapen si b.start<iv.end && iv.start<b.end)
+    if(!tiers[t])tiers[t]=[];
+    tiers[t].push({start:b.start,end:b.end});b._tier=t;
+  });
+  return tiers.length;
+}
+// Per cada marc actiu: assigna tiers, decideix quins blocs es veuen (tier<CAP o dins un clúster expandit),
+// agrupa els amagats en clústers «+N» i calcula la geometria vertical de la banda del marc.
+function marcLayout(){
+  const CAP=Math.max(1,MARC_TIER_CAP);const out=[];let y=0;
+  MARCS.forEach(m=>{
+    if(!state.marcs.has(m.id))return;
+    const blocks=m.blocks.map((b,i)=>({name:b.name,start:b.start,end:b.end,wiki:b.wiki,desc:b.desc,color:m.color,marcName:m.name,key:m.id+':'+i}));
+    if(!blocks.length)return;
+    _assignTiers(blocks);
+    const hidden=blocks.filter(b=>b._tier>=CAP).sort((a,b)=>a.start-b.start);   // blocs profunds → col·lapsats
+    const clusters=[];
+    hidden.forEach(b=>{const last=clusters[clusters.length-1];if(last&&b.start<last.end){last.end=Math.max(last.end,b.end);last.items.push(b);}else clusters.push({start:b.start,end:b.end,items:[b]});});   // agrupats per solapament en x
+    clusters.forEach((c,ci)=>{c.ckey=m.id+'#'+ci;c.expanded=state.expandedClusters.has(c.ckey);});
+    const shown=blocks.filter(b=>b._tier<CAP||clusters.some(c=>c.expanded&&c.items.indexOf(b)>=0));
+    const maxShownTier=shown.reduce((mx,b)=>Math.max(mx,b._tier),0);
+    const barsH=maxShownTier*TIER_STEP+MOV_BAR_H;
+    const hasChips=clusters.length>0;
+    const bandH=barsH+(hasChips?MCHIP_GAP+MCHIP_H:0);
+    out.push({marc:m,color:m.color,shown,clusters,marcTop:y,chipTop:barsH+MCHIP_GAP});
+    y+=bandH+MARC_GAP;
+  });
+  return {marcs:out,totalH:out.length?y-MARC_GAP:0};
+}
+// El canvas d'eres creix amb l'alçada total de les bandes dels marcs (com abans amb els carrils).
+function erasBlockH(){return ERAS_TOP+ERA_LABEL_H+marcLayout().totalH+MOV_PAD_BOT;}
 function eventLabelTop(){return erasBlockH()+6;}
 function barsTop(){return eventLabelTop()+EVENT_LABEL_H+GAP_AFTER;}
 
@@ -751,21 +797,31 @@ function visiblePeople(){return PEOPLE.filter(p=>state.present.has(p.id));}
 // Stack people into rows. Living pills grow to fit the name; dead bars keep their real lifespan
 // (the label just overflows). Lanes pack by the bar, so overlapping names are allowed (click to disambiguate).
 function packLanes(people){
-  const sorted=[...people].sort((a,b)=>a.birth-b.birth);
-  const laneEnds=[];
-  sorted.forEach(p=>{
+  // Geometria d'una pastilla (posició i amplada) — s'aplica igual al focus i a la resta.
+  const geom=p=>{
     const startX=x(p.birth);
     const nameW=p.name.length*7+20;
     const lifeW=Math.max(x(deathOf(p))-startX,8);
     const alive=isAlive(p);
     const pillW=alive?Math.max(lifeW,nameW):lifeW;
     const endX=startX+pillW+(alive?FUTURE_FADE:0);
-    let lane=laneEnds.findIndex(e=>e+8<startX);
+    p._startX=startX;p._endX=endX;p._pillW=pillW;p._alive=alive;
+    return endX;
+  };
+  // L'ORIGINAL (focus) es queda SOL al carril 0 (a dalt); els de context s'empaqueten a partir del carril 1,
+  // així no es perd mai quin era el personatge de referència.
+  const focusPerson=(state.focus&&people.find(p=>p.id===state.focus))||null;
+  if(focusPerson){geom(focusPerson);focusPerson._lane=0;}
+  const off=focusPerson?1:0;
+  const laneEnds=[];
+  people.filter(p=>!focusPerson||p.id!==state.focus).sort((a,b)=>a.birth-b.birth).forEach(p=>{
+    const endX=geom(p);
+    let lane=laneEnds.findIndex(e=>e+8<p._startX);
     if(lane===-1){lane=laneEnds.length;laneEnds.push(endX);}
     else laneEnds[lane]=endX;
-    p._lane=lane;p._startX=startX;p._endX=endX;p._pillW=pillW;p._alive=alive;
+    p._lane=lane+off;
   });
-  return laneEnds.length;
+  return laneEnds.length+off;
 }
 
 // ============================================================
@@ -797,20 +853,25 @@ function render(){
     const dv=k>0?`border-left:1px solid ${hexA(ERAS_COLOR,.26)};`:'';
     return `<div class="blockzone" style="left:${bl}px;width:${bw}px;height:${erasH}px;background:${tint};${dv}"><span class="blabel" style="left:14px;top:${ERAS_TOP}px;color:${shade(ERAS_COLOR,.55)}">${b.name}</span></div>`;
   }).join('');
-  // marc blocks: every active marc pooled into shared lanes, identical style, coloured per marc
-  const blocks=activeBlocks();
-  const bpk=blocks.length?packSegs(blocks):{lane:[]};
-  const blockEls=blocks.map((b,j)=>{
-    const left=x(b.start),w=Math.max(x(b.end)-x(b.start),2);
-    const rowTop=ERAS_TOP+ERA_LABEL_H+bpk.lane[j]*MOV_LANE_H;
-    const c=b.color;
-    // Gradient fades to the right for direction; the spine marks where the period starts, and the
-    // right edge stays crisp so you can still read where it ends. Shadow matches .bar so both layers
-    // sit on the canvas the same way. Name takes the marc's own darkened tone (as the era labels do).
-    // --mc/--mink carry the marc's colour into the stylesheet so the spine, the ink and the :hover
-    // shadow all live in CSS. Inline box-shadow would win over :hover and kill the hover feedback.
-    const grad=`linear-gradient(to right,${mix(c,.28)},${mix(c,.13)})`;
-    return `<div class="seg mov" data-blk="${b.key}" style="left:${left+1}px;width:${Math.max(w-2,2)}px;top:${rowTop}px;height:${MOV_BAR_H}px;background:${grad};--mc:${c};--mink:${shade(c,.55)};" title="${b.name} (${fmtY(b.start)}–${fmtY(b.end)})"><span class="segname">${b.name}</span><span class="segyears">${fmtY(b.start)}–${fmtY(b.end)}</span></div>`;
+  // marc blocks: cada marc actiu en TIERS propis (semi-solapament); els nivells profunds es col·lapsen en «+N»
+  const ml=marcLayout();
+  const blocksY=ERAS_TOP+ERA_LABEL_H;
+  const blockEls=ml.marcs.map(M=>{
+    const c=M.color;
+    const bars=M.shown.map(b=>{
+      const left=x(b.start),w=Math.max(x(b.end)-x(b.start),2);
+      const top=blocksY+M.marcTop+b._tier*TIER_STEP;   // tier profund = més avall i, per z-index, al davant → deixa veure la vora de dalt del pare
+      // El to codifica la PROFUNDITAT: tier 0 (context) clar, cada nivell més avall s'enfosqueix. Sempre el hue del marc.
+      const f=Math.min(0.92,0.26+b._tier*0.22);
+      const grad=`linear-gradient(to right,${mix(c,f)},${mix(c,Math.max(0.08,f-0.15))})`;
+      return `<div class="seg mov" data-blk="${b.key}" style="left:${left+1}px;width:${Math.max(w-2,2)}px;top:${top}px;height:${MOV_BAR_H}px;z-index:${10+b._tier};background:${grad};--mc:${c};--mink:${shade(c,.55)};" title="${b.name} (${fmtY(b.start)}–${fmtY(b.end)})"><span class="segname">${b.name}</span><span class="segyears">${fmtY(b.start)}–${fmtY(b.end)}</span></div>`;
+    }).join('');
+    const chips=M.clusters.map(cl=>{
+      const left=x(cl.start),w=Math.max(x(cl.end)-x(cl.start),26),top=blocksY+M.marcTop+M.chipTop;
+      const lbl=cl.expanded?'−':('+'+cl.items.length);
+      return `<div class="marcchip${cl.expanded?' open':''}" data-cluster="${cl.ckey}" style="left:${left}px;width:${w}px;top:${top}px;height:${MCHIP_H}px;--mc:${hexA(c,.75)};color:${shade(c,.5)};background:${hexA(c,.12)};" title="${cl.expanded?'Recollir':cl.items.map(i=>i.name).join(', ')}">${lbl}</div>`;
+    }).join('');
+    return bars+chips;
   }).join('');
   eraTracksEl.innerHTML=`<div class="segwrap" style="${maskCss}">${backboneEls}${blockEls}</div>`;
   stickLabels();   // manté els noms d'eres/blocs visibles encara que facis zoom i el bloc surti de pantalla
@@ -953,7 +1014,7 @@ function openDetail(p){
     <div class="actions">
       <button class="dbtn" data-act="context">Mostra context</button>
       <button class="dbtn" data-act="report">Reportar error</button>
-      ${SEED_PINNED.includes(p.id)?'':`<button class="dbtn danger" data-act="remove">Elimina</button>`}
+      ${SEED_PINNED.includes(p.id)?'':`<button class="dbtn danger" data-act="remove">Treu de la vista</button>`}
     </div>`;
   $('#closeDetail').onclick=()=>{hideDetail();state.selected=null;render();};
   d.querySelectorAll('.dbtn').forEach(btn=>btn.onclick=()=>{
@@ -1159,6 +1220,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('.barmenu')&&!e.targe
 const bartip=$('#bartip');
 function hideBartip(){bartip.classList.remove('on');}
 function placeBartip(txt,clientX,clientY){
+  if(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches)return;   // mòbil/tàctil: el globus de hover no té sentit (un toc l'enganxa i la info ja surt al detall)
   bartip.textContent=txt;bartip.classList.add('on');
   const w=bartip.offsetWidth,h=bartip.offsetHeight;   // measure after the text is in, then keep it on screen
   bartip.style.left=Math.max(4,Math.min(clientX+14,window.innerWidth-w-4))+'px';
@@ -1216,6 +1278,8 @@ eventsRail.addEventListener('click',e=>{
 });
 eraTracksEl.addEventListener('click',e=>{
   if(suppressClick)return;   // the blocks are a big target and dragging across them pans the canvas — don't open a detail on the release
+  const chip=e.target.closest('[data-cluster]');   // «+N» / «−»: expandeix o recull els tiers profunds del marc, in-situ
+  if(chip){const k=chip.getAttribute('data-cluster');if(state.expandedClusters.has(k))state.expandedClusters.delete(k);else state.expandedClusters.add(k);render();return;}
   const el=e.target.closest('[data-blk]');if(!el)return;
   const b=activeBlocks().find(x=>x.key===el.getAttribute('data-blk'));if(b)openBlock(b);
 });
@@ -1271,14 +1335,20 @@ function focusEvent(id){
 function removePerson(id){
   if(SEED_PINNED.includes(id))return;
   state.pinned.delete(id);
+  if(state.focus===id)state.focus=null;   // si treus l'original, ja no hi ha focus fixat a dalt
   recomputePresent();closeDetailIfGone();render();
 }
-// "Show context": add every DB person whose life overlaps, or is within 20 years of, this person.
+// "Show context": add every SEED-DB person whose life overlaps, or is within 20 years of, this person.
+// DETERMINISTA: recorre només la BD original (salta els `_session` baixats de Wikidata/localStorage),
+// així "Mostra context" dóna el mateix resultat per a tothom, independentment de l'historial de cerques.
+// El dataset canònic el controla l'autor editant la llista PEOPLE; qui vulgui més gent l'afegeix a mà.
 function showContext(id){
   const t=PEOPLE.find(p=>p.id===id);if(!t)return;
   hideDetail();   // tanca el panell de detall perquè es vegi el context que s'afegeix (mòbil i desktop)
+  state.focus=id;   // l'original queda fixat al carril de dalt; els personatges de context, a sota
   const a1=t.birth,a2=deathOf(t);
   PEOPLE.forEach(o=>{
+    if(o._session)return;                          // ← només BD original, mai el que s'hagi baixat en local
     if(o.id===id||state.present.has(o.id))return;
     const gap=Math.max(0,Math.max(o.birth-a2,a1-deathOf(o)));   // 0 if the lifespans overlap
     if(gap<=20)state.pinned.add(o.id);
@@ -1289,7 +1359,7 @@ function showContext(id){
 // Little ⋮ menu anchored to a bar (or opened from the detail panel).
 const barmenu=$('#barmenu');
 function openBarMenu(id,anchorEl){
-  const rm=SEED_PINNED.includes(id)?'':`<button class="danger" data-act="remove" data-id="${id}">Elimina</button>`;
+  const rm=SEED_PINNED.includes(id)?'':`<button class="danger" data-act="remove" data-id="${id}">Treu de la vista</button>`;
   // "Veure detall" first: zoomed far out a bar can shrink to just its ⋮ button, leaving no pill left
   // to click, so the menu has to offer the same thing clicking the bar would.
   barmenu.innerHTML=`<button data-act="detail" data-id="${id}">Veure detall</button><button data-act="context" data-id="${id}">Mostra context</button><button data-act="report" data-id="${id}">Reportar error</button>${rm}`;
@@ -1426,7 +1496,7 @@ $('#fitAll').onclick=()=>{
   fitToPresent();
   if(pxPerYear!==before.px||scroll.scrollLeft!==before.left){fitPrev=before;fitLatch(true);}   // only latch if it actually moved
 };
-$('#reset').onclick=()=>{state.present=new Set();state.pinned=new Set(SEED_PINNED);state.collections=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.selected=null;state.selectedEvent=null;$('#detail').classList.remove('open');clearFitLatch();defaultView();};
+$('#reset').onclick=()=>{state.present=new Set();state.pinned=new Set(SEED_PINNED);state.collections=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.focus=null;state.selected=null;state.selectedEvent=null;state.expandedClusters=new Set();$('#detail').classList.remove('open');clearFitLatch();defaultView();};
 $('#sidebarToggle').onclick=e=>{
   const collapsed=$('.body').classList.toggle('collapsed');
   e.currentTarget.textContent=collapsed?'›':'‹';
@@ -1485,7 +1555,7 @@ scroll.addEventListener('touchmove',e=>{if(tStart&&e.touches.length===1){const t
 scroll.addEventListener('touchend',e=>{
   if(pinch||!tStart||tStart.moved||e.changedTouches.length!==1)return;
   const t=e.changedTouches[0];
-  if(e.target.closest('.bar,.event,.seg.mov,.menu,button,a,input,.results'))return;   // deixa que el toc obri detalls / actuï normal
+  if(e.target.closest('.bar,.event,.seg.mov,.marcchip,.menu,button,a,input,.results'))return;   // deixa que el toc obri detalls / actuï normal
   const now=Date.now();
   if(now-lastTap<300&&Math.abs(t.clientX-lastTapX)<32&&Math.abs(t.clientY-lastTapY)<32){e.preventDefault();zoomAt(t.clientX,1.8);lastTap=0;}
   else{lastTap=now;lastTapX=t.clientX;lastTapY=t.clientY;}
