@@ -883,9 +883,14 @@ function render(){
   const rowH=ROW_H;
   const peopleH=people.length?lanes*rowH+16:46;
   const contentH=barsTop()+peopleH+EVENT_YEAR_BAND;   // EVENT_YEAR_BAND = breathing room so event-year pills clear the lowest bar row
+  // Al mòbil (pointer:coarse) l'eix queda enganxat al terra i .inner s'estira fins a omplir el viewport (regla CSS min-height:calc(100% - var(--axis-h))).
+  // L'any de l'event (i la línia "avui"/guia) ha de seguir aquest terra real, no el contentH lògic, o queda flotant a mig canvas quan hi ha poques files.
+  const _coarse=window.matchMedia('(pointer:coarse)').matches;
+  const _axisH=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--axis-h'))||32;
+  const floorH=_coarse?Math.max(contentH,scroll.clientHeight-_axisH):contentH;
 
   // --- Events (name on top, full line, year pill at the foot; two rows to avoid name overlap) ---
-  const evNameTop=eventLabelTop(), evYearTop=contentH-24;
+  const evNameTop=eventLabelTop(), evYearTop=floorH-24;
   const evPlaced=EVENTS.map(ev=>({ev,left:x(ev.year),w:ev.name.length*7+16})).sort((a,b)=>a.left-b.left);
   // --- Stable semantic zoom: PERMANENT rows + MONOTONIC reveal (see the _row/_revealPPY precompute) ---
   // A name shows the moment the zoom (pxPerYear) reaches its precomputed _revealPPY, always in its fixed
@@ -939,7 +944,7 @@ function render(){
 
   // --- Today line ---
   nowline.style.left=nowX+'px';
-  nowline.style.height=contentH+'px';
+  nowline.style.height=floorH+'px';
   nowline.querySelector('.lbl').textContent='avui · '+NOW_YEAR;
 
   // --- Axis ticks (step chosen so labels are ~>=70px apart) ---
@@ -952,7 +957,7 @@ function render(){
   const firstTick=Math.ceil((DATA_MIN+step*0.4)/step)*step;
   for(let y=firstTick;y<=YEAR_MAX&&x(y)<=W;y+=step){ticks+=`<div class="tick" style="left:${x(y)}px">${fmtY(y)}</div>`;}   // stop at the px-capped canvas edge (W) as well as the year range, so high zoom can't push a tick past the canvas and inflate scrollWidth
   axisInner.innerHTML=ticks;
-  guide.style.height=contentH+'px';
+  guide.style.height=floorH+'px';
   if(parseFloat(guide.style.left||0)>W)hideGuide();   // a guide left over at an old (larger) zoom keeps the scrollable area inflated → runaway scroll + blank right side
 
   renderSidebar();
