@@ -179,8 +179,9 @@
      heavy border-bottom did). The spine is an inset shadow, not a border-left: a single-sided border
      tapers away at the rounded corners, an inset shadow stays a clean 3px. Colour stays washed out —
      the vivid layer belongs to people and events. --mc/--mink are set per block in render(). */
-  .seg.mov{border:none;border-radius:var(--r-card);padding:0 10px 0 13px;cursor:pointer;box-shadow:inset 3px 0 0 var(--mc),0 1px 3px rgba(40,44,60,.14);transition:box-shadow .12s,filter .12s;}
-  .seg.mov:hover{filter:brightness(.98);box-shadow:inset 3px 0 0 var(--mc),0 3px 8px rgba(40,44,60,.26);}
+  .seg.mov{border:none;border-radius:var(--r-card);padding:0 10px 0 13px;cursor:pointer;box-shadow:inset 3px 0 0 var(--mc),0 1px 3px rgba(40,44,60,.14);transition:box-shadow .12s,filter .12s,transform .12s;}
+  /* Hover: anella gris fosca neutra (com el thumb de la barra de scroll) + micro-lift vertical tipus boto. SENSE portar-lo al davant (z-index sense canvis): l'amplada = durada, aixi que mai s'escala horitzontalment. */
+  .seg.mov:hover{transform:translateY(-2px);box-shadow:inset 3px 0 0 var(--mc),0 0 0 2px #5f6570,0 5px 11px rgba(40,44,60,.28);}
   .seg.mov .segname{font-size:12px;letter-spacing:.03em;color:var(--mink,var(--struct-ink));}
   .seg.mov .segyears{font-size:11px;margin-top:0;}
   /* «+N»: control per expandir/recollir els tiers profunds d'un marc. Mateix hue del marc però amb forma de
@@ -556,7 +557,7 @@ const EVENTS=[
   {id:'hegira',name:'Hègira de Mahoma',year:622,wiki:'https://ca.wikipedia.org/wiki/H%C3%A8gira',sitelinks:93,desc:'Mahoma emigra de la Meca a Medina; inici del calendari islàmic i d’una expansió que transformarà el Mediterrani i l’Orient Pròxim.'},
   {id:'pestaNegra',name:'Pesta Negra',year:1347,wiki:'https://ca.wikipedia.org/wiki/Pesta_negra',sitelinks:127,desc:'Epidèmia de pesta bubònica que mata entre un terç i la meitat de la població europea, accelerant la fi del feudalisme medieval.'},
   {id:'descamerica',name:'Descobriment d’Amèrica',year:1492,wiki:'https://ca.wikipedia.org/wiki/Descoberta_d%27Am%C3%A8rica',sitelinks:48,desc:'Cristòfor Colom arriba a les Amèriques el 12 d’octubre, obrint l’era dels grans imperis colonials. Inici convencional de l’Edat Moderna.'},
-  {id:'reformaprot',name:'Reforma Protestant',year:1517,wiki:'https://ca.wikipedia.org/wiki/Reforma_protestant',sitelinks:154,desc:'Martí Luter publica les 95 tesis, trencant la unitat del cristianisme occidental i desencadenant guerres religioses arreu d��Europa.'},
+  {id:'reformaprot',name:'Reforma Protestant',year:1517,wiki:'https://ca.wikipedia.org/wiki/Reforma_protestant',sitelinks:154,desc:'Martí Luter publica les 95 tesis, trencant la unitat del cristianisme occidental i desencadenant guerres religioses arreu d\u0027Europa.'},
   {id:'revolindust',name:'Revolució Industrial',year:1760,wiki:'https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Industrial',sitelinks:161,desc:'L’aparició de la màquina de vapor a Anglaterra transforma l’economia, la societat i el paisatge urbà del món.'},
   {id:'revfr',name:'Revolució Francesa',year:1789,wiki:'https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Francesa',sitelinks:193,desc:'Procés revolucionari que va enderrocar l’Antic Règim a França i va escampar per Europa els ideals de llibertat, igualtat i fraternitat.'},
   {id:'wwi',name:'Inici de la Primera Guerra Mundial',year:1914,wiki:'https://ca.wikipedia.org/wiki/Primera_Guerra_Mundial',sitelinks:264,desc:'Esclat del primer conflicte a escala global, que va redibuixar el mapa polític i social del segle XX.'},
@@ -593,7 +594,7 @@ const PEOPLE=[
   {id:'socrates',wd:'Q913',name:'Sòcrates',birth:-470,death:-399,cats:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Sòcrates',desc:'Filòsof atenès que no deixà escrits propis, considerat el pare de la filosofia occidental i del mètode socràtic.'},
   {id:'plato',wd:'Q859',name:'Plató',birth:-428,death:-348,cats:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Plató',desc:'Filòsof atenès, deixeble de Sòcrates i fundador de l\u0027Acadèmia, autor de La República.'},
   {id:'diogenes',wd:'Q59180',name:'Diògenes',birth:-412,death:-323,cats:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Diògenes_de_Sinope',desc:'Filòsof cínic grec, conegut per la seva vida austera i les seves crítiques mordaces a les convencions socials.'},
-  {id:'aristotil',wd:'Q868',name:'Aristòtil',birth:-384,death:-322,cats:['Filosofia','Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Aristòtil',desc:'Filòsof i científic grec, deixeble de Plat�� i tutor d\u0027Alexandre Magne, sistematitzà gran part del saber antic.'},
+  {id:'aristotil',wd:'Q868',name:'Aristòtil',birth:-384,death:-322,cats:['Filosofia','Ciència'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Aristòtil',desc:'Filòsof i científic grec, deixeble de Plató i tutor d\u0027Alexandre Magne, sistematitzà gran part del saber antic.'},
   {id:'alexandre',wd:'Q8409',name:'Alexandre el Gran',birth:-356,death:-323,cats:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Alexandre_el_Gran',desc:'Rei de Macedònia, conquerí un dels imperis més vastos de l\u0027antiguitat abans dels 33 anys.'},
   {id:'epicur',wd:'Q43216',name:'Epicur',birth:-341,death:-270,cats:['Filosofia'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Epicur',desc:'Filòsof grec, fundador de l\u0027epicureisme, defensor d\u0027una vida senzilla orientada a la recerca del plaer moderat.'},
   {id:'cesar',wd:'Q1048',name:'Juli Cèsar',birth:-100,death:-44,cats:['Política'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Juli_Cèsar',desc:'General i dictador romà, la seva figura marca la transició de la República a l\u0027Imperi Romà.'},
@@ -640,7 +641,7 @@ const GUTTER_YEARS=14;
 const RIGHT_PAD_YEARS=20;   // just enough for the axis to keep ticking a bit past "today" — the real scroll margin is capped in px by FUTURE_MARGIN_PX in render(), not by this
 const YEAR_MIN=DATA_MIN-GUTTER_YEARS, YEAR_MAX=DATA_MAX+RIGHT_PAD_YEARS;
 let pxPerYear=4;               // current zoom (pixels per year); set by defaultView()/setZoom()
-const SEED_PINNED=[];  // ningú no ve fixat per defecte: la vista comença buida i tots els personatges (Bernat incl��s) es poden treure/reportar com la resta
+const SEED_PINNED=[];  // ningú no ve fixat per defecte: la vista comença buida i tots els personatges (Bernat inclòs) es poden treure/reportar com la resta
 const DEFAULT_MARCS=(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches)?[]:['west'];  // al mòbil no mostrem Occident per defecte (ocupa massa); al desktop sí. Marcs a l'inici / després de Reset (la columna d'eres sempre és activa)
 const FUTURE_FADE=72;          // px the living bars (and the era band) fade out past "today"
 const deathOf=p=>p.death==null?NOW_YEAR:p.death;
@@ -864,7 +865,7 @@ function render(){
       // El to codifica la PROFUNDITAT: tier 0 (context) clar, cada nivell més avall s'enfosqueix. Sempre el hue del marc.
       const f=Math.min(0.92,0.26+b._tier*0.22);
       const grad=`linear-gradient(to right,${mix(c,f)},${mix(c,Math.max(0.08,f-0.15))})`;
-      return `<div class="seg mov" data-blk="${b.key}" style="left:${left+1}px;width:${Math.max(w-2,2)}px;top:${top}px;height:${MOV_BAR_H}px;z-index:${10+b._tier};background:${grad};--mc:${c};--mink:${shade(c,.55)};" title="${b.name} (${fmtY(b.start)}–${fmtY(b.end)})"><span class="segname">${b.name}</span><span class="segyears">${fmtY(b.start)}–${fmtY(b.end)}</span></div>`;
+      return `<div class="seg mov" data-blk="${b.key}" style="left:${left+1}px;width:${Math.max(w-2,2)}px;top:${top}px;height:${MOV_BAR_H}px;z-index:${10+b._tier};background:${grad};--mc:${c};--mink:${shade(c,.55)};"><span class="segname">${b.name}</span><span class="segyears">${fmtY(b.start)}–${fmtY(b.end)}</span></div>`;
     }).join('');
     const chips=M.clusters.map(cl=>{
       const left=x(cl.start),w=Math.max(x(cl.end)-x(cl.start),26),top=blocksY+M.marcTop+M.chipTop;
@@ -1012,7 +1013,7 @@ function openDetail(p){
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   d.innerHTML=`<button class="close" id="closeDetail">×</button>
     <h2>${p.name}</h2>
-    <div class="dhead"><span class="life">${fmtY(p.birth)} �� ${isAlive(p)?'actualitat':fmtY(p.death)}</span>${hasCat(p)?p.cats.map(a=>`<span class="chip"><span class="swatch" style="background:${CAT_COLORS[a]}"></span>${a}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>Sense categoria</span>`}<span class="chip era">${eraLabel(p.birth)}</span></div>
+    <div class="dhead"><span class="life">${fmtY(p.birth)} – ${isAlive(p)?'actualitat':fmtY(p.death)}</span>${hasCat(p)?p.cats.map(a=>`<span class="chip"><span class="swatch" style="background:${CAT_COLORS[a]}"></span>${a}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>Sense categoria</span>`}<span class="chip era">${eraLabel(p.birth)}</span></div>
     ${p.gender?`<div class="meta">Gènere: ${p.gender}</div>`:''}
     <div class="desc">${p.desc}</div>
     ${p.wiki?`<a class="wiki" href="${p.wiki}" target="_blank" rel="noopener">🔗 ${linkLabel(p.wiki)}</a>`:''}
@@ -1075,7 +1076,7 @@ function renderDropdown(){
   const localEv=EVENTS.filter(ev=>deaccent(ev.name).includes(term));
   let html=local.map(localRow).join('');
   if(localEv.length)html+=`<div class="rowsep">Esdeveniments</div>`+localEv.map(evSearchRow).join('');
-  // Wikidata: mostrem l'estat de la xarxa (engegat només a partir de 2 lletres ��� wdStatus!=='idle')
+  // Wikidata: mostrem l'estat de la xarxa (engegat només a partir de 2 lletres → wdStatus!=='idle')
   if(wdStatus!=='idle'){
     if(local.length||localEv.length)html+=`<div class="rowsep">Wikidata</div>`;
     if(wdStatus==='loading')html+=`<div class="row loading">Cercant a Wikidata…</div>`;
@@ -1246,6 +1247,9 @@ eraTracksEl.addEventListener('mousemove',e=>{
   if(!el){hideBartip();return;}
   const b=activeBlocks().find(x=>x.key===el.getAttribute('data-blk'));
   if(!b){hideBartip();return;}
+  // Nomes cal el tooltip quan el zoom apreta i el text del bloc no es llegeix sencer (tallat horitzontal o verticalment). Si es llegeix tot, cap tooltip.
+  const clipped=el.scrollWidth>el.clientWidth+1||el.scrollHeight>el.clientHeight+1;
+  if(!clipped){hideBartip();return;}
   placeBartip(`${b.name} · ${fmtY(b.start)} – ${fmtY(b.end)}`,e.clientX,e.clientY);
 });
 eraTracksEl.addEventListener('mouseleave',hideBartip);
@@ -1300,7 +1304,7 @@ function defaultView(){pxPerYear=focusPx();render();scroll.scrollLeft=Math.min(M
 function setZoom(v){pxPerYear=Math.max(fitPx(),Math.min(20,v));render();clampScroll();}
 // Max scroll is measured against OUR canvas width, not scrollWidth: any stray absolutely-positioned
 // leftover (a hover guide parked at an old zoom, an overflowing label) inflates scrollWidth and would
-// hand back a bogus, far too large limit ��� which is exactly how the runaway scroll happened.
+// hand back a bogus, far too large limit — which is exactly how the runaway scroll happened.
 function maxScroll(){return Math.max(0,(parseFloat(inner.style.width)||scroll.scrollWidth)-scroll.clientWidth);}
 function clampScroll(){const max=maxScroll();if(scroll.scrollLeft>max)scroll.scrollLeft=max;}   // keep scrollLeft in range so zooming out doesn't leave it parked past the end
 // Pan (no zoom change) so a person's bar is centred on screen.
