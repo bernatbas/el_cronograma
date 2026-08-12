@@ -49,8 +49,16 @@
      estrany: menú plegat en una i desplegat en l'altra). */
   .topbar{z-index:20;}   /* per sobre de .sidebar (z-index:10): si no, el desplegable hi queda darrere */
   .topbar-left{flex:0 0 auto;min-width:auto;}
+  /* Separador vertical: marca on acaba la navegació («on sóc») i on comencen les opcions de la
+     pàgina. Del mateix marró que la vora inferior de la topbar. Va dins de .secnav (i no a
+     .topbar-left amb :has(), que és menys compatible) i es treu amb «HB»: a aquelles amplades
+     cada píxel compta. */
+  .secnav::after{content:'';flex:0 0 auto;width:2px;height:22px;border-radius:1px;background:#612E25;margin-left:14px;}
+  .secnav.hb::after{display:none;}
   .topbar-right{flex:1 1 auto;min-width:0;justify-content:flex-end;}
-  .topbar-right .search{flex:1 1 auto;min-width:180px;}   /* 180 = «Cercant a Wikidata…» en una línia */
+  /* El cercador cedeix espai, però NO s'estira sense límit: si sobra amplada, es queda a 420 i
+     l'aire va entre el separador i el cercador. 180 = «Cercant a Wikidata…» en una línia. */
+  .topbar-right .search{flex:1 1 auto;min-width:180px;max-width:420px;}
   @media (max-width:480px){ .topbar-right .search{min-width:120px;} }   /* pas 5: últim recurs */
   .topbar.navopen .search{min-width:110px;}   /* amb el menú obert la marca creix: el cercador cedeix mentre estigui obert */
   .secnav{display:flex;align-items:center;gap:14px;min-width:0;}
@@ -75,7 +83,9 @@
   @media (max-width:720px){
     .controls #fitAll .btn-tx,.controls #reset .btn-tx{display:none;}
     .controls #fitAll .btn-ic,.controls #reset .btn-ic{display:block;}
-    .controls .btn{min-width:32px;min-height:32px;padding:4px 8px;}
+    /* amplada FIXA perquè tots quedin quadrats iguals: si no, «Vista global» es veia més gran
+       que les lupes tot i ser ja una icona */
+    .controls .btn{width:34px;min-width:34px;min-height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;}
   }
   /* --- pas 2: plegat: la marca fa de botó i obre el desplegable --- */
   .secnav.navcollapsed{position:relative;gap:0;}
@@ -575,7 +585,7 @@
   function fitSecnav(){
     const coarse=window.matchMedia('(pointer:coarse)').matches, w=window.innerWidth;
     const plega = coarse ? w<=600 : w<=900;   // en tàctil tot ja és més compacte: aguanta més
-    const hb    = coarse ? w<=430 : w<=620;
+    const hb    = coarse ? w<=430 : w<=560;   // amb els botons d'accio quadrats el nom sencer hi cap fins a ~545
     sec.classList.toggle('navcollapsed',plega);
     sec.classList.toggle('hb',plega&&hb);
     if(!plega)tanca();
