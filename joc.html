@@ -49,12 +49,13 @@
      estrany: menú plegat en una i desplegat en l'altra). */
   .topbar{z-index:20;}   /* per sobre de .sidebar (z-index:10): si no, el desplegable hi queda darrere */
   .topbar-left{flex:0 0 auto;min-width:auto;}
-  /* Separador vertical: marca on acaba la navegació («on sóc») i on comencen les opcions de la
-     pàgina. Del mateix marró que la vora inferior de la topbar. Va dins de .secnav (i no a
-     .topbar-left amb :has(), que és menys compatible) i es treu amb «HB»: a aquelles amplades
-     cada píxel compta. */
-  .secnav::after{content:'';flex:0 0 auto;width:2px;height:22px;border-radius:1px;background:#612E25;margin-left:14px;}
-  .secnav.hb::after{display:none;}
+  /* Separador vertical entre el menú i el cercador: marca on acaba la navegació («on sóc») i on
+     comencen les opcions de la pàgina. Del mateix marró que la vora inferior de la topbar.
+     NOMÉS surt quan l'aire entre els dos s'esgota — si hi ha espai de separació, la separació ja
+     la fa l'espai i la barreta no cal. Ho decideix el JS mesurant l'aire (classe .sep).
+     Va dins de .secnav amb ::after (no a .topbar-left amb :has(), menys compatible). */
+  .secnav::after{content:'';flex:0 0 auto;width:2px;height:22px;border-radius:1px;background:#612E25;margin-left:14px;display:none;}
+  .secnav.sep::after{display:block;}
   .topbar-right{flex:1 1 auto;min-width:0;justify-content:flex-end;}
   /* El cercador cedeix espai, però NO s'estira sense límit: si sobra amplada, es queda a 420 i
      l'aire va entre el separador i el cercador. 180 = «Cercant a Wikidata…» en una línia. */
@@ -580,6 +581,7 @@
   const brand=sec&&sec.querySelector('.brand');
   const nav=sec&&sec.querySelector('.modeswitch');
   const tb=document.querySelector('.topbar');
+  const search=document.querySelector('.topbar-right .search');
   if(!sec||!brand||!nav||!tb)return;
   const tanca=()=>{sec.classList.remove('open');tb.classList.remove('navopen');brand.setAttribute('aria-expanded','false');};
   function fitSecnav(){
@@ -588,6 +590,14 @@
     const hb    = coarse ? w<=430 : w<=560;   // amb els botons d'accio quadrats el nom sencer hi cap fins a ~545
     sec.classList.toggle('navcollapsed',plega);
     sec.classList.toggle('hb',plega&&hb);
+    // Separador: només quan l'aire entre el menú i el cercador s'ha esgotat. Es mesura SEMPRE
+    // sense la barreta posada, perquè la barreta viu dins de .secnav i si no es reduiria l'aire
+    // a si mateixa (bucle). Sense cercador (pàgina de jocs) no hi ha res a separar: mai surt.
+    sec.classList.remove('sep');
+    if(search&&!(plega&&hb)){
+      const aire=search.getBoundingClientRect().left-sec.getBoundingClientRect().right;
+      if(aire<40)sec.classList.add('sep');
+    }
     if(!plega)tanca();
   }
   brand.addEventListener('click',e=>{
