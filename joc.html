@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Història Bàsica · Jocs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=swap"></noscript>
+<style>
+  /* Paleta idèntica a index.html (mantenir sincronitzada) */
+  :root{
+    --text:#2C2C2B; --text2:#7D7A75; --canvas:#FFFFFF; --soft:#F9F8F7;
+    --surface:#F0EFED; --border:#E6E5E3; --border-strong:#CBC9C4;
+    --topbar-bg:#B8503C; --band:#F3F4F7; --slate:#5f6570;
+    --r-card:8px; --r-pill:999px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{min-height:100dvh;background:var(--soft);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+
+  /* ===== Top bar: MATEIXA que index.html (fons terracota, vora #612E25, marca Oswald) ===== */
+  .topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 22px;border-bottom:5px solid #612E25;background:var(--topbar-bg);}
+  .topbar-left{display:flex;align-items:center;gap:14px;min-width:0;}
+  .topbar-right{display:flex;align-items:center;gap:14px;flex:0 0 auto;}
+  .brand{color:#fff;font-family:'Oswald','Roboto Condensed','Arial Narrow','Helvetica Neue',Arial,sans-serif;font-weight:600;font-size:20px;letter-spacing:.06em;white-space:nowrap;}
+  .brand .sub{font-weight:400;opacity:.75;}
+  .btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:var(--r-pill);padding:6px 14px;font-size:14px;font-weight:500;cursor:pointer;transition:background .12s;font-family:inherit;}
+  .btn:hover{background:rgba(255,255,255,.22);}
+  .datainfo{color:rgba(255,255,255,.85);font-size:12px;white-space:nowrap;}
+
+  /* ===== Contingut ===== */
+  main{max-width:920px;margin:0 auto;padding:24px 18px 64px;}
+  .lead{color:var(--text2);font-size:14px;margin:2px 0 22px;}
+  .menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
+  .gamecard{display:flex;flex-direction:column;gap:8px;text-align:left;background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-card);padding:18px;cursor:pointer;transition:transform .12s,box-shadow .12s;font:inherit;color:inherit;}
+  .gamecard:hover{transform:translateY(-2px);box-shadow:0 0 0 2px var(--slate),0 5px 11px rgba(40,44,60,.20);}
+  .gamecard .ic{font-size:30px;line-height:1;}
+  .gamecard .t{font-size:17px;font-weight:600;}
+  .gamecard .d{font-size:13px;color:var(--text2);line-height:1.4;}
+  .placeholder{background:var(--canvas);border:1px dashed var(--border-strong);border-radius:var(--r-card);padding:48px 24px;text-align:center;}
+  .placeholder .ic{font-size:52px;line-height:1;}
+  .placeholder h2{margin:14px 0 6px;font-size:22px;font-family:'Oswald','Roboto Condensed','Arial Narrow',Arial,sans-serif;font-weight:600;letter-spacing:.03em;}
+  .placeholder .d{color:var(--text2);max-width:460px;margin:0 auto 18px;line-height:1.5;}
+  .badge{display:inline-block;background:#F7E5E0;color:#B23A2E;font-size:12px;font-weight:600;padding:5px 12px;border-radius:var(--r-pill);letter-spacing:.02em;}
+  .err{background:#F7E5E0;color:#B23A2E;padding:16px;border-radius:var(--r-card);line-height:1.5;}
+  .soon{align-self:flex-start;margin-top:2px;background:var(--surface);color:var(--text2);font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);}
+
+  /* ===== Joc: «Abans o després?» ===== */
+  .game{max-width:560px;margin:0 auto;}
+  .gtop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:20px;}
+  .gtitle{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-weight:600;letter-spacing:.03em;font-size:20px;line-height:1.1;}
+  .gscore{flex:0 0 auto;}
+  .gscore .n{display:inline-flex;align-items:center;gap:6px;background:#F7E5E0;color:var(--topbar-bg);font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-weight:600;font-size:18px;line-height:1;padding:6px 13px;border-radius:var(--r-pill);}
+  @keyframes scorepop{0%{transform:scale(1);}40%{transform:scale(1.3);}100%{transform:scale(1);}}
+  .gscore .n.pop{animation:scorepop .4s ease-out;}
+  .ad-q{color:var(--text2);text-align:center;margin:10px 0 18px;font-size:14px;}
+  .gamefoot{text-align:center;color:var(--text2);font-size:12px;margin-top:22px;letter-spacing:.02em;}
+  .cards2{display:grid;grid-template-columns:1fr;gap:10px;perspective:900px;}
+  .itemcard{position:relative;background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-card);padding:18px 18px 16px;text-align:center;}
+  .itemcard.ref{border:3px solid var(--topbar-bg);}
+  .itemcard.new{border-color:var(--border-strong);box-shadow:0 8px 20px rgba(40,44,60,.16);}
+  .itemcard .meta{font-size:12px;color:var(--text2);font-weight:600;letter-spacing:.02em;margin-bottom:4px;min-height:16px;}
+  .itemcard .meta.ev{font-size:16px;opacity:.75;}
+  .itemcard .nm{font-size:19px;font-weight:600;line-height:1.25;margin-top:4px;}
+  .itemcard .yr{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-size:32px;font-weight:600;margin-top:8px;min-height:38px;color:var(--text);transform-origin:center;}
+  .itemcard .yr .q{color:var(--border-strong);}
+  .vs{width:fit-content;margin:0 auto;background:var(--topbar-bg);color:#fff;font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-weight:600;letter-spacing:.12em;font-size:11px;padding:3px 12px;border-radius:var(--r-pill);}
+  @keyframes cardIn{from{opacity:0;transform:translateY(26px) scale(.96);}to{opacity:1;transform:none;}}
+  .itemcard.enter{animation:cardIn .28s ease-out;}
+  @keyframes yrFlip{0%{opacity:0;transform:rotateX(90deg);}100%{opacity:1;transform:rotateX(0);}}
+  .itemcard .yr.reveal{animation:yrFlip .5s ease-out;}
+  .choices{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;margin-top:18px;align-items:stretch;}
+  .choice{padding:18px 16px;border-radius:var(--r-card);border:1.5px solid var(--border-strong);background:var(--canvas);font:inherit;font-size:16px;font-weight:600;cursor:pointer;color:var(--text);box-shadow:0 3px 0 #E7C3B8;transition:transform .1s,box-shadow .1s,border-color .1s,color .1s;}
+  .choice:hover{transform:translateY(-2px);border-color:var(--topbar-bg);color:var(--topbar-bg);box-shadow:0 6px 14px rgba(184,80,60,.22);}
+  .choice:active{transform:translateY(2px);box-shadow:0 1px 0 #E7C3B8;}
+  .choice:disabled{opacity:.5;cursor:default;transform:none;box-shadow:none;color:var(--text);}
+  .choice .big{display:block;font-size:30px;line-height:1;margin-bottom:4px;color:var(--topbar-bg);font-family:'Oswald','Roboto Condensed',Arial,sans-serif;transition:transform .1s;}
+  .choice:hover .big{transform:scale(1.12);}
+  .pass{display:flex;align-items:center;justify-content:center;padding:0 16px;border-radius:var(--r-card);border:1.5px solid var(--border-strong);background:var(--canvas);color:var(--text);font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 3px 0 #E7C3B8;transition:transform .1s,box-shadow .1s,border-color .1s,color .1s;}
+  .pass:hover:not(:disabled){transform:translateY(-2px);border-color:var(--topbar-bg);color:var(--topbar-bg);box-shadow:0 6px 14px rgba(184,80,60,.22);}
+  .pass:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #E7C3B8;}
+  .pass:disabled{opacity:.5;cursor:default;transform:none;box-shadow:none;}
+  @media (prefers-reduced-motion:reduce){
+    .itemcard.enter,.itemcard .yr.reveal,.gscore .n.pop,.flash-ok,.flash-no{animation:none!important;}
+    .choice,.choice .big,.gamecard{transition:none!important;}
+  }
+  .flash-ok{animation:okpulse .55s;}
+  .flash-no{animation:nopulse .55s;}
+  @keyframes okpulse{0%{box-shadow:0 0 0 0 rgba(45,150,90,.55);}100%{box-shadow:0 0 0 14px rgba(45,150,90,0);}}
+  @keyframes nopulse{0%{box-shadow:0 0 0 0 rgba(178,58,46,.55);}100%{box-shadow:0 0 0 14px rgba(178,58,46,0);}}
+  .gameover{background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-card);padding:32px 24px;text-align:center;max-width:560px;margin:0 auto;}
+  .gameover h2{font-family:'Oswald',Arial,sans-serif;font-weight:600;margin:0 0 8px;font-size:24px;letter-spacing:.03em;}
+  .gameover .stats{display:flex;justify-content:center;gap:34px;margin:16px 0 20px;}
+  .gameover .stat .v{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-size:42px;font-weight:600;color:var(--topbar-bg);line-height:1;}
+  .gameover .stat .k{font-size:12px;color:var(--text2);margin-top:6px;text-transform:uppercase;letter-spacing:.04em;}
+  .gameover .sub{color:var(--text2);margin:8px 0 20px;}
+  .cta{background:var(--topbar-bg);color:#fff;border:none;border-radius:var(--r-pill);padding:12px 26px;font:inherit;font-size:15px;font-weight:600;cursor:pointer;}
+  .cta:hover{filter:brightness(1.06);}
+  .tagd{align-self:flex-start;margin-top:2px;background:#F7E5E0;color:#B23A2E;font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);}
+  .gamehead{text-align:center;margin:0 0 10px;}
+  .gamehead h2{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-weight:600;letter-spacing:.03em;font-size:19px;margin:0;}
+  .gamehead .sub{color:var(--text2);font-size:12px;margin-top:2px;}
+  .gameover .rtitle{margin:6px 0 2px;}
+  .gameover .perfect{color:#2E8B57;}
+  .gameover .streak{font-size:15px;font-weight:600;color:var(--text);margin:8px 0 2px;}
+  .gameover .locknote{color:var(--text2);font-size:13px;margin:8px 0 2px;line-height:1.4;}
+  .gameover .countdown{color:var(--text2);font-size:13px;margin:2px 0 18px;}
+  .gameover .countdown b{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;color:var(--text);letter-spacing:.05em;font-weight:600;font-size:15px;}
+  .btnrow{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+
+  /* ===== Responsive (mateixos punts de tall que la topbar d'index) ===== */
+  @media (max-width:860px){
+    .topbar{padding:10px 14px;gap:10px;}
+    .brand{font-size:16px;}
+    main{padding:18px 14px 48px;}
+  }
+  @media (max-width:600px){
+    .datainfo{display:none;}
+    .menu{grid-template-columns:1fr;}
+    .gtitle{font-size:18px;}
+    .gscore .n{font-size:16px;}
+  }
+  @media (max-height:560px){
+    .topbar{padding:6px 12px;border-bottom-width:3px;}
+    .brand{font-size:15px;}
+  }
+  @media (pointer:coarse){
+    .topbar{padding-top:8px;padding-bottom:8px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));border-bottom-width:3px;}
+    .brand{font-size:15px;letter-spacing:.04em;}
+    .choice{padding:20px 14px;font-size:17px;}
+    .choice .big{font-size:28px;}
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="brand">HISTÒRIA BÀSICA<span class="sub"> · Jocs</span></div>
+  </div>
+  <div class="topbar-right">
+    <span id="datainfo" class="datainfo"></span>
+    <button id="back" class="btn" hidden>← Menú</button>
+  </div>
+</header>
+<main id="app"></main>
+
+<!-- ⚠️ PROVISIONAL: data.js és una CÒPIA (snapshot) de les dades que ara viuen a
+     index.html, feta per facilitar el testeig local. Quan existeixi la DB externa,
+     substituir aquest <script> pel carregador real (fetch a la DB). Veure ESTRATEGIA_JOC.md. -->
+<script src="data.js"></script>
+<script>
+(function(){
+  "use strict";
+  // --- Catàleg de jocs (de moment només obren un placeholder) ---
+  const GAMES=[
+    {id:'ordena',       ic:'🕰️', t:'Ordena la línia',        d:'Posa 4–5 fets o personatges en el seu ordre cronològic correcte.'},
+    {id:'abansdespres', ic:'⚖️', t:'Abans o després?',        d:'Encadena encerts dient si cada item és abans o després. Un repte nou cada dia.'},
+    {id:'personatge',   ic:'🕵️', t:'Endevina el personatge',  d:'Pistes progressives (era, categoria, descripció) fins encertar-ho.'},
+    {id:'contemporanis',ic:'🤝', t:'Contemporanis?',          d:'Van coincidir en vida aquestes dues persones? Sí o no.'}
+  ];
+  const app=document.getElementById('app');
+  const back=document.getElementById('back');
+  const info=document.getElementById('datainfo');
+  let activeModule=null;
+
+  function dataOk(){return !!(window.HB_DATA && HB_DATA.PEOPLE && HB_DATA.EVENTS && HB_DATA.MARCS);}
+
+  function showInfo(){
+    info.textContent = dataOk()
+      ? `${HB_DATA.PEOPLE.length} personatges · ${HB_DATA.EVENTS.length} esdeveniments · ${HB_DATA.MARCS.length} marcs`
+      : '';
+  }
+
+  // ---- Utils compartits ----
+  const fmtYear = y => y<0 ? Math.abs(y)+' aC' : String(y);
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+  // ---- Utils del repte diari: determinisme per data (mitjanit LOCAL de cada jugador) ----
+  function todayStr(d){ d=d||new Date(); const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+  function yesterdayStr(){ const d=new Date(); d.setDate(d.getDate()-1); return todayStr(d); }
+  function ddmm(s){ const a=s.split('-'); return a[2]+'/'+a[1]+'/'+a[0]; }
+  // Llavor estable a partir de la data (FNV-1a) + PRNG mulberry32 + barreja sembrada.
+  function seedFromStr(s){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+  function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+  function seededShuffle(arr,rng){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); const t=a[i];a[i]=a[j];a[j]=t; } return a; }
+  function msToMidnight(){ const now=new Date(); const mid=new Date(now); mid.setHours(24,0,0,0); return mid-now; }
+  function fmtDur(ms){ if(ms<0) ms=0; let s=Math.floor(ms/1000); const h=Math.floor(s/3600); s-=h*3600; const m=Math.floor(s/60); const ss=s-m*60; const p=n=>String(n).padStart(2,'0'); return p(h)+':'+p(m)+':'+p(ss); }
+
+  // Pool d'items per als jocs cronològics: esdeveniments + persones (naixement i mort).
+  // NO incloem marcs/eres: els seus anys d'inici/fi són massa imprecisos.
+  function buildPool(){
+    const pool=[];
+    (HB_DATA.EVENTS||[]).forEach(e=>{
+      if(typeof e.year==='number') pool.push({key:'ev:'+e.id,kind:'event',name:e.name,year:e.year});
+    });
+    (HB_DATA.PEOPLE||[]).forEach(p=>{
+      if(typeof p.birth==='number') pool.push({key:'pe:'+p.id+':b',kind:'person',anchor:'naix',name:p.name,year:p.birth});
+      if(typeof p.death==='number') pool.push({key:'pe:'+p.id+':d',kind:'person',anchor:'mort',name:p.name,year:p.death});
+    });
+    return pool;
+  }
+
+  // ===== Mòdul: «Abans o després?» — REPTE DIARI (determinista per data + 1 intent/dia) =====
+  const AbansDespres = (function(){
+    const DAILY_KEY='hb_ad_daily';    // { date, score, perfect }
+    const STREAK_KEY='hb_ad_streak';  // { last, days }
+    let root=null, deck=[], idx=0, current=null, candidate=null, score=0, locked=false, skipUsed=false, timer=null, cdTimer=null;
+
+    function readLS(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(_){ return null; } }
+    function writeLS(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(_){} }
+
+    // Meta discreta: esdeveniments només icôna 📜; persones indiquen naixement/mort (imprescindible).
+    function meta(it){
+      if(it.kind==='event') return '<div class="meta ev"></div>';
+      return it.anchor==='naix'
+        ? '<div class="meta">🎂 naixement</div>'
+        : '<div class="meta">🕯️ mort</div>';
+    }
+    // role: 'ref' (fixada, amb xinxeta) o 'new' (elevada, apareix animada). flip: anima l'any en revelar-se.
+    function card(it,opts){
+      opts=opts||{};
+      const cls='itemcard '+(opts.role||'')+(opts.enter?' enter':'');
+      const yrInner = opts.reveal ? fmtYear(it.year) : '<span class="q">?</span>';
+      const yrCls = 'yr'+(opts.flip?' reveal':'');
+      return `<div class="${cls}">${meta(it)}<div class="nm">${it.name}</div><div class="${yrCls}">${yrInner}</div></div>`;
+    }
+
+    function head(){ return `<div class="gamehead"><h2>⚖️ Abans o després?</h2><div class="sub">Repte diari · ${ddmm(todayStr())}</div></div>`; }
+
+    // Següent candidat de la baralla FINITA (sense rebarreig). Salta empats d'any (determinista).
+    function nextCandidate(){
+      while(idx<deck.length){ const c=deck[idx++]; if(c.year!==current.year) return c; }
+      return null; // baralla esgotada => ronda perfecta
+    }
+
+    // Pool del dia: cada PERSONA hi surt NOMÉS UN COP (naixement O mort, triat per la llavor).
+    // Així mai comparem el naixement d'algú contra la seva pròpia mort, ni surt duplicada.
+    function dailyPool(rng){
+      const raw = buildPool();
+      const events = raw.filter(x=>x.kind==='event');
+      const byPerson = {};
+      raw.filter(x=>x.kind==='person').forEach(it=>{
+        const pid = it.key.split(':')[1];
+        (byPerson[pid]=byPerson[pid]||[]).push(it);
+      });
+      const persons = [];
+      Object.keys(byPerson).sort().forEach(pid=>{
+        const arr = byPerson[pid].sort((a,b)=> a.key<b.key?-1:1); // ordre estable (:b abans :d)
+        persons.push(arr.length>1 ? arr[rng()<0.5?0:1] : arr[0]);
+      });
+      const pool = events.concat(persons);
+      pool.sort((a,b)=> a.key<b.key?-1:(a.key>b.key?1:0)); // ordre estable abans de sembrar
+      return pool;
+    }
+
+    // ===== Generació del "game path" amb dificultat controlada =====
+    // Dificultat perceptiva (logarítmica): g = |ln(edatA/edatB)|, edat = anys enrere des d'ANY_REF.
+    // g PETIT => els dos ítems queden "a prop" en percepció => DIFÍCIL. g GRAN => FÀCIL.
+    const AD_CONFIG = {
+      refYear: 2026,   // "present" per calcular l'edat de cada ítem
+      gHardMax: 0.55,  // passos "gruix": g <= gHardMax (difícil/mig)
+      gEasyMin: 0.90,  // "respirs": g >= gEasyMin (clarament fàcil)
+      pRespir: 0.22,   // probabilitat (sembrada) que un pas sigui respir (~1 de cada 4-5)
+      warmup: 2        // primers passos forçats a respir (escalfament suau)
+    };
+    function ageOf(it){ return Math.max(1, AD_CONFIG.refYear - it.year); }
+    function gap(a,b){ return Math.abs(Math.log(ageOf(a)/ageOf(b))); }
+
+    // Passeig voraç sembrat: cada següent ítem es tria segons la banda de dificultat desitjada.
+    // Tot es deriva del MATEIX rng del dia (ordre de consum fix) => 100% determinista.
+    function buildPath(pool, rng){
+      const cfg = AD_CONFIG;
+      const rem = pool.slice();
+      if(!rem.length) return [];
+      const path = [ rem.splice(Math.floor(rng()*rem.length),1)[0] ];
+      let step = 0;
+      while(rem.length){
+        step++;
+        const ref = path[path.length-1];
+        const scored = rem.map((it,i)=>({i,g:gap(ref,it)})).filter(o=>o.g>1e-9); // evita empats d'any
+        if(!scored.length){ rem.sort((a,b)=> a.key<b.key?-1:1).forEach(x=>path.push(x)); break; }
+        const wantEasy = (step<=cfg.warmup) || (rng() < cfg.pRespir);
+        let band;
+        if(wantEasy){
+          band = scored.filter(o=>o.g>=cfg.gEasyMin);
+          if(!band.length) band = scored.slice().sort((a,b)=>b.g-a.g).slice(0, Math.max(1,Math.ceil(scored.length*0.2)));
+        } else {
+          band = scored.filter(o=>o.g<=cfg.gHardMax);
+          if(!band.length) band = scored.slice().sort((a,b)=>a.g-b.g).slice(0, Math.max(1,Math.ceil(scored.length*0.2)));
+        }
+        const pick = band[Math.floor(rng()*band.length)];
+        path.push(rem.splice(pick.i,1)[0]);
+      }
+      return path;
+    }
+
+    // Hook de depuració per a l'script d'anàlisi (no afecta el joc).
+    try{ window.__AD = {
+      config: AD_CONFIG,
+      gap: gap,
+      pool: function(ds){ return dailyPool(mulberry32(seedFromStr(ds))); },
+      sim: function(ds){ const r=mulberry32(seedFromStr(ds)); return buildPath(dailyPool(r), r); }
+    }; }catch(_){}
+
+    function render(){
+      root.innerHTML = `
+        <div class="game">
+          <div class="gtop">
+            <div class="gtitle">⚖️ Abans o després?</div>
+            <div class="gscore"><div class="n" id="scoren"><span class="ic">🎯</span><span class="v">${score}</span></div></div>
+          </div>
+          <div class="cards2">
+            ${card(current,{role:'ref',reveal:true})}
+            <div class="vs">VS</div>
+            <div id="candslot">${card(candidate,{role:'new',enter:true})}</div>
+          </div>
+          <div class="choices">
+            <button class="choice" data-a="abans"><span class="big">←</span>Abans</button>
+            <button class="pass" data-x="skip"${skipUsed?' disabled':''}>⏭️ Passa (1)</button>
+            <button class="choice" data-a="despres"><span class="big">→</span>Després</button>
+          </div>
+          <div class="gamefoot">📅 Repte diari · ${ddmm(todayStr())}</div>
+        </div>`;
+      root.querySelectorAll('.choice').forEach(b=>{
+        b.addEventListener('click',()=>guess(b.getAttribute('data-a')));
+      });
+      const sk=root.querySelector('[data-x="skip"]'); if(sk) sk.addEventListener('click',skip);
+    }
+
+    function guess(ans){
+      if(locked||!candidate) return;
+      locked=true;
+      const correct = (ans==='abans' && candidate.year<current.year) || (ans==='despres' && candidate.year>current.year);
+      const slot=root.querySelector('#candslot');
+      if(slot){ slot.innerHTML=card(candidate,{role:'new',reveal:true,flip:true}); const c=slot.querySelector('.itemcard'); if(c) c.classList.add(correct?'flash-ok':'flash-no'); }
+      root.querySelectorAll('.choice').forEach(b=>{ b.disabled=true; });
+      if(correct){
+        score++;
+        const sn=root.querySelector('#scoren'); if(sn){ const v=sn.querySelector('.v'); if(v) v.textContent=score; sn.classList.remove('pop'); void sn.offsetWidth; sn.classList.add('pop'); }
+        current=candidate;
+        const nxt=nextCandidate();
+        if(nxt){ candidate=nxt; timer=setTimeout(()=>{ locked=false; render(); },2000); }
+        else { candidate=null; timer=setTimeout(()=>finish(true),2000); } // ronda perfecta
+      }else{
+        timer=setTimeout(()=>finish(false),2100);
+      }
+    }
+
+    // Comodí: passar UN cop per partida. No suma ni resta; només avança a un nou candidat.
+    function skip(){
+      if(locked||skipUsed||!candidate) return;
+      skipUsed=true;
+      const nxt=nextCandidate();
+      if(nxt){ candidate=nxt; render(); }
+      else { candidate=null; finish(true); } // baralla esgotada en passar => ronda perfecta
+    }
+
+    function finish(perfect){
+      const today=todayStr();
+      const st=readLS(STREAK_KEY);
+      let days=1;
+      if(st){ if(st.last===yesterdayStr()) days=(st.days||0)+1; else if(st.last===today) days=st.days||1; else days=1; }
+      writeLS(STREAK_KEY,{last:today,days:days});
+      writeLS(DAILY_KEY,{date:today,score:score,perfect:!!perfect});
+      showResult(score,!!perfect);
+    }
+
+    function showResult(sc,perfect){
+      if(timer){ clearTimeout(timer); timer=null; }
+      const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
+      const title = perfect ? '<span class="perfect">Ronda perfecta! 🏆</span>' : 'Repte completat';
+      root.innerHTML = `
+        <div class="gameover">
+          ${head()}
+          <h2 class="rtitle">${title}</h2>
+          <div class="stats">
+            <div class="stat"><div class="v">🎯 ${sc}</div><div class="k">encerts seguits</div></div>
+            <div class="stat"><div class="v">🔥 ${days}</div><div class="k">${days===1?'dia':'dies'} seguits</div></div>
+          </div>
+          <div class="locknote">Ja has jugat el repte d'avui. Torna demà per un de nou!</div>
+          <div class="countdown">Nou repte en <b id="cd">--:--:--</b></div>
+          <div class="btnrow"><button class="cta" data-x="share">📤 Comparteix</button></div>
+        </div>`;
+      const sh=root.querySelector('[data-x="share"]');
+      if(sh) sh.addEventListener('click',()=>doShare(sc,days,sh));
+      startCountdown();
+    }
+
+    function doShare(sc,days,btn){
+      const text='🏛️ Història Bàsica — Repte diari '+ddmm(todayStr())+'\n🎯 '+sc+' encerts seguits\n🔥 '+days+' '+(days===1?'dia':'dies')+' seguits';
+      if(navigator.share){ navigator.share({text:text}).catch(()=>{}); return; }
+      const done=()=>{ if(btn){ const o=btn.textContent; btn.textContent='Copiat! ✅'; setTimeout(()=>{ btn.textContent=o; },1800); } };
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(done); }
+      else { done(); }
+    }
+
+    function startCountdown(){
+      if(cdTimer){ clearInterval(cdTimer); cdTimer=null; }
+      const tick=()=>{ const el=root&&root.querySelector('#cd'); if(!el){ if(cdTimer){clearInterval(cdTimer);cdTimer=null;} return; } el.textContent=fmtDur(msToMidnight()); };
+      tick(); cdTimer=setInterval(tick,1000);
+    }
+
+    function start(){
+      if(timer){ clearTimeout(timer); timer=null; }
+      if(cdTimer){ clearInterval(cdTimer); cdTimer=null; }
+      const today=todayStr();
+      const daily=readLS(DAILY_KEY);
+      if(daily && daily.date===today){ showResult(daily.score,!!daily.perfect); return; } // ja jugat avui => bloquejat
+      const rng=mulberry32(seedFromStr(today));
+      const pool=dailyPool(rng); // cada persona només un cop (naix O mort) segons la llavor del dia
+      deck=buildPath(pool,rng);  // ordena el pool en un camí amb dificultat controlada (g logarítmic)
+      idx=0; score=0; locked=false; skipUsed=false; current=null; candidate=null;
+      current=deck[idx++]||null;
+      candidate=current?nextCandidate():null;
+      if(!current||!candidate){ root.innerHTML='<div class="err">No hi ha prou dades per jugar.</div>'; return; }
+      render();
+    }
+
+    return {
+      mount(container){ root=container; start(); },
+      unmount(){ if(timer){ clearTimeout(timer); timer=null; } if(cdTimer){ clearInterval(cdTimer); cdTimer=null; } root=null; }
+    };
+  })();
+
+  const MODULES={ abansdespres: AbansDespres };
+
+  function renderMenu(){
+    back.hidden=true;
+    if(!dataOk()){
+      app.innerHTML=`<div class="err">No s'han pogut carregar les dades (<code>data.js</code>). Assegura't que <code>data.js</code> és a la mateixa carpeta que <code>joc.html</code>.</div>`;
+      return;
+    }
+    let cards='';
+    GAMES.forEach(g=>{
+      const badge = MODULES[g.id] ? '<span class="tagd">📅 Repte diari</span>' : '<span class="soon">🚧 Pròximament</span>';
+      cards+=`<button class="gamecard" data-id="${g.id}"><span class="ic">${g.ic}</span><span class="t">${g.t}</span><span class="d">${g.d}</span>${badge}</button>`;
+    });
+    app.innerHTML=`<p class="lead">Cada joc és un <b>repte diari</b>: un intent al dia, igual per a tothom.</p><div class="menu">${cards}</div>`;
+    app.querySelectorAll('.gamecard').forEach(btn=>{
+      btn.addEventListener('click',()=>{location.hash='#/'+btn.getAttribute('data-id');});
+    });
+  }
+
+  function renderGame(g){
+    back.hidden=false;
+    app.innerHTML=`<div class="placeholder"><div class="ic">${g.ic}</div><h2>${g.t}</h2><p class="d">${g.d}</p><span class="badge">🚧 Pròximament</span></div>`;
+  }
+
+  function router(){
+    showInfo();
+    if(activeModule && activeModule.unmount){ try{activeModule.unmount();}catch(_){} activeModule=null; }
+    const m=(location.hash||'').match(/^#\/(.+)$/);
+    if(m){
+      const g=GAMES.find(x=>x.id===m[1]);
+      if(g){
+        const mod=MODULES[g.id];
+        if(mod){ back.hidden=false; app.innerHTML=''; activeModule=mod; mod.mount(app); }
+        else { renderGame(g); }
+        return;
+      }
+    }
+    renderMenu();
+  }
+
+  back.addEventListener('click',()=>{location.hash='';});
+  window.addEventListener('hashchange',router);
+  router();
+})();
+</script>
+</body>
+</html>
