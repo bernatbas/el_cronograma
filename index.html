@@ -375,7 +375,10 @@
   @media (max-width:600px){
     .search{width:140px;}
     .search input{padding:7px 10px;font-size:13px;}
-    .controls .btn:last-child{display:none;}  /* hide Reset on very small screens */
+    /* El Reset es queda SEMPRE visible. Abans s'amagava aquí, però (a) amb els botons d'acció
+       quadrats de 34px només costa 34px, (b) és una acció útil justament en pantalla petita, i
+       (c) només desapareixia amb ratolí: en tàctil, la regla de .controls #fitAll,#reset de més
+       avall li tornava a posar display i es quedava. Mateixa amplada, comportament diferent. */
   }
 
   /* ===== Compact vertical metrics (phone in landscape: ~340px of usable height) =====
