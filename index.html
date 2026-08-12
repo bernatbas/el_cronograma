@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=swap"></noscript>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Cronograma — prova</title>
+<title>Història Bàsica · Cronograma</title>
 <style>
   /* ============================================================
      DESIGN TOKENS
@@ -50,6 +50,64 @@
   .topbar-left{display:flex;align-items:center;gap:14px;min-width:0;}
   .topbar-right{display:flex;align-items:center;gap:14px;flex:0 0 auto;}
   .brand{font-family:'Oswald','Roboto Condensed','Arial Narrow','Helvetica Neue',Arial,sans-serif;font-weight:600;font-size:20px;letter-spacing:.06em;white-space:nowrap;}
+  /* ===== Botons de secció (Cronograma · Jocs · …) =====
+     BLOC COMPARTIT entre index.html i joc.html: CSS, markup i JS han de ser BYTE-IDÈNTICS.
+     Si el toques en un fitxer, copia'l a l'altre i comprova-ho amb un diff.
+
+     Són botons INDEPENDENTS, no un toggle segmentat: el de la secció actual va marcat i la
+     resta queden disponibles. Afegir una tercera pàgina és només afegir un <a> més.
+     Viu a topbar-left (identitat: «on sóc»), no a la zona d'accions de la dreta.
+     L'aspecte replica .topbar .btn / .topbar .btn.on a TOTS els punts de tall, però
+     autocontingut: així les dues pàgines es veuen igual i la topbar fa la mateixa alçada,
+     sense saltet en navegar. ⚠️ Si canvies l'estil de .btn, actualitza també aquest bloc.
+
+     DOS ESTATS:
+      · ample  → la marca és text pla (botó sense cap decoració) i els botons van en fila.
+      · plegat → els botons no hi caben: la marca es converteix en botó amb fletxa i obre un
+                 desplegable. Qui ho decideix és el JS, MESURANT si caben (.navcollapsed),
+                 perquè depèn del contingut real de la barra i no d'un breakpoint fix.
+     Es va provar amb <details>, però quan està tancat el navegador aplica
+     content-visibility:hidden al pseudo-element ::details-content i els botons deixaven de
+     pintar-se en la vista ampla. Per això l'obertura la porta el JS amb una classe. */
+  /* La topbar s'ha de poder encongir sense que res es trepitgi. Qui cedeix espai és EL
+     CERCADOR; l'esquerra (marca + botons) no s'encongeix mai. Abans .topbar-left tenia
+     min-width:0 i s'aixafava, i la marca (white-space:nowrap) li sortia per fora i acabava
+     sota el cercador; i .topbar-right era flex:0 0 auto, així que ningú cedia. */
+  .topbar-left{flex:0 0 auto;min-width:auto;}
+  .topbar-right{flex:1 1 auto;min-width:0;justify-content:flex-end;}
+  .topbar-right .search{flex:1 1 auto;min-width:80px;}
+  .secnav{display:flex;align-items:center;gap:14px;min-width:0;}
+  /* La marca és un <button> per poder obrir el desplegable. Es neutralitza NOMÉS el chrome
+     del botó: gens de font ni color aquí, perquè les regles de .brand (Oswald 20px 600, blanc)
+     ja guanyen a l'estil per defecte del navegador. Amb font:inherit sortia en font del
+     sistema a 14px i en color fosc sobre el terracota. */
+  .secnav>.brand{display:inline-flex;align-items:center;gap:6px;margin:0;padding:0;border:0;background:none;cursor:default;-webkit-appearance:none;appearance:none;}
+  .brandcaret{display:none;width:12px;height:12px;flex:0 0 auto;opacity:.85;transition:transform .15s;}
+  .modeswitch{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;}
+  .mode{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:38px;min-height:38px;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);font-family:inherit;font-size:14px;font-weight:500;line-height:1;color:#fff;text-decoration:none;white-space:nowrap;transition:background .14s,border-color .14s;}
+  .mode:hover{background:rgba(255,255,255,.22);}
+  .mode.on{background:#fff;border-color:#fff;color:#B23A2E;font-weight:600;cursor:default;}
+  .mode.on:hover{background:#fff;}
+  .mode-ic{display:none;width:17px;height:17px;flex:0 0 auto;}
+  @media (max-width:860px){ .mode{min-width:32px;min-height:32px;padding:4px 8px;font-size:13px;} }
+  @media (max-height:560px){ .mode{min-width:30px;min-height:30px;padding:3px 8px;font-size:13px;} }
+  @media (pointer:coarse){ .mode{min-width:30px;min-height:30px;padding:3px 10px;font-size:13px;} }
+  @media (max-width:600px),(pointer:coarse){ .mode-tx{display:none;} .mode-ic{display:block;} }
+  /* --- plegat: la marca fa de botó i obre el desplegable --- */
+  .secnav.navcollapsed{position:relative;gap:0;}
+  .secnav.navcollapsed>.brand{cursor:pointer;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.12);border-radius:8px;padding:5px 10px;transition:background .14s;}
+  .secnav.navcollapsed>.brand:hover{background:rgba(255,255,255,.22);}
+  .secnav.navcollapsed .brandcaret{display:block;}
+  .secnav.navcollapsed.open>.brand{background:#fff;border-color:#fff;color:#B23A2E;}
+  .secnav.navcollapsed.open .brandcaret{transform:rotate(180deg);}
+  .secnav.navcollapsed .modeswitch{display:none;position:absolute;top:calc(100% + 8px);left:0;flex-direction:column;align-items:stretch;gap:2px;min-width:196px;padding:6px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 28px rgba(40,44,60,.22);z-index:40;}
+  .secnav.navcollapsed.open .modeswitch{display:flex;}
+  .secnav.navcollapsed .mode{justify-content:flex-start;min-width:0;min-height:0;padding:9px 10px;border:0;background:none;border-radius:6px;color:var(--text);font-size:14px;font-weight:500;}
+  .secnav.navcollapsed .mode:hover{background:var(--soft);}
+  .secnav.navcollapsed .mode.on{background:#F7E5E0;color:#B23A2E;font-weight:600;}
+  .secnav.navcollapsed .mode-tx{display:inline;}
+  .secnav.navcollapsed .mode-ic{display:block;}
+  /* ===== fi del bloc compartit ===== */
   .search{position:relative;width:320px;flex:0 0 auto;}
   .search input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none;background:var(--soft);}
   .search input:focus{border-color:var(--blue);background:#fff;}
@@ -394,7 +452,14 @@
 <div class="app">
   <header class="topbar">
     <div class="topbar-left">
-      <div class="brand">HISTÒRIA BÀSICA</div>
+      <!-- BLOC COMPARTIT: mateix markup als dos fitxers; nomes canvia quin <a> porta .on -->
+      <div class="secnav">
+        <button class="brand" type="button" aria-haspopup="true" aria-expanded="false">HISTÒRIA BÀSICA<svg class="brandcaret" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button>
+        <nav class="modeswitch" aria-label="Seccions">
+          <a class="mode on" href="index.html" aria-current="page" title="Cronograma"><svg class="mode-ic" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2.5 15h13"/><path d="M4 6h7"/><path d="M7 10.5h7.5"/></svg><span class="mode-tx">Cronograma</span></a>
+          <a class="mode" href="joc.html" title="Jocs"><svg class="mode-ic" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.4" y="2.4" width="13.2" height="13.2" rx="3.4"/><circle cx="6" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg><span class="mode-tx">Jocs</span></a>
+        </nav>
+      </div>
     </div>
     <div class="topbar-right">
       <div class="search">
@@ -642,7 +707,7 @@ const RIGHT_PAD_YEARS=20;   // just enough for the axis to keep ticking a bit pa
 const YEAR_MIN=DATA_MIN-GUTTER_YEARS, YEAR_MAX=DATA_MAX+RIGHT_PAD_YEARS;
 let pxPerYear=4;               // current zoom (pixels per year); set by defaultView()/setZoom()
 const SEED_PINNED=[];  // ningú no ve fixat per defecte: la vista comença buida i tots els personatges (Bernat inclòs) es poden treure/reportar com la resta
-const DEFAULT_MARCS=(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches)?[]:['west'];  // al mòbil no mostrem Occident per defecte (ocupa massa); al desktop sí. Marcs a l'inici / després de Reset (la columna d'eres sempre és activa)
+const DEFAULT_MARCS=[];  // cap marc actiu a l'inici / després de Reset: la vista arrenca només amb la columna d'eres (sempre activa). Occident i Espanya s'activen a mà al panell
 const FUTURE_FADE=72;          // px the living bars (and the era band) fade out past "today"
 const deathOf=p=>p.death==null?NOW_YEAR:p.death;
 const isAlive=p=>p.death==null;
@@ -1610,7 +1675,17 @@ window.addEventListener('mouseup',()=>{
 function bootDefault(){if(scroll.clientWidth>0){applyMetrics();if(restoredView){pxPerYear=Math.max(fitPx(),Math.min(20,restoredView.px));render();scroll.scrollLeft=Math.min(Math.max(0,restoredView.left||0),maxScroll());}else{defaultView();}lsReady=true;saveNow();}else{requestAnimationFrame(bootDefault);}}   // re-measure here too: at parse time the viewport height can still be 0 (or mid-settle behind Safari's URL bar), which would lock in the wrong metrics
 restoreState();
 bootDefault();
-window.addEventListener('resize',()=>{applyMetrics();setZoom(pxPerYear);});   // rotating the phone flips the compact threshold, so the geometry has to be recomputed before the redraw
+// floorH (el "terra" on s'ancoren l'any de l'event, la linia d'avui i la guia) es calcula DINS de
+// render(), a partir de scroll.clientHeight. Si l'alcada del viewport canvia i no es torna a
+// renderitzar, l'any de l'event queda surant a mig canvas. Passava en creuar el llindar de
+// (pointer:coarse) i, sobretot, quan el layout s'assenta TARD: al mobil la barra d'adreces del
+// navegador s'anima ~200ms i un sol render al primer frame encara llegeix l'alcada antiga.
+// Per aixo es renderitza tres vegades: ara, al frame seguent, i un cop assentat.
+let _settleT;
+function settleRender(){applyMetrics();render();}
+function scheduleSettle(){requestAnimationFrame(settleRender);clearTimeout(_settleT);_settleT=setTimeout(settleRender,180);}
+window.addEventListener('resize',()=>{applyMetrics();setZoom(pxPerYear);scheduleSettle();});   // en girar el mobil canvia el llindar compacte: cal recalcular la geometria abans de repintar
+window.addEventListener('load',scheduleSettle);
 
 // Rotate hint: a dismissible suggestion (not a blocker) on touch devices held in portrait.
 const portraitWall=document.getElementById('portraitWall');
@@ -1648,6 +1723,47 @@ function setupAccordion(){
 }
 setupAccordion();
 if(ACC_MQ.addEventListener)ACC_MQ.addEventListener('change',setupAccordion);
+// ===== BLOC COMPARTIT (index.html / joc.html): plegat de la barra de seccions =====
+// Si els botons de secció no caben a la topbar, la barra es plega: la marca passa a ser un botó
+// amb fletxa que obre un desplegable. La condició es MESURA i no és un breakpoint fix, perquè
+// depèn del contingut real de la barra (a l'index hi ha el cercador i quatre botons; al joc, no).
+//
+// Com es mesura: l'element elàstic de la topbar és el CERCADOR. Mentre tingui espai per sobre del
+// seu min-width, tot hi cap. Quan toca fons, ja no hi ha més espai per cedir → cal plegar.
+// (No es pot mesurar la distància entre l'esquerra i la dreta: amb .topbar-right en flex:1 1 auto
+// aquesta distància és sempre el `gap`, i no diu res de si hi cap.)
+// Ha de ser byte-idèntic als dos fitxers.
+(function(){
+  const sec=document.querySelector('.secnav');
+  const brand=sec&&sec.querySelector('.brand');
+  const nav=sec&&sec.querySelector('.modeswitch');
+  const right=document.querySelector('.topbar-right');
+  if(!sec||!brand||!nav||!right)return;
+  const search=right.querySelector('.search');
+  const tanca=()=>{sec.classList.remove('open');brand.setAttribute('aria-expanded','false');};
+  function fitSecnav(){
+    sec.classList.remove('navcollapsed');tanca();   // mesura sempre en l'estat desplegat
+    let cal;
+    if(search){
+      const min=parseFloat(getComputedStyle(search).minWidth)||0;
+      cal=search.getBoundingClientRect().width<=min+1;            // el cercador ha tocat fons
+    }else{
+      cal=nav.getBoundingClientRect().right>right.getBoundingClientRect().left+1;   // sense cercador: només si es trepitgen
+    }
+    if(cal)sec.classList.add('navcollapsed');
+  }
+  brand.addEventListener('click',e=>{
+    if(!sec.classList.contains('navcollapsed'))return;   // en vista ampla la marca és text inert
+    e.stopPropagation();
+    brand.setAttribute('aria-expanded',sec.classList.toggle('open')?'true':'false');
+  });
+  document.addEventListener('click',e=>{if(!sec.contains(e.target))tanca();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')tanca();});
+  fitSecnav();
+  window.addEventListener('resize',()=>requestAnimationFrame(fitSecnav));
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitSecnav);   // Oswald canvia l'amplada de la marca
+})();
+// ===== fi del bloc compartit =====
 </script>
 </body>
 </html>
