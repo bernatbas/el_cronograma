@@ -61,27 +61,29 @@
      autocontingut: així les dues pàgines es veuen igual i la topbar fa la mateixa alçada,
      sense saltet en navegar. ⚠️ Si canvies l'estil de .btn, actualitza també aquest bloc.
 
-     DOS ESTATS:
-      · ample  → la marca és text pla (botó sense cap decoració) i els botons van en fila.
-      · plegat → els botons no hi caben: la marca es converteix en botó amb fletxa i obre un
-                 desplegable. Qui ho decideix és el JS, MESURANT si caben (.navcollapsed),
-                 perquè depèn del contingut real de la barra i no d'un breakpoint fix.
-     Es va provar amb <details>, però quan està tancat el navegador aplica
-     content-visibility:hidden al pseudo-element ::details-content i els botons deixaven de
-     pintar-se en la vista ampla. Per això l'obertura la porta el JS amb una classe. */
-  /* La topbar s'ha de poder encongir sense que res es trepitgi. Qui cedeix espai és EL
-     CERCADOR; l'esquerra (marca + botons) no s'encongeix mai. Abans .topbar-left tenia
-     min-width:0 i s'aixafava, i la marca (white-space:nowrap) li sortia per fora i acabava
-     sota el cercador; i .topbar-right era flex:0 0 auto, així que ningú cedia. */
+     ESCALA DE COMPRESSIÓ (per ordre; el cercador és l'últim que es toca):
+      1. tot sencer: marca de text + botons en fila
+      2. es plega el menú: la marca passa a botó amb fletxa i obre un desplegable
+      3. els botons d'acció passen a icones
+      4. la marca passa a «HB» (en obrir el menú es torna a veure el nom sencer)
+      5. només si no queda més remei, el cercador baixa del seu mínim
+     El cercador ha de poder mostrar «Cercant a Wikidata…» en UNA línia: 180px mesurats.
+     Els llindars els decideix el JS amb una fórmula que NO depèn del contingut de la pàgina,
+     perquè les dues pàgines es plegan a la mateixa amplada (si no, navegar faria un salt
+     estrany: menú plegat en una i desplegat en l'altra). */
+  .topbar{z-index:20;}   /* per sobre de .sidebar (z-index:10): si no, el desplegable hi queda darrere */
   .topbar-left{flex:0 0 auto;min-width:auto;}
   .topbar-right{flex:1 1 auto;min-width:0;justify-content:flex-end;}
-  .topbar-right .search{flex:1 1 auto;min-width:80px;}
+  .topbar-right .search{flex:1 1 auto;min-width:180px;}   /* 180 = «Cercant a Wikidata…» en una línia */
+  @media (max-width:480px){ .topbar-right .search{min-width:120px;} }   /* pas 5: últim recurs */
+  .topbar.navopen .search{min-width:110px;}   /* amb el menú obert la marca creix: el cercador cedeix mentre estigui obert */
   .secnav{display:flex;align-items:center;gap:14px;min-width:0;}
   /* La marca és un <button> per poder obrir el desplegable. Es neutralitza NOMÉS el chrome
      del botó: gens de font ni color aquí, perquè les regles de .brand (Oswald 20px 600, blanc)
      ja guanyen a l'estil per defecte del navegador. Amb font:inherit sortia en font del
      sistema a 14px i en color fosc sobre el terracota. */
   .secnav>.brand{display:inline-flex;align-items:center;gap:6px;margin:0;padding:0;border:0;background:none;cursor:default;-webkit-appearance:none;appearance:none;}
+  .brand-short{display:none;}
   .brandcaret{display:none;width:12px;height:12px;flex:0 0 auto;opacity:.85;transition:transform .15s;}
   .modeswitch{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;}
   .mode{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:38px;min-height:38px;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);font-family:inherit;font-size:14px;font-weight:500;line-height:1;color:#fff;text-decoration:none;white-space:nowrap;transition:background .14s,border-color .14s;}
@@ -93,9 +95,20 @@
   @media (max-height:560px){ .mode{min-width:30px;min-height:30px;padding:3px 8px;font-size:13px;} }
   @media (pointer:coarse){ .mode{min-width:30px;min-height:30px;padding:3px 10px;font-size:13px;} }
   @media (max-width:600px),(pointer:coarse){ .mode-tx{display:none;} .mode-ic{display:block;} }
-  /* --- plegat: la marca fa de botó i obre el desplegable --- */
+  /* --- pas 3: els botons d'acció passen a icones (regles pròpies de l'index; al joc no hi ha .controls) --- */
+  @media (max-width:720px){
+    .controls #fitAll .btn-tx,.controls #reset .btn-tx{display:none;}
+    .controls #fitAll .btn-ic,.controls #reset .btn-ic{display:block;}
+    .controls .btn{min-width:32px;min-height:32px;padding:4px 8px;}
+  }
+  /* --- pas 2: plegat: la marca fa de botó i obre el desplegable --- */
   .secnav.navcollapsed{position:relative;gap:0;}
-  .secnav.navcollapsed>.brand{cursor:pointer;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.12);border-radius:8px;padding:5px 10px;transition:background .14s;}
+  /* min-height igual que .btn a cada tram: si la marca-botó és més alta que els botons
+     d'acció, la topbar creix en plegar-se (feia 75→79px) i es veu el salt. */
+  .secnav.navcollapsed>.brand{cursor:pointer;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.12);border-radius:8px;padding:0 10px;min-height:38px;transition:background .14s;}
+  @media (max-width:860px){ .secnav.navcollapsed>.brand{min-height:32px;padding:0 8px;} }
+  @media (max-height:560px){ .secnav.navcollapsed>.brand{min-height:30px;padding:0 8px;} }
+  @media (pointer:coarse){ .secnav.navcollapsed>.brand{min-height:30px;padding:0 10px;} }
   .secnav.navcollapsed>.brand:hover{background:rgba(255,255,255,.22);}
   .secnav.navcollapsed .brandcaret{display:block;}
   .secnav.navcollapsed.open>.brand{background:#fff;border-color:#fff;color:#B23A2E;}
@@ -107,6 +120,11 @@
   .secnav.navcollapsed .mode.on{background:#F7E5E0;color:#B23A2E;font-weight:600;}
   .secnav.navcollapsed .mode-tx{display:inline;}
   .secnav.navcollapsed .mode-ic{display:block;}
+  /* --- pas 4: marca abreujada; en obrir el menú es torna a veure sencera --- */
+  .secnav.hb .brand-long{display:none;}
+  .secnav.hb .brand-short{display:inline;}
+  .secnav.hb.open .brand-long{display:inline;}
+  .secnav.hb.open .brand-short{display:none;}
   /* ===== fi del bloc compartit ===== */
   .search{position:relative;width:320px;flex:0 0 auto;}
   .search input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none;background:var(--soft);}
@@ -454,7 +472,7 @@
     <div class="topbar-left">
       <!-- BLOC COMPARTIT: mateix markup als dos fitxers; nomes canvia quin <a> porta .on -->
       <div class="secnav">
-        <button class="brand" type="button" aria-haspopup="true" aria-expanded="false">HISTÒRIA BÀSICA<svg class="brandcaret" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button>
+        <button class="brand" type="button" aria-haspopup="true" aria-expanded="false"><span class="brand-long">HISTÒRIA BÀSICA</span><span class="brand-short">HB</span><svg class="brandcaret" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button>
         <nav class="modeswitch" aria-label="Seccions">
           <a class="mode on" href="index.html" aria-current="page" title="Cronograma"><svg class="mode-ic" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2.5 15h13"/><path d="M4 6h7"/><path d="M7 10.5h7.5"/></svg><span class="mode-tx">Cronograma</span></a>
           <a class="mode" href="joc.html" title="Jocs"><svg class="mode-ic" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.4" y="2.4" width="13.2" height="13.2" rx="3.4"/><circle cx="6" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg><span class="mode-tx">Jocs</span></a>
@@ -1723,45 +1741,50 @@ function setupAccordion(){
 }
 setupAccordion();
 if(ACC_MQ.addEventListener)ACC_MQ.addEventListener('change',setupAccordion);
-// ===== BLOC COMPARTIT (index.html / joc.html): plegat de la barra de seccions =====
-// Si els botons de secció no caben a la topbar, la barra es plega: la marca passa a ser un botó
-// amb fletxa que obre un desplegable. La condició es MESURA i no és un breakpoint fix, perquè
-// depèn del contingut real de la barra (a l'index hi ha el cercador i quatre botons; al joc, no).
+// ===== BLOC COMPARTIT (index.html / joc.html): compressió de la topbar =====
+// Escala: 1) tot sencer · 2) es plega el menú (la marca obre un desplegable) · 3) botons d'acció
+// a icones (CSS) · 4) la marca passa a «HB» · 5) últim recurs, el cercador baixa del seu mínim.
+// El cercador ha de poder mostrar «Cercant a Wikidata…» en una línia (180px mesurats), per això
+// és l'últim que es toca.
 //
-// Com es mesura: l'element elàstic de la topbar és el CERCADOR. Mentre tingui espai per sobre del
-// seu min-width, tot hi cap. Quan toca fons, ja no hi ha més espai per cedir → cal plegar.
-// (No es pot mesurar la distància entre l'esquerra i la dreta: amb .topbar-right en flex:1 1 auto
-// aquesta distància és sempre el `gap`, i no diu res de si hi cap.)
+// Els llindars són una FÓRMULA que no depèn del contingut de la pàgina, a propòsit: així
+// l'index i el joc es plegan a la mateixa amplada. Si cada pàgina es mesurés a si mateixa, el
+// joc (que no té cercador ni quatre botons) es quedaria desplegat molt més avall i navegar
+// d'una pàgina a l'altra faria un canvi estrany.
 // Ha de ser byte-idèntic als dos fitxers.
 (function(){
   const sec=document.querySelector('.secnav');
   const brand=sec&&sec.querySelector('.brand');
   const nav=sec&&sec.querySelector('.modeswitch');
-  const right=document.querySelector('.topbar-right');
-  if(!sec||!brand||!nav||!right)return;
-  const search=right.querySelector('.search');
-  const tanca=()=>{sec.classList.remove('open');brand.setAttribute('aria-expanded','false');};
+  const tb=document.querySelector('.topbar');
+  if(!sec||!brand||!nav||!tb)return;
+  const tanca=()=>{sec.classList.remove('open');tb.classList.remove('navopen');brand.setAttribute('aria-expanded','false');};
   function fitSecnav(){
-    sec.classList.remove('navcollapsed');tanca();   // mesura sempre en l'estat desplegat
-    let cal;
-    if(search){
-      const min=parseFloat(getComputedStyle(search).minWidth)||0;
-      cal=search.getBoundingClientRect().width<=min+1;            // el cercador ha tocat fons
-    }else{
-      cal=nav.getBoundingClientRect().right>right.getBoundingClientRect().left+1;   // sense cercador: només si es trepitgen
-    }
-    if(cal)sec.classList.add('navcollapsed');
+    const coarse=window.matchMedia('(pointer:coarse)').matches, w=window.innerWidth;
+    const plega = coarse ? w<=600 : w<=900;   // en tàctil tot ja és més compacte: aguanta més
+    const hb    = coarse ? w<=430 : w<=620;
+    sec.classList.toggle('navcollapsed',plega);
+    sec.classList.toggle('hb',plega&&hb);
+    if(!plega)tanca();
   }
   brand.addEventListener('click',e=>{
     if(!sec.classList.contains('navcollapsed'))return;   // en vista ampla la marca és text inert
     e.stopPropagation();
-    brand.setAttribute('aria-expanded',sec.classList.toggle('open')?'true':'false');
+    const obert=sec.classList.toggle('open');
+    tb.classList.toggle('navopen',obert);
+    brand.setAttribute('aria-expanded',obert?'true':'false');
   });
   document.addEventListener('click',e=>{if(!sec.contains(e.target))tanca();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')tanca();});
-  fitSecnav();
-  window.addEventListener('resize',()=>requestAnimationFrame(fitSecnav));
-  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitSecnav);   // Oswald canvia l'amplada de la marca
+  // Igual que amb floorH: en creuar el llindar de (pointer:coarse) el primer càlcul encara
+  // llegeix l'estat antic. Es reavalua al frame següent i un cop assentat.
+  let t;
+  function reavalua(){fitSecnav();requestAnimationFrame(fitSecnav);clearTimeout(t);t=setTimeout(fitSecnav,180);}
+  reavalua();
+  window.addEventListener('resize',reavalua);
+  const MQ=window.matchMedia('(pointer:coarse)');
+  if(MQ.addEventListener)MQ.addEventListener('change',reavalua);   // el llindar tàctil pot canviar sense que el resize arribi a temps
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(reavalua);   // Oswald canvia l'amplada de la marca
 })();
 // ===== fi del bloc compartit =====
 </script>
