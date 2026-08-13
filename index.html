@@ -244,6 +244,23 @@
   .newcol:hover{background:var(--surface);color:var(--text);}
   .onview .empty{color:var(--text2);font-size:13px;font-style:italic;}
 
+  /* ===== Mode «personatge unic» (?person=QID, handoff des de joc.html) ===== */
+  .personbar{display:none;align-items:center;justify-content:flex-end;gap:12px;flex:0 0 auto;padding:8px 22px;background:var(--soft);border-bottom:1px solid var(--border-strong);box-shadow:inset 3px 0 0 var(--topbar-bg);}
+  .personbar.on{display:flex;}
+  .personbar .pimg{width:38px;height:38px;flex:0 0 auto;border-radius:50%;object-fit:cover;background:var(--surface);border:1px solid var(--border);}
+  .personbar .ptxt{min-width:0;flex:0 1 auto;}   /* no estira: el grup sencer va a la dreta, no separat a les dues puntes */
+  .personbar .ptag{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--topbar-bg);}
+  .personbar .pname{font-family:'Oswald','Roboto Condensed','Arial Narrow',Arial,sans-serif;font-weight:600;font-size:17px;letter-spacing:.02em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .personbar .pdesc{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .personbar .pback{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--border-strong);background:#fff;border-radius:50%;font-size:15px;line-height:1;color:var(--text2);text-decoration:none;}
+  .personbar .pback:hover{background:var(--surface);color:var(--text);}
+  .personbar[data-state="error"]{box-shadow:inset 3px 0 0 #B23A2E;}
+  .personbar[data-state="error"] .ptag{color:#B23A2E;}
+  @media (max-width:860px){ .personbar{padding:6px 14px;gap:10px;} .personbar .pname{font-size:15px;} }
+  @media (max-width:600px){ .personbar .pdesc{display:none;} }
+  @media (max-width:430px){ .personbar .pimg{display:none;} }
+  @media (pointer:coarse){ .personbar{padding-top:5px;padding-bottom:5px;} .personbar .pimg{width:30px;height:30px;} .personbar .pname{font-size:15px;} }
+
   /* ===== Stage: the scrolling timeline canvas ===== */
   .stage{flex:1 1 auto;position:relative;min-width:0;display:flex;flex-direction:column;}
   .scroll{flex:1 1 auto;overflow:auto;position:relative;cursor:grab;user-select:none;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;}   /* pan-x pan-y: one finger scrolls natively, two fingers are left to our own pinch handler instead of the browser starting a gesture and dropping our events */
@@ -507,6 +524,8 @@
       </div>
     </div>
   </header>
+  <!-- Mode «personatge unic»: el contingut el posa el JS amb nodes/textContent, no innerHTML -->
+  <div class="personbar" id="personbar"></div>
   <div class="body">
     <aside class="sidebar">
       <section>
@@ -805,6 +824,10 @@ const hexA=(hex,a)=>{const n=parseInt(hex.slice(1),16);return `rgba(${(n>>16)&25
 const shade=(hex,f)=>{const n=parseInt(hex.slice(1),16);const r=Math.round(((n>>16)&255)*f),g=Math.round(((n>>8)&255)*f),b=Math.round((n&255)*f);return `rgb(${r},${g},${b})`;};   // darken toward black
 const mix=(hex,f)=>{const n=parseInt(hex.slice(1),16);const m=v=>Math.round(255+(v-255)*f);return `rgb(${m((n>>16)&255)},${m((n>>8)&255)},${m(n&255)})`;};   // opaque tint toward white (f=0 white … 1 full colour)
 const fmtY=y=>y<0?(-y)+' aC':''+y;
+// Escapat per als noms i descripcions que venen de Wikidata (contingut public i editable) i que
+// es pinten via innerHTML. Sense aixo, una etiqueta amb HTML s'injectaria: la cerca i les
+// col·leccions ja n'eren via, i el mode ?person= ho fa arribar des d'un parametre d'URL.
+const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const linkLabel=url=>/wikipedia\.org/.test(url)?'Wikipedia':/wikidata\.org/.test(url)?'Wikidata':'Web';   // adaptive label for the detail link
 
 // Guess categories from Wikidata itemDescription (conservative keyword matching)
@@ -1033,7 +1056,7 @@ function render(){
       const pillW=p._pillW, alive=p._alive;
       const col=barBg(p);
       const fade=alive?`<span class="fade" style="left:${pillW}px;width:${FUTURE_FADE}px;background:${col}"></span>`:'';   // future fade for the living
-      return `<div class="bar${alive?' alive':''}${state.selected===p.id?' sel':''}" data-id="${p.id}" style="left:${p._startX}px;top:${top}px;width:${pillW}px;background:${col}">${fade}<span class="lbl">${p.name}</span><button class="menu" data-menu="${p.id}" title="Opcions">⋮</button></div>`;
+      return `<div class="bar${alive?' alive':''}${state.selected===p.id?' sel':''}" data-id="${p.id}" style="left:${p._startX}px;top:${top}px;width:${pillW}px;background:${col}">${fade}<span class="lbl">${esc(p.name)}</span><button class="menu" data-menu="${p.id}" title="Opcions">⋮</button></div>`;
     }).join('');
   }else{
     barsLayer.innerHTML=`<div class="emptyState" style="top:6px">Clica una col·lecció a l\u0027esquerra o cerca un personatge — o estudia només els períodes.</div>`;
@@ -1088,7 +1111,7 @@ function renderSidebar(){
   $('#collections').innerHTML=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}<span class="cname">${c.name}</span><span class="cnt">${c.wds.length}</span>${c.url?`<a class="extlink" href="${c.url}" target="_blank" rel="noopener" title="Obre el lloc web" onclick="event.stopPropagation()">${extIco}</a>`:''}</button>`).join('')
     +`<button class="newcol" data-newcol>+ Nova col·lecció</button>`;
   const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>a.name.localeCompare(b.name,'ca'));   // always alphabetical
-  $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}" title="Centra\u0027l a la vista">${p.name}</button>${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}">⚠</button><button class="x" data-remove="${p.id}" title="Treu">×</button>`}</div>`).join(''):'<div class="empty">Cap personatge encara. Cerca\u0027n un a dalt.</div>';
+  $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}" title="Centra\u0027l a la vista">${esc(p.name)}</button>${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}">⚠</button><button class="x" data-remove="${p.id}" title="Treu">×</button>`}</div>`).join(''):'<div class="empty">Cap personatge encara. Cerca\u0027n un a dalt.</div>';
 }
 
 // ============================================================
@@ -1109,10 +1132,10 @@ function openDetail(p){
   state.selected=p.id;state.selectedEvent=null;
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   d.innerHTML=`<button class="close" id="closeDetail">×</button>
-    <h2>${p.name}</h2>
+    <h2>${esc(p.name)}</h2>
     <div class="dhead"><span class="life">${fmtY(p.birth)} – ${isAlive(p)?'actualitat':fmtY(p.death)}</span>${hasCat(p)?p.cats.map(a=>`<span class="chip"><span class="swatch" style="background:${CAT_COLORS[a]}"></span>${a}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>Sense categoria</span>`}<span class="chip era">${eraLabel(p.birth)}</span></div>
     ${p.gender?`<div class="meta">Gènere: ${p.gender}</div>`:''}
-    <div class="desc">${p.desc}</div>
+    <div class="desc">${esc(p.desc)}</div>
     ${p.wiki?`<a class="wiki" href="${p.wiki}" target="_blank" rel="noopener">🔗 ${linkLabel(p.wiki)}</a>`:''}
     <div class="actions">
       <button class="dbtn" data-act="context">Mostra context</button>
@@ -1163,7 +1186,7 @@ let searchIdx=-1, wdTerm='', wdResults=[], wdStatus='idle', wdTimer=null, wdSeq=
 const wdCache=new Map();   // cau de resultats de cerca per terme normalitzat (només memòria): repetir una cerca és instantani, sense xarxa
 const dropKnown=arr=>{const inDB=new Set(PEOPLE.map(p=>p.wd).filter(Boolean));return arr.filter(w=>!inDB.has(w.qid));};   // del cau, treu qui ja tinguem/afegit
 
-const localRow=p=>{const added=state.present.has(p.id);return `<div class="row ${added?'disabled':''}" data-add="${p.id}"><span class="swatch" style="background:${swatchBg(p)}"></span>${p.name}<span class="yr">${added?'ja afegit':p.birth+'\u2013'+(p.death==null?'':p.death)}</span></div>`;};
+const localRow=p=>{const added=state.present.has(p.id);return `<div class="row ${added?'disabled':''}" data-add="${p.id}"><span class="swatch" style="background:${swatchBg(p)}"></span>${esc(p.name)}<span class="yr">${added?'ja afegit':p.birth+'\u2013'+(p.death==null?'':p.death)}</span></div>`;};
 const wdRow=w=>`<div class="row" data-wd="${w.qid}"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${w.name}<span class="yr">${w.birth}${w.death!=null?'\u2013'+w.death:'\u2013'}</span></div>`;
 const evSearchRow=ev=>`<div class="row evrow" data-evsearch="${ev.id}"><span class="swatch" style="background:var(--eventc)"></span>${ev.name}<span class="yr">${fmtY(ev.year)}</span></div>`;
 function renderDropdown(){
@@ -1705,8 +1728,150 @@ window.addEventListener('mouseup',()=>{
 // [10] BOOT (wait for a real width before the first fit)
 // ============================================================
 function bootDefault(){if(scroll.clientWidth>0){applyMetrics();if(restoredView){pxPerYear=Math.max(fitPx(),Math.min(20,restoredView.px));render();scroll.scrollLeft=Math.min(Math.max(0,restoredView.left||0),maxScroll());}else{defaultView();}lsReady=true;saveNow();}else{requestAnimationFrame(bootDefault);}}   // re-measure here too: at parse time the viewport height can still be 0 (or mid-settle behind Safari's URL bar), which would lock in the wrong metrics
-restoreState();
-bootDefault();
+// ============================================================
+// [11] MODE «PERSONATGE UNIC» (?person=QID) — handoff des de joc.html
+// ============================================================
+// El joc mostra un personatge random de Wikidata que NO es a la BD local, escriu les seves dades
+// a localStorage['hb_view_person'] i navega a index.html?person=QID. La URL nomes porta el QID
+// (curta i compartible); les dades riques van per la cache. Si la cache no hi es o no coincideix
+// (un amic obre l'enllac al seu dispositiu), es reconsulta Wikidata pel QID.
+//
+// ⚠️ ANYS aC: les DUES APIs de Wikidata serialitzen diferent el mateix valor. Comprovat amb
+// quatre casos (Aristotil, Socrates, Cleopatra, Cesar):
+//     wbgetentities  ->  -0384  =  384 aC   (directe; NO cal conversio)
+//     SPARQL         ->  -0383  =  384 aC   (astronomic; cal restar 1 -> es el que fa wdYear)
+// Aqui fem servir wbgetentities (com el joc), per tant NO s'ha d'aplicar wdYear: seria un any
+// de mes. Mateix parser que joc.html a proposit.
+const PERSON_KEY='hb_view_person';
+const WD_ENT='https://www.wikidata.org/w/api.php?action=wbgetentities&props=labels%7Cdescriptions%7Cclaims%7Csitelinks/urls&languages=ca%7Ces%7Cen&format=json&origin=*&ids=';
+const COMMONS_FP='https://commons.wikimedia.org/wiki/Special:FilePath/';
+const pbar=$('#personbar');
+
+// La barra es construeix amb nodes i textContent: les dades venen de Wikidata i no es poden
+// interpolar a innerHTML.
+function personBar(estat,nom,descripcio,imgUrl){
+  pbar.textContent='';
+  pbar.dataset.state=estat;
+  if(imgUrl){
+    const im=document.createElement('img');
+    im.className='pimg';im.alt='';im.referrerPolicy='no-referrer';im.src=imgUrl;
+    im.addEventListener('error',()=>im.remove());       // Commons pot fallar: la barra no s'ha de trencar
+    pbar.appendChild(im);
+  }
+  const txt=document.createElement('div');txt.className='ptxt';
+  const tag=document.createElement('div');tag.className='ptag';
+  tag.textContent=estat==='error'?'No s’ha pogut carregar':'Personatge del dia';
+  const nm=document.createElement('div');nm.className='pname';nm.textContent=nom;
+  txt.appendChild(tag);txt.appendChild(nm);
+  if(descripcio){const de=document.createElement('div');de.className='pdesc';de.textContent=descripcio;txt.appendChild(de);}
+  pbar.appendChild(txt);
+  // Nomes la ✕, sense text (decisio d'en Bernat). La barra ja diu en quin mode estas, i qualsevol
+  // text hi sobrava: «Veure tot el cronograma» es confonia amb «Vista global» de la topbar, que si
+  // que enquadra. El que fa: treu el ?person= de la URL, i aixo torna la linia de temps desada.
+  const back=document.createElement('a');
+  back.className='pback';back.href='index.html';back.textContent='✕';
+  back.title='Tanca el personatge i torna a la teva linia de temps';
+  back.setAttribute('aria-label','Tanca el personatge i torna a la teva linia de temps');
+  pbar.appendChild(back);
+  pbar.classList.add('on');
+  scheduleSettle();   // la barra canvia l'alcada del canvas: floorH s'ha de recalcular
+}
+
+const pYear=t=>{const m=/^([+-])0*(\d+)-/.exec(String(t||''));if(!m)return null;const y=parseInt(m[2],10);return m[1]==='-'?-y:y;};
+const pLbl=o=>o?((o.ca||o.es||o.en||{}).value||null):null;
+
+function personFromEntity(e){
+  const cl=e.claims||{};
+  const claim=p=>cl[p]&&cl[p][0]&&cl[p][0].mainsnak&&cl[p][0].mainsnak.datavalue;
+  const b=claim('P569'), d=claim('P570'), im=claim('P18');
+  const birth=b?pYear(b.value&&b.value.time):null;
+  if(birth==null)return null;                       // sense naixement no es pot situar a la linia
+  const sl=e.sitelinks||{};
+  const art=(sl.cawiki&&sl.cawiki.url)||(sl.eswiki&&sl.eswiki.url)||(sl.enwiki&&sl.enwiki.url)||('https://www.wikidata.org/wiki/'+e.id);
+  return {qid:e.id,name:pLbl(e.labels)||e.id,desc:pLbl(e.descriptions)||'',
+    birth,death:d?pYear(d.value&&d.value.time):null,
+    img:im?COMMONS_FP+encodeURIComponent(String(im.value).replace(/ /g,'_'))+'?width=500':null,wiki:art};
+}
+
+function personFromCache(qid){
+  let d=null;try{d=JSON.parse(localStorage.getItem(PERSON_KEY)||'null');}catch(e){d=null;}
+  if(!d||d.qid!==qid||typeof d.birth!=='number')return null;
+  return {qid:d.qid,name:String(d.name||qid),desc:String(d.desc||''),birth:d.birth,
+    death:(typeof d.death==='number')?d.death:null,img:d.img||null,
+    wiki:'https://www.wikidata.org/wiki/'+qid};
+}
+
+function fetchPerson(qid){
+  const ac=('AbortController' in window)?new AbortController():null;
+  const to=setTimeout(()=>{if(ac)ac.abort();},9000);
+  return fetch(WD_ENT+encodeURIComponent(qid),ac?{signal:ac.signal}:undefined)
+    .then(r=>r.ok?r.json():Promise.reject(new Error('http')))
+    .then(j=>{
+      const e=j&&j.entities&&j.entities[qid];
+      if(!e||e.missing!==undefined)return null;
+      return personFromEntity(e);
+    })
+    .finally(()=>clearTimeout(to));
+}
+
+// Pinta el cronograma amb NOMES aquest personatge. No es toca localStorage en cap moment
+// (lsReady es queda a false), aixi la linia de temps que tinguis desada sobreviu intacta i
+// «Veure tot el cronograma» la recupera tal com estava.
+function mostraPersonatge(p){
+  const id='wd_'+p.qid;
+  if(!PEOPLE.some(x=>x.id===id)){
+    PEOPLE.push({id,wd:p.qid,name:p.name,birth:p.birth,death:p.death,cats:guessCats(p.desc),
+      gender:'',wiki:p.wiki,desc:p.desc||'',_session:true,_ts:Date.now()});
+  }
+  state.pinned=new Set([id]);
+  state.collections=new Set();
+  state.marcs=new Set();          // vista neta: nomes eres + events + el personatge
+  state.focus=null;state.selected=null;state.selectedEvent=null;
+  recomputePresent();
+  applyMetrics();render();
+  // fitToPresent() divideix per l'amplada visible: si el canvas encara no en te, l'enquadrament
+  // surt malament. bootDefault() ja espera amb rAF per aquest motiu; aqui cal fer el mateix, i
+  // tornar-hi un cop assentat el layout (la barra de mode acaba de canviar l'alcada).
+  enquadra();
+  personBar('ok',p.name,p.desc||'',p.img);
+  requestAnimationFrame(enquadra);
+}
+
+// Vista inicial en mode personatge. NO es pot cridar bootDefault(): posa lsReady=true i crida
+// saveNow(), o sigui que desaria una vista buida a sobre de la linia de temps de l'usuari.
+function vistaBuida(){
+  if(scroll.clientWidth>0){applyMetrics();defaultView();}
+  else requestAnimationFrame(vistaBuida);
+}
+function enquadra(){
+  if(scroll.clientWidth>0){applyMetrics();render();fitToPresent();}
+  else requestAnimationFrame(enquadra);
+}
+function bootPersonMode(qid){
+  if(!/^Q\d+$/.test(qid)){        // QID invalid: no el reconsultem ni el posem en cap URL
+    vistaBuida();
+    personBar('error','Identificador no valid','L’enllac no porta un QID de Wikidata correcte.',null);
+    return;
+  }
+  const cached=personFromCache(qid);
+  if(cached){mostraPersonatge(cached);return;}
+  vistaBuida();                                       // pinta el cronograma mentre resol
+  personBar('loading','Carregant…','Consultant Wikidata…',null);
+  fetchPerson(qid).then(p=>{
+    if(p)mostraPersonatge(p);
+    else personBar('error','Personatge no trobat','Wikidata no retorna cap entitat per a '+qid+'.',null);
+  }).catch(()=>{
+    personBar('error','Sense connexio','No s’ha pogut consultar Wikidata i no hi ha copia local d’aquest personatge.',null);
+  });
+}
+
+const PERSON_QID=(new URLSearchParams(location.search)).get('person');
+if(PERSON_QID){
+  bootPersonMode(PERSON_QID);     // lsReady es queda a false: no s'escriu res a localStorage
+}else{
+  restoreState();
+  bootDefault();
+}
 // floorH (el "terra" on s'ancoren l'any de l'event, la linia d'avui i la guia) es calcula DINS de
 // render(), a partir de scroll.clientHeight. Si l'alcada del viewport canvia i no es torna a
 // renderitzar, l'any de l'event queda surant a mig canvas. Passava en creuar el llindar de

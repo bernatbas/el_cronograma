@@ -107,6 +107,44 @@ El motor assigna a cada esdeveniment una **fila permanent** (0/1) i un **llindar
 - **Cost / escala:** el precàlcul és **O(n²)** (parelles dins de cada fila). Amb desenes o centenars d'events és instantani. Només si algun dia arribem a **milers** valdrà la pena passar a càlcul incremental o cachejar el resultat.
 - **On connectar-hi la font futura:** quan els events vinguin de la db/backend o d'una cerca, el flux és carregar-los → fusionar amb `EVENTS` → cridar el precàlcul → render. Punt d'extensió ja previst.
 
+## 5.2 Wikidata: dues APIs, i el ball dels anys aC
+
+**No és una tasca, és un criteri a tenir en compte cada cop que es toqui Wikidata.**
+
+Les dues APIs de Wikidata **serialitzen els anys aC diferent**: el mateix valor surt amb un any de
+diferència. Comprovat amb quatre casos:
+
+| Personatge | `wbgetentities` | SPARQL | Real |
+|---|---|---|---|
+| Aristòtil | `-0384` | `-0383` | 384 aC |
+| Sòcrates | `-0470` | `-0469` | 470 aC |
+| Cleopatra | `-0069` | `-0068` | 69 aC |
+| Juli Cèsar | `-0100` | `-0099` | 100 aC |
+
+No és un error de Wikidata, són dues feines:
+
+- **`wbgetentities`** torna el **model natiu** de Wikidata (sense any zero: el signe va sobre l'any
+  històric). És «dona'm aquests ítems»: barata i estable, però no pot filtrar ni ordenar.
+- **SPARQL** ha de tornar **tipus XSD** perquè el motor hi pugui comparar i ordenar, i l'ISO 8601
+  **sí que té any zero** i numeració astronòmica. És l'única que permet cercar de debò (filtrar,
+  ordenar, `LIMIT`), a canvi de límits de servei i més fragilitat.
+
+Per això **no té sentit «fer servir sempre la mateixa»**: si es deixa SPARQL es perd la cerca, i
+si es deixa `wbgetentities` es paga el servei de consultes per anar a buscar IDs ja coneguts.
+
+**Criteris:**
+
+- **Cada parser d'anys ha de dir de quina API ve el valor.** Avui `wdYear()` resta 1 (correcte per
+  a SPARQL) i el parser del mode `?person=` no resta res (correcte per a `wbgetentities`). **Tots
+  dos estan bé.** ⚠️ És exactament la mena de cosa que algú «unifica» per no duplicar codi i
+  desplaça tots els anys aC un any. Si algun dia es toca, el que cal és **una sola frontera de
+  conversió** amb la font explícita, no un sol parser.
+- **Fer servir SPARQL només per al que només ell pot fer.** Resoldre Q-ids coneguts no ho és: les
+  col·leccions ho fan amb un `VALUES ?item { wd:Q… }`, que és una cerca per ID disfressada de
+  consulta i amb `wbgetentities` aniria més ràpid i cauria menys.
+
+---
+
 ---
 
 ## 6. Esquema de dades
