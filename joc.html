@@ -133,6 +133,26 @@
   .badge{display:inline-block;background:#F7E5E0;color:#B23A2E;font-size:12px;font-weight:600;padding:5px 12px;border-radius:var(--r-pill);letter-spacing:.02em;}
   .err{background:#F7E5E0;color:#B23A2E;padding:16px;border-radius:var(--r-card);line-height:1.5;}
   .soon{align-self:flex-start;margin-top:2px;background:var(--surface);color:var(--text2);font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);}
+  /* --- Personatge del dia --- */
+  .pwrap{max-width:560px;margin:0 auto;}
+  .ploading,.perror{text-align:center;color:var(--text2);padding:44px 16px;font-size:15px;line-height:1.6;}
+  .pspin{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--topbar-bg);border-radius:50%;animation:pspin .8s linear infinite;margin:0 auto 14px;}
+  @keyframes pspin{to{transform:rotate(360deg);}}
+  .pcard{background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;box-shadow:0 8px 22px rgba(40,44,60,.12);}
+  .pimg{width:100%;height:300px;object-fit:cover;background:var(--surface);display:block;}
+  .pimg.ph{display:flex;align-items:center;justify-content:center;font-size:66px;color:var(--border-strong);}
+  .pbody{padding:20px;}
+  .pname{font-family:'Oswald',sans-serif;font-size:26px;font-weight:600;line-height:1.15;margin:0 0 4px;}
+  .pdesc{color:var(--text2);font-size:15px;line-height:1.5;margin:0 0 14px;}
+  .pchips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
+  .pchip{background:#F7E5E0;color:#B23A2E;font-size:13px;font-weight:600;padding:4px 11px;border-radius:var(--r-pill);}
+  .pchip.yr{background:var(--surface);color:var(--text);}
+  .pacts{display:flex;flex-wrap:wrap;gap:10px;}
+  .pbtn{flex:1 1 140px;display:inline-flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;padding:11px 14px;border-radius:var(--r-card);border:1px solid var(--border-strong);background:var(--canvas);color:var(--text);transition:transform .12s,box-shadow .12s,border-color .12s,color .12s;}
+  .pbtn:hover{transform:translateY(-1px);border-color:var(--topbar-bg);color:var(--topbar-bg);}
+  .pbtn.fav.on{background:#F7E5E0;border-color:var(--topbar-bg);color:#B23A2E;}
+  .palbum{text-align:center;color:var(--text2);font-size:13px;margin-top:16px;}
+  .pretry{margin-top:14px;font:inherit;font-weight:600;cursor:pointer;padding:9px 18px;border-radius:var(--r-pill);border:1px solid var(--border-strong);background:var(--canvas);color:var(--text);}
 
   /* ===== Joc: «Abans o després?» ===== */
   .game{max-width:560px;margin:0 auto;}
@@ -165,18 +185,28 @@
   .choice:disabled{opacity:.5;cursor:default;transform:none;box-shadow:none;color:var(--text);}
   .choice .big{display:block;font-size:30px;line-height:1;margin-bottom:4px;color:var(--topbar-bg);font-family:'Oswald','Roboto Condensed',Arial,sans-serif;transition:transform .1s;}
   .choice:hover .big{transform:scale(1.12);}
-  .pass{display:flex;align-items:center;justify-content:center;padding:0 16px;border-radius:var(--r-card);border:1.5px solid var(--border-strong);background:var(--canvas);color:var(--text);font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 3px 0 #E7C3B8;transition:transform .1s,box-shadow .1s,border-color .1s,color .1s;}
-  .pass:hover:not(:disabled){transform:translateY(-2px);border-color:var(--topbar-bg);color:var(--topbar-bg);box-shadow:0 6px 14px rgba(184,80,60,.22);}
-  .pass:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #E7C3B8;}
-  .pass:disabled{opacity:.5;cursor:default;transform:none;box-shadow:none;}
+  .pass{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 16px;border-radius:var(--r-card);border:2px dashed #C79A3A;background:linear-gradient(180deg,#FFF9EC,#FBEFCF);color:#8A6A1E;font:inherit;font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;white-space:nowrap;box-shadow:0 3px 0 #E6D3A0;transition:transform .1s,box-shadow .1s,border-color .1s,color .1s;}
+  .pass .jk{font-size:24px;line-height:1;text-transform:none;}
+  .pass .jt{font-size:10px;}
+  .pass .jn{position:absolute;top:-8px;right:-8px;min-width:20px;height:20px;line-height:20px;padding:0 5px;border-radius:999px;background:#C79A3A;color:#fff;font-size:12px;font-weight:800;box-shadow:0 1px 3px rgba(0,0,0,.25);}
+  .pass:hover:not(:disabled){transform:translateY(-2px);border-color:#B4841F;color:#6E5416;box-shadow:0 6px 14px rgba(199,154,58,.3);}
+  .pass:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #E6D3A0;}
+  .pass:disabled{opacity:1;filter:grayscale(1);background:#EAEAEA;border-color:#C6C6C6;border-style:solid;color:#9A9A9A;cursor:default;transform:none;box-shadow:none;}
+  .pass:disabled .jt{text-decoration:line-through;}
+  .pass:disabled .jn{background:#A9A9A9;}
   @media (prefers-reduced-motion:reduce){
     .itemcard.enter,.itemcard .yr.reveal,.gscore .n.pop,.flash-ok,.flash-no{animation:none!important;}
     .choice,.choice .big,.gamecard{transition:none!important;}
   }
-  .flash-ok{animation:okpulse .55s;}
-  .flash-no{animation:nopulse .55s;}
-  @keyframes okpulse{0%{box-shadow:0 0 0 0 rgba(45,150,90,.55);}100%{box-shadow:0 0 0 14px rgba(45,150,90,0);}}
-  @keyframes nopulse{0%{box-shadow:0 0 0 0 rgba(178,58,46,.55);}100%{box-shadow:0 0 0 14px rgba(178,58,46,0);}}
+  .itemcard.flash-ok{border:3px solid #2E9B5B;background:#E9F7EE;box-shadow:0 8px 24px rgba(45,150,90,.30);animation:okpulse .5s;}
+  .itemcard.flash-no{border:3px solid #C43A2C;background:#FBECEA;box-shadow:0 8px 24px rgba(196,58,44,.30);animation:nopulse .5s;}
+  .itemcard.flash-ok .yr{color:#238049;}
+  .itemcard.flash-no .yr{color:#B4321F;}
+  .itemcard.flash-ok::after,.itemcard.flash-no::after{position:absolute;top:-16px;right:-14px;width:42px;height:42px;line-height:42px;text-align:center;border-radius:999px;font-size:23px;font-weight:800;color:#fff;box-shadow:0 3px 9px rgba(0,0,0,.28);z-index:3;}
+  .itemcard.flash-ok::after{content:"\2713";background:#2E9B5B;}
+  .itemcard.flash-no::after{content:"\2717";background:#C43A2C;}
+  @keyframes okpulse{0%{transform:scale(.96);box-shadow:0 0 0 0 rgba(45,150,90,.6);}55%{transform:scale(1.03);}100%{transform:scale(1);box-shadow:0 8px 24px rgba(45,150,90,.30);}}
+  @keyframes nopulse{0%{transform:translateX(0);}15%{transform:translateX(-7px);}30%{transform:translateX(6px);}45%{transform:translateX(-5px);}60%{transform:translateX(4px);}75%{transform:translateX(-2px);}100%{transform:translateX(0);}}
   .gameover{background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-card);padding:32px 24px;text-align:center;max-width:560px;margin:0 auto;}
   .gameover h2{font-family:'Oswald',Arial,sans-serif;font-weight:600;margin:0 0 8px;font-size:24px;letter-spacing:.03em;}
   .gameover .stats{display:flex;justify-content:center;gap:34px;margin:16px 0 20px;}
@@ -222,6 +252,32 @@
     .choice{padding:20px 14px;font-size:17px;}
     .choice .big{font-size:28px;}
   }
+  /* === Layout HORITZONTAL per a MOBIL tactil (repensat en columnes) ===
+     Nomes s'activa en pantalles tactils, en horitzontal i amb alcada petita
+     (mobils; les tauletes en horitzontal tenen prou espai i es queden amb el
+     layout normal). El titol va a dalt, la carta fixa a l'esquerra, la nova al
+     mig i els botons apilats a la dreta (zona del polze dret). */
+  @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
+    main{padding:10px 14px 14px;}
+    .game{max-width:none;display:grid;grid-template-columns:1fr 1fr minmax(120px,.8fr);grid-template-areas:"top top top" "cards cards btns";column-gap:14px;row-gap:6px;align-items:stretch;}
+    .gtop{grid-area:top;margin-bottom:2px;}
+    .cards2{grid-area:cards;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;}
+    .vs{align-self:center;}
+    .itemcard{padding:10px 12px 9px;}
+    .itemcard .meta{font-size:11px;min-height:14px;margin-bottom:2px;}
+    .itemcard .meta.ev{font-size:13px;}
+    .itemcard .nm{font-size:15px;margin-top:2px;}
+    .itemcard .yr{font-size:25px;min-height:29px;margin-top:5px;}
+    .choices{grid-area:btns;grid-template-columns:1fr;grid-auto-rows:auto;gap:8px;margin-top:0;align-content:center;}
+    .choices .choice[data-a="abans"]{order:1;}
+    .choices .choice[data-a="despres"]{order:2;}
+    .choices .pass{order:3;}
+    .choice{padding:12px 12px;font-size:15px;}
+    .choice .big{display:inline;font-size:20px;margin:0 6px 0 0;}
+    .pass{flex-direction:row;gap:8px;padding:8px 12px;}
+    .pass .jk{font-size:20px;}
+    .gamefoot{display:none;}
+  }
 </style>
 </head>
 <body>
@@ -238,7 +294,7 @@
   </div>
   <div class="topbar-right">
     <span id="datainfo" class="datainfo"></span>
-    <button id="back" class="btn" hidden>← Menú</button>
+    <button id="back" class="btn" hidden style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.4 9 3.4l6 5"/><path d="M4.6 7.8V14.4h8.8V7.8"/></svg><span>Inici</span></button>
   </div>
 </header>
 <main id="app"></main>
@@ -247,6 +303,9 @@
      index.html, feta per facilitar el testeig local. Quan existeixi la DB externa,
      substituir aquest <script> pel carregador real (fetch a la DB). Veure ESTRATEGIA_JOC.md. -->
 <script src="data.js"></script>
+<!-- Índex d'IDs de Wikidata per al joc «Personatge del dia». Generar amb gen_personatges.py.
+     De moment pot ser una MOSTRA de poques entrades per validar el flux. Veure ESTRATEGIA_JOC.md. -->
+<script src="personatges.js"></script>
 <script>
 (function(){
   "use strict";
@@ -254,6 +313,7 @@
   const GAMES=[
     {id:'ordena',       ic:'🕰️', t:'Ordena la línia',        d:'Posa 4–5 fets o personatges en el seu ordre cronològic correcte.'},
     {id:'abansdespres', ic:'⚖️', t:'Abans o després?',        d:'Encadena encerts dient si cada item és abans o després. Un repte nou cada dia.'},
+    {id:'personatgedia',ic:'🎭', t:'Personatge del dia',      d:'Cada dia, una persona real de la història per descobrir i aprendre.', discover:true},
     {id:'personatge',   ic:'🕵️', t:'Endevina el personatge',  d:'Pistes progressives (era, categoria, descripció) fins encertar-ho.'},
     {id:'contemporanis',ic:'🤝', t:'Contemporanis?',          d:'Van coincidir en vida aquestes dues persones? Sí o no.'}
   ];
@@ -358,7 +418,8 @@
     const AD_CONFIG = {
       refYear: 2026,   // "present" per calcular l'edat de cada ítem
       gHardMax: 0.55,  // passos "gruix": g <= gHardMax (difícil/mig)
-      gEasyMin: 0.90,  // "respirs": g >= gEasyMin (clarament fàcil)
+      gEasyMin: 0.70,  // "respirs": banda MÍNIMA de g (respir moderat)
+      gEasyMax: 1.25,  // "respirs": banda MÀXIMA de g (evita salts trivials/obvis)
       pRespir: 0.22,   // probabilitat (sembrada) que un pas sigui respir (~1 de cada 4-5)
       warmup: 2        // primers passos forçats a respir (escalfament suau)
     };
@@ -381,8 +442,8 @@
         const wantEasy = (step<=cfg.warmup) || (rng() < cfg.pRespir);
         let band;
         if(wantEasy){
-          band = scored.filter(o=>o.g>=cfg.gEasyMin);
-          if(!band.length) band = scored.slice().sort((a,b)=>b.g-a.g).slice(0, Math.max(1,Math.ceil(scored.length*0.2)));
+          band = scored.filter(o=>o.g>=cfg.gEasyMin && o.g<=cfg.gEasyMax);
+          if(!band.length){ const mid=(cfg.gEasyMin+cfg.gEasyMax)/2; band = scored.slice().sort((a,b)=>Math.abs(a.g-mid)-Math.abs(b.g-mid)).slice(0, Math.max(1,Math.ceil(scored.length*0.2))); }
         } else {
           band = scored.filter(o=>o.g<=cfg.gHardMax);
           if(!band.length) band = scored.slice().sort((a,b)=>a.g-b.g).slice(0, Math.max(1,Math.ceil(scored.length*0.2)));
@@ -415,7 +476,7 @@
           </div>
           <div class="choices">
             <button class="choice" data-a="abans"><span class="big">←</span>Abans</button>
-            <button class="pass" data-x="skip"${skipUsed?' disabled':''}>⏭️ Passa (1)</button>
+            <button class="pass" data-x="skip"${skipUsed?' disabled':''} title="${skipUsed?'Comodí ja gastat en aquesta partida':'Comodí: passa aquesta parella (un cop per partida)'}"><span class="jk">🃏</span><span class="jt">${skipUsed?'Gastat':'Comodí'}</span><span class="jn">${skipUsed?0:1}</span></button>
             <button class="choice" data-a="despres"><span class="big">→</span>Després</button>
           </div>
           <div class="gamefoot">📅 Repte diari · ${ddmm(todayStr())}</div>
@@ -521,7 +582,146 @@
     };
   })();
 
-  const MODULES={ abansdespres: AbansDespres };
+  // ===== Mòdul: «Personatge del dia» — DESCOBRIMENT (determinista per data, dades en viu de Wikidata) =====
+  const PersonatgeDia = (function(){
+    const CACHE_KEY='hb_personatge_cache'; // { date, person }
+    const ALBUM_KEY='hb_personatge_album'; // [ {qid,name,birth,death,img,desc,date} ]
+    const FAV_KEY='hb_favorits';           // stub; enllaçarà amb Favorits quan existeixin
+    const VIEW_KEY='hb_view_person';       // handoff cap al cronograma (index.html?person=QID)
+    const WD_API='https://www.wikidata.org/w/api.php';
+    const COMMONS='https://commons.wikimedia.org/wiki/Special:FilePath/';
+    const MAX_TRIES=5; // intents deterministes (base, base+1, …) si algun QID de la llista fos invàlid/esborrat
+    let root=null, alive=false, person=null;
+
+    function readLS(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(_){ return null; } }
+    function writeLS(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(_){} }
+    function el(tag,cls,txt){ const e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
+
+    // --- Wikidata ---
+    async function wd(params){
+      params.format='json'; params.origin='*';
+      const qs=Object.keys(params).map(function(k){ return k+'='+encodeURIComponent(params[k]); }).join('&');
+      const r=await fetch(WD_API+'?'+qs);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r.json();
+    }
+    function hasItem(e,prop,qid){ const c=e.claims&&e.claims[prop]; if(!c) return false; return c.some(function(s){ const v=s.mainsnak&&s.mainsnak.datavalue&&s.mainsnak.datavalue.value; return v&&v.id===qid; }); }
+    function yearFrom(e,prop){ const c=e.claims&&e.claims[prop]; if(!c||!c.length) return null; const dv=c[0].mainsnak&&c[0].mainsnak.datavalue&&c[0].mainsnak.datavalue.value; const t=dv&&dv.time; if(!t) return null; const m=t.match(/^([+-])0*(\d+)-/); if(!m) return null; const y=parseInt(m[2],10); return m[1]==='-'?-y:y; }
+    function imgUrl(e){ const c=e.claims&&e.claims.P18; if(!c||!c.length) return null; const dv=c[0].mainsnak&&c[0].mainsnak.datavalue; if(!dv) return null; return COMMONS+encodeURIComponent(String(dv.value).replace(/ /g,'_'))+'?width=500'; }
+    function itemQids(e,prop,max){ const c=e.claims&&e.claims[prop]; if(!c) return []; const out=[]; for(let i=0;i<c.length;i++){ const v=c[i].mainsnak&&c[i].mainsnak.datavalue&&c[i].mainsnak.datavalue.value; if(v&&v.id){ out.push(v.id); if(out.length>=max) break; } } return out; }
+    function lbl(o){ return o?((o.ca||o.es||o.en||{}).value||null):null; }
+    function isValid(e){
+      if(!e || e.missing!==undefined) return false;
+      if(!hasItem(e,'P31','Q5')) return false;                          // ha de ser humà
+      if(!(e.claims&&e.claims.P569&&e.claims.P569.length)) return false; // ha de tenir naixement
+      if(!lbl(e.labels)) return false;                                  // etiqueta en ca/es/en
+      const s=e.sitelinks||{};                                          // entrada a Viquipèdia en ca I es I en (AND dels tres)
+      if(!(s.cawiki && s.eswiki && s.enwiki)) return false;
+      return true;
+    }
+    async function labelsFor(qids){
+      if(!qids.length) return {};
+      const data=await wd({action:'wbgetentities',ids:qids.join('|'),props:'labels',languages:'ca|es|en'});
+      const map={}, ents=data.entities||{};
+      Object.keys(ents).forEach(function(q){ map[q]=lbl(ents[q].labels); });
+      return map;
+    }
+    async function build(e,qid){
+      const occQ=itemQids(e,'P106',3), couQ=itemQids(e,'P27',2);
+      const names=await labelsFor(occQ.concat(couQ));
+      const s=e.sitelinks||{}, site=s.cawiki||s.eswiki||s.enwiki||{};
+      return {
+        qid:qid,
+        name:lbl(e.labels)||qid,
+        desc:lbl(e.descriptions)||'',
+        birth:yearFrom(e,'P569'),
+        death:yearFrom(e,'P570'),
+        img:imgUrl(e),
+        occ:occQ.map(function(q){ return names[q]; }).filter(Boolean),
+        country:couQ.map(function(q){ return names[q]; }).filter(Boolean),
+        wiki:site.url||''
+      };
+    }
+    // Selecció determinista des de l'índex offline (personatges.js → window.HB_PERSONATGES).
+    // La llavor del dia tria una posició de la llista i es baixa la fitxa d'aquell QID de Wikidata.
+    // Igual per a tothom durant 24h. La llista es genera amb gen_personatges.py (humans amb
+    // data de naixement i article a la Viquipèdia en català I castellà I anglès (AND)). Només IDs, res més.
+    function pool(){ return (typeof window!=='undefined' && Array.isArray(window.HB_PERSONATGES)) ? window.HB_PERSONATGES : []; }
+    async function fetchPerson(qid){
+      const data=await wd({action:'wbgetentities',ids:qid,props:'labels|descriptions|claims|sitelinks/urls',languages:'ca|es|en',sitefilter:'cawiki|eswiki|enwiki'});
+      const e=(data.entities||{})[qid];
+      if(!isValid(e)) return null;
+      return build(e,qid);
+    }
+    async function pickDaily(ds){
+      const cache=readLS(CACHE_KEY);
+      if(cache && cache.date===ds && cache.person) return cache.person;
+      const list=pool();
+      if(!list.length){ const err=new Error('LIST_MISSING'); err.code='LIST_MISSING'; throw err; }
+      const rng=mulberry32(seedFromStr('pd:'+ds));
+      const base=Math.floor(rng()*list.length);
+      for(let k=0;k<MAX_TRIES;k++){
+        const idx=(base+k)%list.length;
+        const qid='Q'+list[idx];
+        const p=await fetchPerson(qid);
+        if(p){ writeLS(CACHE_KEY,{date:ds,person:p}); return p; }
+      }
+      return null;
+    }
+
+    // --- Àlbum + favorits (localStorage) ---
+    function addToAlbum(p){ const a=readLS(ALBUM_KEY)||[]; if(!a.some(function(x){ return x.qid===p.qid; })){ a.push({qid:p.qid,name:p.name,birth:p.birth,death:p.death,img:p.img,desc:p.desc,date:todayStr()}); writeLS(ALBUM_KEY,a); } }
+    function favs(){ return readLS(FAV_KEY)||[]; }
+    function isFav(qid){ return favs().some(function(x){ return x.qid===qid; }); }
+    function toggleFav(p){ let a=favs(); if(a.some(function(x){ return x.qid===p.qid; })) a=a.filter(function(x){ return x.qid!==p.qid; }); else a.push({qid:p.qid,name:p.name,birth:p.birth,death:p.death,img:p.img,desc:p.desc}); writeLS(FAV_KEY,a); return isFav(p.qid); }
+    function viewInCronograma(p){ writeLS(VIEW_KEY,{qid:p.qid,name:p.name,birth:p.birth,death:p.death,img:p.img,desc:p.desc}); location.href='index.html?person='+encodeURIComponent(p.qid); }
+
+    // --- Render ---
+    function renderLoading(){ root.innerHTML=''; const w=el('div','pwrap'), l=el('div','ploading'); l.appendChild(el('div','pspin')); l.appendChild(document.createTextNode('Cercant a Wikidata…')); w.appendChild(l); root.appendChild(w); }
+    function renderError(msg){ root.innerHTML=''; const w=el('div','pwrap'), p=el('div','perror'); p.appendChild(el('div',null,'⚠️')); p.appendChild(el('div',null,msg)); const b=el('button','pretry','Torna-ho a provar'); b.addEventListener('click',start); p.appendChild(b); w.appendChild(p); root.appendChild(w); }
+    function renderPerson(p){
+      root.innerHTML='';
+      const w=el('div','pwrap'), card=el('div','pcard');
+      if(p.img){ const im=el('img','pimg'); im.src=p.img; im.alt=p.name; im.addEventListener('error',function(){ im.style.display='none'; }); card.appendChild(im); }
+      else { card.appendChild(el('div','pimg ph','👤')); }
+      const body=el('div','pbody');
+      body.appendChild(el('h2','pname',p.name));
+      body.appendChild(el('p','pdesc',p.desc||'Sense descripció disponible.'));
+      const chips=el('div','pchips');
+      p.occ.forEach(function(o){ chips.appendChild(el('span','pchip',o)); });
+      p.country.forEach(function(c){ chips.appendChild(el('span','pchip',c)); });
+      const life=(p.birth!=null?fmtYear(p.birth):'?')+' – '+(p.death!=null?fmtYear(p.death):'…');
+      chips.appendChild(el('span','pchip yr',life));
+      body.appendChild(chips);
+      const acts=el('div','pacts');
+      const fav=isFav(p.qid);
+      const fb=el('button','pbtn fav'+(fav?' on':''), fav?'★ Als favorits':'☆ Afegeix a favorits');
+      fb.addEventListener('click',function(){ const on=toggleFav(p); fb.classList.toggle('on',on); fb.textContent=on?'★ Als favorits':'☆ Afegeix a favorits'; });
+      acts.appendChild(fb);
+      const cb=el('button','pbtn','📅 Veure al cronograma'); cb.addEventListener('click',function(){ viewInCronograma(p); }); acts.appendChild(cb);
+      if(p.wiki){ const a=el('a','pbtn','🔗 Llegeix-ne més'); a.href=p.wiki; a.target='_blank'; a.rel='noopener'; acts.appendChild(a); }
+      body.appendChild(acts); card.appendChild(body); w.appendChild(card);
+      const album=readLS(ALBUM_KEY)||[];
+      w.appendChild(el('div','palbum','🗂️ Has descobert '+album.length+' '+(album.length===1?'personatge':'personatges')));
+      root.appendChild(w);
+    }
+
+    function start(){
+      renderLoading();
+      pickDaily(todayStr()).then(function(p){ if(!alive) return; if(!p){ renderError('No hem trobat cap personatge avui. Torna-ho a provar.'); return; } person=p; addToAlbum(p); renderPerson(p); })
+      .catch(function(err){ if(!alive) return; if(err&&err.code==='LIST_MISSING'){ renderError('Falta la llista de personatges (personatges.js). Cal generar-la amb gen_personatges.py.'); } else { renderError('No s\'ha pogut connectar amb Wikidata. Comprova la connexió i torna-ho a provar.'); } });
+    }
+    // Precompute en background: prepara el personatge del dia (omple la caché) en carregar la pàgina.
+    function precompute(){ try{ pickDaily(todayStr()).catch(function(){}); }catch(_){} }
+
+    return {
+      mount(container){ root=container; alive=true; start(); },
+      unmount(){ alive=false; root=null; },
+      precompute:precompute
+    };
+  })();
+
+  const MODULES={ abansdespres: AbansDespres, personatgedia: PersonatgeDia };
 
   function renderMenu(){
     back.hidden=true;
@@ -531,7 +731,7 @@
     }
     let cards='';
     GAMES.forEach(g=>{
-      const badge = MODULES[g.id] ? '<span class="tagd">📅 Repte diari</span>' : '<span class="soon">🚧 Pròximament</span>';
+      const badge = MODULES[g.id] ? (g.discover ? '<span class="tagd">🌟 Descobreix</span>' : '<span class="tagd">📅 Repte diari</span>') : '<span class="soon">🚧 Pròximament</span>';
       cards+=`<button class="gamecard" data-id="${g.id}"><span class="ic">${g.ic}</span><span class="t">${g.t}</span><span class="d">${g.d}</span>${badge}</button>`;
     });
     app.innerHTML=`<p class="lead">Cada joc és un <b>repte diari</b>: un intent al dia, igual per a tothom.</p><div class="menu">${cards}</div>`;
@@ -564,6 +764,8 @@
   back.addEventListener('click',()=>{location.hash='';});
   window.addEventListener('hashchange',router);
   router();
+  // Precompute del «Personatge del dia» en background, tan bon punt carrega la pàgina de jocs.
+  try{ if(MODULES.personatgedia && MODULES.personatgedia.precompute) MODULES.personatgedia.precompute(); }catch(_){}
 })();
 // ===== BLOC COMPARTIT (index.html / joc.html): compressió de la topbar =====
 // Escala: 1) tot sencer · 2) es plega el menú (la marca obre un desplegable) · 3) botons d'acció
