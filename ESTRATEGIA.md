@@ -194,6 +194,25 @@ s'ha fet**. (Abans vivia en un quart document, `CONTEXT.md`, que es va fusionar 
 - **Tirador d'obrir/tancar la barra** (Bernat, 2026-08-05). El botó rodó terracota encara no
   acaba d'estar bé — «algo chirria». Revisar-ne l'acabat i la integració amb la vora.
 
+### Motor d'importància per a personatges
+
+- **Calibrar la importància dels personatges**, igual que ja es fa amb els events. **Estratègia
+  TBD.** Context per quan s'ataqui:
+  - El motor de zoom semàntic (§2–§4) està implementat **només per a events**. Els personatges
+    no tenen cap tractament de nivell de detall: a zoom baix no degraden, es trepitgen.
+  - Mesurat a «Vista global» amb la col·lecció de 18 filòsofs: **les 18 de 18** etiquetes
+    desborden la seva barra (barra mitjana de 29px contra noms de 100–190px), amb un
+    desbordament màxim de **160px** i **6 col·lisions** de nom sobre nom.
+  - `PEOPLE` **no té els camps** `sitelinks` ni `imp` (només els té `EVENTS`, §6): el primer pas
+    és estendre l'esquema i baixar els `sitelinks` de Wikidata també per a les persones.
+  - ⚠️ **No és copiar el motor dels events.** Un event és un **punt** i pot degradar a mode punt;
+    una persona és un **rang** (la barra = la durada de la vida, i l'amplada no es pot tocar
+    sense mentir). El que sobra a zoom baix és **l'etiqueta**, no la barra. Cal decidir què es
+    degrada: el nom (amagar-lo i deixar la barra), la barra sencera, o agrupar per carrils.
+- **Toggle «mostra-ho tot» / «filtra per importància»**: un control que o bé deixa la vista com
+  ara (tot visible) o bé aplica la calibració de dalt. Encaixa amb la **fase 3** del full de ruta
+  (§7), que ja preveu un control d'usuari de nivell de detall.
+
 ### Dades i escala
 
 - **Poblar la BD**: més esdeveniments i marcs. És **manual** — els blocs de període no es poden
@@ -203,6 +222,18 @@ s'ha fet**. (Abans vivia en un quart document, `CONTEXT.md`, que es va fusionar 
   Lligat amb el clustering «+N» (§7 fase 2).
 - **Neteja de `localStorage`** (opt-in): podar per edat i ús via segell `_ts`, o límit dur
   (~500 persones).
+- **Script d'ingesta a la BD**: una eina per afegir **persones, events o blocs** sense editar el
+  `[1] DATA` a mà. Restriccions i paranys a tenir en compte (tots ja trobats treballant-hi):
+  - L'app és **un sol fitxer estàtic sense build**, així que l'script és una eina de
+    desenvolupament: el més senzill és que **emeti els literals JS** per enganxar a `[1] DATA`
+    (o que els insereixi al fitxer), no que l'app llegeixi res nou en temps d'execució.
+  - **Apòstrofs**: cal emetre l'apòstrof tipogràfic `’` (U+2019); un `'` literal trenca l'script.
+  - **Dates aC**: Wikidata fa servir numeració astronòmica (sense any 0). Conversió:
+    `ourYear = astroYear <= 0 ? astroYear - 1 : astroYear`.
+  - **Verificar els Q-id**: cercar pel nom retorna sorpreses (Epictet, Hume i Francis Bacon ja
+    van sortir malament). Comprovar amb `wbsearchentities` abans de donar-los per bons.
+  - Els **blocs de període no es poden cercar a Wikidata**: per a `MARCS` l'script només pot
+    ajudar amb el format, el contingut és manual.
 
 ### Neteja de codi
 
