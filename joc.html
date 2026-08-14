@@ -644,15 +644,23 @@
       if(!(s.cawiki && s.eswiki && s.enwiki)) return false;
       return true;
     }
+    // Text monolingue (p.ex. P2521 forma en femeni): prioritza ca, despres es, despres en.
+    function monolingual(claims,prop){ const c=claims&&claims[prop]; if(!c||!c.length) return null; const by={}; c.forEach(function(s){ const v=s.mainsnak&&s.mainsnak.datavalue&&s.mainsnak.datavalue.value; if(v&&v.text&&v.language){ by[v.language]=v.text; } }); return by.ca||by.es||by.en||null; }
+    // Gènere de la persona: P21 == Q6581072 (dona).
+    function isFemale(e){ const c=e.claims&&e.claims.P21; if(!c||!c.length) return false; const v=c[0].mainsnak&&c[0].mainsnak.datavalue&&c[0].mainsnak.datavalue.value; return !!(v&&v.id==='Q6581072'); }
+    // Baixa etiquetes dels items (ocupacio P106 / nacionalitat P27). Inclou P2521 (forma en femeni
+    // de l'etiqueta) per poder mostrar l'ocupacio en femeni quan la persona es dona. Si Wikidata no
+    // te forma femenina per a aquella ocupacio, es manté l'etiqueta per defecte (masculi generic).
     async function labelsFor(qids){
       if(!qids.length) return {};
-      const data=await wd({action:'wbgetentities',ids:qids.join('|'),props:'labels',languages:'ca|es|en'});
+      const data=await wd({action:'wbgetentities',ids:qids.join('|'),props:'labels|claims',languages:'ca|es|en'});
       const map={}, ents=data.entities||{};
-      Object.keys(ents).forEach(function(q){ map[q]=lbl(ents[q].labels); });
+      Object.keys(ents).forEach(function(q){ const e=ents[q]; map[q]={label:lbl(e.labels), female:monolingual(e.claims,'P2521')}; });
       return map;
     }
     async function build(e,qid){
       const occQ=itemQids(e,'P106',3), couQ=itemQids(e,'P27',2);
+      const female=isFemale(e);
       const names=await labelsFor(occQ.concat(couQ));
       const s=e.sitelinks||{}, site=s.cawiki||s.eswiki||s.enwiki||{};
       return {
@@ -662,8 +670,8 @@
         birth:yearFrom(e,'P569'),
         death:yearFrom(e,'P570'),
         img:imgUrl(e),
-        occ:occQ.map(function(q){ return names[q]; }).filter(Boolean),
-        country:couQ.map(function(q){ return names[q]; }).filter(Boolean),
+        occ:occQ.map(function(q){ const it=names[q]||{}; return (female && it.female) ? it.female : it.label; }).filter(Boolean),
+        country:couQ.map(function(q){ return (names[q]||{}).label; }).filter(Boolean),
         wiki:site.url||''
       };
     }
