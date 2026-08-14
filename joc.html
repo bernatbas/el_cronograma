@@ -311,6 +311,53 @@
     .pass .jk{font-size:20px;}
     .gamefoot{display:none;}
   }
+  /* ===== Joc: «Ordena la línia» ===== */
+  .ordwrap{max-width:560px;margin:0 auto;}
+  .ordhead{text-align:center;margin:0 0 14px;}
+  .ordhead h2{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-weight:600;letter-spacing:.03em;font-size:20px;margin:0;}
+  .ordhead .sub{color:var(--text2);font-size:12px;margin-top:3px;}
+  .ordbar{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin:0 4px 8px;}
+  .ordlist{display:flex;flex-direction:column;gap:8px;}
+  .orditem{display:flex;align-items:center;gap:12px;background:var(--canvas);border:1.5px solid var(--border-strong);border-radius:var(--r-card);padding:12px 14px;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none;box-shadow:0 2px 0 rgba(40,44,60,.05);transition:border-color .12s,box-shadow .12s,background .12s;}
+  .orditem:hover{border-color:var(--topbar-bg);}
+  .orditem:active{cursor:grabbing;}
+  .ogrip{color:var(--border-strong);font-size:18px;line-height:1;flex:0 0 auto;letter-spacing:-2px;}
+  .omain{flex:1 1 auto;min-width:0;text-align:left;}
+  .ometa{font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.02em;}
+  .onm{font-size:16px;font-weight:600;line-height:1.25;}
+  .oyr{flex:0 0 auto;min-width:66px;text-align:right;font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-size:24px;font-weight:600;color:var(--text);transform-origin:center;}
+  .oyr .q{color:var(--border-strong);}
+  .oyr.reveal{animation:yrFlip .5s ease-out;}
+  .orditem.dragging{opacity:.001;}   /* la fila original queda buida sota el ghost, però manté el lloc */
+  .ordghost{position:fixed;z-index:999;pointer-events:none;margin:0;transform:scale(1.03);box-shadow:0 14px 30px rgba(40,44,60,.28);border-color:var(--topbar-bg);}
+  .orditem.ok{border:2.5px solid #2E9B5B;background:#E9F7EE;box-shadow:0 6px 18px rgba(45,150,90,.2);animation:okpulse .5s;}
+  .orditem.no{border:2.5px solid #C43A2C;background:#FBECEA;box-shadow:0 6px 18px rgba(196,58,44,.2);animation:nopulse .5s;}
+  .orditem.rev{border-color:var(--border);}
+  .orditem.ok .oyr{color:#238049;} .orditem.no .oyr{color:#B4321F;}
+  .ordfoot{margin-top:20px;text-align:center;}
+  .ordbanner{margin-top:4px;}
+  .ordbanner .rtitle{font-family:'Oswald',Arial,sans-serif;font-size:22px;font-weight:600;margin:2px 0;}
+  .ordbanner .rtitle.perfect{color:#2E8B57;}
+  .ordbanner .streak{font-size:14px;font-weight:600;margin:6px 0 2px;}
+  .ordbanner .locknote{color:var(--text2);font-size:13px;margin:8px 0 2px;line-height:1.4;}
+  .ordbanner .countdown{color:var(--text2);font-size:13px;margin:2px 0 0;}
+  .ordbanner .countdown b{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;color:var(--text);letter-spacing:.05em;font-weight:600;font-size:15px;}
+  /* «Ordena la línia»: HORITZONTAL TACTIL = compacte perquè els 5 hi càpiguen sense scroll */
+  @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
+    .ordwrap{max-width:none;}
+    .ordhead{margin-bottom:4px;} .ordhead h2{font-size:15px;} .ordhead .sub{display:none;}
+    .ordbar{margin-bottom:4px;font-size:9px;}
+    .ordlist{gap:4px;}
+    .orditem{padding:4px 12px;gap:10px;}
+    .ogrip{font-size:14px;}
+    .onm{font-size:12.5px;line-height:1.1;} .ometa{font-size:9px;} .oyr{font-size:17px;min-width:52px;}
+    .ordfoot{margin-top:6px;}
+    .cta{padding:6px 20px;font-size:13px;}
+  }
+  /* Avís "pròximament" (toast fosc, com a index.html) */
+  .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-8px);z-index:60;display:inline-flex;align-items:center;gap:8px;max-width:calc(100vw - 32px);background:#2C2C2B;color:#fff;font-size:14px;font-weight:600;letter-spacing:.01em;padding:10px 16px;border-radius:var(--r-pill);box-shadow:0 10px 28px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;white-space:nowrap;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  @media (prefers-reduced-motion:reduce){ .toast{transition:none;} }
 </style>
 </head>
 <body>
@@ -762,7 +809,186 @@
     };
   })();
 
-  const MODULES={ abansdespres: AbansDespres, personatgedia: PersonatgeDia };
+  // ===== Mòdul: «Ordena la línia» — REPTE DIARI (determinista per data + 1 intent/dia) =====
+  const OrdenaLinia = (function(){
+    const DAILY_KEY='hb_ord_daily';    // { date, correct }
+    const STREAK_KEY='hb_ord_streak';  // { last, days } — ratxa de dies ENCERTANT (falla => 0)
+    // Mateixa mètrica de dificultat que «Abans o després?»: g = |ln(edatA/edatB)|, edat des de refYear.
+    const O = { refYear:2026, gHardMax:0.55, gMidMin:0.70, gMidMax:1.10, gEasyMin:1.20 };
+    let root=null, order=[], byKey={}, locked=false, ocdTimer=null;
+    let dragRow=null, ghost=null, grab=0;
+
+    function readLS(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(_){ return null; } }
+    function writeLS(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(_){} }
+    function ageOf(it){ return Math.max(1, O.refYear - it.year); }
+    function gap(a,b){ return Math.abs(Math.log(ageOf(a)/ageOf(b))); }
+
+    // Un ítem per persona (naixement O mort segons la llavor del dia) + esdeveniments. Determinista.
+    function dailyPool(rng){
+      const raw=buildPool();
+      const events=raw.filter(x=>x.kind==='event');
+      const byPerson={};
+      raw.filter(x=>x.kind==='person').forEach(it=>{ const pid=it.key.split(':')[1]; (byPerson[pid]=byPerson[pid]||[]).push(it); });
+      const persons=[];
+      Object.keys(byPerson).sort().forEach(pid=>{ const arr=byPerson[pid].sort((a,b)=>a.key<b.key?-1:1); persons.push(arr.length>1?arr[rng()<0.5?0:1]:arr[0]); });
+      const pool=events.concat(persons);
+      pool.sort((a,b)=>a.key<b.key?-1:(a.key>b.key?1:0));
+      return pool;
+    }
+
+    // Tria 5 amb la forma demanada: 3 difícils (a prop de l'àncora, i per tant entre ells), 1 mig, 1 fàcil (lluny).
+    // Tot des del MATEIX rng del dia => 100% determinista i igual per a tothom. Anys sempre distints.
+    function pickFive(rng){
+      const pool=dailyPool(rng).filter(x=>typeof x.year==='number');
+      if(pool.length<5) return null;
+      const usedK=new Set(), usedY=new Set();
+      const take=t=>{ usedK.add(t.key); usedY.add(t.year); return t; };
+      const anchor=take(pool[Math.floor(rng()*pool.length)]);
+      const scored=()=>pool.filter(x=>!usedK.has(x.key)&&!usedY.has(x.year)).map(x=>({x,g:gap(anchor,x)})).filter(o=>o.g>1e-9);
+      function pickBand(filterFn, fallbackSort){
+        const list=scored();
+        let band=seededShuffle(list.filter(filterFn),rng);
+        if(!band.length) band=list.slice().sort(fallbackSort);
+        return band.length?band[0].x:null;
+      }
+      const hard1=pickBand(o=>o.g<=O.gHardMax,(a,b)=>a.g-b.g); if(hard1) take(hard1);
+      const hard2=pickBand(o=>o.g<=O.gHardMax,(a,b)=>a.g-b.g); if(hard2) take(hard2);
+      const midC=(O.gMidMin+O.gMidMax)/2;
+      const mid=pickBand(o=>o.g>=O.gMidMin&&o.g<=O.gMidMax,(a,b)=>Math.abs(a.g-midC)-Math.abs(b.g-midC)); if(mid) take(mid);
+      const easy=pickBand(o=>o.g>=O.gEasyMin,(a,b)=>b.g-a.g); if(easy) take(easy);
+      const five=[anchor,hard1,hard2,mid,easy].filter(Boolean);
+      for(const x of pool){ if(five.length>=5) break; if(!usedK.has(x.key)&&!usedY.has(x.year)){ take(x); five.push(x); } }
+      return five.length===5?five:null;
+    }
+
+    function isSorted(o){ for(let i=1;i<o.length;i++){ if(o[i].year<=o[i-1].year) return false; } return true; }
+    // Meta nomes per a persones (naixement/mort); els esdeveniments no porten cap etiqueta.
+    function meta(it){ if(it.kind==='event') return ''; return it.anchor==='naix'?'🎂 naixement':'🕯️ mort'; }
+    function rowHTML(it){ const m=meta(it); const metaHTML=m?'<div class="ometa">'+m+'</div>':''; return '<div class="orditem" data-key="'+it.key+'"><span class="ogrip" aria-hidden="true">⠿</span><div class="omain">'+metaHTML+'<div class="onm">'+it.name+'</div></div><div class="oyr"><span class="q">?</span></div></div>'; }
+
+    function render(){
+      root.innerHTML='<div class="ordwrap"><div class="ordhead"><h2>🕰️ Ordena la línia</h2><div class="sub">Arrossega per ordenar de més antic (dalt) a més nou (baix) · Repte diari</div></div><div class="ordbar"><span>↑ més antic</span><span>més nou ↓</span></div><div class="ordlist"></div><div class="ordfoot"><button class="cta" id="ordsubmit">Ho tinc!</button></div></div>';
+      const list=root.querySelector('.ordlist');
+      list.innerHTML=order.map(rowHTML).join('');
+      list.querySelectorAll('.orditem').forEach(el=>{ el.addEventListener('pointerdown',function(e){ startDrag(e,el); }); });
+      root.querySelector('#ordsubmit').addEventListener('click',submit);
+    }
+
+    // Drag & drop amb Pointer Events (funciona amb ratolí i tàctil). Un "ghost" fix segueix el dit;
+    // la fila original queda com a buit i es reinsereix entre germans segons la posició del punter.
+    function startDrag(e,row){
+      if(locked) return;
+      if(e.pointerType==='mouse' && e.button!==0) return;
+      e.preventDefault();
+      dragRow=row;
+      const r=row.getBoundingClientRect();
+      grab=e.clientY-r.top;
+      ghost=row.cloneNode(true); ghost.classList.add('ordghost');
+      ghost.style.width=r.width+'px'; ghost.style.left=r.left+'px'; ghost.style.top=r.top+'px';
+      document.body.appendChild(ghost);
+      row.classList.add('dragging');
+      window.addEventListener('pointermove',onMove);
+      window.addEventListener('pointerup',onUp,{once:true});
+    }
+    function onMove(e){
+      if(!dragRow) return;
+      e.preventDefault();
+      const list=root.querySelector('.ordlist');
+      ghost.style.top=(e.clientY-grab)+'px';
+      const items=Array.prototype.slice.call(list.querySelectorAll('.orditem'));
+      let ref=null;
+      for(let i=0;i<items.length;i++){ const s=items[i]; if(s===dragRow) continue; const rr=s.getBoundingClientRect(); if(e.clientY < rr.top+rr.height/2){ ref=s; break; } }
+      if(ref){ if(dragRow.nextSibling!==ref) list.insertBefore(dragRow,ref); }
+      else { if(list.lastElementChild!==dragRow) list.appendChild(dragRow); }
+    }
+    function onUp(){
+      window.removeEventListener('pointermove',onMove);
+      if(ghost){ ghost.remove(); ghost=null; }
+      if(dragRow){ dragRow.classList.remove('dragging'); dragRow=null; }
+      syncOrder();
+    }
+    function syncOrder(){ const list=root.querySelector('.ordlist'); order=Array.prototype.slice.call(list.querySelectorAll('.orditem')).map(el=>byKey[el.dataset.key]); }
+
+    function submit(){
+      if(locked) return; locked=true;
+      syncOrder();
+      const sorted=order.slice().sort((a,b)=>a.year-b.year);
+      const ci={}; sorted.forEach((it,i)=>{ ci[it.key]=i; });
+      const list=root.querySelector('.ordlist');
+      const rows=Array.prototype.slice.call(list.querySelectorAll('.orditem'));
+      let allCorrect=true;
+      rows.forEach((el,i)=>{ if(ci[byKey[el.dataset.key].key]!==i) allCorrect=false; });
+      rows.forEach((el,i)=>{
+        const it=byKey[el.dataset.key];
+        const yr=el.querySelector('.oyr'); yr.textContent=fmtYear(it.year); yr.classList.add('reveal');
+        el.style.cursor='default';
+        if(allCorrect) el.classList.add('ok');
+        else if(ci[it.key]!==i) el.classList.add('no');   // NOMÉS vermell els mal col·locats
+        else el.classList.add('rev');
+      });
+      bumpStreak(allCorrect);
+      writeLS(DAILY_KEY,{date:todayStr(),correct:allCorrect});
+      showBanner(allCorrect);
+    }
+
+    function bumpStreak(correct){
+      const today=todayStr(); const st=readLS(STREAK_KEY); let days;
+      if(correct){ if(st && st.last===yesterdayStr()) days=(st.days||0)+1; else if(st && st.last===today) days=st.days||1; else days=1; }
+      else days=0;
+      writeLS(STREAK_KEY,{last:today,days:days});
+    }
+
+    function startCd(){
+      if(ocdTimer){ clearInterval(ocdTimer); ocdTimer=null; }
+      const tick=()=>{ const el=root&&root.querySelector('#ocd'); if(!el){ if(ocdTimer){clearInterval(ocdTimer);ocdTimer=null;} return; } el.textContent=fmtDur(msToMidnight()); };
+      tick(); ocdTimer=setInterval(tick,1000);
+    }
+    function showBanner(correct){
+      const foot=root.querySelector('.ordfoot'); if(!foot) return;
+      const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
+      foot.innerHTML = correct
+        ? '<div class="ordbanner ok"><div class="rtitle perfect">Ben ordenat! 🎉</div><div class="streak">🔥 '+days+' '+(days===1?'dia':'dies')+' seguits encertant</div><div class="locknote">Ja has resolt el repte d\'avui. Torna demà per un de nou!</div><div class="countdown">Nou repte en <b id="ocd">--:--:--</b></div></div>'
+        : '<div class="ordbanner no"><div class="rtitle">No del tot 😬</div><div class="streak">S\'ha trencat la ratxa. En vermell, els que estaven fora de lloc.</div><div class="locknote">Ja has resolt el repte d\'avui. Torna demà per un de nou!</div><div class="countdown">Nou repte en <b id="ocd">--:--:--</b></div></div>';
+      startCd();
+    }
+
+    function renderLocked(correct){
+      const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
+      root.innerHTML='<div class="gameover"><div class="gamehead"><h2>🕰️ Ordena la línia</h2></div><h2 class="rtitle '+(correct?'perfect':'')+'">'+(correct?'Encertat! 🎉':'No encertat 😬')+'</h2><div class="stats"><div class="stat"><div class="v">🔥 '+days+'</div><div class="k">'+(days===1?'dia':'dies')+' seguits</div></div></div><div class="locknote">Ja has jugat el repte d\'avui. Torna demà per un de nou!</div><div class="countdown">Nou repte en <b id="ocd">--:--:--</b></div></div>';
+      startCd();
+    }
+
+    function buildAndRender(){
+      if(!dataOk()){ root.innerHTML='<div class="err">No hi ha dades per jugar.</div>'; return; }
+      const rng=mulberry32(seedFromStr('ord:'+todayStr()));
+      const five=pickFive(rng);
+      if(!five){ root.innerHTML='<div class="err">No hi ha prou dades per jugar.</div>'; return; }
+      byKey={}; five.forEach(it=>{ byKey[it.key]=it; });
+      let o, guard=0; do{ o=shuffle(five.slice()); guard++; }while(isSorted(o)&&guard<25);
+      order=o; locked=false; render();
+    }
+
+    // Hook de depuració per als tests (no afecta el joc).
+    try{ window.__ORD={ five:function(ds){ return pickFive(mulberry32(seedFromStr('ord:'+(ds||todayStr())))); } }; }catch(_){}
+
+    return {
+      mount(container){ root=container; locked=false; const daily=readLS(DAILY_KEY); if(daily && daily.date===todayStr()){ renderLocked(!!daily.correct); } else { buildAndRender(); } },
+      unmount(){ if(ocdTimer){ clearInterval(ocdTimer); ocdTimer=null; } window.removeEventListener('pointermove',onMove); if(ghost){ ghost.remove(); ghost=null; } dragRow=null; root=null; }
+    };
+  })();
+
+  const MODULES={ abansdespres: AbansDespres, personatgedia: PersonatgeDia, ordena: OrdenaLinia };
+
+  // Avís "pròximament" tipus toast (com a index.html): per als jocs sense mòdul no naveguem enlloc.
+  let toastEl=null, toastT=null;
+  function showToast(msg){
+    if(!toastEl){ toastEl=document.createElement('div'); toastEl.className='toast'; document.body.appendChild(toastEl); }
+    toastEl.textContent=msg;
+    void toastEl.offsetWidth;
+    toastEl.classList.add('show');
+    clearTimeout(toastT);
+    toastT=setTimeout(function(){ if(toastEl) toastEl.classList.remove('show'); }, 1800);
+  }
 
   function renderMenu(){
     back.hidden=true;
@@ -777,7 +1003,11 @@
     });
     app.innerHTML=`<p class="lead">Cada joc és un <b>repte diari</b>: un intent al dia, igual per a tothom.</p><div class="menu">${cards}</div>`;
     app.querySelectorAll('.gamecard').forEach(btn=>{
-      btn.addEventListener('click',()=>{location.hash='#/'+btn.getAttribute('data-id');});
+      btn.addEventListener('click',()=>{
+        const id=btn.getAttribute('data-id');
+        if(MODULES[id]){ location.hash='#/'+id; }
+        else { showToast('🚧 En construcció'); }   // joc no disponible: avis, sense navegar
+      });
     });
   }
 
@@ -794,9 +1024,8 @@
       const g=GAMES.find(x=>x.id===m[1]);
       if(g){
         const mod=MODULES[g.id];
-        if(mod){ back.hidden=false; app.innerHTML=''; activeModule=mod; mod.mount(app); }
-        else { renderGame(g); }
-        return;
+        if(mod){ back.hidden=false; app.innerHTML=''; activeModule=mod; mod.mount(app); return; }
+        // Joc sense mòdul (pròximament): no obrim pagina buida; tornem al menu (l'avis surt al clic).
       }
     }
     renderMenu();
