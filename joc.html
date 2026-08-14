@@ -269,9 +269,16 @@
   }
   @media (max-width:600px){
     .datainfo{display:none;}
-    .menu{grid-template-columns:1fr;}
     .gtitle{font-size:18px;}
     .gscore .n{font-size:16px;}
+    /* Menu de jocs compacte per a mobil: targetes horitzontals i lleugeres perque hi capiguen totes */
+    .lead{margin:0 0 14px;font-size:13px;}
+    .menu{grid-template-columns:1fr;gap:10px;}
+    .gamecard{display:grid;grid-template-columns:auto 1fr;grid-template-areas:'ic t' 'ic d' 'ic badge';column-gap:13px;row-gap:3px;align-items:center;padding:12px 14px;}
+    .gamecard .ic{grid-area:ic;font-size:26px;align-self:center;}
+    .gamecard .t{grid-area:t;font-size:15px;}
+    .gamecard .d{grid-area:d;font-size:12px;line-height:1.3;}
+    .gamecard .tagd,.gamecard .soon{grid-area:badge;justify-self:start;margin-top:2px;}
   }
   @media (max-height:560px){
     .topbar{padding:6px 12px;gap:10px;border-bottom-width:3px;}
@@ -867,7 +874,8 @@
     function rowHTML(it){ const m=meta(it); const metaHTML=m?'<div class="ometa">'+m+'</div>':''; return '<div class="orditem" data-key="'+it.key+'"><span class="ogrip" aria-hidden="true">⠿</span><div class="omain">'+metaHTML+'<div class="onm">'+it.name+'</div></div><div class="oyr"><span class="q">?</span></div></div>'; }
 
     function render(){
-      root.innerHTML='<div class="ordwrap"><div class="ordhead"><h2>🕰️ Ordena la línia</h2><div class="sub">Arrossega per ordenar de més antic (dalt) a més nou (baix) · Repte diari</div></div><div class="ordbar"><span>↑ més antic</span><span>més nou ↓</span></div><div class="ordlist"></div><div class="ordfoot"><button class="cta" id="ordsubmit">Ho tinc!</button></div></div>';
+      const subTxt = locked ? 'Repte d\'avui · consulta el resultat, torna demà per un de nou' : 'Arrossega per ordenar de més antic (dalt) a més nou (baix) · Repte diari';
+      root.innerHTML='<div class="ordwrap"><div class="ordhead"><h2>🕰️ Ordena la línia</h2><div class="sub">'+subTxt+'</div></div><div class="ordbar"><span>↑ més antic</span><span>més nou ↓</span></div><div class="ordlist"></div><div class="ordfoot"><button class="cta" id="ordsubmit">Ho tinc!</button></div></div>';
       const list=root.querySelector('.ordlist');
       list.innerHTML=order.map(rowHTML).join('');
       list.querySelectorAll('.orditem').forEach(el=>{ el.addEventListener('pointerdown',function(e){ startDrag(e,el); }); });
@@ -909,8 +917,8 @@
     }
     function syncOrder(){ const list=root.querySelector('.ordlist'); order=Array.prototype.slice.call(list.querySelectorAll('.orditem')).map(el=>byKey[el.dataset.key]); }
 
-    function submit(){
-      if(locked) return; locked=true;
+    // Aplica la revelació al tauler actual (anys + colors). animate=true només en enviar (evita el flip en reentrar).
+    function applyReveal(animate){
       syncOrder();
       const sorted=order.slice().sort((a,b)=>a.year-b.year);
       const ci={}; sorted.forEach((it,i)=>{ ci[it.key]=i; });
@@ -920,14 +928,20 @@
       rows.forEach((el,i)=>{ if(ci[byKey[el.dataset.key].key]!==i) allCorrect=false; });
       rows.forEach((el,i)=>{
         const it=byKey[el.dataset.key];
-        const yr=el.querySelector('.oyr'); yr.textContent=fmtYear(it.year); yr.classList.add('reveal');
+        const yr=el.querySelector('.oyr'); yr.textContent=fmtYear(it.year); if(animate) yr.classList.add('reveal');
         el.style.cursor='default';
         if(allCorrect) el.classList.add('ok');
         else if(ci[it.key]!==i) el.classList.add('no');   // NOMÉS vermell els mal col·locats
         else el.classList.add('rev');
       });
+      return allCorrect;
+    }
+
+    function submit(){
+      if(locked) return; locked=true;
+      const allCorrect=applyReveal(true);   // syncOrder() a dins: 'order' ja reflecteix el DOM
       bumpStreak(allCorrect);
-      writeLS(DAILY_KEY,{date:todayStr(),correct:allCorrect});
+      writeLS(DAILY_KEY,{date:todayStr(),correct:allCorrect,order:order.map(x=>x.key)});
       showBanner(allCorrect);
     }
 
@@ -968,11 +982,48 @@
       order=o; locked=false; render();
     }
 
+    // Reentrada un cop jugat avui: mostra SEMPRE els 5 elements amb el resultat marcat (per aprendre).
+    function renderResolved(daily){
+      if(!dataOk()){ root.innerHTML='<div class="err">No hi ha dades per jugar.</div>'; return; }
+      const rng=mulberry32(seedFromStr('ord:'+todayStr()));
+      const five=pickFive(rng);
+      if(!five){ root.innerHTML='<div class="err">No hi ha prou dades per jugar.</div>'; return; }
+      byKey={}; five.forEach(it=>{ byKey[it.key]=it; });
+      let o=null, hasOrder=false;
+      if(daily && daily.order && daily.order.length===five.length){ o=daily.order.map(k=>byKey[k]).filter(Boolean); if(o.length===five.length) hasOrder=true; else o=null; }
+      if(!o) o=five.slice().sort((a,b)=>a.year-b.year);   // fallback per a partides antigues sense ordre desat
+      order=o; locked=true; render();
+      if(hasOrder){
+        const ac=applyReveal(false);   // sense animació en reentrar
+        showBanner(ac);
+      } else {
+        // Partida jugada abans d'aquest canvi: no tenim l'ordre real, no pintem verd/vermell (seria enganyós).
+        revealNeutral();
+        showRecoverNote(!!(daily&&daily.correct));
+      }
+    }
+
+    // Revelació neutra (només anys, sense colors) per a partides antigues sense ordre desat.
+    function revealNeutral(){
+      const list=root.querySelector('.ordlist'); if(!list) return;
+      Array.prototype.slice.call(list.querySelectorAll('.orditem')).forEach(el=>{
+        const it=byKey[el.dataset.key];
+        el.querySelector('.oyr').textContent=fmtYear(it.year);
+        el.style.cursor='default';
+      });
+    }
+    function showRecoverNote(correct){
+      const foot=root.querySelector('.ordfoot'); if(!foot) return;
+      const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
+      foot.innerHTML='<div class="ordbanner"><div class="rtitle '+(correct?'perfect':'')+'">'+(correct?'Vas encertar! 🎉':'No vas encertar 😬')+'</div><div class="streak">🔥 '+days+' '+(days===1?'dia':'dies')+' seguits encertant</div><div class="locknote">D\'aquesta partida no vam desar el teu ordre, així que es mostren els 5 en ordre cronològic. A partir d\'ara es desarà el teu ordre exacte amb els encerts i errors.</div><div class="countdown">Nou repte en <b id="ocd">--:--:--</b></div></div>';
+      startCd();
+    }
+
     // Hook de depuració per als tests (no afecta el joc).
     try{ window.__ORD={ five:function(ds){ return pickFive(mulberry32(seedFromStr('ord:'+(ds||todayStr())))); } }; }catch(_){}
 
     return {
-      mount(container){ root=container; locked=false; const daily=readLS(DAILY_KEY); if(daily && daily.date===todayStr()){ renderLocked(!!daily.correct); } else { buildAndRender(); } },
+      mount(container){ root=container; locked=false; const daily=readLS(DAILY_KEY); if(daily && daily.date===todayStr()){ renderResolved(daily); } else { buildAndRender(); } },
       unmount(){ if(ocdTimer){ clearInterval(ocdTimer); ocdTimer=null; } window.removeEventListener('pointermove',onMove); if(ghost){ ghost.remove(); ghost=null; } dragRow=null; root=null; }
     };
   })();
