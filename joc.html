@@ -166,16 +166,21 @@
     .palbum{margin-top:8px;font-size:12px;}
   }
   /* Personatge del dia: HORITZONTAL TACTIL (des del cronograma) = foto esq | info centre | botons dreta, sense scroll */
+  /* Enfocament robust: body en columna flexible (barra a dalt auto + main omple la resta), i la */
+  /* targeta ocupa el 100% d'aquest espai, sense endevinar l'alcada de la topbar. Aixi no es talla. */
   @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
-    .pwrap{max-width:none;}
-    .pcard{display:grid;grid-template-columns:minmax(160px,32%) 1fr minmax(150px,190px);gap:16px;padding:12px;align-items:stretch;height:calc(100dvh - 96px);}
+    body{display:flex;flex-direction:column;}
+    main{flex:1 1 auto;min-height:0;padding:8px 12px;}
+    .pwrap{max-width:none;height:100%;margin:0;}
+    .pcard{display:grid;grid-template-columns:minmax(140px,28%) 1fr minmax(148px,180px);gap:14px;padding:12px;align-items:stretch;height:100%;}
     .pimg{height:100%;max-height:none;border-radius:12px;}
     .pbody{padding:0;display:flex;flex-direction:column;justify-content:center;min-height:0;overflow:auto;}
-    .pname{font-size:22px;margin-bottom:4px;}
-    .pdesc{font-size:14px;line-height:1.4;margin-bottom:12px;}
-    .pchips{margin-bottom:0;}
+    .pname{font-size:21px;line-height:1.1;margin-bottom:4px;}
+    .pdesc{font-size:13.5px;line-height:1.4;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+    .pchips{gap:6px;margin-bottom:0;}
+    .pchip{font-size:12px;padding:3px 9px;}
     .pacts{flex-direction:column;flex-wrap:nowrap;justify-content:center;padding:0;gap:8px;min-height:0;}
-    .pacts .pbtn{flex:0 0 auto;width:100%;}
+    .pacts .pbtn{flex:0 0 auto;width:100%;padding:10px;font-size:13px;}
     .palbum{display:none;}
   }
 
