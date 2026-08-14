@@ -172,7 +172,7 @@
     /* 100svh = alcada "petita" (amb barres del navegador visibles): a Safari/Chrome iOS aixi mai */
     /* no sobresurt de la pantalla i evitem el mini-scroll que deixava el dvh. */
     body{display:flex;flex-direction:column;height:100svh;min-height:0;}
-    main{flex:1 1 auto;min-height:0;padding:8px 12px;}
+    main{flex:1 1 auto;min-height:0;padding:8px 12px;margin:0;max-width:none;width:100%;}
     .pwrap{max-width:none;height:100%;margin:0;}
     .pcard{display:grid;grid-template-columns:minmax(120px,24%) 1fr minmax(148px,180px);gap:14px;padding:12px;align-items:stretch;height:100%;}
     /* Foto una mica mes petita que la targeta (marge de seguretat), centrada verticalment. */
@@ -185,6 +185,15 @@
     .pacts{flex-direction:column;flex-wrap:nowrap;justify-content:center;padding:0;gap:8px;min-height:0;}
     .pacts .pbtn{flex:0 0 auto;width:100%;padding:10px;font-size:13px;}
     .palbum{display:none;}
+  }
+  /* Menu de jocs: HORITZONTAL TACTIL = targetes mes petites, mes per fila, marges apurats */
+  @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
+    .menu{grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:8px;}
+    .gamecard{padding:10px 11px;gap:4px;border-radius:12px;}
+    .gamecard .ic{font-size:22px;}
+    .gamecard .t{font-size:13.5px;line-height:1.1;}
+    .gamecard .d{font-size:11px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    .gamecard .tagd,.gamecard .soon{font-size:10px;padding:2px 7px;margin-top:1px;}
   }
 
   /* ===== Joc: «Abans o després?» ===== */
@@ -349,17 +358,24 @@
   .ordbanner .locknote{color:var(--text2);font-size:13px;margin:8px 0 2px;line-height:1.4;}
   .ordbanner .countdown{color:var(--text2);font-size:13px;margin:2px 0 0;}
   .ordbanner .countdown b{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;color:var(--text);letter-spacing:.05em;font-weight:600;font-size:15px;}
-  /* «Ordena la línia»: HORITZONTAL TACTIL = compacte perquè els 5 hi càpiguen sense scroll */
+  /* «Ordena la línia»: HORITZONTAL TACTIL = mateixa logica que els altres jocs (pila a l'esquerra, boto/resultat a la dreta) */
   @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
-    .ordwrap{max-width:none;}
-    .ordhead{margin-bottom:4px;} .ordhead h2{font-size:15px;} .ordhead .sub{display:none;}
-    .ordbar{margin-bottom:4px;font-size:9px;}
-    .ordlist{gap:4px;}
+    .ordwrap{max-width:none;height:100%;display:grid;grid-template-columns:1fr minmax(140px,190px);grid-template-areas:"head head" "bar foot" "list foot";grid-template-rows:auto auto 1fr;column-gap:16px;row-gap:5px;align-items:start;}
+    .ordhead{grid-area:head;margin:0;text-align:left;}
+    .ordhead h2{font-size:15px;} .ordhead .sub{display:none;}
+    .ordbar{grid-area:bar;margin:0;font-size:9px;}
+    .ordlist{grid-area:list;gap:4px;min-height:0;align-self:start;}
+    .ordfoot{grid-area:foot;margin:0;align-self:center;text-align:center;}
     .orditem{padding:4px 12px;gap:10px;}
     .ogrip{font-size:14px;}
     .onm{font-size:12.5px;line-height:1.1;} .ometa{font-size:9px;} .oyr{font-size:17px;min-width:52px;}
-    .ordfoot{margin-top:6px;}
-    .cta{padding:6px 20px;font-size:13px;}
+    .cta{padding:9px 14px;font-size:13px;width:100%;}
+    .ordbanner{margin:0;}
+    .ordbanner .rtitle{font-size:16px;margin:0 0 2px;}
+    .ordbanner .streak{font-size:11.5px;margin:4px 0 2px;}
+    .ordbanner .locknote{font-size:10.5px;margin:4px 0 2px;line-height:1.3;}
+    .ordbanner .countdown{font-size:10.5px;}
+    .ordbanner .countdown b{font-size:12px;}
   }
   /* Avís "pròximament" (toast fosc, com a index.html) */
   .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-8px);z-index:60;display:inline-flex;align-items:center;gap:8px;max-width:calc(100vw - 32px);background:#2C2C2B;color:#fff;font-size:14px;font-weight:600;letter-spacing:.01em;padding:10px 16px;border-radius:var(--r-pill);box-shadow:0 10px 28px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;white-space:nowrap;}
@@ -381,7 +397,7 @@
   </div>
   <div class="topbar-right">
     <span id="datainfo" class="datainfo"></span>
-    <button id="back" class="btn" hidden style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.4 9 3.4l6 5"/><path d="M4.6 7.8V14.4h8.8V7.8"/></svg><span>Inici</span></button>
+    <button id="back" class="btn" hidden style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.4 9 3.4l6 5"/><path d="M4.6 7.8V14.4h8.8V7.8"/></svg><span>Tots els jocs</span></button>
   </div>
 </header>
 <main id="app"></main>
@@ -1052,7 +1068,7 @@
       const badge = MODULES[g.id] ? (g.discover ? '<span class="tagd">🌟 Descobreix</span>' : '<span class="tagd">📅 Repte diari</span>') : '<span class="soon">🚧 Pròximament</span>';
       cards+=`<button class="gamecard" data-id="${g.id}"><span class="ic">${g.ic}</span><span class="t">${g.t}</span><span class="d">${g.d}</span>${badge}</button>`;
     });
-    app.innerHTML=`<p class="lead">Cada joc és un <b>repte diari</b>: un intent al dia, igual per a tothom.</p><div class="menu">${cards}</div>`;
+    app.innerHTML=`<div class="menu">${cards}</div>`;
     app.querySelectorAll('.gamecard').forEach(btn=>{
       btn.addEventListener('click',()=>{
         const id=btn.getAttribute('data-id');
