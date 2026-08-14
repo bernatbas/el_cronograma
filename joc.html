@@ -169,11 +169,14 @@
   /* Enfocament robust: body en columna flexible (barra a dalt auto + main omple la resta), i la */
   /* targeta ocupa el 100% d'aquest espai, sense endevinar l'alcada de la topbar. Aixi no es talla. */
   @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
-    body{display:flex;flex-direction:column;}
+    /* 100svh = alcada "petita" (amb barres del navegador visibles): a Safari/Chrome iOS aixi mai */
+    /* no sobresurt de la pantalla i evitem el mini-scroll que deixava el dvh. */
+    body{display:flex;flex-direction:column;height:100svh;min-height:0;}
     main{flex:1 1 auto;min-height:0;padding:8px 12px;}
     .pwrap{max-width:none;height:100%;margin:0;}
-    .pcard{display:grid;grid-template-columns:minmax(140px,28%) 1fr minmax(148px,180px);gap:14px;padding:12px;align-items:stretch;height:100%;}
-    .pimg{height:100%;max-height:none;border-radius:12px;}
+    .pcard{display:grid;grid-template-columns:minmax(120px,24%) 1fr minmax(148px,180px);gap:14px;padding:12px;align-items:stretch;height:100%;}
+    /* Foto una mica mes petita que la targeta (marge de seguretat), centrada verticalment. */
+    .pimg{height:90%;max-height:100%;align-self:center;border-radius:12px;}
     .pbody{padding:0;display:flex;flex-direction:column;justify-content:center;min-height:0;overflow:auto;}
     .pname{font-size:21px;line-height:1.1;margin-bottom:4px;}
     .pdesc{font-size:13.5px;line-height:1.4;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
