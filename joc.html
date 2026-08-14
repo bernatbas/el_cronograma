@@ -139,20 +139,45 @@
   .pspin{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--topbar-bg);border-radius:50%;animation:pspin .8s linear infinite;margin:0 auto 14px;}
   @keyframes pspin{to{transform:rotate(360deg);}}
   .pcard{background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;box-shadow:0 8px 22px rgba(40,44,60,.12);}
-  .pimg{width:100%;height:300px;object-fit:cover;background:var(--surface);display:block;}
+  .pimg{width:100%;height:320px;object-fit:contain;object-position:center;background:var(--surface);display:block;}
   .pimg.ph{display:flex;align-items:center;justify-content:center;font-size:66px;color:var(--border-strong);}
-  .pbody{padding:20px;}
+  .pbody{padding:20px 20px 0;}
   .pname{font-family:'Oswald',sans-serif;font-size:26px;font-weight:600;line-height:1.15;margin:0 0 4px;}
   .pdesc{color:var(--text2);font-size:15px;line-height:1.5;margin:0 0 14px;}
   .pchips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
   .pchip{background:#F7E5E0;color:#B23A2E;font-size:13px;font-weight:600;padding:4px 11px;border-radius:var(--r-pill);}
   .pchip.yr{background:var(--surface);color:var(--text);}
-  .pacts{display:flex;flex-wrap:wrap;gap:10px;}
+  .pacts{display:flex;flex-wrap:wrap;gap:10px;padding:0 20px 20px;}
   .pbtn{flex:1 1 140px;display:inline-flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;padding:11px 14px;border-radius:var(--r-card);border:1px solid var(--border-strong);background:var(--canvas);color:var(--text);transition:transform .12s,box-shadow .12s,border-color .12s,color .12s;}
   .pbtn:hover{transform:translateY(-1px);border-color:var(--topbar-bg);color:var(--topbar-bg);}
   .pbtn.fav.on{background:#F7E5E0;border-color:var(--topbar-bg);color:#B23A2E;}
   .palbum{text-align:center;color:var(--text2);font-size:13px;margin-top:16px;}
   .pretry{margin-top:14px;font:inherit;font-weight:600;cursor:pointer;padding:9px 18px;border-radius:var(--r-pill);border:1px solid var(--border-strong);background:var(--canvas);color:var(--text);}
+  /* Personatge del dia: MOBIL VERTICAL, tot ha de cabre sense scroll */
+  @media (max-width:600px){
+    .pimg{height:clamp(150px,32vh,250px);}
+    .pbody{padding:14px 16px 0;}
+    .pname{font-size:21px;margin-bottom:3px;}
+    .pdesc{font-size:13.5px;line-height:1.45;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    .pchips{gap:6px;margin-bottom:12px;}
+    .pchip{font-size:12px;padding:3px 9px;}
+    .pacts{gap:8px;padding:0 16px 12px;}
+    .pbtn{flex:1 1 44%;padding:9px 10px;font-size:13px;}
+    .palbum{margin-top:8px;font-size:12px;}
+  }
+  /* Personatge del dia: HORITZONTAL TACTIL (des del cronograma) = foto esq | info centre | botons dreta, sense scroll */
+  @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
+    .pwrap{max-width:none;}
+    .pcard{display:grid;grid-template-columns:minmax(160px,32%) 1fr minmax(150px,190px);gap:16px;padding:12px;align-items:stretch;height:calc(100dvh - 96px);}
+    .pimg{height:100%;max-height:none;border-radius:12px;}
+    .pbody{padding:0;display:flex;flex-direction:column;justify-content:center;min-height:0;overflow:auto;}
+    .pname{font-size:22px;margin-bottom:4px;}
+    .pdesc{font-size:14px;line-height:1.4;margin-bottom:12px;}
+    .pchips{margin-bottom:0;}
+    .pacts{flex-direction:column;flex-wrap:nowrap;justify-content:center;padding:0;gap:8px;min-height:0;}
+    .pacts .pbtn{flex:0 0 auto;width:100%;}
+    .palbum{display:none;}
+  }
 
   /* ===== Joc: «Abans o després?» ===== */
   .game{max-width:560px;margin:0 auto;}
@@ -700,7 +725,7 @@
       acts.appendChild(fb);
       const cb=el('button','pbtn','📅 Veure al cronograma'); cb.addEventListener('click',function(){ viewInCronograma(p); }); acts.appendChild(cb);
       if(p.wiki){ const a=el('a','pbtn','🔗 Llegeix-ne més'); a.href=p.wiki; a.target='_blank'; a.rel='noopener'; acts.appendChild(a); }
-      body.appendChild(acts); card.appendChild(body); w.appendChild(card);
+      card.appendChild(body); card.appendChild(acts); w.appendChild(card);
       const album=readLS(ALBUM_KEY)||[];
       w.appendChild(el('div','palbum','🗂️ Has descobert '+album.length+' '+(album.length===1?'personatge':'personatges')));
       root.appendChild(w);
