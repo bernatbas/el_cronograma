@@ -24,6 +24,53 @@ async function goPersonMode(page, qid = 'Q868') {
   await page.goto(`/index.html?person=${qid}`);
 }
 
+// ── Helpers de viewport estret ───────────────────────────────────────────────
+// Els tres calen perquè al mòbil l'app arrenca en un estat DIFERENT del desktop. No són
+// "workarounds": repliquen el que ha de fer un usuari real abans d'arribar al control.
+
+// El popup «Gira el mòbil» (només portrait tàctil) se superposa al canvas i intercepta els
+// clics. `checkPortrait()` corre de forma síncrona al boot, així que quan el `goto` ha
+// resolt la classe `.on` ja hi és — o no hi serà mai: no cal esperar.
+async function dismissRotateHint(page) {
+  if (await page.locator('#portraitWall.on').count() === 0) return;
+  await page.locator('#rotateDismiss').click();
+  await expect(page.locator('#portraitWall.on')).toHaveCount(0);
+}
+
+// La sidebar arrenca PLEGADA per sota de 900px (canvi #47) — cosa que afecta portrait (393px)
+// i landscape (851px) — i llavors amaga tot el seu contingut
+// (`.body.collapsed .sidebar>*{display:none}`). Qualsevol test que hi cliqui a dins l'ha
+// d'obrir primer. Tanca l'avís de girar abans, que si no tapa el tirador.
+async function openSidebar(page) {
+  await dismissRotateHint(page);
+  if (await page.locator('.body.collapsed').count()) {
+    await page.locator('#sidebarToggle').click();
+    await page.waitForTimeout(300);   // animació de width (0.18s)
+  }
+  await expect(page.locator('.body')).not.toHaveClass(/collapsed/);
+}
+
+// Al mòbil la sidebar és a més un ACORDIÓ: només una secció oberta a la vegada, i per
+// defecte ho és «A la vista» (l'última). Així que obrir la sidebar NO n'hi ha prou —
+// `#collections` es queda a `display:none` fins que s'obre la seva secció.
+async function openCollectionsSection(page) {
+  await openSidebar(page);
+  const sec = page.locator('.sidebar section:has(#collections)');
+  if (await page.locator('.sidebar.accordion').count()
+      && await sec.evaluate(el => !el.classList.contains('open'))) {
+    await sec.locator('h3').click();
+  }
+  await expect(page.locator('[data-col="filosofs"]')).toBeVisible();
+}
+
+// Per sota del llindar de plegat (tàctil ≤600px) el menú de seccions viu dins d'un
+// desplegable que obre la marca; l'enllaç «Jocs» existeix al DOM però no és visible.
+async function openSectionMenu(page) {
+  if (await page.locator('.secnav.navcollapsed').count() === 0) return;
+  await page.locator('.secnav > .brand').click();
+  await expect(page.locator('.modeswitch')).toBeVisible();
+}
+
 // Afegeix el primer personatge de la BD local via cerca i retorna el seu nom
 async function addFirstPerson(page) {
   const term = await page.evaluate(() => PEOPLE[0]?.name?.slice(0, 5) ?? 'Sòcra');
@@ -75,6 +122,7 @@ test.describe('Topbar', () => {
 
   test('clicar «Jocs» navega a joc.html', async ({ page }) => {
     await page.goto(INDEX);
+    await openSectionMenu(page);   // en portrait el menú està plegat dins la marca
     await page.locator('.modeswitch a:not([aria-current])').click();
     await expect(page).toHaveURL(/joc\.html/);
   });
@@ -90,14 +138,22 @@ test.describe('Topbar', () => {
 // ─── Sidebar ────────────────────────────────────────────────────────────────
 
 test.describe('Sidebar', () => {
-  test('és visible i no col·lapsada inicialment', async ({ page }) => {
+  // L'estat inicial NO és el mateix a tot arreu: des del canvi #47 arrenca plegada per sota
+  // de 900px. El test ho comprova segons el viewport, en lloc d'exigir-la oberta sempre
+  // (que és el que contradeia el canvi #47 i feia petar portrait i landscape).
+  test('arrenca plegada sota 900px i oberta per sobre', async ({ page }) => {
     await freshIndex(page);
-    await expect(page.locator('.body')).not.toHaveClass(/collapsed/);
-    await expect(page.locator('.sidebar')).toBeVisible();
+    await expect(page.locator('.sidebar')).toBeVisible();   // plegada deixa una tira de 14px
+    if (page.viewportSize().width < 900) {
+      await expect(page.locator('.body')).toHaveClass(/collapsed/);
+    } else {
+      await expect(page.locator('.body')).not.toHaveClass(/collapsed/);
+    }
   });
 
   test('el tirador col·lapsa la sidebar i eixampla el canvas', async ({ page }) => {
     await freshIndex(page);
+    await openSidebar(page);   // punt de partida conegut: al mòbil arrenca plegada
     const wBefore = await page.locator('#scroll').evaluate(el => el.clientWidth);
     await page.locator('#sidebarToggle').click();
     await page.waitForTimeout(300); // animació CSS 0.18s
@@ -108,6 +164,7 @@ test.describe('Sidebar', () => {
 
   test('tornar a clicar obre la sidebar i encongeix el canvas', async ({ page }) => {
     await freshIndex(page);
+    await openSidebar(page);
     await page.locator('#sidebarToggle').click();
     await page.waitForTimeout(300);
     const wCollapsed = await page.locator('#scroll').evaluate(el => el.clientWidth);
@@ -161,6 +218,7 @@ test.describe('Fitxa de detall', () => {
 
   test('la ✕ de la fitxa la tanca', async ({ page }) => {
     await freshIndex(page);
+    await dismissRotateHint(page);   // l'avís de girar tapa la ✕ del bottom-sheet
     await addFirstPerson(page);
     await page.locator('#barsLayer .bar').first().click();
     await expect(page.locator('#detail.open')).toBeVisible();
@@ -187,6 +245,7 @@ test.describe('Col·leccions', () => {
     await freshIndex(page);
     // Intercepta Wikidata per no dependre de xarxa
     await page.route('**/wikidata.org/**', route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await openCollectionsSection(page);   // sidebar + secció de l'acordió
     const btn = page.locator('[data-col="filosofs"]');
     await expect(btn).toBeVisible();
     await btn.click();
@@ -198,6 +257,7 @@ test.describe('Col·leccions', () => {
   test('desactivar la col·lecció buida el canvas', async ({ page }) => {
     await freshIndex(page);
     await page.route('**/wikidata.org/**', route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await openCollectionsSection(page);
     const btn = page.locator('[data-col="filosofs"]');
     await btn.click();
     await expect(page.locator('#barsLayer .bar').first()).toBeVisible({ timeout: 5000 });
@@ -240,6 +300,7 @@ test.describe('Mode personatge (?person=QID)', () => {
     // cosa que haguéssim escrit a mà a localStorage.
     await freshIndex(page);
     await page.route('**/wikidata.org/**', route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await openCollectionsSection(page);   // sota 900px: sidebar plegada + acordió tancat
     await page.locator('[data-col="filosofs"]').click();
     await expect(page.locator('[data-col="filosofs"].on')).toBeVisible();
     // Entra en mode personatge
@@ -342,6 +403,7 @@ test.describe('Integració joc → index', () => {
     // del test anterior: injectar localStorage no serveix, el `beforeunload` el sobreescriu).
     await freshIndex(page);
     await page.route('**/wikidata.org/**', route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await openCollectionsSection(page);   // sota 900px: sidebar plegada + acordió tancat
     await page.locator('[data-col="filosofs"]').click();
     await expect(page.locator('[data-col="filosofs"].on')).toBeVisible();
     // El joc escriu el personatge del dia i navega
