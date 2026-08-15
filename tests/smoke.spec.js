@@ -330,6 +330,25 @@ test.describe('Mode personatge (?person=QID)', () => {
     await expect(page.locator('#scroll')).toBeAttached();
     expect(errors).toHaveLength(0);
   });
+
+  // Hauria d'haver atrapat el bug del TDZ (#49): si l'script peta durant el boot, no apareix
+  // cap barra. La dada ve del localStorage (img:null), no de Wikidata, així que no cal mock.
+  test('el personatge apareix com a barra al canvas', async ({ page }) => {
+    await goPersonMode(page);
+    await expect(page.locator('#barsLayer .bar').first()).toBeVisible({ timeout: 5000 });
+  });
+
+  // Hauria d'haver atrapat el bug del display:none (#51): en portrait (<=430px) la regla
+  // @media amagava .personbar .pimg, que ara fa 26x26px en lloc de desaparèixer.
+  // Corre als tres viewports: portrait és el cas crític, els altres passen igualment.
+  test('la foto de la personbar no és oculta per cap media query', async ({ page }) => {
+    await goPersonMode(page);
+    await expect(page.locator('#personbar.on')).toBeVisible();
+    const display = await page.locator('#personbar .pimg').evaluate(
+      el => window.getComputedStyle(el).display
+    );
+    expect(display).not.toBe('none');
+  });
 });
 
 // ─── Mòbil: portrait ─────────────────────────────────────────────────────────
