@@ -255,7 +255,7 @@
   .personbar[data-state="error"] .ptag{color:#B23A2E;}
   @media (max-width:860px){ .personbar{padding:6px 14px;gap:10px;} .personbar .pname{font-size:15px;} }
   @media (max-width:600px){ .personbar .pdesc{display:none;} }
-  @media (max-width:430px){ .personbar .pimg{display:none;} }
+  @media (max-width:430px){ .personbar .pimg{width:26px;height:26px;} }   /* la foto es fa petita, però NO desapareix: en vertical era l'única cosa que no sortia */
   @media (pointer:coarse){ .personbar{padding-top:5px;padding-bottom:5px;} .personbar .pimg{width:30px;height:30px;} .personbar .pname{font-size:15px;} }
 
   /* ===== Stage: the scrolling timeline canvas ===== */
@@ -1857,6 +1857,17 @@ function bootPersonMode(qid){
   });
 }
 
+// Sidebar: plegada per defecte a pantalles estretes; la preferència manual es persisteix.
+// ⚠️ Ha d'anar ABANS del boot: la barra està en flux (canvi #41), així que plegar-la eixampla
+// el canvas ~226px. Si es fes després, fitToPresent() ja hauria mesurat el clientWidth VELL i
+// el personatge quedaria descentrat i amb el zoom equivocat (bug del mode ?person= al mòbil).
+// La transició es desactiva per a aquesta primera aplicació: si no, bootDefault() mesura a
+// mitja animació de 0,18s i torna a llegir una amplada que encara no és la definitiva.
+{const _sbPref=localStorage.getItem(SIDEBAR_LS);const _sbCollapse=_sbPref?_sbPref==='collapsed':window.innerWidth<900;
+ if(_sbCollapse){const _sb=$('.sidebar');const _tr=_sb.style.transition;_sb.style.transition='none';
+   $('.body').classList.add('collapsed');$('#sidebarToggle').textContent='›';
+   _sb.getBoundingClientRect();_sb.style.transition=_tr;}}
+
 const PERSON_QID=(new URLSearchParams(location.search)).get('person');
 if(PERSON_QID){
   bootPersonMode(PERSON_QID);
@@ -1886,10 +1897,6 @@ function checkPortrait(){
 $('#rotateDismiss').addEventListener('click',()=>{rotateDismissed=true;portraitWall.classList.remove('on');});
 window.addEventListener('resize',checkPortrait);
 checkPortrait();
-
-// Sidebar: collapse by default on narrow screens (phone / small tablet in landscape).
-// Sidebar: collapsed per defecte a pantalles estretes; la preferència manual (open/collapsed) es persisteix a localStorage.
-{const _sbPref=localStorage.getItem(SIDEBAR_LS);const _sbCollapse=_sbPref?_sbPref==='collapsed':window.innerWidth<900;if(_sbCollapse){$('.body').classList.add('collapsed');$('#sidebarToggle').textContent='›';}}
 
 // ===== Acordió de la barra lateral (NOMÉS mòbil) =====
 // En pointer:coarse, les 3 seccions es comporten com un acordió: només una oberta a la vegada,

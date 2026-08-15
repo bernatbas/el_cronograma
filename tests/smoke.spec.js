@@ -2,6 +2,11 @@ import { test, expect } from '@playwright/test';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
+// ⚠️ RegExp, NO el glob '**/wikidata.org/**': el glob exigeix la subcadena literal
+// `/wikidata.org/`, que NO tenen ni `query.wikidata.org/sparql` ni `www.wikidata.org/w/api.php`
+// (el caràcter previ és un punt, no una barra). Amb el glob la intercepció no s'activava mai i
+// els tests anaven a la xarxa de debò → fallades intermitents quan la SPARQL trigava >5s.
+const WIKIDATA = /wikidata\.org/;
 const INDEX = '/index.html';
 const JOC   = '/joc.html';
 
@@ -244,7 +249,7 @@ test.describe('Col·leccions', () => {
   test('activar una col·lecció afegeix barres al canvas', async ({ page }) => {
     await freshIndex(page);
     // Intercepta Wikidata per no dependre de xarxa
-    await page.route('**/wikidata.org/**', route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
     await openCollectionsSection(page);   // sidebar + secció de l'acordió
     const btn = page.locator('[data-col="filosofs"]');
     await expect(btn).toBeVisible();
@@ -256,7 +261,7 @@ test.describe('Col·leccions', () => {
 
   test('desactivar la col·lecció buida el canvas', async ({ page }) => {
     await freshIndex(page);
-    await page.route('**/wikidata.org/**', route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
     await openCollectionsSection(page);
     const btn = page.locator('[data-col="filosofs"]');
     await btn.click();
@@ -299,7 +304,7 @@ test.describe('Mode personatge (?person=QID)', () => {
     // el `beforeunload` fa `saveNow()` amb l'estat EN MEMÒRIA i sobreescriuria qualsevol
     // cosa que haguéssim escrit a mà a localStorage.
     await freshIndex(page);
-    await page.route('**/wikidata.org/**', route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
     await openCollectionsSection(page);   // sota 900px: sidebar plegada + acordió tancat
     await page.locator('[data-col="filosofs"]').click();
     await expect(page.locator('[data-col="filosofs"].on')).toBeVisible();
@@ -404,7 +409,7 @@ test.describe('Integració joc → index', () => {
     // Prepara un estat a l'index activant la col·lecció per la interfície (vegeu la nota
     // del test anterior: injectar localStorage no serveix, el `beforeunload` el sobreescriu).
     await freshIndex(page);
-    await page.route('**/wikidata.org/**', route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
     await openCollectionsSection(page);   // sota 900px: sidebar plegada + acordió tancat
     await page.locator('[data-col="filosofs"]').click();
     await expect(page.locator('[data-col="filosofs"].on')).toBeVisible();
