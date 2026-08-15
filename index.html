@@ -18,9 +18,6 @@
     --text:#2C2C2B; --text2:#7D7A75; --canvas:#FFFFFF; --soft:#F9F8F7;
     --surface:#F0EFED; --border:#E6E5E3; --border-strong:#CBC9C4; --blue:#2783DE; --blueSoft:#E5F2FC;
     --topbar-bg:#B8503C;
-    /* collection (people) colours — the vivid "data" layer */
-    --philosophy:#5E9FE8; --music:#BF8EDA; --literature:#DE9255;
-    --science:#72BC8F; --politics:#DF84A8; --painting:#D4A72C; --religion:#A24E5E;
     /* events + structure — the calm layer */
     --eventc:#4B4F57;
     --struct:#8B93AD; --struct-ink:#565D78; --band:#F3F4F7; --r-card:8px; --r-pill:999px; --axis-h:32px;
@@ -865,8 +862,6 @@ function applyMetrics(){
   document.documentElement.style.setProperty('--bar-h',BAR_H+'px');
 }
 applyMetrics();
-// Greedy lane assignment so overlapping intervals stack instead of colliding.
-function packSegs(segs){const arr=segs.map((s,idx)=>({idx,start:s.start,end:s.end})).sort((a,b)=>a.start-b.start);const ends=[];const lane=new Array(segs.length).fill(0);for(const it of arr){let placed=false;for(let l=0;l<ends.length;l++){if(it.start>=ends[l]){lane[it.idx]=l;ends[l]=it.end;placed=true;break;}}if(!placed){lane[it.idx]=ends.length;ends.push(it.end);}}return {lane,nLanes:Math.max(1,ends.length)};}
 // All period blocks from the active marcs, pooled into one list and tagged with their marc's colour.
 // `key` (marc id + index) is the click identity: blocks have no id of their own in DATA, and the
 // pooled list is rebuilt on every render, so the DOM needs something stable to look them back up by.
