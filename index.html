@@ -166,7 +166,7 @@
 
   /* ===== Sidebar (marcs · col·leccions · a la vista) ===== */
   .body{display:flex;flex:1 1 auto;min-height:0;position:relative;}
-  .sidebar{position:absolute;top:0;left:0;bottom:0;width:240px;border-right:2px solid var(--border-strong);padding:16px;overflow:hidden;background:var(--soft);transition:width .18s ease,padding .18s ease;z-index:10;box-shadow:3px 0 14px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:18px;}   /* overlays the canvas instead of pushing it — the stage never resizes */
+  .sidebar{flex:0 0 auto;width:240px;border-right:2px solid var(--border-strong);padding:16px;overflow:hidden;background:var(--soft);transition:width .18s ease,padding .18s ease;box-shadow:3px 0 14px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:18px;}
   .body.collapsed .sidebar{width:14px;padding:0;overflow:hidden;box-shadow:none;}   /* thin strip stays visible as a "something's hidden here" cue */
   .body.collapsed .sidebar>*{display:none;}                        /* hide content instead of letting it reflow/wrap inside the strip */
   /* Tirador de la barra: botó RODÓ en color corporatiu (terracota) amb fletxa blanca, que cavalca la vora dreta. Forma + color diferents de les targetes de col·lecció → no es confon, i queda integrat sobre la línia de la vora. */
@@ -211,12 +211,11 @@
   /* ===== Category legend (below the timeline) =====
      Passive reading aid, not a control: it lists only the categories actually painted on the
      canvas right now, so it appears on the first search and empties again when you clear. */
-  .legend{position:absolute;left:256px;bottom:calc(var(--axis-h) + 12px);z-index:8;display:flex;flex-direction:column;gap:6px;max-width:40vw;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-card);background:rgba(255,255,255,.84);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 4px 16px rgba(40,44,60,.13);transition:left .18s ease;pointer-events:none;}
+  .legend{position:absolute;left:16px;bottom:calc(var(--axis-h) + 12px);z-index:8;display:flex;flex-direction:column;gap:6px;max-width:40vw;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-card);background:rgba(255,255,255,.84);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 4px 16px rgba(40,44,60,.13);transition:left .18s ease;pointer-events:none;}
   /* Floats over the canvas so it costs zero layout height — vertical space is the scarcest thing on
      a phone. Tucked against the sidebar (240px + gutter), which overlays the stage rather than
      shrinking it, so it has to follow the sidebar open/closed. Always open and non-interactive:
      pointer-events:none means it can never block a bar in a low lane that it happens to overlap. */
-  .body.collapsed .legend{left:30px;}
   .legend:empty{display:none;}                 /* nothing painted → no floating card at all */
   .legend .lgi{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);white-space:nowrap;}
   .legend .swatch{width:10px;height:10px;border-radius:3px;flex:0 0 auto;}
@@ -252,7 +251,7 @@
   .personbar .ptag{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--topbar-bg);}
   .personbar .pname{font-family:'Oswald','Roboto Condensed','Arial Narrow',Arial,sans-serif;font-weight:600;font-size:17px;letter-spacing:.02em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .personbar .pdesc{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .personbar .pback{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--border-strong);background:#fff;border-radius:50%;font-size:15px;line-height:1;color:var(--text2);text-decoration:none;}
+  .personbar .pback{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--border-strong);background:#fff;border-radius:50%;font-size:15px;line-height:1;color:var(--text2);cursor:pointer;padding:0;-webkit-appearance:none;appearance:none;}
   .personbar .pback:hover{background:var(--surface);color:var(--text);}
   .personbar[data-state="error"]{box-shadow:inset 3px 0 0 #B23A2E;}
   .personbar[data-state="error"] .ptag{color:#B23A2E;}
@@ -413,8 +412,7 @@
     .sidebar section{margin-bottom:0;}
     .filter{padding:3px 0;font-size:13px;}
     .filter input{width:15px;height:15px;}
-    .legend{left:202px;padding:6px 10px;gap:5px;max-width:60vw;}   /* 190px compact sidebar + gutter */
-    .body.collapsed .legend{left:26px;}
+    .legend{left:12px;padding:6px 10px;gap:5px;max-width:60vw;}
     .legend .lgi{font-size:11px;gap:6px;}
     .legend .lgi{font-size:11px;gap:5px;}
     .onview .item{padding:3px 0;font-size:13px;}
@@ -782,6 +780,7 @@ function saveNow(){
   try{localStorage.setItem(LS_KEY,JSON.stringify({v:1,pinned:[...state.pinned],collections:[...state.collections],marcs:[...state.marcs],showEvents:state.showEvents,focus:state.focus,extraPeople:PEOPLE.filter(p=>p._session),view:{px:pxPerYear,left:scroll.scrollLeft}}));}catch(e){}
 }
 function scheduleSave(){if(!lsReady)return;clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,400);}   // debounced: render() and scroll fire often
+window.addEventListener('beforeunload',()=>{if(lsReady)saveNow();});   // flush debounce before navigating to joc.html or elsewhere
 function restoreState(){
   let d;try{d=JSON.parse(localStorage.getItem(LS_KEY)||'null');}catch(e){d=null;}
   if(!d||d.v!==1)return;
@@ -798,7 +797,7 @@ scroll.addEventListener('scroll',scheduleSave);   // persist pan position (no-op
 let toastTimer=null;
 // Amplada del canvas tapada per la barra lateral (0 si està minimitzada). Serveix per centrar
 // overlays/toasts respecte el canvas VISIBLE i no respecte la pantalla sencera.
-function canvasBlind(){const sb=document.querySelector('.sidebar');return sb?Math.max(0,sb.getBoundingClientRect().right-scroll.getBoundingClientRect().left):0;}
+function canvasBlind(){return 0;}
 function showToast(msg){const bl=canvasBlind();toastEl.style.left='calc(50% + '+(bl/2)+'px)';toastEl.textContent=msg;toastEl.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('on'),2200);}
 const WIP=()=>showToast('🚧 En construcció');
 function hideDetail(){$('#detail').classList.remove('open');detailBackdrop.classList.remove('open');}
@@ -1521,7 +1520,7 @@ let collLoads=0, collSpinTimer=null;
 function beginCollLoading(){
   collLoads++;
   if(collLoads===1 && !collSpinTimer){
-    collSpinTimer=setTimeout(()=>{collSpinTimer=null; if(collLoads>0){collOverlay.style.left=canvasBlind()+'px'; collOverlay.classList.add('on');}},250);
+    collSpinTimer=setTimeout(()=>{collSpinTimer=null; if(collLoads>0){collOverlay.classList.add('on');}},250);
   }
   return function endCollLoading(){
     collLoads=Math.max(0,collLoads-1);
@@ -1599,9 +1598,8 @@ function fitToPresent(){
   if(!pp.length)return;                            // only the always-pinned ones → nothing you chose to frame, so don't move
   const y1=Math.min(...pp.map(p=>p.birth)), y2=Math.max(...pp.map(p=>deathOf(p)));
   const pad=Math.max(10,(y2-y1)*0.06);
-  const blind=Math.max(0,$('.sidebar').getBoundingClientRect().right-scroll.getBoundingClientRect().left);
-  setZoom(Math.max(60,scroll.clientWidth-blind-24)/((y2-y1)+2*pad));
-  scroll.scrollLeft=Math.min(Math.max(0,x(y1-pad)-blind),maxScroll());
+  setZoom(Math.max(60,scroll.clientWidth-24)/((y2-y1)+2*pad));
+  scroll.scrollLeft=Math.min(Math.max(0,x(y1-pad)),maxScroll());
 }
 // Zoom keeping the year under the pointer fixed.
 function zoomAt(clientX,factor){clearFitLatch();
@@ -1631,6 +1629,7 @@ $('#sidebarToggle').onclick=e=>{
   e.currentTarget.textContent=collapsed?'›':'‹';
   e.currentTarget.title=collapsed?'Mostra la barra lateral':'Amaga la barra lateral';
 };
+$('.sidebar').addEventListener('transitionend',e=>{if(e.propertyName==='width'){applyMetrics();setZoom(pxPerYear);scheduleSettle();}});
 
 // Trackpad pinch / ⌘+wheel → zoom. (Chrome/Firefox deliver pinch as ctrl+wheel.)
 // Bound to the document, not to #scroll: the sidebar overlays the canvas and the topbar sits above it,
@@ -1747,6 +1746,15 @@ const WD_ENT='https://www.wikidata.org/w/api.php?action=wbgetentities&props=labe
 const COMMONS_FP='https://commons.wikimedia.org/wiki/Special:FilePath/';
 const pbar=$('#personbar');
 
+// Surt del mode personatge sense recàrrega: restaura l'estat desat (el d'abans del joc) i
+// torna a la vista normal. Més net que href=index.html: conserva el que l'usuari hagi activat
+// durant la sessió (col·leccions, etc.) gràcies a que restoreState torna a llegir localStorage.
+function exitPersonMode(){
+  history.replaceState(null,'',location.pathname);
+  pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;
+  restoreState();
+  bootDefault();
+}
 // La barra es construeix amb nodes i textContent: les dades venen de Wikidata i no es poden
 // interpolar a innerHTML.
 function personBar(estat,nom,descripcio,imgUrl){
@@ -1768,10 +1776,11 @@ function personBar(estat,nom,descripcio,imgUrl){
   // Nomes la ✕, sense text (decisio d'en Bernat). La barra ja diu en quin mode estas, i qualsevol
   // text hi sobrava: «Veure tot el cronograma» es confonia amb «Vista global» de la topbar, que si
   // que enquadra. El que fa: treu el ?person= de la URL, i aixo torna la linia de temps desada.
-  const back=document.createElement('a');
-  back.className='pback';back.href='index.html';back.textContent='✕';
+  const back=document.createElement('button');
+  back.className='pback';back.type='button';back.textContent='✕';
   back.title='Tanca el personatge i torna a la teva linia de temps';
   back.setAttribute('aria-label','Tanca el personatge i torna a la teva linia de temps');
+  back.addEventListener('click',exitPersonMode);
   pbar.appendChild(back);
   pbar.classList.add('on');
   scheduleSettle();   // la barra canvia l'alcada del canvas: floorH s'ha de recalcular
