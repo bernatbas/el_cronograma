@@ -771,6 +771,7 @@ const inner=$('#inner'),barsLayer=$('#barsLayer'),eraTracksEl=$('#eraTracks'),er
 // canvis fets en reobrir la pàgina al mateix navegador.
 // ============================================================
 const LS_KEY='historiabasica.state.v1';
+const SIDEBAR_LS='historiabasica.sidebar';
 let lsReady=false,saveTimer=null,restoredView=null;
 function saveNow(){
   if(!lsReady)return;
@@ -1625,6 +1626,7 @@ $('#sidebarToggle').onclick=e=>{
   const collapsed=$('.body').classList.toggle('collapsed');
   e.currentTarget.textContent=collapsed?'›':'‹';
   e.currentTarget.title=collapsed?'Mostra la barra lateral':'Amaga la barra lateral';
+  try{localStorage.setItem(SIDEBAR_LS,collapsed?'collapsed':'open');}catch(ex){}
 };
 $('.sidebar').addEventListener('transitionend',e=>{if(e.propertyName==='width'){applyMetrics();setZoom(pxPerYear);scheduleSettle();}});
 
@@ -1723,7 +1725,7 @@ window.addEventListener('mouseup',()=>{
 // ============================================================
 // [10] BOOT (wait for a real width before the first fit)
 // ============================================================
-function bootDefault(){if(scroll.clientWidth>0){applyMetrics();if(restoredView){pxPerYear=Math.max(fitPx(),Math.min(20,restoredView.px));render();scroll.scrollLeft=Math.min(Math.max(0,restoredView.left||0),maxScroll());}else{defaultView();}lsReady=true;saveNow();}else{requestAnimationFrame(bootDefault);}}   // re-measure here too: at parse time the viewport height can still be 0 (or mid-settle behind Safari's URL bar), which would lock in the wrong metrics
+function bootDefault(cb){if(scroll.clientWidth>0){applyMetrics();if(restoredView){pxPerYear=Math.max(fitPx(),Math.min(20,restoredView.px));render();scroll.scrollLeft=Math.min(Math.max(0,restoredView.left||0),maxScroll());}else{defaultView();}lsReady=true;saveNow();if(cb)cb();}else{requestAnimationFrame(()=>bootDefault(cb));}}   // re-measure here too: at parse time the viewport height can still be 0 (or mid-settle behind Safari's URL bar), which would lock in the wrong metrics
 // ============================================================
 // [11] MODE «PERSONATGE UNIC» (?person=QID) — handoff des de joc.html
 // ============================================================
@@ -1834,11 +1836,19 @@ function bootPersonMode(qid){
     return;
   }
   const cached=personFromCache(qid);
-  if(cached){bootDefault();mostraPersonatge(cached);return;}
+  if(cached){
+    bootDefault(()=>{
+      mostraPersonatge(cached);
+      fitToPresent();                                        // centra la vista sobre el personatge
+      window.dispatchEvent(new Event('resize'));             // re-avalua fitSecnav amb l'amplada real (fix topbar HB)
+      if(!cached.img)fetchPerson(qid).then(p=>{if(p&&p.img)personBar('ok',p.name,p.desc||'',p.img);}).catch(()=>{});
+    });
+    return;
+  }
   bootDefault();
   personBar('loading','Carregant…','Consultant Wikidata…',null);
   fetchPerson(qid).then(p=>{
-    if(p)mostraPersonatge(p);
+    if(p){mostraPersonatge(p);requestAnimationFrame(fitToPresent);}
     else personBar('error','Personatge no trobat','Wikidata no retorna cap entitat per a '+qid+'.',null);
   }).catch(()=>{
     personBar('error','Sense connexió','No s’ha pogut consultar Wikidata i no hi ha còpia local d’aquest personatge.',null);
@@ -1877,7 +1887,8 @@ window.addEventListener('resize',checkPortrait);
 checkPortrait();
 
 // Sidebar: collapse by default on narrow screens (phone / small tablet in landscape).
-if(window.innerWidth<900){$('.body').classList.add('collapsed');$('#sidebarToggle').textContent='›';}   // re-clamp: a wider window raises the minimum zoom, so plain render() would leave the canvas narrower than the viewport
+// Sidebar: collapsed per defecte a pantalles estretes; la preferència manual (open/collapsed) es persisteix a localStorage.
+{const _sbPref=localStorage.getItem(SIDEBAR_LS);const _sbCollapse=_sbPref?_sbPref==='collapsed':window.innerWidth<900;if(_sbCollapse){$('.body').classList.add('collapsed');$('#sidebarToggle').textContent='›';}}
 
 // ===== Acordió de la barra lateral (NOMÉS mòbil) =====
 // En pointer:coarse, les 3 seccions es comporten com un acordió: només una oberta a la vegada,

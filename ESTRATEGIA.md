@@ -273,15 +273,6 @@ s'ha fet**. (Abans vivia en un quart document, `CONTEXT.md`, que es va fusionar 
   - Els **blocs de període no es poden cercar a Wikidata**: per a `MARCS` l'script només pot
     ajudar amb el format, el contingut és manual.
 
-### Neteja de codi
-
-- **Vars de categoria mortes al `:root`**: `--philosophy`, `--music`, `--literature`, `--science`,
-  `--politics`, `--painting`, `--religion` no es referencien enlloc (zero `var()`) i ja no cobreixen
-  l'`Esport`. La font viva és `CAT_COLORS` al JS. Esborrar-les, o bé fer que `CAT_COLORS` en llegeixi
-  els valors per tenir-ho en un sol lloc.
-- **`packSegs()`** queda definida sense cap crida des que `marcLayout()` la va substituir (canvi
-  #26). Esborrar-la quan estiguem segurs que no la volem recuperar.
-
 ### Opcional
 
 - Encastar Oswald en base64 (.woff2) per eliminar el FOUT del títol a la primera visita.
