@@ -29,15 +29,14 @@ export default defineConfig({
     {
       name: 'mobile-portrait',
       use: {
-        ...devices['iPhone 14'],
-        // portrait: width < height (390×844 per defecte de l'iPhone 14)
+        ...devices['Pixel 5'],
       },
     },
     {
       name: 'mobile-landscape',
       use: {
-        ...devices['iPhone 14 landscape'],
-        // landscape: width > height (844×390)
+        ...devices['Pixel 5'],
+        viewport: { width: 851, height: 393 },
       },
     },
   ],

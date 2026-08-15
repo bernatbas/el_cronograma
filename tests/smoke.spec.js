@@ -270,23 +270,22 @@ test.describe('Mode personatge (?person=QID)', () => {
 // ─── Mòbil: portrait ─────────────────────────────────────────────────────────
 
 test.describe('Mòbil portrait', () => {
-  test.skip(({ isMobile }, testInfo) =>
-    !isMobile || testInfo.project.name !== 'mobile-portrait',
-    'Només mobile-portrait');
-
-  test('surt el popup de girar el telèfon', async ({ page }) => {
+  test('surt el popup de girar el telèfon', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile-portrait', 'Només mobile-portrait');
     await freshIndex(page);
     await expect(page.locator('#portraitWall.on')).toBeVisible({ timeout: 2000 });
   });
 
-  test('la ✕ del popup el tanca i no torna a sortir', async ({ page }) => {
+  test('la ✕ del popup el tanca i no torna a sortir', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile-portrait', 'Només mobile-portrait');
     await freshIndex(page);
     await expect(page.locator('#portraitWall.on')).toBeVisible();
     await page.locator('#rotateDismiss').click();
     await expect(page.locator('#portraitWall.on')).toHaveCount(0);
   });
 
-  test('la topbar és compacta (≤50px)', async ({ page }) => {
+  test('la topbar és compacta (≤50px)', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'mobile-portrait', 'Només mobile-portrait');
     await page.goto(INDEX);
     const h = await page.locator('.topbar').evaluate(el => el.getBoundingClientRect().height);
     expect(h).toBeLessThanOrEqual(50);
@@ -296,9 +295,8 @@ test.describe('Mòbil portrait', () => {
 // ─── Mòbil: cap ⋮ a les barres ──────────────────────────────────────────────
 
 test.describe('Mòbil: botó ⋮', () => {
-  test.skip(({ isMobile }) => !isMobile, 'Només mòbil');
-
-  test('el ⋮ no és visible en cap barra en tàctil', async ({ page }) => {
+  test('el ⋮ no és visible en cap barra en tàctil', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'desktop', 'Només mòbil');
     await freshIndex(page);
     await addFirstPerson(page);
     // En tàctil el ⋮ ha de tenir display:none (regla CSS amb !important)
@@ -312,9 +310,8 @@ test.describe('Mòbil: botó ⋮', () => {
 // ─── Mòbil: fitxa com a bottom-sheet ────────────────────────────────────────
 
 test.describe('Mòbil: bottom-sheet', () => {
-  test.skip(({ isMobile }) => !isMobile, 'Només mòbil');
-
-  test('la fitxa puja des de baix en obrir-se', async ({ page }) => {
+  test('la fitxa puja des de baix en obrir-se', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'desktop', 'Només mòbil');
     await freshIndex(page);
     await addFirstPerson(page);
     await page.locator('#barsLayer .bar').first().click();
