@@ -164,13 +164,13 @@
 
   /* ===== Sidebar (marcs · col·leccions · a la vista) ===== */
   .body{display:flex;flex:1 1 auto;min-height:0;position:relative;}
-  .sidebar{flex:0 0 auto;width:240px;border-right:2px solid var(--border-strong);padding:16px;overflow:hidden;background:var(--soft);transition:width .18s ease,padding .18s ease;box-shadow:3px 0 14px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:18px;}
-  .body.collapsed .sidebar{width:14px;padding:0;overflow:hidden;box-shadow:none;}   /* thin strip stays visible as a "something's hidden here" cue */
+  .sidebar{flex:0 0 auto;width:240px;border-right:2px solid var(--border-strong);padding:16px;overflow:hidden;background:var(--soft);transition:width .18s ease,padding .18s ease,background .18s ease,border-color .18s ease;box-shadow:3px 0 14px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:18px;}
+  .body.collapsed .sidebar{width:18px;padding:0;overflow:hidden;box-shadow:none;background:var(--topbar-bg);border-right-color:var(--topbar-bg);}   /* la franja sencera en terracota fa d'affordance: «aquí hi ha alguna cosa» */
   .body.collapsed .sidebar>*{display:none;}                        /* hide content instead of letting it reflow/wrap inside the strip */
-  /* Tirador de la barra: botó RODÓ en color corporatiu (terracota) amb fletxa blanca, que cavalca la vora dreta. Forma + color diferents de les targetes de col·lecció → no es confon, i queda integrat sobre la línia de la vora. */
-  .sidebarHandle{position:absolute;top:50%;left:225px;transform:translateY(-50%);width:30px;height:30px;border:1.5px solid var(--topbar-bg);background:var(--topbar-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:15px;line-height:1;padding:0;z-index:10;box-shadow:0 2px 7px rgba(40,44,60,.22);transition:left .18s ease,filter .14s ease,box-shadow .14s ease;}
-  .sidebarHandle:hover{filter:brightness(1.08);box-shadow:0 3px 11px rgba(40,44,60,.30);}
-  .body.collapsed .sidebarHandle{left:3px;}
+  /* Tirador: píndola vertical en terracota, cavalca la vora dreta quan obre; centrada a la franja quan plega. */
+  .sidebarHandle{position:absolute;top:50%;left:232px;transform:translateY(-50%);width:16px;height:44px;border:none;background:var(--topbar-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:12px;line-height:1;padding:0;z-index:10;box-shadow:0 2px 7px rgba(40,44,60,.22);transition:left .18s ease,filter .14s ease,box-shadow .14s ease;}
+  .sidebarHandle:hover{filter:brightness(1.12);box-shadow:0 3px 11px rgba(40,44,60,.30);}
+  .body.collapsed .sidebarHandle{left:1px;}
   .sidebar h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin:0 0 10px;font-weight:600;}
   /* Cada secció: títol fix + cos amb scroll propi. Amb poc contingut prenen l'alçada natural (sense forçar aire);
      quan la suma no cap, el flexbox les encongeix (les més plenes cedeixen més espai) i cada cos fa scroll intern.
@@ -405,7 +405,7 @@
     .btn{min-width:30px;min-height:30px;padding:3px 8px;font-size:13px;}
     .search input{padding:5px 10px;font-size:13px;}
     .sidebar{width:190px;padding:10px 12px;}
-    .sidebarHandle{left:175px;}   /* sidebar 190 − 15 (radi del botó rodó) → cercle centrat sobre la vora */
+    .sidebarHandle{left:182px;}   /* sidebar 190 − 8 (meitat de la píndola 16px) → centrada sobre la vora */
     .sidebar h3{font-size:11px;margin:0 0 6px;}
     .sidebar section{margin-bottom:0;}
     .filter{padding:3px 0;font-size:13px;}
@@ -456,7 +456,7 @@
     .results{max-height:min(52vh,360px);}
     .results .row{min-height:44px;padding:11px 14px;}
     .results .rowsep{padding:9px 14px 4px;}
-    .sidebarHandle{width:34px;height:34px;font-size:16px;}   /* target tàctil una mica més gran */
+    .sidebarHandle{width:18px;height:50px;font-size:12px;}   /* píndola lleugerament més gran per a tàctil */
     .sidebar{gap:12px;}
     .sidebar h3{margin:0 0 6px;}
     .filter{padding:5px 0;font-size:13px;}
