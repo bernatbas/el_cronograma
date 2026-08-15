@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  structural:
+    name: Checks estructurals
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bloc compartit byte-idèntic (index ↔ joc)
+        run: |
+          diff \
+            <(sed -n '/===== Bloc compartit/,/fi del bloc compartit =====/p' index.html) \
+            <(sed -n '/===== Bloc compartit/,/fi del bloc compartit =====/p' joc.html) \
+          && echo "OK: blocs idèntics"
+
+      - name: Sintaxi JS — claus equilibrades
+        run: |
+          python3 - <<'EOF'
+          import re, sys
+          html = open('index.html').read()
+          m = re.search(r'<script>(.*)</script>', html, re.DOTALL)
+          if not m:
+              sys.exit('ERROR: no s\'ha trobat el bloc <script>')
+          s = m.group(1)
+          if s.count('{') != s.count('}'):
+              sys.exit(f'ERROR: claus desequilibrades ({s.count("{")} open vs {s.count("}")} close)')
+          print(f'OK: script {len(s):,} chars, claus equilibrades')
+          EOF
+
+  playwright:
+    name: Playwright (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    needs: structural
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [desktop, mobile-portrait, mobile-landscape]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instal·la dependències
+        run: npm ci
+
+      - name: Instal·la Chromium (Playwright)
+        run: npx playwright install --with-deps chromium
+
+      - name: Corre els tests (${{ matrix.project }})
+        run: npx playwright test --project=${{ matrix.project }}
+
+      - name: Puja l'informe si falla
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: playwright-report/
+          retention-days: 7
