@@ -1137,7 +1137,7 @@ function openDetail(p){
     <div class="actions">
       <button class="dbtn" data-act="context">Mostra context</button>
       <button class="dbtn" data-act="report">Reportar error</button>
-      ${SEED_PINNED.includes(p.id)?'':`<button class="dbtn danger" data-act="remove">Treu de la vista</button>`}
+      ${SEED_PINNED.includes(p.id)?'':`<button class="dbtn danger" data-act="remove">Esborra</button>`}
     </div>`;
   $('#closeDetail').onclick=()=>{hideDetail();state.selected=null;render();};
   d.querySelectorAll('.dbtn').forEach(btn=>btn.onclick=()=>{
@@ -1231,7 +1231,7 @@ function highlightSearch(i){
 function activateRow(r){if(!r)return;if(r.dataset.add)addFromSearch(r.dataset.add);else if(r.dataset.evsearch)focusEvent(r.dataset.evsearch);else if(r.dataset.wd)addWikidataPerson(r.dataset.wd);}
 function addFromSearch(id){
   if(!id||state.present.has(id))return;
-  state.selectedEvent=null;state.pinned.add(id);q.value='';results.classList.remove('open');wdTerm='';wdResults=[];render();revealPerson(id);
+  state.selectedEvent=null;state.pinned.add(id);q.value='';results.classList.remove('open');wdTerm='';wdResults=[];clearFitLatch();render();revealPerson(id);
 }
 // Wikidata person -> session-only entry in PEOPLE (no category; lost on reload)
 function addWikidataPerson(qid){
@@ -1461,6 +1461,7 @@ function focusEvent(id){
 function removePerson(id){
   if(SEED_PINNED.includes(id))return;
   state.pinned.delete(id);
+  clearFitLatch();
   if(state.focus===id)state.focus=null;   // si treus l'original, ja no hi ha focus fixat a dalt
   recomputePresent();closeDetailIfGone();
   if(PERSON_QID&&id==='wd_'+PERSON_QID){history.replaceState(null,'',location.pathname);pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;}
@@ -1481,13 +1482,14 @@ function showContext(id){
     const gap=Math.max(0,Math.max(o.birth-a2,a1-deathOf(o)));   // 0 if the lifespans overlap
     if(gap<=20)state.pinned.add(o.id);
   });
+  clearFitLatch();
   recomputePresent();render();panToPerson(id);
 }
 
 // Little ⋮ menu anchored to a bar (or opened from the detail panel).
 const barmenu=$('#barmenu');
 function openBarMenu(id,anchorEl){
-  const rm=SEED_PINNED.includes(id)?'':`<button class="danger" data-act="remove" data-id="${id}">Treu de la vista</button>`;
+  const rm=SEED_PINNED.includes(id)?'':`<button class="danger" data-act="remove" data-id="${id}">Esborra</button>`;
   // "Veure detall" first: zoomed far out a bar can shrink to just its ⋮ button, leaving no pill left
   // to click, so the menu has to offer the same thing clicking the bar would.
   barmenu.innerHTML=`<button data-act="detail" data-id="${id}">Veure detall</button><button data-act="context" data-id="${id}">Mostra context</button><button data-act="report" data-id="${id}">Reportar error</button>${rm}`;
@@ -1555,7 +1557,7 @@ async function toggleCollection(cid){
       const p=PEOPLE.find(x=>x.wd===q);
       if(p&&!SEED_PINNED.includes(p.id))state.pinned.delete(p.id);
     });
-    recomputePresent();closeDetailIfGone();render();return;
+    recomputePresent();closeDetailIfGone();clearFitLatch();render();return;
   }
   state.collections.add(cid);
   const local=new Map(PEOPLE.filter(p=>p.wd).map(p=>[p.wd,p]));
@@ -1564,6 +1566,7 @@ async function toggleCollection(cid){
   const stale=c.wds.filter(q=>{const p=local.get(q);return p&&p._session&&(!p._ts||Date.now()-p._ts>COLL_TTL);});   // membres del cau caducats → refresc silenciós
   if(!missing.length){                             // tot és local → mostrar-ho de cop, sense spinner
     localIds.forEach(id=>state.pinned.add(id));
+    clearFitLatch();
     recomputePresent();render();
     refreshStale(stale);                           // en segon pla, sense bloquejar l'aparició instantània
     return;
@@ -1576,7 +1579,7 @@ async function toggleCollection(cid){
   finally{endLoading();}
   if(!state.collections.has(cid))return;           // desactivada (o canviada) mentre carregava → descarta el resultat zombie
   localIds.forEach(id=>state.pinned.add(id));       // revela els locals ara — també és el fallback si la petició falla
-  if(failed){recomputePresent();render();showToast(`${c.name} · no s'ha pogut connectar a Wikidata`);return;}
+  if(failed){recomputePresent();clearFitLatch();render();showToast(`${c.name} · no s'ha pogut connectar a Wikidata`);return;}
   got.forEach(w=>{
     if(w.birth==null)return;                        // no birth year → nowhere to place the bar
     const id='wd_'+w.qid;
@@ -1584,6 +1587,7 @@ async function toggleCollection(cid){
     state.pinned.add(id);
   });
   recomputePresent();
+  clearFitLatch();
   const lost=missing.length-got.filter(w=>w.birth!=null).length;
   render();                                         // revela tothom de cop (s'acaba el pop-in de 2 fases)
   showToast(lost?`${c.name} · ${lost} no s'han pogut carregar`:c.name);
