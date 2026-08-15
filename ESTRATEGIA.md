@@ -231,6 +231,14 @@ s'ha fet**. (Abans vivia en un quart document, `CONTEXT.md`, que es va fusionar 
   volíem evitar. A decidir amb calma.
 - **Tirador d'obrir/tancar la barra** (Bernat, 2026-08-05). El botó rodó terracota encara no
   acaba d'estar bé — «algo chirria». Revisar-ne l'acabat i la integració amb la vora.
+  *(En curs: canvi #54 — cercle → píndola vertical terracota que sobresurti de la franja.)*
+- **Eix de l'any: anclar a meitat de pantalla en pantalles grans** (Bernat, 2026-08-15).
+  Ara l'eix queda enganxat a baix sempre. En pantalles grans quedaria més elegant que els
+  anys no pugin més amunt de la meitat de la pantalla (a l'alçada del botó de la sidebar).
+  Lligat amb `floorH` dins de `render()`; cal no trencar el comportament de mòbil.
+- **Textura a la topbar** (Bernat, 2026-08-15). Afegir algun element de textura al fons
+  terracota de la topbar per donar-li més personalitat. A definir: subtil grain, pattern
+  geomètric, gradient lleuger... sense que distregui del contingut.
 
 ### Motor d'importància per a personatges
 

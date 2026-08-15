@@ -165,12 +165,12 @@
   /* ===== Sidebar (marcs · col·leccions · a la vista) ===== */
   .body{display:flex;flex:1 1 auto;min-height:0;position:relative;}
   .sidebar{flex:0 0 auto;width:240px;border-right:2px solid var(--border-strong);padding:16px;overflow:hidden;background:var(--soft);transition:width .18s ease,padding .18s ease,background .18s ease,border-color .18s ease;box-shadow:3px 0 14px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:18px;}
-  .body.collapsed .sidebar{width:18px;padding:0;overflow:hidden;box-shadow:none;background:var(--topbar-bg);border-right-color:var(--topbar-bg);}   /* la franja sencera en terracota fa d'affordance: «aquí hi ha alguna cosa» */
+  .body.collapsed .sidebar{width:16px;padding:0;overflow:hidden;box-shadow:none;background:var(--topbar-bg);border-right-color:var(--topbar-bg);}   /* la franja sencera en terracota fa d'affordance: «aquí hi ha alguna cosa» */
   .body.collapsed .sidebar>*{display:none;}                        /* hide content instead of letting it reflow/wrap inside the strip */
   /* Tirador: píndola vertical en terracota, cavalca la vora dreta quan obre; centrada a la franja quan plega. */
   .sidebarHandle{position:absolute;top:50%;left:232px;transform:translateY(-50%);width:16px;height:44px;border:none;background:var(--topbar-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:12px;line-height:1;padding:0;z-index:10;box-shadow:0 2px 7px rgba(40,44,60,.22);transition:left .18s ease,filter .14s ease,box-shadow .14s ease;}
   .sidebarHandle:hover{filter:brightness(1.12);box-shadow:0 3px 11px rgba(40,44,60,.30);}
-  .body.collapsed .sidebarHandle{left:1px;}
+  .body.collapsed .sidebarHandle{left:8px;}   /* 16px franja − 8px (meitat de la píndola) → centrada sobre la vora dreta */
   .sidebar h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin:0 0 10px;font-weight:600;}
   /* Cada secció: títol fix + cos amb scroll propi. Amb poc contingut prenen l'alçada natural (sense forçar aire);
      quan la suma no cap, el flexbox les encongeix (les més plenes cedeixen més espai) i cada cos fa scroll intern.
