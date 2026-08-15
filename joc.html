@@ -1133,7 +1133,7 @@
     // sense la barreta posada, perquè la barreta viu dins de .secnav i si no es reduiria l'aire
     // a si mateixa (bucle). Sense cercador (pàgina de jocs) no hi ha res a separar: mai surt.
     sec.classList.remove('sep');
-    if(search&&!(plega&&hb)){
+    if(search&&!plega){
       const aire=search.getBoundingClientRect().left-sec.getBoundingClientRect().right;
       if(aire<40)sec.classList.add('sep');
     }
@@ -1154,6 +1154,7 @@
   function reavalua(){fitSecnav();requestAnimationFrame(fitSecnav);clearTimeout(t);t=setTimeout(fitSecnav,180);}
   reavalua();
   window.addEventListener('resize',reavalua);
+  if(screen&&screen.orientation)screen.orientation.addEventListener('change',()=>setTimeout(reavalua,200));   // en girar el mòbil screen.orientation.change dona temps al viewport d'assentar-se abans de mesurar
   const MQ=window.matchMedia('(pointer:coarse)');
   if(MQ.addEventListener)MQ.addEventListener('change',reavalua);   // el llindar tàctil pot canviar sense que el resize arribi a temps
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(reavalua);   // Oswald canvia l'amplada de la marca
