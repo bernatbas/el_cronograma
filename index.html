@@ -377,6 +377,16 @@
   .detail .dbtn.danger{color:#C0392B;border-color:#E7B7B0;}
   .detail .dbtn.danger:hover{background:#FBEDEB;}
 
+  /* ===== Footer (barra fina al peu de l'app) =====
+     flex:0 0 auto dins de .app → li menja alçada a .body, que ja és flex:1 1 auto amb min-height:0.
+     El render llegeix scroll.clientHeight en viu, així que floorH i l'eix s'hi ajusten sols. */
+  .footer{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:30px;background:#1E1E1D;color:#8C8880;font-size:11.5px;
+    /* és l'element més baix de l'app: el padding inferior ha de saltar l'indicador d'inici de l'iPhone (a la resta, env() val 0) */
+    padding:0 max(22px,env(safe-area-inset-left)) env(safe-area-inset-bottom) max(22px,env(safe-area-inset-right));}
+  .footer span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .footer a{color:#B3AEA6;text-decoration:none;}
+  .footer a:hover{color:#fff;text-decoration:underline;}
+
   /* ===== Rotate hint (touch devices in portrait: a dismissible suggestion, not a blocker) ===== */
   .rotate-hint{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.94);width:calc(100vw - 32px);max-width:560px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;background:var(--text);color:#fff;padding:34px 26px calc(34px + env(safe-area-inset-bottom));border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.42);z-index:70;opacity:0;visibility:hidden;transition:opacity .25s,transform .25s,visibility 0s .25s;}
   .rotate-hint.on{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1);transition:opacity .25s,transform .25s,visibility 0s;}
@@ -438,6 +448,8 @@
   @media (pointer:coarse){
     /* Barra superior fineta: només marca + cerca (ample complet) + Reset/Vista global compactes. El zoom es fa amb els dits. */
     .topbar{gap:10px;padding-top:3px;padding-bottom:3px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));border-bottom-width:2px;}
+    /* Footer compacte: al mòbil l'alçada és el recurs escàs, i el peu no és contingut. */
+    .footer{min-height:22px;font-size:10px;gap:10px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));}
     .brand{font-size:15px;letter-spacing:.04em;}
     .topbar-right{flex:1 1 auto;min-width:0;gap:8px;}
     .search{flex:1 1 auto;width:auto;min-width:0;}
@@ -527,8 +539,6 @@
       </div>
     </div>
   </header>
-  <!-- Mode «personatge unic»: el contingut el posa el JS amb nodes/textContent, no innerHTML -->
-  <div class="personbar" id="personbar"></div>
   <div class="body">
     <aside class="sidebar">
       <section>
@@ -546,6 +556,10 @@
     </aside>
     <button class="sidebarHandle" id="sidebarToggle" title="Amaga la barra lateral">‹</button>
     <main class="stage">
+      <!-- Mode «personatge unic»: el contingut el posa el JS amb nodes/textContent, no innerHTML.
+           Viu DINS de .stage (no com a germà de .body): així ocupa només l'ample del canvas i la
+           barra lateral arrenca just sota la topbar en lloc de baixar quan hi ha personatge. -->
+      <div class="personbar" id="personbar"></div>
       <div class="scroll" id="scroll">
         <div class="inner" id="inner">
           <div class="eraPanel" id="eraPanel"></div>
@@ -562,6 +576,10 @@
     </main>
     <aside class="detail" id="detail"></aside>
   </div>
+  <footer class="footer">
+    <span>© <span id="fyear">2026</span> Història Bàsica</span>
+    <span>Dades de <a href="https://www.wikidata.org" target="_blank" rel="noopener noreferrer">Wikidata</a> · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0</a></span>
+  </footer>
 </div>
 <div class="detail-backdrop" id="detailBackdrop"></div>
 <div class="barmenu" id="barmenu"></div>
@@ -584,6 +602,9 @@ const CAT_COLORS={
   'Esport':'#94AD3C'
 };
 const NOW_YEAR=new Date().getFullYear();
+// L'any del footer s'actualitza sol, com la línia d'avui. getElementById i no $(): aquí dalt
+// $ encara és en TDZ (es declara a [3]) i fer-lo servir aturaria tot l'script (vegeu canvi #49).
+{const _fy=document.getElementById('fyear');if(_fy)_fy.textContent=NOW_YEAR;}
 
 // COL·LECCIONS: playlists de persones. Guarden **Q-ids, no persones** — la mateixa referència
 // resol a una entrada de PEOPLE si la tenim en local, i es baixa de Wikidata si no, així una
