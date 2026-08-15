@@ -18,7 +18,8 @@
   }
   *{box-sizing:border-box;}
   html,body{margin:0;}
-  body{min-height:100dvh;background:var(--soft);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  /* columna flexible perquè el footer quedi sempre al peu, també quan el joc és curt */
+  body{min-height:100dvh;display:flex;flex-direction:column;background:var(--soft);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
 
   /* ===== Top bar: MATEIXA que index.html (fons terracota, vora #612E25, marca Oswald) ===== */
   /* Gra de paper sobre el terracota: soroll fractal en escala de grisos, generat amb un SVG inline
@@ -122,7 +123,17 @@
   .datainfo{color:rgba(255,255,255,.85);font-size:12px;white-space:nowrap;}
 
   /* ===== Contingut ===== */
-  main{max-width:920px;margin:0 auto;padding:24px 18px 64px;}
+  main{max-width:920px;margin:0 auto;padding:24px 18px 64px;flex:1 0 auto;width:100%;box-sizing:border-box;}   /* flex:1 0 auto → empeny el footer al peu sense encongir-se mai per sota del contingut */
+
+  /* ===== Footer (barra fina al peu) =====
+     ⚠️ Ha de ser IDÈNTIC al de l'index.html: surt a totes dues seccions i si divergeix,
+     el peu canvia d'aspecte en navegar. */
+  .footer{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:30px;background:#1E1E1D;color:#8C8880;font-size:11.5px;
+    /* és l'element més baix de l'app: el padding inferior ha de saltar l'indicador d'inici de l'iPhone (a la resta, env() val 0) */
+    padding:0 max(22px,env(safe-area-inset-left)) env(safe-area-inset-bottom) max(22px,env(safe-area-inset-right));}
+  .footer span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .footer a{color:#B3AEA6;text-decoration:none;}
+  .footer a:hover{color:#fff;text-decoration:underline;}
   .lead{color:var(--text2);font-size:14px;margin:2px 0 22px;}
   .menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
   .gamecard{display:flex;flex-direction:column;gap:8px;text-align:left;background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-card);padding:18px;cursor:pointer;transition:transform .12s,box-shadow .12s;font:inherit;color:inherit;}
@@ -304,6 +315,8 @@
     .btn{min-width:30px;min-height:30px;padding:3px 10px;font-size:13px;}
     .choice{padding:20px 14px;font-size:17px;}
     .choice .big{font-size:28px;}
+    /* Footer compacte: al mòbil l'alçada és el recurs escàs, i el peu no és contingut. */
+    .footer{min-height:22px;font-size:10px;gap:10px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));}
   }
   /* === Layout HORITZONTAL per a MOBIL tactil (repensat en columnes) ===
      Nomes s'activa en pantalles tactils, en horitzontal i amb alcada petita
@@ -392,7 +405,7 @@
   <div class="topbar-left">
     <!-- BLOC COMPARTIT: mateix markup als dos fitxers; nomes canvia quin <a> porta .on -->
     <div class="secnav">
-      <button class="brand" type="button" aria-haspopup="true" aria-expanded="false"><span class="brand-long">HISTÒRIA BÀSICA</span><span class="brand-short">HB</span><svg class="brandcaret" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button>
+      <button class="brand" type="button" aria-haspopup="true" aria-expanded="false"><span class="brand-long">HISTÒRIA BASica</span><span class="brand-short">HB</span><svg class="brandcaret" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button>
       <nav class="modeswitch" aria-label="Seccions">
         <a class="mode" href="index.html" title="Cronograma"><svg class="mode-ic" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2.5 15h13"/><path d="M4 6h7"/><path d="M7 10.5h7.5"/></svg><span class="mode-tx">Cronograma</span></a>
         <a class="mode on" href="joc.html" aria-current="page" title="Jocs"><svg class="mode-ic" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.4" y="2.4" width="13.2" height="13.2" rx="3.4"/><circle cx="6" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg><span class="mode-tx">Jocs</span></a>
@@ -405,6 +418,10 @@
   </div>
 </header>
 <main id="app"></main>
+<footer class="footer">
+  <span>© <span id="fyear">2026</span> HISTÒRIA BASica</span>
+  <span>Dades de <a href="https://www.wikidata.org" target="_blank" rel="noopener noreferrer">Wikidata</a> · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0</a></span>
+</footer>
 
 <!-- ⚠️ PROVISIONAL: data.js és una CÒPIA (snapshot) de les dades que ara viuen a
      index.html, feta per facilitar el testeig local. Quan existeixi la DB externa,
@@ -416,6 +433,8 @@
 <script>
 (function(){
   "use strict";
+  // L'any del footer s'actualitza sol (mateix criteri que a l'index.html)
+  {const _fy=document.getElementById('fyear');if(_fy)_fy.textContent=new Date().getFullYear();}
   // --- Catàleg de jocs (de moment només obren un placeholder) ---
   const GAMES=[
     {id:'ordena',       ic:'🕰️', t:'Ordena la línia',        d:'Posa 4–5 fets o personatges en el seu ordre cronològic correcte.'},

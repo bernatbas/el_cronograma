@@ -236,9 +236,19 @@ s'ha fet**. (Abans vivia en un quart document, `CONTEXT.md`, que es va fusionar 
   Ara l'eix queda enganxat a baix sempre. En pantalles grans quedaria més elegant que els
   anys no pugin més amunt de la meitat de la pantalla (a l'alçada del botó de la sidebar).
   Lligat amb `floorH` dins de `render()`; cal no trencar el comportament de mòbil.
-- **Textura a la topbar** (Bernat, 2026-08-15). Afegir algun element de textura al fons
-  terracota de la topbar per donar-li més personalitat. A definir: subtil grain, pattern
-  geomètric, gradient lleuger... sense que distregui del contingut.
+- **Textura a la topbar** (Bernat, 2026-08-15). ✅ Fet al canvi #56 (gra de paper amb
+  `background-blend-mode:soft-light`).
+- **Ressaltar el personatge del dia en arribar del joc** (Bernat, 2026-08-15). Quan s'entra
+  per `?person=QID`, el personatge s'ha de revelar amb el **mateix efecte que en cercar algú**
+  (`revealPerson`). Ara, si hi ha molta gent a la vista, costa localitzar-lo.
+- **Clicar el nom a la personbar torna a ressaltar-lo** (Bernat, 2026-08-15). Clicar el nom del
+  personatge del dia a la seva barra ha de repetir l'efecte de revelat i **centrar-l'hi la vista
+  amb pan, sense tocar el zoom** (`panToPerson`, no `fitToPresent`).
+- **Activar una col·lecció ha de reenquadrar** (Bernat, 2026-08-15). En activar-la, ajustar el
+  zoom perquè hi càpiga tothom. ⚠️ Contradiu una decisió anterior documentada a `CLAUDE.md`
+  («activar-la **no toca el zoom**, era brusc; per enquadrar hi ha Vista global») — cal decidir
+  si es reverteix aquella decisió o si el reenquadrament només s'aplica quan la col·lecció cau
+  **fora** de la vista actual.
 
 ### Motor d'importància per a personatges
 
