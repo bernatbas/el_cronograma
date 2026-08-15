@@ -1364,8 +1364,10 @@ eraTracksEl.addEventListener('mousemove',e=>{
   if(!el){hideBartip();return;}
   const b=activeBlocks().find(x=>x.key===el.getAttribute('data-blk'));
   if(!b){hideBartip();return;}
-  // Nomes cal el tooltip quan el zoom apreta i el text del bloc no es llegeix sencer (tallat horitzontal o verticalment). Si es llegeix tot, cap tooltip.
-  const clipped=el.scrollWidth>el.clientWidth+1||el.scrollHeight>el.clientHeight+1;
+  // Nomes cal el tooltip quan el zoom apreta i el text del bloc no es llegeix sencer. El bloc
+  // pare té overflow:hidden i no desborda mai; cal mesurar els spans interiors on hi ha ellipsis.
+  const nm=el.querySelector('.segname'),yr=el.querySelector('.segyears');
+  const clipped=(nm&&nm.scrollWidth>nm.clientWidth+1)||(yr&&yr.scrollWidth>yr.clientWidth+1)||el.scrollHeight>el.clientHeight+1;
   if(!clipped){hideBartip();return;}
   placeBartip(`${b.name} · ${fmtY(b.start)} – ${fmtY(b.end)}`,e.clientX,e.clientY);
 });
