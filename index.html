@@ -794,6 +794,7 @@ function restoreState(){
 }
 scroll.addEventListener('scroll',scheduleSave);   // persist pan position (no-op until lsReady)
 let toastTimer=null;
+let _settleT;   // ha d'anar aquí dalt: personBar() crida scheduleSettle() durant el boot de ?person=, molt abans de [12]
 // Amplada del canvas tapada per la barra lateral (0 si està minimitzada). Serveix per centrar
 // overlays/toasts respecte el canvas VISIBLE i no respecte la pantalla sencera.
 function canvasBlind(){return 0;}
@@ -1869,7 +1870,6 @@ if(PERSON_QID){
 // (pointer:coarse) i, sobretot, quan el layout s'assenta TARD: al mobil la barra d'adreces del
 // navegador s'anima ~200ms i un sol render al primer frame encara llegeix l'alcada antiga.
 // Per aixo es renderitza tres vegades: ara, al frame seguent, i un cop assentat.
-let _settleT;
 function settleRender(){applyMetrics();render();}
 function scheduleSettle(){requestAnimationFrame(settleRender);clearTimeout(_settleT);_settleT=setTimeout(settleRender,180);}
 window.addEventListener('resize',()=>{applyMetrics();setZoom(pxPerYear);scheduleSettle();});   // en girar el mobil canvia el llindar compacte: cal recalcular la geometria abans de repintar

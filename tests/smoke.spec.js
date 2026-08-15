@@ -235,16 +235,13 @@ test.describe('Mode personatge (?person=QID)', () => {
   });
 
   test('la ✕ restaura les col·leccions actives prèvies', async ({ page }) => {
-    // Prepara un estat desat amb la col·lecció de filòsofs activa
-    await page.goto(INDEX);
-    await page.evaluate(() => {
-      const saved = {
-        v: 1, pinned: [], collections: ['filosofs'], marcs: [],
-        showEvents: true, focus: null, extraPeople: [],
-        view: { px: 2, left: 0 }
-      };
-      localStorage.setItem('historiabasica.state.v1', JSON.stringify(saved));
-    });
+    // La col·lecció s'activa per la INTERFÍCIE, no injectant localStorage: en navegar,
+    // el `beforeunload` fa `saveNow()` amb l'estat EN MEMÒRIA i sobreescriuria qualsevol
+    // cosa que haguéssim escrit a mà a localStorage.
+    await freshIndex(page);
+    await page.route('**/wikidata.org/**', route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await page.locator('[data-col="filosofs"]').click();
+    await expect(page.locator('[data-col="filosofs"].on')).toBeVisible();
     // Entra en mode personatge
     await page.evaluate((q) => {
       localStorage.setItem('hb_view_person', JSON.stringify({
@@ -341,14 +338,12 @@ test.describe('Integració joc → index', () => {
   });
 
   test('l\'estat de l\'index sobreviu el viatge joc → index → ✕', async ({ page }) => {
-    // Prepara un estat a l'index (col·lecció activa)
-    await page.goto(INDEX);
-    await page.evaluate(() => {
-      localStorage.setItem('historiabasica.state.v1', JSON.stringify({
-        v: 1, pinned: [], collections: ['filosofs'], marcs: [],
-        showEvents: true, focus: null, extraPeople: [], view: { px: 2, left: 0 }
-      }));
-    });
+    // Prepara un estat a l'index activant la col·lecció per la interfície (vegeu la nota
+    // del test anterior: injectar localStorage no serveix, el `beforeunload` el sobreescriu).
+    await freshIndex(page);
+    await page.route('**/wikidata.org/**', route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await page.locator('[data-col="filosofs"]').click();
+    await expect(page.locator('[data-col="filosofs"].on')).toBeVisible();
     // El joc escriu el personatge del dia i navega
     await page.goto(JOC);
     await page.evaluate(() => {
