@@ -312,8 +312,10 @@ test.describe('Mode personatge (?person=QID)', () => {
     await page.goto('/index.html?person=Q868');
     // Surt del mode
     await page.locator('#personbar .pback').click();
-    // La col·lecció ha de quedar activada
-    await expect(page.locator('[data-col="filosofs"].on')).toBeVisible({ timeout: 3000 });
+    // La col·lecció ha de quedar activada. S'afirma sobre la CLASSE i no sobre la
+    // visibilitat: al mòbil l'acordió de la sidebar torna a «A la vista» en recarregar,
+    // així que el botó és correctament `.on` però queda dins d'una secció tancada.
+    await expect(page.locator('[data-col="filosofs"]')).toHaveClass(/on/, { timeout: 3000 });
   });
 
   test('QID invàlid no trenca la pàgina', async ({ page }) => {
@@ -416,7 +418,7 @@ test.describe('Integració joc → index', () => {
     await page.goto('/index.html?person=Q868');
     // Surt del mode personatge
     await page.locator('#personbar .pback').click();
-    // La col·lecció ha de seguir activa
-    await expect(page.locator('[data-col="filosofs"].on')).toBeVisible({ timeout: 3000 });
+    // La col·lecció ha de seguir activa (classe, no visibilitat: vegeu el test de dalt)
+    await expect(page.locator('[data-col="filosofs"]')).toHaveClass(/on/, { timeout: 3000 });
   });
 });
