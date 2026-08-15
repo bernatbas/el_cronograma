@@ -419,7 +419,7 @@
 </header>
 <main id="app"></main>
 <footer class="footer">
-  <span>© <span id="fyear">2026</span> HISTÒRIA BASica</span>
+  <span>© 2026 HISTÒRIA BASica</span>
   <span>Dades de <a href="https://www.wikidata.org" target="_blank" rel="noopener noreferrer">Wikidata</a> · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0</a></span>
 </footer>
 
@@ -433,8 +433,6 @@
 <script>
 (function(){
   "use strict";
-  // L'any del footer s'actualitza sol (mateix criteri que a l'index.html)
-  {const _fy=document.getElementById('fyear');if(_fy)_fy.textContent=new Date().getFullYear();}
   // --- Catàleg de jocs (de moment només obren un placeholder) ---
   const GAMES=[
     {id:'ordena',       ic:'🕰️', t:'Ordena la línia',        d:'Posa 4–5 fets o personatges en el seu ordre cronològic correcte.'},

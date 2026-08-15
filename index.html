@@ -577,7 +577,7 @@
     <aside class="detail" id="detail"></aside>
   </div>
   <footer class="footer">
-    <span>© <span id="fyear">2026</span> HISTÒRIA BASica</span>
+    <span>© 2026 HISTÒRIA BASica</span>
     <span>Dades de <a href="https://www.wikidata.org" target="_blank" rel="noopener noreferrer">Wikidata</a> · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0</a></span>
   </footer>
 </div>
@@ -602,10 +602,6 @@ const CAT_COLORS={
   'Esport':'#94AD3C'
 };
 const NOW_YEAR=new Date().getFullYear();
-// L'any del footer s'actualitza sol, com la línia d'avui. getElementById i no $(): aquí dalt
-// $ encara és en TDZ (es declara a [3]) i fer-lo servir aturaria tot l'script (vegeu canvi #49).
-{const _fy=document.getElementById('fyear');if(_fy)_fy.textContent=NOW_YEAR;}
-
 // COL·LECCIONS: playlists de persones. Guarden **Q-ids, no persones** — la mateixa referència
 // resol a una entrada de PEOPLE si la tenim en local, i es baixa de Wikidata si no, així una
 // col·lecció pot incloure qualsevol (aquí Descartes, Camus i Sartre no són a la DB local).
