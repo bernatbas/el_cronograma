@@ -1459,7 +1459,9 @@ function removePerson(id){
   if(SEED_PINNED.includes(id))return;
   state.pinned.delete(id);
   if(state.focus===id)state.focus=null;   // si treus l'original, ja no hi ha focus fixat a dalt
-  recomputePresent();closeDetailIfGone();render();
+  recomputePresent();closeDetailIfGone();
+  if(PERSON_QID&&id==='wd_'+PERSON_QID){history.replaceState(null,'',location.pathname);pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;}
+  scheduleSave();render();
 }
 // "Show context": add every SEED-DB person whose life overlaps, or is within 20 years of, this person.
 // DETERMINISTA: recorre només la BD original (salta els `_session` baixats de Wikidata/localStorage),
@@ -1741,15 +1743,6 @@ const WD_ENT='https://www.wikidata.org/w/api.php?action=wbgetentities&props=labe
 const COMMONS_FP='https://commons.wikimedia.org/wiki/Special:FilePath/';
 const pbar=$('#personbar');
 
-// Surt del mode personatge sense recàrrega: restaura l'estat desat (el d'abans del joc) i
-// torna a la vista normal. Més net que href=index.html: conserva el que l'usuari hagi activat
-// durant la sessió (col·leccions, etc.) gràcies a que restoreState torna a llegir localStorage.
-function exitPersonMode(){
-  history.replaceState(null,'',location.pathname);
-  pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;
-  restoreState();
-  bootDefault();
-}
 // La barra es construeix amb nodes i textContent: les dades venen de Wikidata i no es poden
 // interpolar a innerHTML.
 function personBar(estat,nom,descripcio,imgUrl){
@@ -1773,9 +1766,9 @@ function personBar(estat,nom,descripcio,imgUrl){
   // que enquadra. El que fa: treu el ?person= de la URL, i aixo torna la linia de temps desada.
   const back=document.createElement('button');
   back.className='pback';back.type='button';back.textContent='✕';
-  back.title='Tanca el personatge i torna a la teva linia de temps';
-  back.setAttribute('aria-label','Tanca el personatge i torna a la teva linia de temps');
-  back.addEventListener('click',exitPersonMode);
+  back.title='Treu el personatge de la vista';
+  back.setAttribute('aria-label','Treu el personatge de la vista');
+  back.addEventListener('click',()=>{removePerson('wd_'+PERSON_QID);});
   pbar.appendChild(back);
   pbar.classList.add('on');
   scheduleSettle();   // la barra canvia l'alcada del canvas: floorH s'ha de recalcular
@@ -1818,60 +1811,43 @@ function fetchPerson(qid){
     .finally(()=>clearTimeout(to));
 }
 
-// Pinta el cronograma amb NOMES aquest personatge. No es toca localStorage en cap moment
-// (lsReady es queda a false), aixi la linia de temps que tinguis desada sobreviu intacta i
-// «Veure tot el cronograma» la recupera tal com estava.
+// Afegeix el personatge del joc a la vista com qualsevol resultat de cerca de Wikidata:
+// lsReady segueix actiu, l’estat es desa normalment, i la × de la personbar és equivalent
+// a la × d’«A la vista» (removePerson).
 function mostraPersonatge(p){
   const id='wd_'+p.qid;
   if(!PEOPLE.some(x=>x.id===id)){
     PEOPLE.push({id,wd:p.qid,name:p.name,birth:p.birth,death:p.death,cats:guessCats(p.desc),
       gender:'',wiki:p.wiki,desc:p.desc||'',_session:true,_ts:Date.now()});
   }
-  state.pinned=new Set([id]);
-  state.collections=new Set();
-  state.marcs=new Set();          // vista neta: nomes eres + events + el personatge
-  state.focus=null;state.selected=null;state.selectedEvent=null;
-  recomputePresent();
-  applyMetrics();render();
-  // fitToPresent() divideix per l'amplada visible: si el canvas encara no en te, l'enquadrament
-  // surt malament. bootDefault() ja espera amb rAF per aquest motiu; aqui cal fer el mateix, i
-  // tornar-hi un cop assentat el layout (la barra de mode acaba de canviar l'alcada).
-  enquadra();
+  state.present.add(id);
+  state.pinned.add(id);
+  scheduleSave();
+  render();
   personBar('ok',p.name,p.desc||'',p.img);
-  requestAnimationFrame(enquadra);
-}
-
-// Vista inicial en mode personatge. NO es pot cridar bootDefault(): posa lsReady=true i crida
-// saveNow(), o sigui que desaria una vista buida a sobre de la linia de temps de l'usuari.
-function vistaBuida(){
-  if(scroll.clientWidth>0){applyMetrics();defaultView();}
-  else requestAnimationFrame(vistaBuida);
-}
-function enquadra(){
-  if(scroll.clientWidth>0){applyMetrics();render();fitToPresent();}
-  else requestAnimationFrame(enquadra);
 }
 function bootPersonMode(qid){
-  if(!/^Q\d+$/.test(qid)){        // QID invalid: no el reconsultem ni el posem en cap URL
-    vistaBuida();
-    personBar('error','Identificador no valid','L’enllac no porta un QID de Wikidata correcte.',null);
+  restoreState();
+  if(!/^Q\d+$/.test(qid)){
+    bootDefault();
+    personBar('error','Identificador no vàlid','L’enllaç no porta un QID de Wikidata correcte.',null);
     return;
   }
   const cached=personFromCache(qid);
-  if(cached){mostraPersonatge(cached);return;}
-  vistaBuida();                                       // pinta el cronograma mentre resol
+  if(cached){bootDefault();mostraPersonatge(cached);return;}
+  bootDefault();
   personBar('loading','Carregant…','Consultant Wikidata…',null);
   fetchPerson(qid).then(p=>{
     if(p)mostraPersonatge(p);
     else personBar('error','Personatge no trobat','Wikidata no retorna cap entitat per a '+qid+'.',null);
   }).catch(()=>{
-    personBar('error','Sense connexio','No s’ha pogut consultar Wikidata i no hi ha copia local d’aquest personatge.',null);
+    personBar('error','Sense connexió','No s’ha pogut consultar Wikidata i no hi ha còpia local d’aquest personatge.',null);
   });
 }
 
 const PERSON_QID=(new URLSearchParams(location.search)).get('person');
 if(PERSON_QID){
-  bootPersonMode(PERSON_QID);     // lsReady es queda a false: no s'escriu res a localStorage
+  bootPersonMode(PERSON_QID);
 }else{
   restoreState();
   bootDefault();
@@ -1883,7 +1859,7 @@ if(PERSON_QID){
 // navegador s'anima ~200ms i un sol render al primer frame encara llegeix l'alcada antiga.
 // Per aixo es renderitza tres vegades: ara, al frame seguent, i un cop assentat.
 let _settleT;
-function settleRender(){applyMetrics();render();if(PERSON_QID)fitToPresent();}
+function settleRender(){applyMetrics();render();}
 function scheduleSettle(){requestAnimationFrame(settleRender);clearTimeout(_settleT);_settleT=setTimeout(settleRender,180);}
 window.addEventListener('resize',()=>{applyMetrics();setZoom(pxPerYear);scheduleSettle();});   // en girar el mobil canvia el llindar compacte: cal recalcular la geometria abans de repintar
 window.addEventListener('load',scheduleSettle);

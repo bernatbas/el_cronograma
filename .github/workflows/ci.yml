@@ -49,7 +49,7 @@ jobs:
           cache: npm
 
       - name: Instal·la dependències
-        run: npm ci
+        run: npm install
 
       - name: Instal·la Chromium (Playwright)
         run: npx playwright install --with-deps chromium
