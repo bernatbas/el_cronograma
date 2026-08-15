@@ -191,7 +191,7 @@ test.describe('Col·leccions', () => {
     await expect(btn).toBeVisible();
     await btn.click();
     // Membres locals (Sòcrates, Plató, Aristòtil, Diògenes) apareixen sense Wikidata
-    await expect(page.locator('#barsLayer .bar')).toHaveCount({ minimum: 1 }, { timeout: 5000 });
+    await expect(page.locator('#barsLayer .bar').first()).toBeVisible({ timeout: 5000 });
     await expect(btn).toHaveClass(/on/);
   });
 
@@ -200,7 +200,7 @@ test.describe('Col·leccions', () => {
     await page.route('**/wikidata.org/**', route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
     const btn = page.locator('[data-col="filosofs"]');
     await btn.click();
-    await expect(page.locator('#barsLayer .bar')).toHaveCount({ minimum: 1 }, { timeout: 5000 });
+    await expect(page.locator('#barsLayer .bar').first()).toBeVisible({ timeout: 5000 });
     await btn.click();
     await expect(page.locator('#barsLayer .bar')).toHaveCount(0, { timeout: 3000 });
     await expect(btn).not.toHaveClass(/on/);
