@@ -1172,9 +1172,9 @@
   // Igual que amb floorH: en creuar el llindar de (pointer:coarse) el primer càlcul encara
   // llegeix l'estat antic. Es reavalua al frame següent i un cop assentat.
   let t;
-  function reavalua(){fitSecnav();requestAnimationFrame(fitSecnav);clearTimeout(t);t=setTimeout(fitSecnav,180);}
+  function reavalua(){fitSecnav();requestAnimationFrame(fitSecnav);clearTimeout(t);t=setTimeout(fitSecnav,300);}
   reavalua();
-  window.addEventListener('resize',reavalua);
+  window.addEventListener('resize',()=>{requestAnimationFrame(reavalua);});
   if(screen&&screen.orientation)screen.orientation.addEventListener('change',()=>setTimeout(reavalua,350));   // en girar el mòbil screen.orientation.change dona temps al viewport d'assentar-se abans de mesurar
   const MQ=window.matchMedia('(pointer:coarse)');
   if(MQ.addEventListener)MQ.addEventListener('change',reavalua);   // el llindar tàctil pot canviar sense que el resize arribi a temps
