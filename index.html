@@ -1717,37 +1717,38 @@ scroll.addEventListener('touchend',e=>{
   if(e.target.closest('.bar,.event,.seg.mov,.marcchip,.menu,button,a,input,.results'))return;   // deixa que el toc obri detalls / actuï normal
   const now=Date.now();
   if(now-lastTap<300&&Math.abs(t.clientX-lastTapX)<32&&Math.abs(t.clientY-lastTapY)<32){e.preventDefault();zoomAt(t.clientX,1.8);lastTap=0;hideGuide();}
-  else{
-    lastTap=now;lastTapX=t.clientX;lastTapY=t.clientY;
-    const rect=inner.getBoundingClientRect();
-    const offX=t.clientX-rect.left;
-    if(offX>=0&&offX<=totalW()){
-      const yr=Math.round(YEAR_MIN+offX/pxPerYear);
-      guide.style.display='block';guide.style.left=offX+'px';
-      guide.querySelector('.yr').textContent=yr;
-    }
-  }
+  else{lastTap=now;lastTapX=t.clientX;lastTapY=t.clientY;}
 },{passive:false});
 
-// Guia mòbil: toc proper a la línia → arrossegar (prioritat sobre barres i canvas). tStart=null evita que el handler de doble-tap dispari.
+// Guia mòbil: drag primer (passive:false, prioritat) → placement segon (passive:true).
+// Ordre important: drag es registra abans de placement, per tant fires primer.
+// Si la guia és visible i el toc cau a ±22px → drag actiu, placement no s'executa (guideTouch=true).
+// Si la guia no és visible, o el toc és lluny → drag surt, placement col·loca la guia al touchstart.
 let guideTouch=false;
+// 1) Drag: toc proper a la guia existent → arrossegar
 scroll.addEventListener('touchstart',e=>{
-  if(e.touches.length!==1||guide.style.display==='none')return;
+  if(e.touches.length!==1||guide.style.display!=='block')return;
   const t=e.touches[0];
-  const rect=inner.getBoundingClientRect();
-  const touchX=t.clientX-rect.left;
-  const guideX=parseFloat(guide.style.left||'-9999');
-  if(Math.abs(touchX-guideX)>22)return;
-  e.preventDefault();
-  guideTouch=true;
-  tStart=null;   // evita que el doble-tap / col·locació de guia disparin en el touchend
+  const touchX=t.clientX-scroll.getBoundingClientRect().left+scroll.scrollLeft;
+  if(Math.abs(touchX-parseFloat(guide.style.left||'-9999'))>22)return;
+  e.preventDefault();guideTouch=true;tStart=null;
 },{passive:false});
+// 2) Placement: toc al canvas buit → guia apareix immediatament
+scroll.addEventListener('touchstart',e=>{
+  if(e.touches.length!==1||guideTouch||pinch)return;
+  if(e.target.closest('.bar,.event,.seg.mov,.marcchip,.menu,button,a,input,.results'))return;
+  const t=e.touches[0];
+  const offX=t.clientX-scroll.getBoundingClientRect().left+scroll.scrollLeft;
+  if(offX<0||offX>totalW())return;
+  guide.style.display='block';guide.style.left=offX+'px';
+  guide.querySelector('.yr').textContent=Math.round(YEAR_MIN+offX/pxPerYear);
+},{passive:true});
+// 3) Moviment del drag
 scroll.addEventListener('touchmove',e=>{
   if(!guideTouch||e.touches.length!==1)return;
   e.preventDefault();
   const t=e.touches[0];
-  const rect=inner.getBoundingClientRect();
-  const offX=Math.max(0,Math.min(t.clientX-rect.left,totalW()));
+  const offX=Math.max(0,Math.min(t.clientX-scroll.getBoundingClientRect().left+scroll.scrollLeft,totalW()));
   guide.style.left=offX+'px';
   guide.querySelector('.yr').textContent=Math.round(YEAR_MIN+offX/pxPerYear);
 },{passive:false});
