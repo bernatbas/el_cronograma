@@ -315,8 +315,9 @@
     .btn{min-width:30px;min-height:30px;padding:3px 10px;font-size:13px;}
     .choice{padding:20px 14px;font-size:17px;}
     .choice .big{font-size:28px;}
-    /* Footer compacte: al mòbil l'alçada és el recurs escàs, i el peu no és contingut. */
-    .footer{min-height:22px;font-size:10px;gap:10px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));}
+    /* Footer: al mòbil s'amaga; l'env(safe-area-inset-bottom) es cedeix al main per no perdre la zona segura */
+    .footer{display:none;}
+    main{padding-bottom:max(64px,calc(64px + env(safe-area-inset-bottom)));}
   }
   /* === Layout HORITZONTAL per a MOBIL tactil (repensat en columnes) ===
      Nomes s'activa en pantalles tactils, en horitzontal i amb alcada petita
