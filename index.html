@@ -448,9 +448,8 @@
   @media (pointer:coarse){
     /* Barra superior fineta: només marca + cerca (ample complet) + Reset/Vista global compactes. El zoom es fa amb els dits. */
     .topbar{gap:10px;padding-top:3px;padding-bottom:3px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));border-bottom-width:2px;}
-    /* Footer: al mòbil s'amaga; l'env(safe-area-inset-bottom) es cedeix al .stage per no perdre la zona segura */
-    .footer{display:none;}
-    .stage{padding-bottom:env(safe-area-inset-bottom);}
+    /* Footer al mòbil: visible però sense safe-area-inset-bottom (l'indicador d'inici el pot tapar lleugerament, acceptable) */
+    .footer{min-height:22px;font-size:10px;gap:10px;padding-top:0;padding-bottom:0;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));}
     .brand{font-size:15px;letter-spacing:.04em;}
     .topbar-right{flex:1 1 auto;min-width:0;gap:8px;}
     .search{flex:1 1 auto;width:auto;min-width:0;}
