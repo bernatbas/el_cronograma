@@ -1685,7 +1685,7 @@ const tMid=t=>(t[0].clientX+t[1].clientX)/2;
 const tDist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
 scroll.addEventListener('touchstart',e=>{
   if(e.touches.length!==2){endPinch();return;}
-  e.preventDefault();
+  e.preventDefault();hideGuide();
   const rect=scroll.getBoundingClientRect(),mx=tMid(e.touches);
   pinch={dist0:Math.max(tDist(e.touches),1),px0:pxPerYear,mx,scale:1,
          year:YEAR_MIN+((mx-rect.left)+scroll.scrollLeft)/pxPerYear};   // the year under the fingers, held there for the whole gesture
@@ -1716,9 +1716,43 @@ scroll.addEventListener('touchend',e=>{
   const t=e.changedTouches[0];
   if(e.target.closest('.bar,.event,.seg.mov,.marcchip,.menu,button,a,input,.results'))return;   // deixa que el toc obri detalls / actuï normal
   const now=Date.now();
-  if(now-lastTap<300&&Math.abs(t.clientX-lastTapX)<32&&Math.abs(t.clientY-lastTapY)<32){e.preventDefault();zoomAt(t.clientX,1.8);lastTap=0;}
-  else{lastTap=now;lastTapX=t.clientX;lastTapY=t.clientY;}
+  if(now-lastTap<300&&Math.abs(t.clientX-lastTapX)<32&&Math.abs(t.clientY-lastTapY)<32){e.preventDefault();zoomAt(t.clientX,1.8);lastTap=0;hideGuide();}
+  else{
+    lastTap=now;lastTapX=t.clientX;lastTapY=t.clientY;
+    const rect=inner.getBoundingClientRect();
+    const offX=t.clientX-rect.left;
+    if(offX>=0&&offX<=totalW()){
+      const yr=Math.round(YEAR_MIN+offX/pxPerYear);
+      guide.style.display='block';guide.style.left=offX+'px';
+      guide.querySelector('.yr').textContent=yr;
+    }
+  }
 },{passive:false});
+
+// Guia mòbil: toc proper a la línia → arrossegar (prioritat sobre barres i canvas). tStart=null evita que el handler de doble-tap dispari.
+let guideTouch=false;
+scroll.addEventListener('touchstart',e=>{
+  if(e.touches.length!==1||guide.style.display==='none')return;
+  const t=e.touches[0];
+  const rect=inner.getBoundingClientRect();
+  const touchX=t.clientX-rect.left;
+  const guideX=parseFloat(guide.style.left||'-9999');
+  if(Math.abs(touchX-guideX)>22)return;
+  e.preventDefault();
+  guideTouch=true;
+  tStart=null;   // evita que el doble-tap / col·locació de guia disparin en el touchend
+},{passive:false});
+scroll.addEventListener('touchmove',e=>{
+  if(!guideTouch||e.touches.length!==1)return;
+  e.preventDefault();
+  const t=e.touches[0];
+  const rect=inner.getBoundingClientRect();
+  const offX=Math.max(0,Math.min(t.clientX-rect.left,totalW()));
+  guide.style.left=offX+'px';
+  guide.querySelector('.yr').textContent=Math.round(YEAR_MIN+offX/pxPerYear);
+},{passive:false});
+scroll.addEventListener('touchend',()=>{guideTouch=false;});
+scroll.addEventListener('touchcancel',()=>{guideTouch=false;});
 
 // Hover guide (vertical year line). Suppressed while dragging.
 scroll.addEventListener('mousemove',e=>{
