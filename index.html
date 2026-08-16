@@ -859,7 +859,7 @@ const guessCats=desc=>{if(!desc)return[];const d=desc.toLowerCase(),a=[];
   if(/compositor|composer|música|music/.test(d))a.push('Música');
   if(/escriptor|escritor|writer|poeta|poet|dramaturgo|dramaturg|novel·lista|novelist/.test(d))a.push('Literatura');
   if(/físic|physicist|matemàtic|mathematician|astrònom|astronomer|científic|scientist|naturalista|naturalist/.test(d))a.push('Ciència');
-  if(/rei|king|emperador|emperor|dictador|dictator|militar|military|president|independentista/.test(d))a.push('Política');
+  if(/polític|político|politician|politique|rei|king|emperador|emperor|dictador|dictator|militar|military|president|independentista|ministre|minister/.test(d))a.push('Política');
   if(/pintor|painter|escultor|sculptor/.test(d))a.push('Pintura');
   if(/profeta|prophet|religiós|religious|sant|saint/.test(d))a.push('Religió');
   if(/futbolista|jugador de futbol|footballer|football player|tennista|tenista|tennis player|jugador de tennis|basquetbol|bàsquet|baloncestista|basketball|boxejador|boxeador|boxer|atleta|athlete|track and field|velocista|sprinter|gimnasta|gymnast|nedador|nadador|swimmer|ciclista|cyclist|golfista|golfer|automobilista|racing driver|motorcycle racer/.test(d)
@@ -1155,18 +1155,18 @@ function openDetail(p){
   d.innerHTML=`<button class="close" id="closeDetail">×</button>
     <h2>${esc(p.name)}</h2>
     <div class="dhead"><span class="life">${fmtY(p.birth)} – ${isAlive(p)?'actualitat':fmtY(p.death)}</span>${hasCat(p)?p.cats.map(a=>`<span class="chip"><span class="swatch" style="background:${CAT_COLORS[a]}"></span>${a}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>Sense categoria</span>`}<span class="chip era">${eraLabel(p.birth)}</span></div>
-    ${p.gender?`<div class="meta">Gènere: ${p.gender}</div>`:''}
     <div class="desc">${esc(p.desc)}</div>
-    ${p.wiki?`<a class="wiki" href="${p.wiki}" target="_blank" rel="noopener">🔗 ${linkLabel(p.wiki)}</a>`:''}
     <div class="actions">
       <button class="dbtn" data-act="context">Mostra context</button>
-      <button class="dbtn" data-act="report">Reportar error</button>
+      ${p.wiki?`<button class="dbtn" data-act="wiki">${linkLabel(p.wiki)} ↗</button>`:''}
       ${SEED_PINNED.includes(p.id)?'':`<button class="dbtn danger" data-act="remove">Esborra</button>`}
     </div>`;
   $('#closeDetail').onclick=()=>{hideDetail();state.selected=null;render();};
   d.querySelectorAll('.dbtn').forEach(btn=>btn.onclick=()=>{
     const act=btn.getAttribute('data-act');
-    if(act==='remove')removePerson(p.id);else if(act==='report')WIP();else showContext(p.id);
+    if(act==='remove')removePerson(p.id);
+    else if(act==='wiki')window.open(p.wiki,'_blank','noopener,noreferrer');
+    else showContext(p.id);
   });
   render();
 }
@@ -2034,10 +2034,11 @@ if(ACC_MQ.addEventListener)ACC_MQ.addEventListener('change',setupAccordion);
   function reavalua(){fitSecnav();requestAnimationFrame(fitSecnav);clearTimeout(t);t=setTimeout(fitSecnav,180);}
   reavalua();
   window.addEventListener('resize',reavalua);
-  if(screen&&screen.orientation)screen.orientation.addEventListener('change',()=>setTimeout(reavalua,200));   // en girar el mòbil screen.orientation.change dona temps al viewport d'assentar-se abans de mesurar
+  if(screen&&screen.orientation)screen.orientation.addEventListener('change',()=>setTimeout(reavalua,350));   // en girar el mòbil screen.orientation.change dona temps al viewport d'assentar-se abans de mesurar
   const MQ=window.matchMedia('(pointer:coarse)');
   if(MQ.addEventListener)MQ.addEventListener('change',reavalua);   // el llindar tàctil pot canviar sense que el resize arribi a temps
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(reavalua);   // Oswald canvia l'amplada de la marca
+  window.addEventListener('pageshow',e=>{if(e.persisted)reavalua();});   // bfcache: el back-button restaura la pàgina sense re-executar el JS; reavalua garanteix que la barreta es recalculi
 })();
 // ===== fi del bloc compartit =====
 </script>

@@ -1175,10 +1175,11 @@
   function reavalua(){fitSecnav();requestAnimationFrame(fitSecnav);clearTimeout(t);t=setTimeout(fitSecnav,180);}
   reavalua();
   window.addEventListener('resize',reavalua);
-  if(screen&&screen.orientation)screen.orientation.addEventListener('change',()=>setTimeout(reavalua,200));   // en girar el mòbil screen.orientation.change dona temps al viewport d'assentar-se abans de mesurar
+  if(screen&&screen.orientation)screen.orientation.addEventListener('change',()=>setTimeout(reavalua,350));   // en girar el mòbil screen.orientation.change dona temps al viewport d'assentar-se abans de mesurar
   const MQ=window.matchMedia('(pointer:coarse)');
   if(MQ.addEventListener)MQ.addEventListener('change',reavalua);   // el llindar tàctil pot canviar sense que el resize arribi a temps
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(reavalua);   // Oswald canvia l'amplada de la marca
+  window.addEventListener('pageshow',e=>{if(e.persisted)reavalua();});   // bfcache: el back-button restaura la pàgina sense re-executar el JS; reavalua garanteix que la barreta es recalculi
 })();
 // ===== fi del bloc compartit =====
 </script>
