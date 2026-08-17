@@ -1002,7 +1002,7 @@
     // Mateixa mètrica de dificultat que «Abans o després?»: g = |ln(edatA/edatB)|, edat des de refYear.
     const O = { refYear:2026, gHardMax:0.55, gMidMin:0.70, gMidMax:1.10, gEasyMin:1.20 };
     let root=null, order=[], byKey={}, locked=false, ocdTimer=null;
-    let dragRow=null, ghost=null, grab=0;
+    let dragRow=null, ghost=null, grab=0, gaOrdStarted=false;
 
     function readLS(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(_){ return null; } }
     function writeLS(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(_){} }
@@ -1067,6 +1067,7 @@
       if(locked) return;
       if(e.pointerType==='mouse' && e.button!==0) return;
       e.preventDefault();
+      if(!gaOrdStarted){ gaOrdStarted=true; if(typeof gtag!=='undefined')gtag('event','joc_iniciat',{joc:'ordena'}); }
       dragRow=row;
       const r=row.getBoundingClientRect();
       grab=e.clientY-r.top;
@@ -1119,7 +1120,6 @@
 
     function submit(){
       if(locked) return; locked=true;
-      if(typeof gtag!=='undefined')gtag('event','joc_iniciat',{joc:'ordena'});
       const res=applyReveal(true);   // syncOrder() a dins: 'order' ja reflecteix el DOM
       if(typeof gtag!=='undefined')gtag('event','joc_completat',{joc:'ordena',resultat:res.allCorrect?'guanyat':'perdut',encerts:5-res.wrong});
       bumpStreak(res.allCorrect);
@@ -1209,7 +1209,7 @@
     try{ window.__ORD={ five:function(ds){ return pickFive(mulberry32(seedFromStr('ord:'+(ds||todayStr())))); } }; }catch(_){}
 
     return {
-      mount(container){ root=container; locked=false; if(typeof gtag!=='undefined')gtag('event','joc_vist',{joc:'ordena'}); const daily=readLS(DAILY_KEY); if(daily && daily.date===todayStr()){ renderResolved(daily); } else { buildAndRender(); } },
+      mount(container){ root=container; locked=false; gaOrdStarted=false; if(typeof gtag!=='undefined')gtag('event','joc_vist',{joc:'ordena'}); const daily=readLS(DAILY_KEY); if(daily && daily.date===todayStr()){ renderResolved(daily); } else { buildAndRender(); } },
       unmount(){ if(ocdTimer){ clearInterval(ocdTimer); ocdTimer=null; } window.removeEventListener('pointermove',onMove); if(ghost){ ghost.remove(); ghost=null; } dragRow=null; root=null; }
     };
   })();
