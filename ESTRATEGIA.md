@@ -7,7 +7,7 @@
 > Estat: **Fase 1 implementada** — motor de zoom semàntic actiu per a esdeveniments (2 files
 > permanents, aparició monòtona). Pendent: clustering, límit de carrils >2 i estendre-ho a
 > blocs/marcs.
-> Última actualització: 2026-08-11
+> Última actualització: 2026-08-17
 
 ---
 
@@ -207,48 +207,21 @@ s'ha fet**. (Abans vivia en un quart document, `CONTEXT.md`, que es va fusionar 
 
 ### Bugs
 
-- **El globus dels blocs no surt quan el text queda tallat** (Bernat, 2026-08-07). El gate del
-  `mousemove` d'`eraTracksEl` mesura `el.scrollWidth>el.clientWidth` del **bloc** `.seg.mov`,
-  però la retallada («ROMA…») passa a l'span interior `.segname` (té `text-overflow:ellipsis`),
-  que **no** fa desbordar el bloc. Per això el globus només surt amb zoom-out extrem, quan ni
-  `.segyears` hi cap. **Fix proposat** — mesurar els spans interiors:
-  ```js
-  const nm=el.querySelector('.segname'), yr=el.querySelector('.segyears');
-  const clipped=(nm&&nm.scrollWidth>nm.clientWidth+1)||(yr&&yr.scrollWidth>yr.clientWidth+1)||el.scrollHeight>el.clientHeight+1;
-  ```
+- **El globus dels blocs no surt quan el text queda tallat** ✅ Resolt al canvi #68. Es mesuren els spans interiors (`.segname`, `.segyears`) en lloc del bloc pare, i s'elimina la tolerància `+1` que amagava retallades d'1px.
 - **L'error vermell de Wikidata és massa sensible?** (Bernat, 2026-08-06). Sospita que a vegades
   surt la fila «No s'ha pogut connectar» quan no caldria, però sense context clar de quan passa.
   **Cal definir el cas de reproducció abans de tocar res.**
 
 ### UX
 
-- **Vista global auto-desmarcada** (Bernat, 2026-08-06). Si «Vista global» està activada i
-  s'afegeix algú que queda **fora** de l'enquadrament (per cerca o activant una col·lecció amb
-  algú més antic), el botó s'ha de **desmarcar sol** perquè torni a ser clicable i re-enquadri.
-  Ara cal desclicar i tornar a clicar.
-- **Repensar l'etiqueta «Treu de la vista»** (Bernat, 2026-08-07). Potser «Esborra», més curt i
-  clar. Contrapunt: «Esborra» pot fer pensar en esborrat permanent, que és justament el que
-  volíem evitar. A decidir amb calma.
-- **Tirador d'obrir/tancar la barra** (Bernat, 2026-08-05). El botó rodó terracota encara no
-  acaba d'estar bé — «algo chirria». Revisar-ne l'acabat i la integració amb la vora.
-  *(En curs: canvi #54 — cercle → píndola vertical terracota que sobresurti de la franja.)*
-- **Eix de l'any: anclar a meitat de pantalla en pantalles grans** (Bernat, 2026-08-15).
-  Ara l'eix queda enganxat a baix sempre. En pantalles grans quedaria més elegant que els
-  anys no pugin més amunt de la meitat de la pantalla (a l'alçada del botó de la sidebar).
-  Lligat amb `floorH` dins de `render()`; cal no trencar el comportament de mòbil.
-- **Textura a la topbar** (Bernat, 2026-08-15). ✅ Fet al canvi #56 (gra de paper amb
-  `background-blend-mode:soft-light`).
-- **Ressaltar el personatge del dia en arribar del joc** (Bernat, 2026-08-15). Quan s'entra
-  per `?person=QID`, el personatge s'ha de revelar amb el **mateix efecte que en cercar algú**
-  (`revealPerson`). Ara, si hi ha molta gent a la vista, costa localitzar-lo.
-- **Clicar el nom a la personbar torna a ressaltar-lo** (Bernat, 2026-08-15). Clicar el nom del
-  personatge del dia a la seva barra ha de repetir l'efecte de revelat i **centrar-l'hi la vista
-  amb pan, sense tocar el zoom** (`panToPerson`, no `fitToPresent`).
-- **Activar una col·lecció ha de reenquadrar** (Bernat, 2026-08-15). En activar-la, ajustar el
-  zoom perquè hi càpiga tothom. ⚠️ Contradiu una decisió anterior documentada a `CLAUDE.md`
-  («activar-la **no toca el zoom**, era brusc; per enquadrar hi ha Vista global») — cal decidir
-  si es reverteix aquella decisió o si el reenquadrament només s'aplica quan la col·lecció cau
-  **fora** de la vista actual.
+- **Vista global auto-desmarcada** ✅ Resolt com a efecte col·lateral: `addFromSearch` crida `clearFitLatch()` (desmarca), i les col·leccions criden `fitToPresent()` (#70). Si el nou personatge queda dins, el botó es queda marcat — és coherent perquè re-clicar tampoc no canviaria res.
+- **Repensar l'etiqueta «Treu de la vista»** ✅ Canviat a «Esborra».
+- **Tirador d'obrir/tancar la barra** ✅ Fet al canvi #54 (píndola vertical terracota).
+- **Eix de l'any: anclar a meitat de pantalla en pantalles grans** ✅ Fet. `floorH` al desktop és `Math.max(contentH, scroll.clientHeight*0.5)`.
+- **Textura a la topbar** ✅ Fet al canvi #56 (gra de paper amb `background-blend-mode:soft-light`).
+- **Ressaltar el personatge del dia en arribar del joc** ✅ Fet al canvi #64 (`flashBar` + `centerOnPerson`).
+- **Clicar el nom a la personbar torna a ressaltar-lo** ✅ Fet al canvi #64 (click al `pname` crida `revealPerson`).
+- **Activar una col·lecció ha de reenquadrar** ✅ Resolt al canvi #70. `toggleCollection()` crida `fitToPresent()` a tots els camins (èxit, error/fallback). La decisió anterior («no toca el zoom») es reverteix: la nova conducta és reenquadrar sempre, com fa `addFromSearch`. `CLAUDE.md` actualitzat.
 
 ### Motor d'importància per a personatges
 
@@ -295,3 +268,72 @@ s'ha fet**. (Abans vivia en un quart document, `CONTEXT.md`, que es va fusionar 
 
 - Encastar Oswald en base64 (.woff2) per eliminar el FOUT del títol a la primera visita.
 - Hint d'onboarding.
+
+---
+
+## 11. Analítica — Google Analytics 4
+
+Implementat el 2026-08-17. Measurement ID: **`G-0L1N4BT3QQ`** (free, sense límit de visites).
+El snippet és als dos fitxers (`index.html` i `joc.html`) just després del `<meta charset>`.
+
+### 11.1 Events de `index.html`
+
+| Event | Quan s'envia | Paràmetres |
+|---|---|---|
+| `colleccio_activada` | En activar una col·lecció (toggle ON) | `nom` |
+| `fitxa_oberta` | En obrir la fitxa de detall d'un personatge | `personatge` |
+| `mostra_context` | En clicar «Mostra context» dins la fitxa | `personatge` |
+| `vista_global` | En clicar el botó «Vista global» | — |
+| `reset` | En clicar «Restablir» | — |
+| `cerca_wikidata` | En llançar una cerca al cercador | `text` |
+| `personatge_afegit` | En afegir un personatge des de Wikidata | `nom`, `qid` |
+
+### 11.2 Events de `joc.html`
+
+| Event | Quan s'envia | Paràmetres |
+|---|---|---|
+| `joc_vist` | En muntar el joc (primera pantalla visible) | `joc` |
+| `joc_iniciat` | Primera interacció real: primera resposta (AbansDespres), primera pista desvetllada (PersonatgeDia), primer drag (OrdenaLinia) | `joc` |
+| `joc_completat` | En acabar el joc (bé per victòria, bé per derrota) | `joc`, `resultat` (`guanyat`/`perdut`), `encerts` (número) |
+| `joc_2_cronograma` | En clicar «Veure al cronograma» des del joc | `joc` |
+
+Valors de `joc`: `abansdespres`, `personatgedia`, `ordena`.
+
+`joc_vist` i `joc_iniciat` es disparen **un sol cop per sessió de joc** (flags `gaStarted` / `gaOrdStarted` que es reinicien al muntar cada joc). `joc_completat` es dispara cada cop que la partida acaba.
+
+### 11.3 Custom definitions a crear a GA4
+
+**Admin → Custom definitions → Create custom dimension:**
+
+| Nom GA4 | Paràmetre d'event | Scope |
+|---|---|---|
+| `Personatge` | `personatge` | Event |
+| `Nom` | `nom` | Event |
+| `QID` | `qid` | Event |
+| `Coleccio` | `nom` (filtrant per `colleccio_activada`) | Event |
+| `Text cerca` | `text` | Event |
+| `Joc` | `joc` | Event |
+| `Resultat` | `resultat` | Event |
+
+**Admin → Custom definitions → Create custom metric:**
+
+| Nom GA4 | Paràmetre d'event | Unitat |
+|---|---|---|
+| `Encerts` | `encerts` | Estàndard |
+
+### 11.4 Com llegir les dades
+
+- **Temps real** (Reports → Realtime): veure events en directe mentre s'usa l'eina.
+- **Informe d'events** (Reports → Engagement → Events): volum per event, últims 28 dies.
+- **Exploració** (Explore → Blank): per combinar dimensions — p. ex. `Joc` × `Resultat` per veure taxa de victòria per joc.
+- **Filtre de bots**: el trànsit de GitHub Pages i bots de Google apareix com a EUA sense interacció. Es pot crear un filtre `Developer traffic` a Admin → Data filters (Developer IP) per excloure les teves visites locals.
+
+### 11.5 Patró per a futurs jocs / botons «Veure al cronograma»
+
+Quan un joc nou tingui el botó de cross-sell cap a `index.html`, afegir **abans** de navegar:
+
+```js
+if(typeof gtag!=='undefined') gtag('event','joc_2_cronograma',{joc:'<id_del_joc>'});
+```
+
+I al muntar el joc, els tres events habituals (`joc_vist` al `mount`, `joc_iniciat` a la primera acció, `joc_completat` al final), seguint el patró de `gaStarted`.
