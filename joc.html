@@ -147,7 +147,7 @@
   .placeholder .d{color:var(--text2);max-width:460px;margin:0 auto 18px;line-height:1.5;}
   .badge{display:inline-block;background:#F7E5E0;color:#B23A2E;font-size:12px;font-weight:600;padding:5px 12px;border-radius:var(--r-pill);letter-spacing:.02em;}
   .err{background:#F7E5E0;color:#B23A2E;padding:16px;border-radius:var(--r-card);line-height:1.5;}
-  .soon{align-self:flex-start;margin-top:2px;background:var(--surface);color:var(--text2);font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);}
+  .soon{align-self:flex-start;margin-top:auto;background:var(--surface);color:var(--text2);font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);}
   /* --- Personatge del dia --- */
   .pwrap{max-width:560px;margin:0 auto;}
   .ploading,.perror{text-align:center;color:var(--text2);padding:44px 16px;font-size:15px;line-height:1.6;}
@@ -272,7 +272,7 @@
   .gameover .sub{color:var(--text2);margin:8px 0 20px;}
   .cta{background:var(--topbar-bg);color:#fff;border:none;border-radius:var(--r-pill);padding:12px 26px;font:inherit;font-size:15px;font-weight:600;cursor:pointer;}
   .cta:hover{filter:brightness(1.06);}
-  .tagd{align-self:flex-start;margin-top:2px;background:#F7E5E0;color:#B23A2E;font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);}
+  .tagd{align-self:flex-start;margin-top:auto;background:#F7E5E0;color:#B23A2E;font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);}
   .gamehead{text-align:center;margin:0 0 10px;}
   .gamehead h2{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-weight:600;letter-spacing:.03em;font-size:19px;margin:0;}
   .gamehead .sub{color:var(--text2);font-size:12px;margin-top:2px;}
@@ -325,15 +325,22 @@
      mig i els botons apilats a la dreta (zona del polze dret). */
   @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
     main{padding:10px 14px 14px;}
-    .game{max-width:none;display:grid;grid-template-columns:1fr 1fr minmax(120px,.8fr);grid-template-areas:"top top top" "cards cards btns";column-gap:14px;row-gap:6px;align-items:stretch;}
+    /* La graella del joc omple tota l'alcada de main (body 100svh) i la fila de cartes es 1fr:
+       aixi les cartes s'estiren en VERTICAL i tenen "feel de carta" (estretes i altes), sense scroll. */
+    .game{max-width:none;height:100%;display:grid;grid-template-columns:1fr 1fr minmax(120px,.8fr);grid-template-rows:auto 1fr;grid-template-areas:"top top top" "cards cards btns";column-gap:14px;row-gap:6px;align-items:stretch;}
     .gtop{grid-area:top;margin-bottom:2px;}
-    .cards2{grid-area:cards;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;}
+    /* Cartes estretes (format retrat) i centrades dins l'espai; s'estiren en alcada (align-items:stretch). */
+    .cards2{grid-area:cards;grid-template-columns:minmax(0,220px) auto minmax(0,220px);justify-content:center;align-items:stretch;gap:14px;min-height:0;}
     .vs{align-self:center;}
-    .itemcard{padding:10px 12px 9px;}
-    .itemcard .meta{font-size:11px;min-height:14px;margin-bottom:2px;}
-    .itemcard .meta.ev{font-size:13px;}
-    .itemcard .nm{font-size:15px;margin-top:2px;}
-    .itemcard .yr{font-size:25px;min-height:29px;margin-top:5px;}
+    /* #candslot embolcalla la carta nova: cal que tambe s'estiri i passi l'alcada a la .itemcard de dins. */
+    #candslot{display:flex;flex-direction:column;min-height:0;}
+    #candslot>.itemcard{flex:1;}
+    /* Contingut (meta / nom / any) centrat verticalment => aire a dalt i a baix = sensacio de carta. */
+    .itemcard{display:flex;flex-direction:column;justify-content:center;gap:10px;padding:18px 16px;min-height:0;}
+    .itemcard .meta{font-size:12px;min-height:14px;margin-bottom:0;}
+    .itemcard .meta.ev{font-size:15px;}
+    .itemcard .nm{font-size:18px;margin-top:0;line-height:1.3;}
+    .itemcard .yr{font-size:32px;min-height:36px;margin-top:0;}
     .choices{grid-area:btns;grid-template-columns:1fr;grid-auto-rows:auto;gap:8px;margin-top:0;align-content:center;}
     .choices .choice[data-a="abans"]{order:1;}
     .choices .choice[data-a="despres"]{order:2;}
@@ -343,6 +350,23 @@
     .pass{flex-direction:row;gap:8px;padding:8px 12px;}
     .pass .jk{font-size:20px;}
     .gamefoot{display:none;}
+    /* --- Pantalla de RESULTAT compacta i centrada (abans demanava scroll en horitzontal) --- */
+    /* Centrat vertical nomes a la pantalla de resultat: main:has(.gameover). Si el navegador no
+       suporta :has(), la regla s'ignora i la targeta queda a dalt (pero ja compacta, sense scroll). */
+    main:has(.gameover){display:flex;flex-direction:column;justify-content:center;align-items:center;}
+    .gameover{width:100%;max-width:520px;padding:14px 24px;margin:0;}
+    /* Capcalera compacta: mantenim el titol ⚖️ + la DATA del repte (info util), pero reduida. */
+    .gameover .gamehead{display:block;margin-bottom:6px;}
+    .gameover .gamehead h2{font-size:15px;margin:0;}
+    .gameover .gamehead .sub{font-size:11px;margin-top:1px;}
+    .gameover .rtitle{font-size:18px;margin:2px 0 4px;}
+    .gameover .stats{gap:32px;margin:6px 0 8px;}
+    .gameover .stat .v{font-size:30px;}
+    .gameover .stat .k{font-size:10px;margin-top:2px;}
+    .gameover .locknote{font-size:11.5px;margin:4px 0 2px;line-height:1.35;}
+    .gameover .countdown{font-size:11.5px;margin:2px 0 10px;}
+    .gameover .countdown b{font-size:13px;}
+    .gameover .btnrow .cta{padding:9px 24px;font-size:14px;}
   }
   /* ===== Joc: «Ordena la línia» ===== */
   .ordwrap{max-width:560px;margin:0 auto;}
@@ -381,7 +405,8 @@
     .ordhead{grid-area:head;margin:0;text-align:left;}
     .ordhead h2{font-size:15px;} .ordhead .sub{display:none;}
     .ordbar{grid-area:bar;margin:0;font-size:9px;}
-    .ordlist{grid-area:list;gap:4px;min-height:0;align-self:start;}
+    /* Llista centrada verticalment dins l'espai disponible => aire equilibrat a dalt i a baix (mes elegant que enganxada al footer). */
+    .ordlist{grid-area:list;gap:6px;min-height:0;align-self:center;}
     .ordfoot{grid-area:foot;margin:0;align-self:center;text-align:center;}
     .orditem{padding:4px 12px;gap:10px;}
     .ogrip{font-size:14px;}
@@ -393,6 +418,25 @@
     .ordbanner .locknote{font-size:10.5px;margin:4px 0 2px;line-height:1.3;}
     .ordbanner .countdown{font-size:10.5px;}
     .ordbanner .countdown b{font-size:12px;}
+  }
+  /* «Ordena la línia»: VERTICAL en pantalles baixes (iPhone SE i similars) => lletra i marges més petits perquè el resultat càpiga sense scroll */
+  @media (orientation:portrait) and (max-height:770px){
+    .ordhead{margin:0 0 8px;}
+    .ordhead h2{font-size:16px;}
+    .ordhead .sub{font-size:11px;margin-top:2px;}
+    .ordbar{margin:0 4px 5px;font-size:10px;}
+    .ordlist{gap:5px;}
+    .orditem{padding:6px 12px;gap:10px;}
+    .onm{font-size:13px;line-height:1.15;}
+    .ometa{font-size:10px;}
+    .oyr{font-size:18px;min-width:56px;}
+    .ordbanner .rtitle{font-size:17px;margin:1px 0;}
+    .ordbanner .streak{font-size:12px;margin:3px 0 1px;}
+    .ordbanner .locknote{font-size:11px;margin:3px 0 1px;line-height:1.3;}
+    .ordbanner .countdown{font-size:11px;}
+    .ordbanner .countdown b{font-size:12.5px;}
+    .btnrow{margin-top:6px;}
+    .btnrow .cta{padding:9px 22px;font-size:14px;}
   }
   /* Avís "pròximament" (toast fosc, com a index.html) */
   .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-8px);z-index:60;display:inline-flex;align-items:center;gap:8px;max-width:calc(100vw - 32px);background:#2C2C2B;color:#fff;font-size:14px;font-weight:600;letter-spacing:.01em;padding:10px 16px;border-radius:var(--r-pill);box-shadow:0 10px 28px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;white-space:nowrap;}
@@ -435,7 +479,7 @@
   "use strict";
   // --- Catàleg de jocs (de moment només obren un placeholder) ---
   const GAMES=[
-    {id:'ordena',       ic:'🕰️', t:'Ordena la línia',        d:'Posa 4–5 fets o personatges en el seu ordre cronològic correcte.'},
+    {id:'ordena',       ic:'↕️', t:'Ordena la línia',        d:'Ordena aquests 5 fets històrics correctament.'},
     {id:'abansdespres', ic:'⚖️', t:'Abans o després?',        d:'Encadena encerts dient si cada item és abans o després. Un repte nou cada dia.'},
     {id:'personatgedia',ic:'🎭', t:'Personatge del dia',      d:'Cada dia, una persona real de la història per descobrir i aprendre.', discover:true},
     {id:'personatge',   ic:'🕵️', t:'Endevina el personatge',  d:'Pistes progressives (era, categoria, descripció) fins encertar-ho.'},
@@ -600,7 +644,7 @@
           </div>
           <div class="choices">
             <button class="choice" data-a="abans"><span class="big">←</span>Abans</button>
-            <button class="pass" data-x="skip"${skipUsed?' disabled':''} title="${skipUsed?'Comodí ja gastat en aquesta partida':'Comodí: passa aquesta parella (un cop per partida)'}"><span class="jk">🃏</span><span class="jt">${skipUsed?'Gastat':'Comodí'}</span><span class="jn">${skipUsed?0:1}</span></button>
+            <button class="pass" data-x="skip"${skipUsed?' disabled':''} title="${skipUsed?'Comodí ja gastat en aquesta partida':'Comodí: passa aquesta parella (un cop per partida)'}"><span class="jk">���</span><span class="jt">${skipUsed?'Gastat':'Comodí'}</span><span class="jn">${skipUsed?0:1}</span></button>
             <button class="choice" data-a="despres"><span class="big">→</span>Després</button>
           </div>
           <div class="gamefoot">📅 Repte diari · ${ddmm(todayStr())}</div>
@@ -834,7 +878,7 @@
       if(p.wiki){ const a=el('a','pbtn','🔗 Llegeix-ne més'); a.href=p.wiki; a.target='_blank'; a.rel='noopener'; acts.appendChild(a); }
       card.appendChild(body); card.appendChild(acts); w.appendChild(card);
       const album=readLS(ALBUM_KEY)||[];
-      w.appendChild(el('div','palbum','🗂️ Has descobert '+album.length+' '+(album.length===1?'personatge':'personatges')));
+      w.appendChild(el('div','palbum','🗂�� Has descobert '+album.length+' '+(album.length===1?'personatge':'personatges')));
       root.appendChild(w);
     }
 
@@ -911,8 +955,8 @@
     function rowHTML(it){ const m=meta(it); const metaHTML=m?'<div class="ometa">'+m+'</div>':''; return '<div class="orditem" data-key="'+it.key+'"><span class="ogrip" aria-hidden="true">⠿</span><div class="omain">'+metaHTML+'<div class="onm">'+it.name+'</div></div><div class="oyr"><span class="q">?</span></div></div>'; }
 
     function render(){
-      const subTxt = locked ? 'Repte d\'avui · consulta el resultat, torna demà per un de nou' : 'Arrossega per ordenar de més antic (dalt) a més nou (baix) · Repte diari';
-      root.innerHTML='<div class="ordwrap"><div class="ordhead"><h2>🕰️ Ordena la línia</h2><div class="sub">'+subTxt+'</div></div><div class="ordbar"><span>↑ més antic</span><span>més nou ↓</span></div><div class="ordlist"></div><div class="ordfoot"><button class="cta" id="ordsubmit">Ho tinc!</button></div></div>';
+      const subHTML = locked ? '' : '<div class="sub">Arrossega per ordenar de més antic (dalt) a més nou (baix) · Repte diari</div>';
+      root.innerHTML='<div class="ordwrap"><div class="ordhead"><h2>↕️ Ordena la línia</h2>'+subHTML+'</div><div class="ordbar"><span>↑ més antic</span><span>més nou ↓</span></div><div class="ordlist"></div><div class="ordfoot"><button class="cta" id="ordsubmit">Ho tinc!</button></div></div>';
       const list=root.querySelector('.ordlist');
       list.innerHTML=order.map(rowHTML).join('');
       list.querySelectorAll('.orditem').forEach(el=>{ el.addEventListener('pointerdown',function(e){ startDrag(e,el); }); });
@@ -961,8 +1005,9 @@
       const ci={}; sorted.forEach((it,i)=>{ ci[it.key]=i; });
       const list=root.querySelector('.ordlist');
       const rows=Array.prototype.slice.call(list.querySelectorAll('.orditem'));
-      let allCorrect=true;
-      rows.forEach((el,i)=>{ if(ci[byKey[el.dataset.key].key]!==i) allCorrect=false; });
+      let wrong=0; const marks=[];
+      rows.forEach((el,i)=>{ const good=(ci[byKey[el.dataset.key].key]===i); marks.push(good); if(!good) wrong++; });
+      const allCorrect=(wrong===0);
       rows.forEach((el,i)=>{
         const it=byKey[el.dataset.key];
         const yr=el.querySelector('.oyr'); yr.textContent=fmtYear(it.year); if(animate) yr.classList.add('reveal');
@@ -971,15 +1016,15 @@
         else if(ci[it.key]!==i) el.classList.add('no');   // NOMÉS vermell els mal col·locats
         else el.classList.add('rev');
       });
-      return allCorrect;
+      return { allCorrect:allCorrect, wrong:wrong, marks:marks };
     }
 
     function submit(){
       if(locked) return; locked=true;
-      const allCorrect=applyReveal(true);   // syncOrder() a dins: 'order' ja reflecteix el DOM
-      bumpStreak(allCorrect);
-      writeLS(DAILY_KEY,{date:todayStr(),correct:allCorrect,order:order.map(x=>x.key)});
-      showBanner(allCorrect);
+      const res=applyReveal(true);   // syncOrder() a dins: 'order' ja reflecteix el DOM
+      bumpStreak(res.allCorrect);
+      writeLS(DAILY_KEY,{date:todayStr(),correct:res.allCorrect,order:order.map(x=>x.key)});
+      showBanner(res.allCorrect, res.wrong, res.marks);
     }
 
     function bumpStreak(correct){
@@ -994,26 +1039,51 @@
       const tick=()=>{ const el=root&&root.querySelector('#ocd'); if(!el){ if(ocdTimer){clearInterval(ocdTimer);ocdTimer=null;} return; } el.textContent=fmtDur(msToMidnight()); };
       tick(); ocdTimer=setInterval(tick,1000);
     }
-    function showBanner(correct){
+    function ordFailTitle(wrong){
+      if(wrong<=2) return 'Ai, per poc! 😅';
+      if(wrong===3) return 'Suposo que la idea era bona però… 🙄';
+      return 'Osti quin desastre… 🙈';
+    }
+    function showBanner(correct, wrong, marks){
       const foot=root.querySelector('.ordfoot'); if(!foot) return;
       const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
       foot.innerHTML = correct
         ? '<div class="ordbanner ok"><div class="rtitle perfect">Ben ordenat! 🎉</div><div class="streak">🔥 '+days+' '+(days===1?'dia':'dies')+' seguits encertant</div><div class="locknote">Ja has resolt el repte d\'avui. Torna demà per un de nou!</div><div class="countdown">Nou repte en <b id="ocd">--:--:--</b></div></div>'
-        : '<div class="ordbanner no"><div class="rtitle">No del tot 😬</div><div class="streak">S\'ha trencat la ratxa. En vermell, els que estaven fora de lloc.</div><div class="locknote">Ja has resolt el repte d\'avui. Torna demà per un de nou!</div><div class="countdown">Nou repte en <b id="ocd">--:--:--</b></div></div>';
+        : '<div class="ordbanner no"><div class="rtitle">'+ordFailTitle(wrong)+'</div><div class="streak">S\'ha trencat la ratxa. En vermell, els que estaven fora de lloc.</div><div class="locknote">Ja has resolt el repte d\'avui. Torna demà per un de nou!</div><div class="countdown">Nou repte en <b id="ocd">--:--:--</b></div></div>';
       startCd();
+      const bn=foot.querySelector('.ordbanner');
+      if(bn){ const br=document.createElement('div'); br.className='btnrow'; br.innerHTML='<button class="cta ordshare" data-x="oshare">📤 Comparteix</button>'; bn.appendChild(br); const sb=br.querySelector('[data-x="oshare"]'); if(sb) sb.addEventListener('click',()=>ordDoShare(marks,days,sb)); }
+    }
+
+    function ordShareText(marks, days){
+      const p=n=>String(n).padStart(2,'0');
+      const d=new Date(); const dd=p(d.getDate())+'/'+p(d.getMonth()+1);
+      const squares=(marks||[]).map(m=>m?'🟩':'🟥').join('');
+      let url=''; try{ if(location && location.origin && location.origin!=='null') url=location.origin+location.pathname; }catch(_){}
+      const NL=String.fromCharCode(10);
+      let t='↕️ Història BASica · Ordena la línia — '+dd+NL+squares+NL+'🔥 '+days+' '+(days===1?'dia':'dies')+' seguits';
+      if(url) t+=NL+url;
+      return t;
+    }
+    function ordDoShare(marks, days, btn){
+      const text=ordShareText(marks,days);
+      if(navigator.share){ navigator.share({text:text}).catch(()=>{}); return; }
+      const done=()=>{ if(btn){ const o=btn.textContent; btn.textContent='Copiat! ✅'; setTimeout(()=>{ btn.textContent=o; },1800); } };
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(done); }
+      else { done(); }
     }
 
     function renderLocked(correct){
       const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
-      root.innerHTML='<div class="gameover"><div class="gamehead"><h2>🕰️ Ordena la línia</h2></div><h2 class="rtitle '+(correct?'perfect':'')+'">'+(correct?'Encertat! 🎉':'No encertat 😬')+'</h2><div class="stats"><div class="stat"><div class="v">🔥 '+days+'</div><div class="k">'+(days===1?'dia':'dies')+' seguits</div></div></div><div class="locknote">Ja has jugat el repte d\'avui. Torna demà per un de nou!</div><div class="countdown">Nou repte en <b id="ocd">--:--:--</b></div></div>';
+      root.innerHTML='<div class="gameover"><div class="gamehead"><h2>↕️ Ordena la línia</h2></div><h2 class="rtitle '+(correct?'perfect':'')+'">'+(correct?'Encertat! 🎉':'No encertat 😬')+'</h2><div class="stats"><div class="stat"><div class="v">🔥 '+days+'</div><div class="k">'+(days===1?'dia':'dies')+' seguits</div></div></div><div class="locknote">Ja has jugat el repte d\'avui. Torna demà per un de nou!</div><div class="countdown">Nou repte en <b id="ocd">--:--:--</b></div></div>';
       startCd();
     }
 
     function buildAndRender(){
-      if(!dataOk()){ root.innerHTML='<div class="err">No hi ha dades per jugar.</div>'; return; }
+      if(!dataOk()){ root.innerHTML='<div class="err">Ens hem quedat sense història! N\'estem fabricant de nova. Torna demà 🛠️</div>'; return; }
       const rng=mulberry32(seedFromStr('ord:'+todayStr()));
       const five=pickFive(rng);
-      if(!five){ root.innerHTML='<div class="err">No hi ha prou dades per jugar.</div>'; return; }
+      if(!five){ root.innerHTML='<div class="err">Ens hem quedat sense història! N\'estem fabricant de nova. Torna demà 🛠️</div>'; return; }
       byKey={}; five.forEach(it=>{ byKey[it.key]=it; });
       let o, guard=0; do{ o=shuffle(five.slice()); guard++; }while(isSorted(o)&&guard<25);
       order=o; locked=false; render();
@@ -1021,39 +1091,17 @@
 
     // Reentrada un cop jugat avui: mostra SEMPRE els 5 elements amb el resultat marcat (per aprendre).
     function renderResolved(daily){
-      if(!dataOk()){ root.innerHTML='<div class="err">No hi ha dades per jugar.</div>'; return; }
+      if(!dataOk()){ root.innerHTML='<div class="err">Ens hem quedat sense història! N\'estem fabricant de nova. Torna demà 🛠️</div>'; return; }
       const rng=mulberry32(seedFromStr('ord:'+todayStr()));
       const five=pickFive(rng);
-      if(!five){ root.innerHTML='<div class="err">No hi ha prou dades per jugar.</div>'; return; }
+      if(!five){ root.innerHTML='<div class="err">Ens hem quedat sense història! N\'estem fabricant de nova. Torna demà 🛠️</div>'; return; }
       byKey={}; five.forEach(it=>{ byKey[it.key]=it; });
-      let o=null, hasOrder=false;
-      if(daily && daily.order && daily.order.length===five.length){ o=daily.order.map(k=>byKey[k]).filter(Boolean); if(o.length===five.length) hasOrder=true; else o=null; }
-      if(!o) o=five.slice().sort((a,b)=>a.year-b.year);   // fallback per a partides antigues sense ordre desat
+      let o=null;
+      if(daily && daily.order && daily.order.length===five.length){ o=daily.order.map(k=>byKey[k]).filter(Boolean); if(o.length!==five.length) o=null; }
+      if(!o) o=five.slice().sort((a,b)=>a.year-b.year);   // fallback de seguretat
       order=o; locked=true; render();
-      if(hasOrder){
-        const ac=applyReveal(false);   // sense animació en reentrar
-        showBanner(ac);
-      } else {
-        // Partida jugada abans d'aquest canvi: no tenim l'ordre real, no pintem verd/vermell (seria enganyós).
-        revealNeutral();
-        showRecoverNote(!!(daily&&daily.correct));
-      }
-    }
-
-    // Revelació neutra (només anys, sense colors) per a partides antigues sense ordre desat.
-    function revealNeutral(){
-      const list=root.querySelector('.ordlist'); if(!list) return;
-      Array.prototype.slice.call(list.querySelectorAll('.orditem')).forEach(el=>{
-        const it=byKey[el.dataset.key];
-        el.querySelector('.oyr').textContent=fmtYear(it.year);
-        el.style.cursor='default';
-      });
-    }
-    function showRecoverNote(correct){
-      const foot=root.querySelector('.ordfoot'); if(!foot) return;
-      const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
-      foot.innerHTML='<div class="ordbanner"><div class="rtitle '+(correct?'perfect':'')+'">'+(correct?'Vas encertar! 🎉':'No vas encertar 😬')+'</div><div class="streak">🔥 '+days+' '+(days===1?'dia':'dies')+' seguits encertant</div><div class="locknote">D\'aquesta partida no vam desar el teu ordre, així que es mostren els 5 en ordre cronològic. A partir d\'ara es desarà el teu ordre exacte amb els encerts i errors.</div><div class="countdown">Nou repte en <b id="ocd">--:--:--</b></div></div>';
-      startCd();
+      const res=applyReveal(false);   // sense animació en reentrar
+      showBanner(res.allCorrect, res.wrong, res.marks);
     }
 
     // Hook de depuració per als tests (no afecta el joc).
