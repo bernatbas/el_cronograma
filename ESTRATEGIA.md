@@ -280,7 +280,7 @@ El snippet és als dos fitxers (`index.html` i `joc.html`) just després del `<m
 
 | Event | Quan s'envia | Paràmetres |
 |---|---|---|
-| `colleccio_activada` | En activar una col·lecció (toggle ON) | `nom` |
+| `colleccio_activada` | En activar una col·lecció (toggle ON) | `colleccio` |
 | `fitxa_oberta` | En obrir la fitxa de detall d'un personatge | `personatge` |
 | `mostra_context` | En clicar «Mostra context» dins la fitxa | `personatge` |
 | `vista_global` | En clicar el botó «Vista global» | — |
@@ -307,7 +307,8 @@ Totes 7 ja creades a GA4 (Admin → Custom definitions → Custom dimensions):
 
 | Nom GA4 | Paràmetre d'event | Scope | Nota |
 |---|---|---|---|
-| `Colecció` | `nom` | Event | Compartit amb `personatge_afegit` (filtra per event) |
+| `Colecció` | `colleccio` | Event | |
+| `Nom persona` | `nom` | Event | |
 | `Encerts` | `encerts` | Event (metric) | A Custom metrics, no dimensions — permet fer mitjanes i sumes |
 | `Joc` | `joc` | Event | |
 | `Personatge` | `personatge` | Event | |
