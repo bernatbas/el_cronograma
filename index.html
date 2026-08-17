@@ -1396,7 +1396,7 @@ eraTracksEl.addEventListener('mousemove',e=>{
   // Nomes cal el tooltip quan el zoom apreta i el text del bloc no es llegeix sencer. El bloc
   // pare té overflow:hidden i no desborda mai; cal mesurar els spans interiors on hi ha ellipsis.
   const nm=el.querySelector('.segname'),yr=el.querySelector('.segyears');
-  const clipped=(nm&&nm.scrollWidth>nm.clientWidth+1)||(yr&&yr.scrollWidth>yr.clientWidth+1)||el.scrollHeight>el.clientHeight+1;
+  const clipped=(nm&&nm.scrollWidth>nm.clientWidth)||(yr&&yr.scrollWidth>yr.clientWidth)||el.scrollHeight>el.clientHeight;
   if(!clipped){hideBartip();return;}
   placeBartip(`${b.name} · ${fmtY(b.start)} – ${fmtY(b.end)}`,e.clientX,e.clientY);
 });
