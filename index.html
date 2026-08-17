@@ -1916,14 +1916,23 @@ function mostraPersonatge(p,opts){
   if(!opts||!opts.noBar) personBar('ok',p.name,p.desc||'',p.img);
 }
 
-// Barra multi-personatge per al handoff des del joc (?joc=): mostra N noms sense l'etiqueta
-// «Personatge del dia». El ✕ elimina tots els personatges i amaga la barra.
-function jocBar(people){
+// Barra multi-personatge per al handoff des del joc (?joc=): mostra N noms + anys sense etiqueta.
+// resolvedIds: ids reals a PEOPLE (deduplicats per QID a bootJocContext).
+// Clicar el nom torna a fer flash de totes les barres; ✕ elimina tots i amaga la barra.
+function jocBar(people,resolvedIds){
   pbar.textContent='';
   pbar.dataset.state='ok';
   const txt=document.createElement('div');txt.className='ptxt';
   const nm=document.createElement('div');nm.className='pname';
-  nm.textContent=people.map(function(p){return p.name;}).join(' · ');
+  nm.style.cursor='pointer';nm.title='Torna a ressaltar-los a la vista';
+  nm.textContent=people.map(function(p){
+    const y1=fmtY(p.birth);
+    const y2=p.death!=null?fmtY(p.death):'avui';
+    return p.name+' ('+y1+'–'+y2+')';
+  }).join(' · ');
+  nm.addEventListener('click',function(){
+    resolvedIds.forEach(function(id){revealPerson(id);});
+  });
   txt.appendChild(nm);
   pbar.appendChild(txt);
   const back=document.createElement('button');
@@ -1931,7 +1940,7 @@ function jocBar(people){
   back.title='Treu els personatges de la vista';
   back.setAttribute('aria-label','Treu els personatges de la vista');
   back.addEventListener('click',function(){
-    people.forEach(function(p){removePerson('wd_'+p.qid);});
+    resolvedIds.forEach(function(id){removePerson(id);});
     pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;
   });
   pbar.appendChild(back);
@@ -1976,10 +1985,24 @@ function bootJocContext(){
   if(!people||!people.length){ restoreState(); bootDefault(); return; }
   restoreState();
   bootDefault(function(){
-    people.forEach(function(p){ mostraPersonatge(p,{noBar:true}); });
-    jocBar(people);
+    // Per a cada persona, busca si ja existeix a la BD local pel QID per evitar duplicats.
+    // Si existeix, pina la seva entry local; si no, crea una entry _session nova.
+    const resolvedIds=people.map(function(p){
+      const local=PEOPLE.find(function(x){return x.wd===p.qid;});
+      const id=local?local.id:'wd_'+p.qid;
+      if(!local){
+        PEOPLE.push({id:'wd_'+p.qid,wd:p.qid,name:p.name,birth:p.birth,death:p.death,
+          cats:guessCats(p.desc),gender:'',wiki:p.wiki||'',desc:p.desc||'',_session:true,_ts:Date.now()});
+      }
+      state.present.add(id);
+      state.pinned.add(id);
+      return id;
+    });
+    scheduleSave();
+    jocBar(people,resolvedIds);
     fitToPresent();
     window.dispatchEvent(new Event('resize'));
+    setTimeout(function(){ resolvedIds.forEach(function(id){ flashBar(id); }); },500);
   });
 }
 
