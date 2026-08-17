@@ -906,7 +906,7 @@
     function favs(){ return readLS(FAV_KEY)||[]; }
     function isFav(qid){ return favs().some(function(x){ return x.qid===qid; }); }
     function toggleFav(p){ let a=favs(); if(a.some(function(x){ return x.qid===p.qid; })) a=a.filter(function(x){ return x.qid!==p.qid; }); else a.push({qid:p.qid,name:p.name,birth:p.birth,death:p.death,img:p.img,desc:p.desc}); writeLS(FAV_KEY,a); return isFav(p.qid); }
-    function viewInCronograma(p){ writeLS(VIEW_KEY,{qid:p.qid,name:p.name,birth:p.birth,death:p.death,img:p.img,desc:p.desc}); location.href='index.html?person='+encodeURIComponent(p.qid); }
+    function viewInCronograma(p){ if(typeof gtag!=='undefined')gtag('event','joc_2_cronograma',{joc:'personatgedia'}); writeLS(VIEW_KEY,{qid:p.qid,name:p.name,birth:p.birth,death:p.death,img:p.img,desc:p.desc}); location.href='index.html?person='+encodeURIComponent(p.qid); }
 
     // --- Pop-up d'invitacio a contribuir (nomes escenaris 2 i 3) ---
     function popupSeenToday(){ const s=readLS(POPUP_KEY); return !!(s && s.date===todayStr()); }
