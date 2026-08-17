@@ -308,7 +308,7 @@ Totes 7 ja creades a GA4 (Admin → Custom definitions → Custom dimensions):
 | Nom GA4 | Paràmetre d'event | Scope | Nota |
 |---|---|---|---|
 | `Colecció` | `nom` | Event | Compartit amb `personatge_afegit` (filtra per event) |
-| `Encerts` | `encerts` | Event | Creat com a dimension; move a Custom metrics si vols fer mitjanes |
+| `Encerts` | `encerts` | Event (metric) | A Custom metrics, no dimensions — permet fer mitjanes i sumes |
 | `Joc` | `joc` | Event | |
 | `Personatge` | `personatge` | Event | |
 | `QID` | `qid` | Event | |
