@@ -1922,7 +1922,7 @@ function bootPersonMode(qid){
       centerOnPerson(cached);                               // zoom + centrat sobre el personatge (no fitToPresent: enmarca tots els desats)
       window.dispatchEvent(new Event('resize'));             // re-avalua fitSecnav amb l'amplada real (fix topbar HB)
       setTimeout(()=>flashBar('wd_'+qid),500);             // retardat: sobreviu els render() de scheduleSettle (180ms)
-      if(!cached.img)fetchPerson(qid).then(p=>{if(p&&p.img)personBar('ok',p.name,p.desc||'',p.img);}).catch(()=>{});
+      if(!cached.img)fetchPerson(qid).then(p=>{if(p&&p.img&&pbar.classList.contains('on'))personBar('ok',p.name,p.desc||'',p.img);}).catch(()=>{});
     });
     return;
   }
