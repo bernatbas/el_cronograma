@@ -1903,7 +1903,7 @@ function fetchPerson(qid){
 // Afegeix el personatge del joc a la vista com qualsevol resultat de cerca de Wikidata:
 // lsReady segueix actiu, l’estat es desa normalment, i la × de la personbar és equivalent
 // a la × d’«A la vista» (removePerson).
-function mostraPersonatge(p){
+function mostraPersonatge(p,opts){
   const id='wd_'+p.qid;
   if(!PEOPLE.some(x=>x.id===id)){
     PEOPLE.push({id,wd:p.qid,name:p.name,birth:p.birth,death:p.death,cats:guessCats(p.desc),
@@ -1913,7 +1913,30 @@ function mostraPersonatge(p){
   state.pinned.add(id);
   scheduleSave();
   render();
-  personBar('ok',p.name,p.desc||'',p.img);
+  if(!opts||!opts.noBar) personBar('ok',p.name,p.desc||'',p.img);
+}
+
+// Barra multi-personatge per al handoff des del joc (?joc=): mostra N noms sense l'etiqueta
+// «Personatge del dia». El ✕ elimina tots els personatges i amaga la barra.
+function jocBar(people){
+  pbar.textContent='';
+  pbar.dataset.state='ok';
+  const txt=document.createElement('div');txt.className='ptxt';
+  const nm=document.createElement('div');nm.className='pname';
+  nm.textContent=people.map(function(p){return p.name;}).join(' · ');
+  txt.appendChild(nm);
+  pbar.appendChild(txt);
+  const back=document.createElement('button');
+  back.className='pback';back.type='button';back.textContent='✕';
+  back.title='Treu els personatges de la vista';
+  back.setAttribute('aria-label','Treu els personatges de la vista');
+  back.addEventListener('click',function(){
+    people.forEach(function(p){removePerson('wd_'+p.qid);});
+    pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;
+  });
+  pbar.appendChild(back);
+  pbar.classList.add('on');
+  scheduleSettle();
 }
 function bootPersonMode(qid){
   restoreState();
@@ -1953,7 +1976,8 @@ function bootJocContext(){
   if(!people||!people.length){ restoreState(); bootDefault(); return; }
   restoreState();
   bootDefault(function(){
-    people.forEach(function(p){ mostraPersonatge(p); });
+    people.forEach(function(p){ mostraPersonatge(p,{noBar:true}); });
+    jocBar(people);
     fitToPresent();
     window.dispatchEvent(new Event('resize'));
   });
