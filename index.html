@@ -345,8 +345,8 @@
   /* ===== Hover guide + "today" line ===== */
   .guide{position:absolute;top:0;width:1px;background:var(--blue);pointer-events:none;display:none;z-index:8;}
   .guide .yr{position:absolute;top:2px;left:3px;background:var(--blue);color:#fff;font-size:11px;padding:2px 7px;border-radius:var(--r-card);white-space:nowrap;}
-  .nowline{position:absolute;top:0;width:0;border-left:2px solid rgba(30,30,29,.4);pointer-events:none;}
-  .nowline .lbl{position:absolute;top:2px;left:5px;background:var(--text);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-card);white-space:nowrap;}
+  .nowline{position:absolute;top:0;width:0;border-left:2px dashed #612E25;pointer-events:none;}
+  .nowline .lbl{position:absolute;top:2px;left:5px;background:#612E25;color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-card);white-space:nowrap;}
 
   /* ===== Axis (sticks to the viewport bottom when content overflows) ===== */
   .axis{position:sticky;bottom:0;height:var(--axis-h);border-top:1px solid var(--border);background:var(--canvas);z-index:7;}
@@ -944,10 +944,9 @@ function packLanes(people){
   // Geometria d'una pastilla (posició i amplada) — s'aplica igual al focus i a la resta.
   const geom=p=>{
     const startX=x(p.birth);
-    const nameW=p.name.length*7+20;
     const lifeW=Math.max(x(deathOf(p))-startX,8);
     const alive=isAlive(p);
-    const pillW=alive?Math.max(lifeW,nameW):lifeW;
+    const pillW=lifeW;
     const endX=startX+pillW+(alive?FUTURE_FADE:0);
     p._startX=startX;p._endX=endX;p._pillW=pillW;p._alive=alive;
     return endX;
