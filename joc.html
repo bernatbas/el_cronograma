@@ -125,7 +125,7 @@
   .datainfo{color:rgba(255,255,255,.85);font-size:12px;white-space:nowrap;}
 
   /* ===== Contingut ===== */
-  main{max-width:920px;margin:0 auto;padding:24px 18px 64px;flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;width:100%;box-sizing:border-box;}   /* flex:1 0 auto → empeny el footer al peu sense encongir-se mai per sota del contingut */
+  main{max-width:920px;margin:0 auto;padding:20px 18px 28px;flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;width:100%;box-sizing:border-box;}   /* flex:1 0 auto → empeny el footer al peu sense encongir-se mai per sota del contingut */
 
   /* ===== Footer (barra fina al peu) =====
      ⚠️ Ha de ser IDÈNTIC al de l'index.html: surt a totes dues seccions i si divergeix,
@@ -181,8 +181,8 @@
   .pinvtext{font-size:14px;line-height:1.5;color:var(--text2);margin:0 0 18px;}
   .pinvcta{display:inline-flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box;font:inherit;font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;padding:12px 16px;border-radius:var(--r-card);border:1px solid var(--topbar-bg);background:var(--topbar-bg);color:#fff;transition:transform .12s,box-shadow .12s;}
   .pinvcta:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(178,58,46,.3);}
-  .pinvno{display:block;width:100%;margin-top:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:10px;border-radius:var(--r-card);border:1px solid var(--border-strong);background:none;color:var(--text2);transition:background .12s,color .12s,border-color .12s,transform .12s;}
-  .pinvno:hover{background:var(--surface);color:var(--text);border-color:var(--border-strong);transform:translateY(-1px);}
+  .pinvno{display:block;width:100%;margin-top:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:10px;border-radius:var(--r-card);border:1px solid transparent;background:none;color:var(--text2);transition:background .12s,color .12s,border-color .12s,transform .12s;}
+  .pinvno:hover{background:var(--surface);color:var(--text);border-color:var(--border);transform:translateY(-1px);}
   .pinvhelp{display:inline-block;width:100%;box-sizing:border-box;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--text2);text-decoration:none;}
   .pinvhelp:hover{color:var(--topbar-bg);text-decoration:underline;}
   @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
@@ -420,7 +420,7 @@
   .orditem.no{border:2.5px solid #C43A2C;background:#FBECEA;box-shadow:0 6px 18px rgba(196,58,44,.2);animation:nopulse .5s;}
   .orditem.rev{border-color:var(--border);}
   .orditem.ok .oyr{color:#238049;} .orditem.no .oyr{color:#B4321F;}
-  .ordfoot{margin-top:20px;text-align:center;}
+  .ordfoot{margin-top:14px;text-align:center;}
   .ordbanner{margin-top:4px;}
   .ordbanner .rtitle{font-family:'Oswald',Arial,sans-serif;font-size:22px;font-weight:600;margin:2px 0;}
   .ordbanner .rtitle.perfect{color:#2E8B57;}
@@ -428,6 +428,16 @@
   .ordbanner .locknote{color:var(--text2);font-size:13px;margin:8px 0 2px;line-height:1.4;}
   .ordbanner .countdown{color:var(--text2);font-size:13px;margin:2px 0 0;}
   .ordbanner .countdown b{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;color:var(--text);letter-spacing:.05em;font-weight:600;font-size:15px;}
+  /* «Ordena la línia»: DESKTOP/TABLET amb finestra baixa (barra de pestanyes+marcadors menja alcada) => compactem perque no aparegui mai la barra de scroll */
+  @media (min-width:861px) and (max-height:820px){
+    main{padding-top:14px;padding-bottom:16px;}
+    .ordhead{margin:0 0 8px;}
+    .ordlist{gap:6px;}
+    .orditem{padding:9px 14px;}
+    .ordfoot{margin-top:8px;}
+    .ordbanner .streak{margin:4px 0 2px;}
+    .ordbanner .locknote{display:none;}
+  }
   /* «Ordena la línia»: HORITZONTAL TACTIL = mateixa logica que els altres jocs (pila a l'esquerra, boto/resultat a la dreta) */
   @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
     .ordwrap{max-width:none;height:100%;display:grid;grid-template-columns:1fr minmax(140px,190px);grid-template-areas:"head head" "bar foot" "list foot";grid-template-rows:auto auto minmax(0,1fr);column-gap:16px;row-gap:5px;align-items:start;}
@@ -464,8 +474,9 @@
     .oyr{font-size:18px;min-width:56px;}
     .ordbanner .rtitle{font-size:17px;margin:1px 0;}
     .ordbanner .streak{font-size:12px;margin:3px 0 1px;}
-    .ordbanner .locknote{font-size:11px;margin:3px 0 1px;line-height:1.3;}
-    .ordbanner .countdown{font-size:11px;}
+    /* Pantalla baixa: amaguem la nota redundant ("Ja has resolt..."), el compte enrere ja ho diu => cap scroll. */
+    .ordbanner .locknote{display:none;}
+    .ordbanner .countdown{font-size:11px;margin-top:2px;}
     .ordbanner .countdown b{font-size:12.5px;}
     .btnrow{margin-top:6px;}
     .btnrow .cta{padding:9px 22px;font-size:14px;}
@@ -572,7 +583,7 @@
     function meta(it){
       if(it.kind==='event') return '<div class="meta ev"></div>';
       return it.anchor==='naix'
-        ? '<div class="meta">�� naixement</div>'
+        ? '<div class="meta">🎂 naixement</div>'
         : '<div class="meta">🕯️ mort</div>';
     }
     // role: 'ref' (fixada, amb xinxeta) o 'new' (elevada, apareix animada). flip: anima l'any en revelar-se.
@@ -584,7 +595,7 @@
       return `<div class="${cls}">${meta(it)}<div class="nm">${it.name}</div><div class="${yrCls}">${yrInner}</div></div>`;
     }
 
-    function head(){ return `<div class="gamehead"><h2>⚖️ Abans o despr��s?</h2><div class="sub">Repte diari · ${ddmm(todayStr())}</div></div>`; }
+    function head(){ return `<div class="gamehead"><h2>⚖️ Abans o després?</h2><div class="sub">Repte diari · ${ddmm(todayStr())}</div></div>`; }
 
     // Següent candidat de la baralla FINITA (sense rebarreig). Salta empats d'any (determinista).
     function nextCandidate(){
@@ -676,7 +687,7 @@
           </div>
           <div class="choices">
             <button class="choice" data-a="abans"><span class="big">←</span>Abans</button>
-            <button class="pass" data-x="skip"${skipUsed?' disabled':''} title="${skipUsed?'Comodí ja gastat en aquesta partida':'Comodí: passa aquesta parella (un cop per partida)'}"><span class="jk">���</span><span class="jt">${skipUsed?'Gastat':'Comodí'}</span><span class="jn">${skipUsed?0:1}</span></button>
+            <button class="pass" data-x="skip"${skipUsed?' disabled':''} title="${skipUsed?'Comodí ja gastat en aquesta partida':'Comodí: passa aquesta parella (un cop per partida)'}"><span class="jk">🃏</span><span class="jt">${skipUsed?'Gastat':'Comodí'}</span><span class="jn">${skipUsed?0:1}</span></button>
             <button class="choice" data-a="despres"><span class="big">→</span>Després</button>
           </div>
           <div class="gamefoot">📅 Repte diari · ${ddmm(todayStr())}</div>
