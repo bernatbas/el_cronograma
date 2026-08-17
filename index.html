@@ -1943,6 +1943,22 @@ function bootPersonMode(qid){
   });
 }
 
+// [11b] MODE «JOC» (?joc=<nom>) — handoff des de joc.html quan l'usuari vol veure persones al cronograma
+// joc.html escriu hb_joc_context=[{qid,name,birth,death,img,desc},...] i navega a index.html?joc=<nom>.
+function bootJocContext(){
+  let people=null;
+  try{ people=JSON.parse(localStorage.getItem('hb_joc_context')||'null'); }catch(_){}
+  try{ localStorage.removeItem('hb_joc_context'); }catch(_){}
+  history.replaceState(null,'',location.pathname);
+  if(!people||!people.length){ restoreState(); bootDefault(); return; }
+  restoreState();
+  bootDefault(function(){
+    people.forEach(function(p){ mostraPersonatge(p); });
+    fitToPresent();
+    window.dispatchEvent(new Event('resize'));
+  });
+}
+
 // Sidebar: plegada per defecte a pantalles estretes; la preferència manual es persisteix.
 // ⚠️ Ha d'anar ABANS del boot: la barra està en flux (canvi #41), així que plegar-la eixampla
 // el canvas ~226px. Si es fes després, fitToPresent() ja hauria mesurat el clientWidth VELL i
@@ -1954,9 +1970,13 @@ function bootPersonMode(qid){
    $('.body').classList.add('collapsed');$('#sidebarToggle').textContent='›';
    _sb.getBoundingClientRect();_sb.style.transition=_tr;}}
 
-const PERSON_QID=(new URLSearchParams(location.search)).get('person');
+const _urlP=new URLSearchParams(location.search);
+const PERSON_QID=_urlP.get('person');
+const JOC_PARAM=_urlP.get('joc');
 if(PERSON_QID){
   bootPersonMode(PERSON_QID);
+}else if(JOC_PARAM){
+  bootJocContext();
 }else{
   restoreState();
   bootDefault();

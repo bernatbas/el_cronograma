@@ -304,6 +304,8 @@
   .gameover .sub{color:var(--text2);margin:8px 0 20px;}
   .cta{background:var(--topbar-bg);color:#fff;border:none;border-radius:var(--r-pill);padding:12px 26px;font:inherit;font-size:15px;font-weight:600;cursor:pointer;}
   .cta:hover{filter:brightness(1.06);}
+  .cta.sec{background:transparent;color:var(--topbar-bg);border:2px solid var(--topbar-bg);}
+  .cta.sec:hover{background:rgba(184,80,60,.08);}
   .tagd{align-self:flex-start;margin-top:auto;background:#F7E5E0;color:#B23A2E;font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);}
   .gamehead{text-align:center;margin:0 0 10px;}
   .gamehead h2{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-weight:600;letter-spacing:.03em;font-size:19px;margin:0;}
@@ -573,11 +575,29 @@
     return pool;
   }
 
+  // Retorna {qid,name,birth,death,img,desc} per a un ítem del pool de tipus 'person', o null si és un event.
+  function personFromItem(it){
+    if(!it||it.kind!=='person') return null;
+    const id=it.key.split(':')[1];
+    const p=(HB_DATA.PEOPLE||[]).find(x=>x.id===id);
+    if(!p||!p.wd) return null;
+    return {qid:p.wd,name:p.name,birth:p.birth,death:p.death||null,img:null,desc:p.desc||''};
+  }
+
+  // Desa un array de persones a localStorage i navega al cronograma per mostrar-les.
+  function viewInCronogramaMulti(items,joc){
+    const people=items.map(personFromItem).filter(Boolean);
+    if(!people.length) return;
+    if(typeof gtag!=='undefined') gtag('event','joc_2_cronograma',{joc:joc});
+    try{ localStorage.setItem('hb_joc_context',JSON.stringify(people)); }catch(_){}
+    location.href='index.html?joc='+encodeURIComponent(joc);
+  }
+
   // ===== Mòdul: «Abans o després?» — REPTE DIARI (determinista per data + 1 intent/dia) =====
   const AbansDespres = (function(){
     const DAILY_KEY='hb_ad_daily';    // { date, score, perfect }
     const STREAK_KEY='hb_ad_streak';  // { last, days }
-    let root=null, deck=[], idx=0, current=null, candidate=null, score=0, locked=false, skipUsed=false, timer=null, cdTimer=null, gaStarted=false;
+    let root=null, deck=[], idx=0, current=null, candidate=null, score=0, locked=false, skipUsed=false, timer=null, cdTimer=null, gaStarted=false, failPair=null;
 
     function readLS(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(_){ return null; } }
     function writeLS(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(_){} }
@@ -717,6 +737,7 @@
         if(nxt){ candidate=nxt; timer=setTimeout(()=>{ locked=false; render(); },2000); }
         else { candidate=null; timer=setTimeout(()=>finish(true),2000); } // ronda perfecta
       }else{
+        failPair=[current,candidate];
         timer=setTimeout(()=>finish(false),2100);
       }
     }
@@ -745,6 +766,7 @@
       if(timer){ clearTimeout(timer); timer=null; }
       const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
       const title = perfect ? '<span class="perfect">Ronda perfecta! 🏆</span>' : 'Repte completat';
+      const cronoPeople = !perfect && failPair ? failPair.map(personFromItem).filter(Boolean) : [];
       root.innerHTML = `
         <div class="gameover">
           ${head()}
@@ -755,10 +777,11 @@
           </div>
           <div class="locknote">Ja has jugat el repte d'avui. Torna demà per un de nou!</div>
           <div class="countdown">Nou repte en <b id="cd">--:--:--</b></div>
-          <div class="btnrow"><button class="cta" data-x="share">📤 Comparteix</button></div>
+          <div class="btnrow"><button class="cta" data-x="share">📤 Comparteix</button>${cronoPeople.length?'<button class="cta sec" data-x="crono">🏛️ Veure al cronograma</button>':''}</div>
         </div>`;
       const sh=root.querySelector('[data-x="share"]');
       if(sh) sh.addEventListener('click',()=>doShare(sc,days,sh));
+      if(cronoPeople.length){const cb=root.querySelector('[data-x="crono"]');if(cb)cb.addEventListener('click',()=>viewInCronogramaMulti(failPair,'abansdespres'));}
       startCountdown();
     }
 
@@ -793,7 +816,7 @@
     }
 
     return {
-      mount(container){ root=container; gaStarted=false; if(typeof gtag!=='undefined')gtag('event','joc_vist',{joc:'abansdespres'}); start(); },
+      mount(container){ root=container; gaStarted=false; failPair=null; if(typeof gtag!=='undefined')gtag('event','joc_vist',{joc:'abansdespres'}); start(); },
       unmount(){ if(timer){ clearTimeout(timer); timer=null; } if(cdTimer){ clearInterval(cdTimer); cdTimer=null; } root=null; }
     };
   })();
@@ -1152,7 +1175,15 @@
         : '<div class="ordbanner no"><div class="rtitle">'+ordFailTitle(wrong)+'</div><div class="streak">S\'ha trencat la ratxa. En vermell, els que estaven fora de lloc.</div><div class="locknote">Ja has resolt el repte d\'avui. Torna demà per un de nou!</div><div class="countdown">Nou repte en <b id="ocd">--:--:--</b></div></div>';
       startCd();
       const bn=foot.querySelector('.ordbanner');
-      if(bn){ const br=document.createElement('div'); br.className='btnrow'; br.innerHTML='<button class="cta ordshare" data-x="oshare">📤 Comparteix</button>'; bn.appendChild(br); const sb=br.querySelector('[data-x="oshare"]'); if(sb) sb.addEventListener('click',()=>ordDoShare(marks,days,sb)); }
+      if(bn){
+        const br=document.createElement('div'); br.className='btnrow';
+        const wrongItems=!correct?order.filter((_,i)=>!marks[i]):[];
+        const cronoPeople=wrongItems.map(personFromItem).filter(Boolean);
+        br.innerHTML='<button class="cta ordshare" data-x="oshare">📤 Comparteix</button>'+(cronoPeople.length?'<button class="cta sec" data-x="crono">🏛️ Veure al cronograma</button>':'');
+        bn.appendChild(br);
+        const sb=br.querySelector('[data-x="oshare"]'); if(sb) sb.addEventListener('click',()=>ordDoShare(marks,days,sb));
+        if(cronoPeople.length){const cb=br.querySelector('[data-x="crono"]');if(cb)cb.addEventListener('click',()=>viewInCronogramaMulti(wrongItems,'ordena'));}
+      }
     }
 
     function ordShareText(marks, days){
