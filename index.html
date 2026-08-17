@@ -1599,7 +1599,7 @@ async function toggleCollection(cid){
   if(!missing.length){                             // tot és local → mostrar-ho de cop, sense spinner
     localIds.forEach(id=>state.pinned.add(id));
     clearFitLatch();
-    recomputePresent();render();
+    recomputePresent();fitToPresent();
     refreshStale(stale);                           // en segon pla, sense bloquejar l'aparició instantània
     return;
   }
@@ -1611,7 +1611,7 @@ async function toggleCollection(cid){
   finally{endLoading();}
   if(!state.collections.has(cid))return;           // desactivada (o canviada) mentre carregava → descarta el resultat zombie
   localIds.forEach(id=>state.pinned.add(id));       // revela els locals ara — també és el fallback si la petició falla
-  if(failed){recomputePresent();clearFitLatch();render();showToast(`${c.name} · no s'ha pogut connectar a Wikidata`);return;}
+  if(failed){recomputePresent();clearFitLatch();render();fitToPresent();showToast(`${c.name} · no s'ha pogut connectar a Wikidata`);return;}
   got.forEach(w=>{
     if(w.birth==null)return;                        // no birth year → nowhere to place the bar
     const id='wd_'+w.qid;
@@ -1621,7 +1621,7 @@ async function toggleCollection(cid){
   recomputePresent();
   clearFitLatch();
   const lost=missing.length-got.filter(w=>w.birth!=null).length;
-  render();                                         // revela tothom de cop (s'acaba el pop-in de 2 fases)
+  render();fitToPresent();                          // revela tothom de cop i reenqua­dra
   showToast(lost?`${c.name} · ${lost} no s'han pogut carregar`:c.name);
   refreshStale(stale);                             // refresca també, en segon pla, els caducats que ja teníem
 }
