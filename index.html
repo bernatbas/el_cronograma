@@ -259,6 +259,8 @@
   .personbar .ptag{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--topbar-bg);}
   .personbar .pname{font-family:'Oswald','Roboto Condensed','Arial Narrow',Arial,sans-serif;font-weight:600;font-size:17px;letter-spacing:.02em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .personbar .pdesc{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .personbar .pname-item{background:none;border:none;padding:0;font:inherit;color:inherit;cursor:pointer;line-height:inherit;}
+  .personbar .pname-item:hover{text-decoration:underline;}
   .personbar .pback{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--border-strong);background:#fff;border-radius:50%;font-size:15px;line-height:1;color:var(--text2);cursor:pointer;padding:0;-webkit-appearance:none;appearance:none;}
   .personbar .pback:hover{background:var(--surface);color:var(--text);}
   .personbar[data-state="error"]{box-shadow:inset 3px 0 0 #B23A2E;}
@@ -810,7 +812,7 @@ window.addEventListener('beforeunload',()=>{if(lsReady)saveNow();});   // flush 
 function restoreState(){
   let d;try{d=JSON.parse(localStorage.getItem(LS_KEY)||'null');}catch(e){d=null;}
   if(!d||d.v!==1)return;
-  (d.extraPeople||[]).forEach(p=>{if(p&&p.id&&!PEOPLE.some(x=>x.id===p.id))PEOPLE.push(p);});   // re-add people fetched from Wikidata last session
+  (d.extraPeople||[]).forEach(p=>{if(p&&p.id&&!PEOPLE.some(x=>x.id===p.id||(x.wd&&p.wd&&x.wd===p.wd)))PEOPLE.push(p);});   // re-add people fetched from Wikidata last session; dedup per QID per evitar duplicats si la persona existeix a la BD local
   state.pinned=new Set([...SEED_PINNED,...(Array.isArray(d.pinned)?d.pinned:[])]);
   state.collections=new Set(Array.isArray(d.collections)?d.collections:[]);
   state.marcs=new Set(Array.isArray(d.marcs)?d.marcs:DEFAULT_MARCS);
@@ -1904,8 +1906,9 @@ function fetchPerson(qid){
 // lsReady segueix actiu, l’estat es desa normalment, i la × de la personbar és equivalent
 // a la × d’«A la vista» (removePerson).
 function mostraPersonatge(p,opts){
-  const id='wd_'+p.qid;
-  if(!PEOPLE.some(x=>x.id===id)){
+  const existing=PEOPLE.find(x=>x.wd===p.qid);
+  const id=existing?existing.id:'wd_'+p.qid;
+  if(!existing){
     PEOPLE.push({id,wd:p.qid,name:p.name,birth:p.birth,death:p.death,cats:guessCats(p.desc),
       gender:'',wiki:p.wiki,desc:p.desc||'',_session:true,_ts:Date.now()});
   }
@@ -1914,24 +1917,28 @@ function mostraPersonatge(p,opts){
   scheduleSave();
   render();
   if(!opts||!opts.noBar) personBar('ok',p.name,p.desc||'',p.img);
+  return id;
 }
 
 // Barra multi-personatge per al handoff des del joc (?joc=): mostra N noms + anys sense etiqueta.
 // resolvedIds: ids reals a PEOPLE (deduplicats per QID a bootJocContext).
-// Clicar el nom torna a fer flash de totes les barres; ✕ elimina tots i amaga la barra.
+// Cada nom és un botó independent: clicar-lo fa flash només d'ell; ✕ elimina tots.
 function jocBar(people,resolvedIds){
   pbar.textContent='';
   pbar.dataset.state='ok';
   const txt=document.createElement('div');txt.className='ptxt';
   const nm=document.createElement('div');nm.className='pname';
-  nm.style.cursor='pointer';nm.title='Torna a ressaltar-los a la vista';
-  nm.textContent=people.map(function(p){
+  people.forEach(function(p,i){
+    if(i>0){const sep=document.createElement('span');sep.textContent=' · ';nm.appendChild(sep);}
     const y1=fmtY(p.birth);
     const y2=p.death!=null?fmtY(p.death):'avui';
-    return p.name+' ('+y1+'–'+y2+')';
-  }).join(' · ');
-  nm.addEventListener('click',function(){
-    resolvedIds.forEach(function(id){revealPerson(id);});
+    const btn=document.createElement('button');
+    btn.type='button';btn.className='pname-item';
+    btn.textContent=p.name+' ('+y1+'–'+y2+')';
+    btn.title='Torna a ressaltar-lo a la vista';
+    const id=resolvedIds[i];
+    btn.addEventListener('click',function(){revealPerson(id);});
+    nm.appendChild(btn);
   });
   txt.appendChild(nm);
   pbar.appendChild(txt);
@@ -1957,10 +1964,10 @@ function bootPersonMode(qid){
   const cached=personFromCache(qid);
   if(cached){
     bootDefault(()=>{
-      mostraPersonatge(cached);
+      const pid=mostraPersonatge(cached);
       centerOnPerson(cached);                               // zoom + centrat sobre el personatge (no fitToPresent: enmarca tots els desats)
       window.dispatchEvent(new Event('resize'));             // re-avalua fitSecnav amb l'amplada real (fix topbar HB)
-      setTimeout(()=>flashBar('wd_'+qid),500);             // retardat: sobreviu els render() de scheduleSettle (180ms)
+      setTimeout(()=>flashBar(pid),500);                   // retardat: sobreviu els render() de scheduleSettle (180ms)
       if(!cached.img)fetchPerson(qid).then(p=>{if(p&&p.img&&pbar.classList.contains('on'))personBar('ok',p.name,p.desc||'',p.img);}).catch(()=>{});
     });
     return;
@@ -1968,7 +1975,7 @@ function bootPersonMode(qid){
   bootDefault();
   personBar('loading','Carregant…','Consultant Wikidata…',null);
   fetchPerson(qid).then(p=>{
-    if(p){mostraPersonatge(p);centerOnPerson(p);window.dispatchEvent(new Event('resize'));setTimeout(()=>flashBar('wd_'+qid),500);}
+    if(p){const pid=mostraPersonatge(p);centerOnPerson(p);window.dispatchEvent(new Event('resize'));setTimeout(()=>flashBar(pid),500);}
     else personBar('error','Personatge no trobat','Wikidata no retorna cap entitat per a '+qid+'.',null);
   }).catch(()=>{
     personBar('error','Sense connexió','No s’ha pogut consultar Wikidata i no hi ha còpia local d’aquest personatge.',null);
