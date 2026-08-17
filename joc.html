@@ -758,7 +758,8 @@
       let days=1;
       if(st){ if(st.last===yesterdayStr()) days=(st.days||0)+1; else if(st.last===today) days=st.days||1; else days=1; }
       writeLS(STREAK_KEY,{last:today,days:days});
-      writeLS(DAILY_KEY,{date:today,score:score,perfect:!!perfect});
+      const failKeys=!perfect&&failPair?failPair.map(function(it){return it.key;}):null;
+      writeLS(DAILY_KEY,{date:today,score:score,perfect:!!perfect,failKeys:failKeys});
       showResult(score,!!perfect);
     }
 
@@ -777,7 +778,7 @@
           </div>
           <div class="locknote">Ja has jugat el repte d'avui. Torna demà per un de nou!</div>
           <div class="countdown">Nou repte en <b id="cd">--:--:--</b></div>
-          <div class="btnrow"><button class="cta" data-x="share">📤 Comparteix</button>${cronoPeople.length?'<button class="cta sec" data-x="crono">🏛️ Veure al cronograma</button>':''}</div>
+          <div class="btnrow"><button class="cta" data-x="share">📤 Comparteix</button>${cronoPeople.length?'<button class="cta sec" data-x="crono">🏛️ A veure, ensenyam-ho</button>':''}</div>
         </div>`;
       const sh=root.querySelector('[data-x="share"]');
       if(sh) sh.addEventListener('click',()=>doShare(sc,days,sh));
@@ -804,7 +805,15 @@
       if(cdTimer){ clearInterval(cdTimer); cdTimer=null; }
       const today=todayStr();
       const daily=readLS(DAILY_KEY);
-      if(daily && daily.date===today){ showResult(daily.score,!!daily.perfect); return; } // ja jugat avui => bloquejat
+      if(daily && daily.date===today){
+        if(!daily.perfect && daily.failKeys){
+          const allPool=buildPool(); const byKey={};
+          allPool.forEach(function(it){byKey[it.key]=it;});
+          const fp=daily.failKeys.map(function(k){return byKey[k];}).filter(Boolean);
+          failPair=fp.length?fp:null;
+        }
+        showResult(daily.score,!!daily.perfect); return;
+      } // ja jugat avui => bloquejat
       const rng=mulberry32(seedFromStr(today));
       const pool=dailyPool(rng); // cada persona només un cop (naix O mort) segons la llavor del dia
       deck=buildPath(pool,rng);  // ordena el pool en un camí amb dificultat controlada (g logarítmic)
@@ -1179,7 +1188,7 @@
         const br=document.createElement('div'); br.className='btnrow';
         const wrongItems=!correct?order.filter((_,i)=>!marks[i]):[];
         const cronoPeople=wrongItems.map(personFromItem).filter(Boolean);
-        br.innerHTML='<button class="cta ordshare" data-x="oshare">📤 Comparteix</button>'+(cronoPeople.length?'<button class="cta sec" data-x="crono">🏛️ Veure al cronograma</button>':'');
+        br.innerHTML='<button class="cta ordshare" data-x="oshare">📤 Comparteix</button>'+(cronoPeople.length?'<button class="cta sec" data-x="crono">🏛️ A veure, ensenyam-ho</button>':'');
         bn.appendChild(br);
         const sb=br.querySelector('[data-x="oshare"]'); if(sb) sb.addEventListener('click',()=>ordDoShare(marks,days,sb));
         if(cronoPeople.length){const cb=br.querySelector('[data-x="crono"]');if(cb)cb.addEventListener('click',()=>viewInCronogramaMulti(wrongItems,'ordena'));}
