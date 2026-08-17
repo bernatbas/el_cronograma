@@ -1631,6 +1631,17 @@ function fitToPresent(){
   setZoom(Math.max(60,scroll.clientWidth-24)/((y2-y1)+2*pad));
   scroll.scrollLeft=Math.min(Math.max(0,x(y1-pad)),maxScroll());
 }
+// Zoom centrat sobre un personatge concret (mode joc → cronograma).
+// Mostra la vida sencera + 60% de marge a cada banda. Prou context per no quedar perdut,
+// prou apropa perquè el personatge tingui protagonisme.
+function centerOnPerson(p){
+  const y1=p.birth, y2=p.death!=null?p.death:NOW_YEAR;
+  const span=Math.max(1,y2-y1);
+  const pad=Math.max(20,Math.round(span*0.6));
+  clearFitLatch();
+  setZoom(Math.max(fitPx(),Math.min(20,(scroll.clientWidth-24)/(span+2*pad))));
+  scroll.scrollLeft=Math.min(Math.max(0,x((y1+y2)/2)-scroll.clientWidth/2),maxScroll());
+}
 // Zoom keeping the year under the pointer fixed.
 function zoomAt(clientX,factor){clearFitLatch();
   const rect=scroll.getBoundingClientRect();
@@ -1908,9 +1919,9 @@ function bootPersonMode(qid){
   if(cached){
     bootDefault(()=>{
       mostraPersonatge(cached);
-      fitToPresent();                                        // centra la vista sobre el personatge
+      centerOnPerson(cached);                               // zoom + centrat sobre el personatge (no fitToPresent: enmarca tots els desats)
       window.dispatchEvent(new Event('resize'));             // re-avalua fitSecnav amb l'amplada real (fix topbar HB)
-      requestAnimationFrame(()=>flashBar('wd_'+qid));       // il·lumina la barra perquè sigui fàcil de localitzar
+      setTimeout(()=>flashBar('wd_'+qid),500);             // retardat: sobreviu els render() de scheduleSettle (180ms)
       if(!cached.img)fetchPerson(qid).then(p=>{if(p&&p.img)personBar('ok',p.name,p.desc||'',p.img);}).catch(()=>{});
     });
     return;
@@ -1918,7 +1929,7 @@ function bootPersonMode(qid){
   bootDefault();
   personBar('loading','Carregant…','Consultant Wikidata…',null);
   fetchPerson(qid).then(p=>{
-    if(p){mostraPersonatge(p);requestAnimationFrame(()=>{fitToPresent();flashBar('wd_'+qid);});}
+    if(p){mostraPersonatge(p);centerOnPerson(p);window.dispatchEvent(new Event('resize'));setTimeout(()=>flashBar('wd_'+qid),500);}
     else personBar('error','Personatge no trobat','Wikidata no retorna cap entitat per a '+qid+'.',null);
   }).catch(()=>{
     personBar('error','Sense connexió','No s’ha pogut consultar Wikidata i no hi ha còpia local d’aquest personatge.',null);
