@@ -577,7 +577,7 @@
   const AbansDespres = (function(){
     const DAILY_KEY='hb_ad_daily';    // { date, score, perfect }
     const STREAK_KEY='hb_ad_streak';  // { last, days }
-    let root=null, deck=[], idx=0, current=null, candidate=null, score=0, locked=false, skipUsed=false, timer=null, cdTimer=null;
+    let root=null, deck=[], idx=0, current=null, candidate=null, score=0, locked=false, skipUsed=false, timer=null, cdTimer=null, gaStarted=false;
 
     function readLS(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(_){ return null; } }
     function writeLS(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(_){} }
@@ -704,6 +704,7 @@
     function guess(ans){
       if(locked||!candidate) return;
       locked=true;
+      if(!gaStarted){ gaStarted=true; if(typeof gtag!=='undefined')gtag('event','joc_iniciat',{joc:'abansdespres'}); }
       const correct = (ans==='abans' && candidate.year<current.year) || (ans==='despres' && candidate.year>current.year);
       const slot=root.querySelector('#candslot');
       if(slot){ slot.innerHTML=card(candidate,{role:'new',reveal:true,flip:true}); const c=slot.querySelector('.itemcard'); if(c) c.classList.add(correct?'flash-ok':'flash-no'); }
@@ -730,6 +731,7 @@
     }
 
     function finish(perfect){
+      if(typeof gtag!=='undefined')gtag('event','joc_completat',{joc:'abansdespres',resultat:perfect?'guanyat':'perdut',encerts:score});
       const today=todayStr();
       const st=readLS(STREAK_KEY);
       let days=1;
@@ -791,7 +793,7 @@
     }
 
     return {
-      mount(container){ root=container; start(); },
+      mount(container){ root=container; gaStarted=false; if(typeof gtag!=='undefined')gtag('event','joc_vist',{joc:'abansdespres'}); start(); },
       unmount(){ if(timer){ clearTimeout(timer); timer=null; } if(cdTimer){ clearInterval(cdTimer); cdTimer=null; } root=null; }
     };
   })();
@@ -949,6 +951,7 @@
     function renderLoading(){ root.innerHTML=''; const w=el('div','pwrap'), l=el('div','ploading'); l.appendChild(el('div','pspin')); l.appendChild(document.createTextNode('Cercant a Wikidata…')); w.appendChild(l); root.appendChild(w); }
     function renderError(msg){ root.innerHTML=''; const w=el('div','pwrap'), p=el('div','perror'); p.appendChild(el('div',null,'⚠️')); p.appendChild(el('div',null,msg)); const b=el('button','pretry','Torna-ho a provar'); b.addEventListener('click',start); p.appendChild(b); w.appendChild(p); root.appendChild(w); }
     function renderPerson(p){
+      if(typeof gtag!=='undefined')gtag('event','joc_iniciat',{joc:'personatgedia'});
       root.innerHTML='';
       const w=el('div','pwrap'), card=el('div','pcard');
       if(p.img){ const im=el('img','pimg'); im.src=p.img; im.alt=p.name; im.addEventListener('error',function(){ const ph=el('div','pimg ph','👤'); if(im.parentNode) im.parentNode.replaceChild(ph,im); }); card.appendChild(im); }
@@ -986,7 +989,7 @@
     function precompute(){ try{ pickDaily(todayStr()).catch(function(){}); }catch(_){} }
 
     return {
-      mount(container){ root=container; alive=true; start(); },
+      mount(container){ root=container; alive=true; if(typeof gtag!=='undefined')gtag('event','joc_vist',{joc:'personatgedia'}); start(); },
       unmount(){ alive=false; if(popupTimer){ clearTimeout(popupTimer); popupTimer=null; } closeInvitePopup(); root=null; },
       precompute:precompute
     };
@@ -1116,7 +1119,9 @@
 
     function submit(){
       if(locked) return; locked=true;
+      if(typeof gtag!=='undefined')gtag('event','joc_iniciat',{joc:'ordena'});
       const res=applyReveal(true);   // syncOrder() a dins: 'order' ja reflecteix el DOM
+      if(typeof gtag!=='undefined')gtag('event','joc_completat',{joc:'ordena',resultat:res.allCorrect?'guanyat':'perdut',encerts:5-res.wrong});
       bumpStreak(res.allCorrect);
       writeLS(DAILY_KEY,{date:todayStr(),correct:res.allCorrect,order:order.map(x=>x.key)});
       showBanner(res.allCorrect, res.wrong, res.marks);
@@ -1204,7 +1209,7 @@
     try{ window.__ORD={ five:function(ds){ return pickFive(mulberry32(seedFromStr('ord:'+(ds||todayStr())))); } }; }catch(_){}
 
     return {
-      mount(container){ root=container; locked=false; const daily=readLS(DAILY_KEY); if(daily && daily.date===todayStr()){ renderResolved(daily); } else { buildAndRender(); } },
+      mount(container){ root=container; locked=false; if(typeof gtag!=='undefined')gtag('event','joc_vist',{joc:'ordena'}); const daily=readLS(DAILY_KEY); if(daily && daily.date===todayStr()){ renderResolved(daily); } else { buildAndRender(); } },
       unmount(){ if(ocdTimer){ clearInterval(ocdTimer); ocdTimer=null; } window.removeEventListener('pointermove',onMove); if(ghost){ ghost.remove(); ghost=null; } dragRow=null; root=null; }
     };
   })();
