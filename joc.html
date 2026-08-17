@@ -169,9 +169,31 @@
   .pbtn:hover{transform:translateY(-1px);border-color:var(--topbar-bg);color:var(--topbar-bg);}
   .pbtn.fav.on{background:#F7E5E0;border-color:var(--topbar-bg);color:#B23A2E;}
   .palbum{text-align:center;color:var(--text2);font-size:13px;margin-top:16px;}
-  .pinvite{margin:12px 0 2px;font-size:12.5px;color:var(--text2);text-align:center;line-height:1.45;}
-  .pinvite a{color:var(--topbar-bg);font-weight:600;text-decoration:none;}
-  .pinvite a:hover{text-decoration:underline;}
+  /* Pop-up d'invitacio a contribuir (Personatge del dia) */
+  .pinvov{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(30,30,29,.55);opacity:0;transition:opacity .2s ease;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);}
+  .pinvov.show{opacity:1;}
+  .pinvmodal{position:relative;width:100%;max-width:360px;background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-card);box-shadow:0 18px 44px rgba(40,44,60,.28);padding:26px 22px 18px;text-align:center;transform:translateY(10px) scale(.98);transition:transform .2s ease;}
+  .pinvov.show .pinvmodal{transform:translateY(0) scale(1);}
+  .pinvx{position:absolute;top:8px;right:10px;background:none;border:none;font-size:17px;line-height:1;color:var(--text2);cursor:pointer;padding:6px;border-radius:8px;}
+  .pinvx:hover{color:var(--text);background:var(--surface);}
+  .pinvemoji{font-size:40px;line-height:1;margin-bottom:10px;}
+  .pinvtitle{font-family:'Oswald',sans-serif;font-size:20px;font-weight:600;margin:0 0 8px;color:var(--text);}
+  .pinvtext{font-size:14px;line-height:1.5;color:var(--text2);margin:0 0 18px;}
+  .pinvcta{display:inline-flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box;font:inherit;font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;padding:12px 16px;border-radius:var(--r-card);border:1px solid var(--topbar-bg);background:var(--topbar-bg);color:#fff;transition:transform .12s,box-shadow .12s;}
+  .pinvcta:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(178,58,46,.3);}
+  .pinvno{display:block;width:100%;margin-top:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:9px;border-radius:var(--r-card);border:none;background:none;color:var(--text2);}
+  .pinvno:hover{color:var(--text);}
+  .pinvhelp{display:inline-block;width:100%;box-sizing:border-box;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--text2);text-decoration:none;}
+  .pinvhelp:hover{color:var(--topbar-bg);text-decoration:underline;}
+  @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
+    .pinvmodal{max-width:340px;padding:16px 18px 12px;}
+    .pinvemoji{font-size:29px;margin-bottom:6px;}
+    .pinvtitle{font-size:17px;margin-bottom:5px;}
+    .pinvtext{font-size:12.5px;margin-bottom:12px;}
+    .pinvcta{padding:10px 14px;font-size:13px;}
+    .pinvno{margin-top:5px;padding:7px;}
+    .pinvhelp{margin-top:9px;padding-top:9px;}
+  }
   .pretry{margin-top:14px;font:inherit;font-weight:600;cursor:pointer;padding:9px 18px;border-radius:var(--r-pill);border:1px solid var(--border-strong);background:var(--canvas);color:var(--text);}
   /* Personatge del dia: MOBIL VERTICAL, tot ha de cabre sense scroll */
   @media (max-width:600px){
@@ -425,6 +447,9 @@
     .ordbanner .locknote{font-size:10.5px;margin:4px 0 2px;line-height:1.3;}
     .ordbanner .countdown{font-size:10.5px;}
     .ordbanner .countdown b{font-size:12px;}
+    /* Estat RESOLT: deixem que el scroll el faci el contenidor exterior (main), que iOS Safari gestiona sempre be, en comptes de la llista imbricada dins el grid (que iOS sovint no deixa scrollar => quedava tallat sense scroll). */
+    .ordwrap.resolved{height:auto;}
+    .ordwrap.resolved .ordlist{overflow:visible;-webkit-overflow-scrolling:auto;}
   }
   /* «Ordena la línia»: VERTICAL en pantalles baixes (iPhone SE i similars) => lletra i marges més petits perquè el resultat càpiga sense scroll */
   @media (orientation:portrait) and (max-height:770px){
@@ -763,10 +788,11 @@
     const ALBUM_KEY='hb_personatge_album'; // [ {qid,name,birth,death,img,desc,date} ]
     const FAV_KEY='hb_favorits';           // stub; enllaçarà amb Favorits quan existeixin
     const VIEW_KEY='hb_view_person';       // handoff cap al cronograma (index.html?person=QID)
+    const POPUP_KEY='hb_personatge_popup'; // { date } — pop-up d'invitacio ja mostrat/tancat AVUI (clau per DATA)
     const WD_API='https://www.wikidata.org/w/api.php';
     const COMMONS='https://commons.wikimedia.org/wiki/Special:FilePath/';
     const MAX_TRIES=5; // intents deterministes (base, base+1, …) si algun QID de la llista fos invàlid/esborrat
-    let root=null, alive=false, person=null;
+    let root=null, alive=false, person=null, popupTimer=null;
 
     function readLS(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(_){ return null; } }
     function writeLS(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(_){} }
@@ -878,6 +904,45 @@
     function toggleFav(p){ let a=favs(); if(a.some(function(x){ return x.qid===p.qid; })) a=a.filter(function(x){ return x.qid!==p.qid; }); else a.push({qid:p.qid,name:p.name,birth:p.birth,death:p.death,img:p.img,desc:p.desc}); writeLS(FAV_KEY,a); return isFav(p.qid); }
     function viewInCronograma(p){ writeLS(VIEW_KEY,{qid:p.qid,name:p.name,birth:p.birth,death:p.death,img:p.img,desc:p.desc}); location.href='index.html?person='+encodeURIComponent(p.qid); }
 
+    // --- Pop-up d'invitacio a contribuir (nomes escenaris 2 i 3) ---
+    function popupSeenToday(){ const s=readLS(POPUP_KEY); return !!(s && s.date===todayStr()); }
+    function markPopupSeen(){ writeLS(POPUP_KEY,{date:todayStr()}); }   // punt 4: tancar O clicar el CTA compta com a vist del dia
+    function onInviteKey(ev){ if(ev.key==='Escape'){ markPopupSeen(); closeInvitePopup(); } }
+    function closeInvitePopup(){ document.removeEventListener('keydown',onInviteKey); const ov=document.getElementById('pinvov'); if(!ov) return; ov.classList.remove('show'); setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); },200); }
+    function scheduleInvitePopup(p){
+      if(popupTimer){ clearTimeout(popupTimer); popupTimer=null; }
+      // Punt 1: nomes si CONEIXEM l'estat de la imatge. imgSource='wikidata' (cas B / te P18) o desconegut => mai.
+      if(!p || p.imgSource==='wikidata' || p.imgSource===undefined) return;
+      // Punt 3: clau per DATA. Si ja s'ha mostrat/tancat avui, no el tornem a treure.
+      if(popupSeenToday()) return;
+      // Punt 1: apareix 1,5s DESPRES de coneixer l'estat (renderPerson ja te imgSource resolt).
+      popupTimer=setTimeout(function(){ popupTimer=null; if(!alive) return; if(popupSeenToday()) return; if(document.getElementById('pinvov')) return; showInvitePopup(p); },1500);
+    }
+    function showInvitePopup(p){
+      const isWiki=(p.imgSource==='wikipedia');
+      const ov=el('div','pinvov'); ov.id='pinvov';
+      const md=el('div','pinvmodal');
+      const x=el('button','pinvx','✕'); x.setAttribute('aria-label','Tanca'); x.addEventListener('click',function(){ markPopupSeen(); closeInvitePopup(); }); md.appendChild(x);
+      md.appendChild(el('div','pinvemoji', isWiki?'📷':'🖼️'));
+      md.appendChild(el('h3','pinvtitle', isWiki?'Gairebé hi som!':'Falta un retrat'));
+      md.appendChild(el('p','pinvtext', isWiki?('La foto surt de la Viquipèdia, però encara no està enllaçada a Wikidata. Vols ajudar a connectar-la perquè es vegi a tot arreu?'):('D\'aquest personatge no hi ha cap retrat lliure. En tens un (o en saps trobar un de lliure)? Comparteix-lo amb la comunitat.')));
+      const cta=el('a','pinvcta', isWiki?'Enllaça-la a Wikidata »':'Puja una imatge a Commons »');
+      cta.href=isWiki?('https://www.wikidata.org/wiki/'+p.qid):'https://commons.wikimedia.org/wiki/Special:UploadWizard';
+      cta.target='_blank'; cta.rel='noopener';
+      cta.addEventListener('click',function(){ markPopupSeen(); closeInvitePopup(); });
+      md.appendChild(cta);
+      const no=el('button','pinvno','Ara no'); no.addEventListener('click',function(){ markPopupSeen(); closeInvitePopup(); }); md.appendChild(no);
+      // Punt 5: enllac de suport al final ("si necessites ajuda, aqui la tens").
+      const help=el('a','pinvhelp', isWiki?'Com s\'enllaça una imatge? ↗':'Com es puja una imatge? ↗');
+      help.href=isWiki?'https://www.wikidata.org/wiki/Help:Statements':'https://commons.wikimedia.org/wiki/Commons:First_steps/Uploading_files';
+      help.target='_blank'; help.rel='noopener'; md.appendChild(help);
+      ov.appendChild(md);
+      ov.addEventListener('click',function(ev){ if(ev.target===ov){ markPopupSeen(); closeInvitePopup(); } });
+      document.body.appendChild(ov);
+      document.addEventListener('keydown',onInviteKey);
+      requestAnimationFrame(function(){ ov.classList.add('show'); });
+    }
+
     // --- Render ---
     function renderLoading(){ root.innerHTML=''; const w=el('div','pwrap'), l=el('div','ploading'); l.appendChild(el('div','pspin')); l.appendChild(document.createTextNode('Cercant a Wikidata…')); w.appendChild(l); root.appendChild(w); }
     function renderError(msg){ root.innerHTML=''; const w=el('div','pwrap'), p=el('div','perror'); p.appendChild(el('div',null,'⚠️')); p.appendChild(el('div',null,msg)); const b=el('button','pretry','Torna-ho a provar'); b.addEventListener('click',start); p.appendChild(b); w.appendChild(p); root.appendChild(w); }
@@ -895,17 +960,7 @@
       const life=(p.birth!=null?fmtYear(p.birth):'?')+' – '+(p.death!=null?fmtYear(p.death):'…');
       chips.appendChild(el('span','pchip yr',life));
       body.appendChild(chips);
-      // Invitació a contribuir NOMÉS quan falta la imatge a Wikidata (escenaris 2 i 3).
-      // El cas B (hi ha P18 però la càrrega falla) té imgSource='wikidata' → no mostra invitació.
-      if(p.imgSource!=='wikidata'){
-        const inv=el('div','pinvite');
-        if(p.imgSource==='wikipedia'){
-          inv.innerHTML='📷 La foto surt de la Viquipèdia però encara no està a Wikidata. <a href="https://www.wikidata.org/wiki/'+p.qid+'" target="_blank" rel="noopener">Ajuda a enllaçar-la »</a>';
-        } else {
-          inv.innerHTML='🖼️ Aquest personatge no té cap retrat lliure. En tens un? <a href="https://commons.wikimedia.org/wiki/Special:UploadWizard" target="_blank" rel="noopener">Puja\'l a Commons »</a>';
-        }
-        body.appendChild(inv);
-      }
+      // (La invitacio a contribuir ja no es inline: ara es mostra com a pop-up modal; veure scheduleInvitePopup.)
       const acts=el('div','pacts');
       const fav=isFav(p.qid);
       const fb=el('button','pbtn fav'+(fav?' on':''), fav?'★ Als favorits':'☆ Afegeix a favorits');
@@ -915,8 +970,9 @@
       if(p.wiki){ const a=el('a','pbtn','🔗 Llegeix-ne més'); a.href=p.wiki; a.target='_blank'; a.rel='noopener'; acts.appendChild(a); }
       card.appendChild(body); card.appendChild(acts); w.appendChild(card);
       const album=readLS(ALBUM_KEY)||[];
-      w.appendChild(el('div','palbum','🗂�� Has descobert '+album.length+' '+(album.length===1?'personatge':'personatges')));
+      w.appendChild(el('div','palbum','📇 Has descobert '+album.length+' '+(album.length===1?'personatge':'personatges')));
       root.appendChild(w);
+      scheduleInvitePopup(p);
     }
 
     function start(){
@@ -929,7 +985,7 @@
 
     return {
       mount(container){ root=container; alive=true; start(); },
-      unmount(){ alive=false; root=null; },
+      unmount(){ alive=false; if(popupTimer){ clearTimeout(popupTimer); popupTimer=null; } closeInvitePopup(); root=null; },
       precompute:precompute
     };
   })();
@@ -1137,6 +1193,7 @@
       if(daily && daily.order && daily.order.length===five.length){ o=daily.order.map(k=>byKey[k]).filter(Boolean); if(o.length!==five.length) o=null; }
       if(!o) o=five.slice().sort((a,b)=>a.year-b.year);   // fallback de seguretat
       order=o; locked=true; render();
+      const rw=root.querySelector('.ordwrap'); if(rw) rw.classList.add('resolved');
       const res=applyReveal(false);   // sense animació en reentrar
       showBanner(res.allCorrect, res.wrong, res.marks);
     }
