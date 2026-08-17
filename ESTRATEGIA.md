@@ -303,23 +303,17 @@ Valors de `joc`: `abansdespres`, `personatgedia`, `ordena`.
 
 ### 11.3 Custom definitions a crear a GA4
 
-**Admin → Custom definitions → Create custom dimension:**
+Totes 7 ja creades a GA4 (Admin → Custom definitions → Custom dimensions):
 
-| Nom GA4 | Paràmetre d'event | Scope |
-|---|---|---|
-| `Personatge` | `personatge` | Event |
-| `Nom` | `nom` | Event |
-| `QID` | `qid` | Event |
-| `Coleccio` | `nom` (filtrant per `colleccio_activada`) | Event |
-| `Text cerca` | `text` | Event |
-| `Joc` | `joc` | Event |
-| `Resultat` | `resultat` | Event |
-
-**Admin → Custom definitions → Create custom metric:**
-
-| Nom GA4 | Paràmetre d'event | Unitat |
-|---|---|---|
-| `Encerts` | `encerts` | Estàndard |
+| Nom GA4 | Paràmetre d'event | Scope | Nota |
+|---|---|---|---|
+| `Colecció` | `nom` | Event | Compartit amb `personatge_afegit` (filtra per event) |
+| `Encerts` | `encerts` | Event | Creat com a dimension; move a Custom metrics si vols fer mitjanes |
+| `Joc` | `joc` | Event | |
+| `Personatge` | `personatge` | Event | |
+| `QID` | `qid` | Event | |
+| `Resultat` | `resultat` | Event | |
+| `Text de cerca` | `text` | Event | |
 
 ### 11.4 Com llegir les dades
 
