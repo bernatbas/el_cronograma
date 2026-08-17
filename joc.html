@@ -181,8 +181,8 @@
   .pinvtext{font-size:14px;line-height:1.5;color:var(--text2);margin:0 0 18px;}
   .pinvcta{display:inline-flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box;font:inherit;font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;padding:12px 16px;border-radius:var(--r-card);border:1px solid var(--topbar-bg);background:var(--topbar-bg);color:#fff;transition:transform .12s,box-shadow .12s;}
   .pinvcta:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(178,58,46,.3);}
-  .pinvno{display:block;width:100%;margin-top:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:10px;border-radius:var(--r-card);border:1px solid transparent;background:none;color:var(--text2);transition:background .12s,color .12s,border-color .12s,transform .12s;}
-  .pinvno:hover{background:var(--surface);color:var(--text);border-color:var(--border);transform:translateY(-1px);}
+  .pinvno{display:block;width:100%;margin-top:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:10px;border-radius:var(--r-card);border:1px solid var(--border-strong);background:none;color:var(--text2);transition:background .12s,color .12s,border-color .12s,transform .12s;}
+  .pinvno:hover{background:var(--surface);color:var(--text);border-color:var(--border-strong);transform:translateY(-1px);}
   .pinvhelp{display:inline-block;width:100%;box-sizing:border-box;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--text2);text-decoration:none;}
   .pinvhelp:hover{color:var(--topbar-bg);text-decoration:underline;}
   @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
@@ -938,7 +938,7 @@
       root.innerHTML='';
       const w=el('div','pwrap'), card=el('div','pcard');
       if(p.img){ const im=el('img','pimg'); im.src=p.img; im.alt=p.name; im.addEventListener('error',function(){ const ph=el('div','pimg ph','👤'); if(im.parentNode) im.parentNode.replaceChild(ph,im); }); card.appendChild(im); }
-      else { card.appendChild(el('div','pimg ph','��')); }
+      else { card.appendChild(el('div','pimg ph','👤')); }
       const body=el('div','pbody');
       body.appendChild(el('h2','pname',p.name));
       body.appendChild(el('p','pdesc',p.desc||'Sense descripció disponible.'));
