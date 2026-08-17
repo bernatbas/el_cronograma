@@ -58,9 +58,9 @@
      comencen les opcions de la pàgina. Del mateix marró que la vora inferior de la topbar.
      NOMÉS surt quan l'aire entre els dos s'esgota — si hi ha espai de separació, la separació ja
      la fa l'espai i la barreta no cal. Ho decideix el JS mesurant l'aire (classe .sep).
-     Va dins de .secnav amb ::after (no a .topbar-left amb :has(), menys compatible). */
-  .secnav::after{content:'';flex:0 0 auto;width:2px;height:22px;border-radius:1px;background:#612E25;margin-left:14px;display:none;}
-  .secnav.sep::after{display:block;}
+     Va dins de .modeswitch amb ::after; el JS afegeix .sep a .secnav i el selector descendant l'activa. */
+  .modeswitch::after{content:'';flex:0 0 auto;width:2px;height:22px;border-radius:1px;background:#612E25;margin-left:6px;display:none;}
+  .secnav.sep .modeswitch::after{display:block;}
   .topbar-right{flex:1 1 auto;min-width:0;justify-content:flex-end;}
   /* El cercador cedeix espai, però NO s'estira sense límit: si sobra amplada, es queda a 420 i
      l'aire va entre el separador i el cercador. 180 = «Cercant a Wikidata…» en una línia. */
