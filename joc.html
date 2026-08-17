@@ -746,6 +746,7 @@
     function skip(){
       if(locked||skipUsed||!candidate) return;
       skipUsed=true;
+      if(typeof gtag!=='undefined') gtag('event','joc_comodin_usat',{joc:'abansdespres'});
       const nxt=nextCandidate();
       if(nxt){ candidate=nxt; render(); }
       else { candidate=null; finish(true); } // baralla esgotada en passar => ronda perfecta

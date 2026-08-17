@@ -295,7 +295,8 @@ El snippet és als dos fitxers (`index.html` i `joc.html`) just després del `<m
 | `joc_vist` | En muntar el joc (primera pantalla visible) | `joc` |
 | `joc_iniciat` | Primera interacció real: primera resposta (AbansDespres), primera pista desvetllada (PersonatgeDia), primer drag (OrdenaLinia) | `joc` |
 | `joc_completat` | En acabar el joc (bé per victòria, bé per derrota) | `joc`, `resultat` (`guanyat`/`perdut`), `encerts` (número) |
-| `joc_2_cronograma` | En clicar «Veure al cronograma» des del joc | `joc` |
+| `joc_comodin_usat` | En clicar el 🃏 comodí (1 cop màxim per partida) | `joc` (`abansdespres`) |
+| `joc_2_cronograma` | En clicar «A veure, ensenyam-ho» des del joc | `joc` |
 
 Valors de `joc`: `abansdespres`, `personatgedia`, `ordena`.
 
