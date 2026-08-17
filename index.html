@@ -1827,6 +1827,8 @@ function personBar(estat,nom,descripcio,imgUrl){
   const tag=document.createElement('div');tag.className='ptag';
   tag.textContent=estat==='error'?'No s’ha pogut carregar':'Personatge del dia';
   const nm=document.createElement('div');nm.className='pname';nm.textContent=nom;
+  nm.style.cursor='pointer';nm.title='Torna a centrar-lo a la vista';
+  nm.addEventListener('click',()=>{if(PERSON_QID)revealPerson('wd_'+PERSON_QID);});
   txt.appendChild(tag);txt.appendChild(nm);
   if(descripcio){const de=document.createElement('div');de.className='pdesc';de.textContent=descripcio;txt.appendChild(de);}
   pbar.appendChild(txt);
@@ -1908,6 +1910,7 @@ function bootPersonMode(qid){
       mostraPersonatge(cached);
       fitToPresent();                                        // centra la vista sobre el personatge
       window.dispatchEvent(new Event('resize'));             // re-avalua fitSecnav amb l'amplada real (fix topbar HB)
+      requestAnimationFrame(()=>flashBar('wd_'+qid));       // il·lumina la barra perquè sigui fàcil de localitzar
       if(!cached.img)fetchPerson(qid).then(p=>{if(p&&p.img)personBar('ok',p.name,p.desc||'',p.img);}).catch(()=>{});
     });
     return;
@@ -1915,7 +1918,7 @@ function bootPersonMode(qid){
   bootDefault();
   personBar('loading','Carregant…','Consultant Wikidata…',null);
   fetchPerson(qid).then(p=>{
-    if(p){mostraPersonatge(p);requestAnimationFrame(fitToPresent);}
+    if(p){mostraPersonatge(p);requestAnimationFrame(()=>{fitToPresent();flashBar('wd_'+qid);});}
     else personBar('error','Personatge no trobat','Wikidata no retorna cap entitat per a '+qid+'.',null);
   }).catch(()=>{
     personBar('error','Sense connexió','No s’ha pogut consultar Wikidata i no hi ha còpia local d’aquest personatge.',null);
