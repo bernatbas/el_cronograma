@@ -181,8 +181,8 @@
   .pinvtext{font-size:14px;line-height:1.5;color:var(--text2);margin:0 0 18px;}
   .pinvcta{display:inline-flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box;font:inherit;font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;padding:12px 16px;border-radius:var(--r-card);border:1px solid var(--topbar-bg);background:var(--topbar-bg);color:#fff;transition:transform .12s,box-shadow .12s;}
   .pinvcta:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(178,58,46,.3);}
-  .pinvno{display:block;width:100%;margin-top:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:9px;border-radius:var(--r-card);border:none;background:none;color:var(--text2);}
-  .pinvno:hover{color:var(--text);}
+  .pinvno{display:block;width:100%;margin-top:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:10px;border-radius:var(--r-card);border:1px solid transparent;background:none;color:var(--text2);transition:background .12s,color .12s,border-color .12s,transform .12s;}
+  .pinvno:hover{background:var(--surface);color:var(--text);border-color:var(--border);transform:translateY(-1px);}
   .pinvhelp{display:inline-block;width:100%;box-sizing:border-box;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--text2);text-decoration:none;}
   .pinvhelp:hover{color:var(--topbar-bg);text-decoration:underline;}
   @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
@@ -572,7 +572,7 @@
     function meta(it){
       if(it.kind==='event') return '<div class="meta ev"></div>';
       return it.anchor==='naix'
-        ? '<div class="meta">🎂 naixement</div>'
+        ? '<div class="meta">�� naixement</div>'
         : '<div class="meta">🕯️ mort</div>';
     }
     // role: 'ref' (fixada, amb xinxeta) o 'new' (elevada, apareix animada). flip: anima l'any en revelar-se.
@@ -584,7 +584,7 @@
       return `<div class="${cls}">${meta(it)}<div class="nm">${it.name}</div><div class="${yrCls}">${yrInner}</div></div>`;
     }
 
-    function head(){ return `<div class="gamehead"><h2>⚖️ Abans o després?</h2><div class="sub">Repte diari · ${ddmm(todayStr())}</div></div>`; }
+    function head(){ return `<div class="gamehead"><h2>⚖️ Abans o despr��s?</h2><div class="sub">Repte diari · ${ddmm(todayStr())}</div></div>`; }
 
     // Següent candidat de la baralla FINITA (sense rebarreig). Salta empats d'any (determinista).
     function nextCandidate(){
@@ -824,6 +824,8 @@
     function monolingual(claims,prop){ const c=claims&&claims[prop]; if(!c||!c.length) return null; const by={}; c.forEach(function(s){ const v=s.mainsnak&&s.mainsnak.datavalue&&s.mainsnak.datavalue.value; if(v&&v.text&&v.language){ by[v.language]=v.text; } }); return by.ca||by.es||by.en||null; }
     // Gènere de la persona: P21 == Q6581072 (dona).
     function isFemale(e){ const c=e.claims&&e.claims.P21; if(!c||!c.length) return false; const v=c[0].mainsnak&&c[0].mainsnak.datavalue&&c[0].mainsnak.datavalue.value; return !!(v&&v.id==='Q6581072'); }
+    // Codi de genere per triar el tracte informal al pop-up: 'f' dona, 'm' home, '' desconegut/altre (=> neutre).
+    function genderCode(e){ const c=e.claims&&e.claims.P21; if(!c||!c.length) return ''; const v=c[0].mainsnak&&c[0].mainsnak.datavalue&&c[0].mainsnak.datavalue.value; if(!(v&&v.id)) return ''; if(v.id==='Q6581072') return 'f'; if(v.id==='Q6581097') return 'm'; return ''; }
     // Baixa etiquetes dels items (ocupacio P106 / nacionalitat P27). Inclou P2521 (forma en femeni
     // de l'etiqueta) per poder mostrar l'ocupacio en femeni quan la persona es dona. Si Wikidata no
     // te forma femenina per a aquella ocupacio, es manté l'etiqueta per defecte (masculi generic).
@@ -834,29 +836,14 @@
       Object.keys(ents).forEach(function(q){ const e=ents[q]; map[q]={label:lbl(e.labels), female:monolingual(e.claims,'P2521')}; });
       return map;
     }
-    // Fallback d'imatge: si no hi ha P18 a Wikidata, mirem si l'article de la Viquipèdia en té una
-    // (API REST de resum). Torna una URL o null. Només s'usa quan falta la imatge de Wikidata.
-    async function wikiImage(lang,title){
-      if(!lang||!title) return null;
-      try{
-        const u='https://'+lang+'.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(String(title).replace(/ /g,'_'));
-        const r=await fetch(u);
-        if(!r.ok) return null;
-        const j=await r.json();
-        return (j.thumbnail&&j.thumbnail.source)||(j.originalimage&&j.originalimage.source)||null;
-      }catch(_){ return null; }
-    }
     async function build(e,qid){
       const occQ=itemQids(e,'P106',3), couQ=itemQids(e,'P27',2);
-      const female=isFemale(e);
+      const female=isFemale(e), gender=genderCode(e);
       const names=await labelsFor(occQ.concat(couQ));
       const s=e.sitelinks||{}, site=s.cawiki||s.eswiki||s.enwiki||{};
-      // Idioma i títol de l'article per si cal el fallback d'imatge de la Viquipèdia.
-      let wikiLang='', wikiTitle=''; const pref=[['ca','cawiki'],['es','eswiki'],['en','enwiki']];
-      for(let i=0;i<pref.length;i++){ const wk=s[pref[i][1]]; if(wk&&wk.title){ wikiLang=pref[i][0]; wikiTitle=wk.title; break; } }
-      // Escenari 1: imatge de Wikidata (P18). Escenari 2: si no n'hi ha, provem la Viquipèdia.
-      let img=imgUrl(e), imgSource=img?'wikidata':null;
-      if(!img){ const wimg=await wikiImage(wikiLang,wikiTitle); if(wimg){ img=wimg; imgSource='wikipedia'; } }
+      // Opcio A: P18 (Wikidata) es l'UNICA font de retrat. La imatge principal de l'article de la
+      // Viquipedia NO es fiable (p.ex. en un pintor sol ser una obra seva, no un retrat d'ell), no la fem servir.
+      const img=imgUrl(e), imgSource=img?'wikidata':null;
       return {
         qid:qid,
         name:lbl(e.labels)||qid,
@@ -865,6 +852,7 @@
         death:yearFrom(e,'P570'),
         img:img,
         imgSource:imgSource,
+        gender:gender,
         occ:occQ.map(function(q){ const it=names[q]||{}; return (female && it.female) ? it.female : it.label; }).filter(Boolean),
         country:couQ.map(function(q){ return (names[q]||{}).label; }).filter(Boolean),
         wiki:site.url||''
@@ -911,30 +899,30 @@
     function closeInvitePopup(){ document.removeEventListener('keydown',onInviteKey); const ov=document.getElementById('pinvov'); if(!ov) return; ov.classList.remove('show'); setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); },200); }
     function scheduleInvitePopup(p){
       if(popupTimer){ clearTimeout(popupTimer); popupTimer=null; }
-      // Punt 1: nomes si CONEIXEM l'estat de la imatge. imgSource='wikidata' (cas B / te P18) o desconegut => mai.
-      if(!p || p.imgSource==='wikidata' || p.imgSource===undefined) return;
+      // Opcio A: nomes quan NO hi ha P18 (imgSource===null). Si te P18 (cas B inclos) o l'estat es desconegut => mai.
+      if(!p || p.imgSource!==null) return;
       // Punt 3: clau per DATA. Si ja s'ha mostrat/tancat avui, no el tornem a treure.
       if(popupSeenToday()) return;
       // Punt 1: apareix 1,5s DESPRES de coneixer l'estat (renderPerson ja te imgSource resolt).
       popupTimer=setTimeout(function(){ popupTimer=null; if(!alive) return; if(popupSeenToday()) return; if(document.getElementById('pinvov')) return; showInvitePopup(p); },1500);
     }
     function showInvitePopup(p){
-      const isWiki=(p.imgSource==='wikipedia');
+      const qui = p.gender==='f' ? 'aquesta mossa' : (p.gender==='m' ? 'aquest nano' : 'aquesta persona');
       const ov=el('div','pinvov'); ov.id='pinvov';
       const md=el('div','pinvmodal');
       const x=el('button','pinvx','✕'); x.setAttribute('aria-label','Tanca'); x.addEventListener('click',function(){ markPopupSeen(); closeInvitePopup(); }); md.appendChild(x);
-      md.appendChild(el('div','pinvemoji', isWiki?'📷':'🖼️'));
-      md.appendChild(el('h3','pinvtitle', isWiki?'Gairebé hi som!':'Falta un retrat'));
-      md.appendChild(el('p','pinvtext', isWiki?('La foto surt de la Viquipèdia, però encara no està enllaçada a Wikidata. Vols ajudar a connectar-la perquè es vegi a tot arreu?'):('D\'aquest personatge no hi ha cap retrat lliure. En tens un (o en saps trobar un de lliure)? Comparteix-lo amb la comunitat.')));
-      const cta=el('a','pinvcta', isWiki?'Enllaça-la a Wikidata »':'Puja una imatge a Commons »');
-      cta.href=isWiki?('https://www.wikidata.org/wiki/'+p.qid):'https://commons.wikimedia.org/wiki/Special:UploadWizard';
+      md.appendChild(el('div','pinvemoji','🖼️'));
+      md.appendChild(el('h3','pinvtitle','Falta la foto'));
+      md.appendChild(el('p','pinvtext','Si tens una imatge d\''+qui+', et convido a pujar-la a la wikipedia: entre tots farem del món un lloc millor 🌍'));
+      const cta=el('a','pinvcta','Puja una imatge a Commons »');
+      cta.href='https://commons.wikimedia.org/wiki/Special:UploadWizard';
       cta.target='_blank'; cta.rel='noopener';
       cta.addEventListener('click',function(){ markPopupSeen(); closeInvitePopup(); });
       md.appendChild(cta);
       const no=el('button','pinvno','Ara no'); no.addEventListener('click',function(){ markPopupSeen(); closeInvitePopup(); }); md.appendChild(no);
       // Punt 5: enllac de suport al final ("si necessites ajuda, aqui la tens").
-      const help=el('a','pinvhelp', isWiki?'Com s\'enllaça una imatge? ↗':'Com es puja una imatge? ↗');
-      help.href=isWiki?'https://www.wikidata.org/wiki/Help:Statements':'https://commons.wikimedia.org/wiki/Commons:First_steps/Uploading_files';
+      const help=el('a','pinvhelp','Com es puja una imatge? ↗');
+      help.href='https://commons.wikimedia.org/wiki/Commons:First_steps/Uploading_files';
       help.target='_blank'; help.rel='noopener'; md.appendChild(help);
       ov.appendChild(md);
       ov.addEventListener('click',function(ev){ if(ev.target===ov){ markPopupSeen(); closeInvitePopup(); } });
@@ -950,7 +938,7 @@
       root.innerHTML='';
       const w=el('div','pwrap'), card=el('div','pcard');
       if(p.img){ const im=el('img','pimg'); im.src=p.img; im.alt=p.name; im.addEventListener('error',function(){ const ph=el('div','pimg ph','👤'); if(im.parentNode) im.parentNode.replaceChild(ph,im); }); card.appendChild(im); }
-      else { card.appendChild(el('div','pimg ph','👤')); }
+      else { card.appendChild(el('div','pimg ph','��')); }
       const body=el('div','pbody');
       body.appendChild(el('h2','pname',p.name));
       body.appendChild(el('p','pdesc',p.desc||'Sense descripció disponible.'));
