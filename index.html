@@ -1591,7 +1591,7 @@ async function toggleCollection(cid){
     recomputePresent();closeDetailIfGone();clearFitLatch();render();return;
   }
   state.collections.add(cid);
-  if(typeof gtag!=='undefined')gtag('event','colleccio_activada',{nom:c.name});
+  if(typeof gtag!=='undefined')gtag('event','colleccio_activada',{colleccio:c.name});
   const local=new Map(PEOPLE.filter(p=>p.wd).map(p=>[p.wd,p]));
   const localIds=c.wds.map(q=>local.get(q)).filter(Boolean).map(p=>p.id);
   const missing=c.wds.filter(q=>!local.has(q));
