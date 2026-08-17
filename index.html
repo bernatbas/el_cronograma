@@ -1152,6 +1152,7 @@ function eraLabel(year){
 }
 
 function openDetail(p){
+  if(typeof gtag!=='undefined')gtag('event','fitxa_oberta',{personatge:p.name});
   state.selected=p.id;state.selectedEvent=null;
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   d.innerHTML=`<button class="close" id="closeDetail">×</button>
@@ -1168,7 +1169,7 @@ function openDetail(p){
     const act=btn.getAttribute('data-act');
     if(act==='remove')removePerson(p.id);
     else if(act==='wiki')window.open(p.wiki,'_blank','noopener,noreferrer');
-    else showContext(p.id);
+    else{if(typeof gtag!=='undefined')gtag('event','mostra_context',{personatge:p.name});showContext(p.id);}
   });
   render();
 }
@@ -1262,6 +1263,7 @@ function addFromSearch(id){
 // Wikidata person -> session-only entry in PEOPLE (no category; lost on reload)
 function addWikidataPerson(qid){
   const w=wdResults.find(x=>x.qid===qid);if(!w||w.birth==null)return;
+  if(typeof gtag!=='undefined')gtag('event','personatge_afegit',{nom:w.name,qid});
   const id='wd_'+qid;
   if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:qid,name:w.name,birth:w.birth,death:w.death,cats:guessCats(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_session:true,_ts:Date.now()});
   addFromSearch(id);
@@ -1310,6 +1312,7 @@ function fulltextSearch(term){
   return wdFetch(url).then(d=>byIds((((d.query&&d.query.search)||[]).map(x=>x.title).filter(t=>/^Q\d+$/.test(t))),false));
 }
 function fetchWikidata(term){
+  if(typeof gtag!=='undefined')gtag('event','cerca_wikidata',{text:term.trim()});
   const key=deaccent(term.trim());
   const seq=++wdSeq;
   entitySearch(term).then(out=>{
@@ -1588,6 +1591,7 @@ async function toggleCollection(cid){
     recomputePresent();closeDetailIfGone();clearFitLatch();render();return;
   }
   state.collections.add(cid);
+  if(typeof gtag!=='undefined')gtag('event','colleccio_activada',{nom:c.name});
   const local=new Map(PEOPLE.filter(p=>p.wd).map(p=>[p.wd,p]));
   const localIds=c.wds.map(q=>local.get(q)).filter(Boolean).map(p=>p.id);
   const missing=c.wds.filter(q=>!local.has(q));
@@ -1661,12 +1665,13 @@ let fitPrev=null;
 function fitLatch(on){$('#fitAll').classList.toggle('on',on);}
 function clearFitLatch(){fitPrev=null;fitLatch(false);}
 $('#fitAll').onclick=()=>{
+  if(typeof gtag!=='undefined')gtag('event','vista_global');
   if(fitPrev){pxPerYear=Math.max(fitPx(),Math.min(20,fitPrev.px));render();scroll.scrollLeft=Math.min(Math.max(0,fitPrev.left),maxScroll());clearFitLatch();return;}
   const before={px:pxPerYear,left:scroll.scrollLeft};
   fitToPresent();
   if(pxPerYear!==before.px||scroll.scrollLeft!==before.left){fitPrev=before;fitLatch(true);}   // only latch if it actually moved
 };
-$('#reset').onclick=()=>{state.present=new Set();state.pinned=new Set(SEED_PINNED);state.collections=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.focus=null;state.selected=null;state.selectedEvent=null;state.expandedClusters=new Set();$('#detail').classList.remove('open');clearFitLatch();defaultView();};
+$('#reset').onclick=()=>{if(typeof gtag!=='undefined')gtag('event','reset');state.present=new Set();state.pinned=new Set(SEED_PINNED);state.collections=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.focus=null;state.selected=null;state.selectedEvent=null;state.expandedClusters=new Set();$('#detail').classList.remove('open');clearFitLatch();defaultView();};
 $('#sidebarToggle').onclick=e=>{
   const collapsed=$('.body').classList.toggle('collapsed');
   e.currentTarget.textContent=collapsed?'›':'‹';
