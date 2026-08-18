@@ -181,10 +181,10 @@
   .pinvemoji{font-size:40px;line-height:1;margin-bottom:10px;}
   .pinvtitle{font-family:'Oswald',sans-serif;font-size:20px;font-weight:600;margin:0 0 8px;color:var(--text);}
   .pinvtext{font-size:14px;line-height:1.5;color:var(--text2);margin:0 0 18px;}
-  .pinvcta{display:inline-flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box;font:inherit;font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;padding:12px 16px;border-radius:var(--r-card);border:1px solid var(--topbar-bg);background:var(--topbar-bg);color:#fff;transition:transform .12s,box-shadow .12s;}
+  .pinvcta{display:inline-flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box;font:inherit;font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;padding:12px 16px;border-radius:var(--r-card);border:1px solid #612E25;background:var(--topbar-bg);color:#fff;transition:transform .12s,box-shadow .12s;}
   .pinvcta:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(178,58,46,.3);}
-  .pinvno{display:block;width:100%;margin-top:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:10px;border-radius:var(--r-card);border:1px solid transparent;background:none;color:var(--text2);transition:background .12s,color .12s,border-color .12s,transform .12s;}
-  .pinvno:hover{background:var(--surface);color:var(--text);border-color:var(--border);transform:translateY(-1px);}
+  .pinvno{display:block;width:100%;margin-top:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:10px;border-radius:var(--r-card);border:1px solid #612E25;background:none;color:var(--text2);transition:background .12s,color .12s,border-color .12s,transform .12s;}
+  .pinvno:hover{background:var(--surface);color:var(--text);border-color:#612E25;transform:translateY(-1px);}
   .pinvhelp{display:inline-block;width:100%;box-sizing:border-box;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--text2);text-decoration:none;}
   .pinvhelp:hover{color:var(--topbar-bg);text-decoration:underline;}
   @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
@@ -875,9 +875,25 @@
     async function wd(params){
       params.format='json'; params.origin='*';
       const qs=Object.keys(params).map(function(k){ return k+'='+encodeURIComponent(params[k]); }).join('&');
-      const r=await fetch(WD_API+'?'+qs);
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      return r.json();
+      const url=WD_API+'?'+qs;
+      let lastErr=null;
+      for(let attempt=0;attempt<2;attempt++){
+        if(attempt) await new Promise(function(res){ setTimeout(res,600); });
+        const ctrl=new AbortController();
+        const to=setTimeout(function(){ ctrl.abort(); },8000);
+        try{
+          const r=await fetch(url,{signal:ctrl.signal});
+          clearTimeout(to);
+          if(!r.ok) throw new Error('HTTP '+r.status);
+          return await r.json();
+        }catch(e){
+          clearTimeout(to);
+          lastErr=e;
+          const m=/^HTTP (\d+)/.exec((e&&e.message)||'');
+          if(m && parseInt(m[1],10)<500) throw e;
+        }
+      }
+      throw lastErr||new Error('fetch failed');
     }
     function hasItem(e,prop,qid){ const c=e.claims&&e.claims[prop]; if(!c) return false; return c.some(function(s){ const v=s.mainsnak&&s.mainsnak.datavalue&&s.mainsnak.datavalue.value; return v&&v.id===qid; }); }
     function yearFrom(e,prop){ const c=e.claims&&e.claims[prop]; if(!c||!c.length) return null; const dv=c[0].mainsnak&&c[0].mainsnak.datavalue&&c[0].mainsnak.datavalue.value; const t=dv&&dv.time; if(!t) return null; const m=t.match(/^([+-])0*(\d+)-/); if(!m) return null; const y=parseInt(m[2],10); return m[1]==='-'?-y:y; }
@@ -1297,12 +1313,50 @@
     async function wd(params){
       params.format='json'; params.origin='*';
       const qs=Object.keys(params).map(function(k){ return k+'='+encodeURIComponent(params[k]); }).join('&');
-      const r=await fetch(WD_API+'?'+qs);
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      return r.json();
+      const url=WD_API+'?'+qs;
+      let lastErr=null;
+      for(let attempt=0;attempt<2;attempt++){
+        if(attempt) await new Promise(function(res){ setTimeout(res,600); });
+        const ctrl=new AbortController();
+        const to=setTimeout(function(){ ctrl.abort(); },8000);
+        try{
+          const r=await fetch(url,{signal:ctrl.signal});
+          clearTimeout(to);
+          if(!r.ok) throw new Error('HTTP '+r.status);
+          return await r.json();
+        }catch(e){
+          clearTimeout(to);
+          lastErr=e;
+          const m=/^HTTP (\d+)/.exec((e&&e.message)||'');
+          if(m && parseInt(m[1],10)<500) throw e;
+        }
+      }
+      throw lastErr||new Error('fetch failed');
     }
     function imgUrl(e){ const c=e.claims&&e.claims.P18; if(!c||!c.length) return null; const dv=c[0].mainsnak&&c[0].mainsnak.datavalue; if(!dv) return null; return COMMONS+encodeURIComponent(String(dv.value).replace(/ /g,'_'))+'?width=400'; }
     function wdLbl(o){ return o?((o.ca||o.es||o.en||{}).value||null):null; }
+
+    // Precarrega les fotos del pool. Si alguna no es pot descarregar, reintenta 1 cop; si tampoc, retorna false.
+    function loadImg(src){
+      return new Promise(function(resolve){
+        if(!src){ resolve(false); return; }
+        const im=new Image(); let done=false;
+        const to=setTimeout(function(){ if(!done){ done=true; resolve(false); } },8000);
+        im.onload=function(){ if(!done){ done=true; clearTimeout(to); resolve(true); } };
+        im.onerror=function(){ if(!done){ done=true; clearTimeout(to); resolve(false); } };
+        im.src=src;
+      });
+    }
+    async function preloadImages(pool){
+      const srcs=(pool||[]).map(function(p){ return p&&p.img; });
+      if(srcs.length<5) return false;
+      for(let attempt=0;attempt<2;attempt++){
+        if(attempt) await new Promise(function(r){ setTimeout(r,600); });
+        const rs=await Promise.all(srcs.map(loadImg));
+        if(rs.every(Boolean)) return true;
+      }
+      return false;
+    }
 
     // Pool diari: seed 'mem:<date>', batches de 30 fins tenir 5 amb foto
     let poolPromise=null;
@@ -1311,32 +1365,43 @@
       poolPromise=(async function(){
         const today=todayStr();
         const cached=readLS(POOL_KEY);
-        if(cached&&cached.date===today&&Array.isArray(cached.pool)&&cached.pool.length>=5) return cached.pool;
-        const list=(typeof window!=='undefined'&&Array.isArray(window.HB_PERSONATGES))?window.HB_PERSONATGES:[];
-        if(!list.length) return null;
-        const rng=mulberry32(seedFromStr('mem:'+today));
-        let batchStart=Math.floor(rng()*list.length);
-        const results=[];
-        for(let attempt=0;attempt<6&&results.length<5;attempt++){
-          const ids=[];
-          for(let i=0;i<BATCH;i++) ids.push('Q'+list[(batchStart+i)%list.length]);
-          batchStart=(batchStart+BATCH)%list.length;
-          try{
-            const data=await wd({action:'wbgetentities',ids:ids.join('|'),props:'labels|claims',languages:'ca|es|en'});
-            const ents=data.entities||{};
-            for(const qid of ids){
-              if(results.length>=5) break;
-              const e=ents[qid];
-              if(!e||e.missing!==undefined) continue;
-              const img=imgUrl(e); if(!img) continue;
-              const name=wdLbl(e.labels); if(!name) continue;
-              results.push({qid,name,img});
-            }
-          }catch(_){}
+        let pool=null;
+        if(cached&&cached.date===today&&Array.isArray(cached.pool)&&cached.pool.length>=5){
+          pool=cached.pool;                                   // cache fresc d'avui
+        } else {
+          const list=(typeof window!=='undefined'&&Array.isArray(window.HB_PERSONATGES))?window.HB_PERSONATGES:[];
+          if(!list.length) return null;
+          const rng=mulberry32(seedFromStr('mem:'+today));
+          let batchStart=Math.floor(rng()*list.length);
+          const results=[];
+          for(let attempt=0;attempt<6&&results.length<5;attempt++){
+            const ids=[];
+            for(let i=0;i<BATCH;i++) ids.push('Q'+list[(batchStart+i)%list.length]);
+            batchStart=(batchStart+BATCH)%list.length;
+            try{
+              const data=await wd({action:'wbgetentities',ids:ids.join('|'),props:'labels|claims',languages:'ca|es|en'});
+              const ents=data.entities||{};
+              for(const qid of ids){
+                if(results.length>=5) break;
+                const e=ents[qid];
+                if(!e||e.missing!==undefined) continue;
+                const img=imgUrl(e); if(!img) continue;
+                const name=wdLbl(e.labels); if(!name) continue;
+                results.push({qid,name,img});
+              }
+            }catch(_){}
+          }
+          if(results.length>=5){
+            pool=results.slice(0,5);
+            writeLS(POOL_KEY,{date:today,pool:pool});          // nomes desem builds frescos
+          } else if(cached&&Array.isArray(cached.pool)&&cached.pool.length>=5){
+            pool=cached.pool;                                  // fallback: ultim pool bo
+          }
         }
-        if(results.length<5) return null;
-        const pool=results.slice(0,5);
-        writeLS(POOL_KEY,{date:today,pool:pool});
+        if(!pool) return null;
+        // Les fotos son remotes (Commons): nomes mostrem el tauler si es poden DESCARREGAR.
+        const imgsOk=await preloadImages(pool);
+        if(!imgsOk) return null;
         return pool;
       })().catch(function(){ return null; });
       return poolPromise;
@@ -1532,18 +1597,26 @@
         mode=savedMode();
         state=loadState();
         currentPool=null;
-        root.innerHTML='<div class="gamehead"><h2>🃏 Memory</h2></div>'
-          +'<div class="mem-loading">Buscant personatges… ⏳</div>';
-        ensurePool().then(function(p){
+        function load(){
           if(!root) return;
-          currentPool=p;
-          if(!p){
-            root.innerHTML='<div class="gamehead"><h2>🃏 Memory</h2></div>'
-              +'<div class="err">No s’han pogut carregar els personatges. Comprova la connexió i torna-ho a provar.</div>';
-            return;
-          }
-          render();
-        });
+          root.innerHTML='<div class="gamehead"><h2>🃏 Memory</h2></div>'
+            +'<div class="mem-loading"><div class="pspin"></div>Buscant personatges…</div>';
+          ensurePool().then(function(p){
+            if(!root) return;
+            currentPool=p;
+            if(!p){
+              root.innerHTML='<div class="gamehead"><h2>🃏 Memory</h2></div>'
+                +'<div class="perror"><div style="font-size:26px;margin-bottom:6px;">⚠️</div>'
+                +'<div>No s’han pogut carregar els personatges. Comprova la connexió i torna-ho a provar.</div>'
+                +'<button class="pretry" id="memretry">Torna-ho a provar</button></div>';
+              var rb=root.querySelector('#memretry');
+              if(rb) rb.addEventListener('click',function(){ poolPromise=null; load(); });
+              return;
+            }
+            render();
+          });
+        }
+        load();
       },
       unmount(){
         if(cdTimer){ clearTimeout(cdTimer); cdTimer=null; }
