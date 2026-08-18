@@ -521,7 +521,10 @@
   .mem-panel{background:var(--canvas);border-radius:var(--r-card);padding:24px 20px 20px;max-width:300px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.28);position:relative;}
   .mem-pclose{position:absolute;top:10px;right:12px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2);padding:4px;line-height:1;}
   .mem-pimg{width:120px;height:160px;object-fit:cover;border-radius:var(--r-card);margin:0 auto 12px;display:block;}
-  .mem-pname{font-family:'Oswald','Roboto Condensed','Arial Narrow',Arial,sans-serif;font-size:20px;font-weight:700;margin-bottom:16px;color:var(--text);}
+  .mem-pname{font-family:'Oswald','Roboto Condensed','Arial Narrow',Arial,sans-serif;font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text);}
+  .mem-pdates{font-size:13px;color:var(--text2);margin-bottom:16px;}
+  .mem-pbtns{display:flex;flex-direction:column;gap:10px;}
+  .mem-pbtns .cta{width:100%;}
   .mbanner .memshare{margin-top:14px;}
 </style>
 </head>
@@ -1553,26 +1556,29 @@
       var p=currentPool[personIdx];
       var ov=document.createElement('div');
       ov.className='mem-overlay';
-      ov.innerHTML='<div class="mem-panel">'
-        +'<button class="mem-pclose" aria-label="Tanca">✕</button>'
-        +'<img class="mem-pimg" src="'+esc(p.img)+'" alt="'+esc(p.name)+'">'
-        +'<div class="mem-pname">'+esc(p.name)+'</div>'
-        +'<button class="cta">🗺️ Veure al cronograma</button>'
-        +'</div>';
-      const ctaEl=ov.querySelector('.cta');
+      const datesStr=(p.birth!=null?fmtYear(p.birth):’?’)+’ – ‘+(p.death!=null?fmtYear(p.death):’…’);
+      ov.innerHTML=’<div class="mem-panel">’
+        +’<button class="mem-pclose" aria-label="Tanca">✕</button>’
+        +’<img class="mem-pimg" src="’+esc(p.img)+’" alt="’+esc(p.name)+’">’
+        +’<div class="mem-pname">’+esc(p.name)+’</div>’
+        +’<div class="mem-pdates">’+datesStr+’</div>’
+        +’<div class="mem-pbtns"><button class="cta">🗺️ Veure al cronograma</button></div>’
+        +’</div>’;
+      const btns=ov.querySelector(‘.mem-pbtns’);
+      const ctaEl=ov.querySelector(‘.cta’);
       if(p.birth==null){
         ctaEl.disabled=true;
-        ctaEl.title='Ja em sap greu, però a la Viquipèdia no hi surt l’any de naixement';
-        ctaEl.textContent='🗺️ No disponible al cronograma';
+        ctaEl.title=’Ja em sap greu, però a la Viquipèdia no hi surt l’any de naixement’;
+        ctaEl.textContent=’🗺️ No disponible al cronograma’;
       }else{
-        ctaEl.addEventListener('click',function(){ goToCronograma('memory',[p]); });
+        ctaEl.addEventListener(‘click’,function(){ goToCronograma(‘memory’,[p]); });
       }
       if(p.wiki){
-        const wa=document.createElement('a');
-        wa.className='cta sec';wa.textContent='🔗 Llegeix-ne més';
-        wa.href=p.wiki;wa.target='_blank';wa.rel='noopener';
-        wa.addEventListener('click',function(){ track('memory_wiki',{}); });
-        ov.querySelector('.mem-panel').appendChild(wa);
+        const wa=document.createElement(‘a’);
+        wa.className=’cta sec’;wa.textContent=’🔗 Llegeix-ne més’;
+        wa.href=p.wiki;wa.target=’_blank’;wa.rel=’noopener’;
+        wa.addEventListener(‘click’,function(){ track(‘memory_wiki’,{}); });
+        btns.appendChild(wa);
       }
       ov.querySelector('.mem-pclose').addEventListener('click',function(){ ov.remove(); });
       ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });

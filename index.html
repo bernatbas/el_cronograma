@@ -2038,13 +2038,16 @@ function bootFromJoc(){
   try{ ctx=JSON.parse(localStorage.getItem('hb_cronograma_ctx')||'null'); }catch(_){}
   try{ localStorage.removeItem('hb_cronograma_ctx'); }catch(_){}  // us unic: consumir i esborrar
   history.replaceState(null,'',location.pathname);
-  if(!ctx||ctx.v!==1||!ctx.people||!ctx.people.length||(Date.now()-ctx.ts)>FRESH_MS){
+  const _np=(ctx&&ctx.people&&ctx.people.length)||0, _ne=(ctx&&ctx.events&&ctx.events.length)||0;
+  if(!ctx||ctx.v!==1||(!_np&&!_ne)||(Date.now()-ctx.ts)>FRESH_MS){
     restoreState(); bootDefault(); return;
   }
   const src=ctx.source||null;
-  const people=ctx.people;
+  const people=ctx.people||[];
   restoreState();
-  if(people.length===1){
+  // El repartidor va per TOTAL d'items, no per persones: amb 1 persona i 4 events
+  // el cami d'un sol personatge ignorava ctx.events i nomes es veia la persona.
+  if(_np===1&&!_ne){
     // Un sol personatge: usa personBar amb etiqueta de source
     const p=people[0];
     bootDefault(function(){
@@ -2067,7 +2070,7 @@ function bootFromJoc(){
       }).catch(function(){});
     });
   }else{
-    // Conjunt de personatges: jocBar amb etiqueta de source
+    // Conjunt (persones i/o events): jocBar. Aguanta people buit (traspàs només d'events).
     bootDefault(function(){
       const resolvedIds=people.map(function(p){
         const local=PEOPLE.find(function(x){return x.wd===p.qid;});
@@ -2161,15 +2164,16 @@ function scheduleSettle(){requestAnimationFrame(settleRender);clearTimeout(_sett
 window.addEventListener('resize',()=>{applyMetrics();setZoom(pxPerYear);scheduleSettle();});   // en girar el mobil canvia el llindar compacte: cal recalcular la geometria abans de repintar
 window.addEventListener('load',scheduleSettle);
 
-// Rotate hint: a dismissible suggestion (not a blocker) on touch devices held in portrait.
+// Rotate hint: es mostra UN SOL COP per usuari (dismiss persistit a localStorage).
+const ROTATE_LS='historiabasica.rotateDismissed';
 const portraitWall=document.getElementById('portraitWall');
-let rotateDismissed=false;
+let rotateDismissed=!!(localStorage.getItem(ROTATE_LS));
 function checkPortrait(){
   const isTouch=window.matchMedia('(pointer:coarse)').matches;
   const isPortrait=window.innerWidth<window.innerHeight;
   portraitWall.classList.toggle('on',isTouch&&isPortrait&&!rotateDismissed);
 }
-$('#rotateDismiss').addEventListener('click',()=>{rotateDismissed=true;portraitWall.classList.remove('on');});
+$('#rotateDismiss').addEventListener('click',()=>{rotateDismissed=true;try{localStorage.setItem(ROTATE_LS,'1');}catch(_){}portraitWall.classList.remove('on');});
 window.addEventListener('resize',checkPortrait);
 checkPortrait();
 
