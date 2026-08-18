@@ -505,8 +505,8 @@
   .mem-back{background:#EBCDBE;border:2px solid #612E25;display:flex;align-items:center;justify-content:center;}
   .mem-back-icon{font-size:2rem;opacity:.6;}
   .mem-front{transform:rotateY(180deg);background:var(--surface);border:2px solid var(--border);}
-  .mem-card.matched .mem-front{border-color:#4caf50;background:#f0fff4;}
-  .mem-card.no-match .mem-front{border-color:#e57373;background:#fff5f5;}
+  .mem-card.matched .mem-front{border:3px solid #4caf50;background:#f0fff4;}
+  .mem-card.no-match .mem-front{border:3px solid #e57373;background:#fff5f5;}
   .mem-img{width:100%;height:100%;object-fit:cover;display:block;}
   .mem-name{display:flex;align-items:center;justify-content:center;height:100%;padding:10px;font-family:'Oswald','Roboto Condensed','Arial Narrow',Arial,sans-serif;font-size:15px;font-weight:600;letter-spacing:.02em;text-align:center;color:var(--text);line-height:1.25;}
   .mem-errors{text-align:center;font-size:13px;color:var(--text2);padding:2px 0 6px;}
@@ -1362,10 +1362,14 @@
     function saveMode(m){ writeLS(MODE_KEY,m); }
 
     // Estat del joc
+    function sameColCount(order){
+      var n=0; for(var i=0;i<5;i++) if(order[i]%5===order[i+5]%5) n++; return n;
+    }
     function initModeState(m){
-      const rng=mulberry32(seedFromStr('mem:'+state.date+':'+m));
-      const order=seededShuffle([0,1,2,3,4,5,6,7,8,9],rng);
-      return {errors:0,found:[],order:order,done:false};
+      var base=seedFromStr('mem:'+state.date+':'+m), ord, att=0;
+      do { ord=seededShuffle([0,1,2,3,4,5,6,7,8,9],mulberry32(base+att)); att++; }
+      while(att<8 && sameColCount(ord)>=3);
+      return {errors:0,found:[],order:ord,done:false};
     }
     function modeState(){
       if(!state[mode]){ state[mode]=initModeState(mode); saveState(); }
