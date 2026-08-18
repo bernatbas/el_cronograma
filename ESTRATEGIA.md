@@ -145,6 +145,49 @@ si es deixa `wbgetentities` es paga el servei de consultes per anar a buscar IDs
 
 ---
 
+## 5.3 Una persona sense any de naixement no es pinta (2026-08-18)
+
+`x(y) = (y - YEAR_MIN) * pxPerYear` no té cap noció de «no ho sé»: amb `y = null` el `null` es
+coerciona a 0 i la barra apareix **a l'any 0** i s'estira fins a «avui» com si fos algú viu des de
+l'antiguitat. Un personatge sense `birth` a Wikidata (o amb la data perduda pel camí) es veia com
+una franja que travessava tot el cronograma.
+
+**La regla és que `birth` és obligatori per pintar.** No hi ha barra sense any de naixement, i el
+cronograma no ha d'endevinar-lo. Implementat en **tres capes**, i cadascuna cobreix una escletxa
+diferent — no és redundància per comoditat:
+
+1. **`visiblePeople()` filtra `typeof p.birth === 'number'`.** És l'única capa que garanteix el
+   resultat: passi el que passi amunt, res sense any arriba al render. `typeof` i no `!= null`
+   perquè un `birth` que hagi passat per un JSON dolent pot ser una string.
+2. **`mostraPersonatge()` repara** les dates nul·les d'una entrada que ja era a `PEOPLE`. Abans
+   només omplia els camps en **crear** l'entrada, així que una persona desada un dia amb `birth`
+   nul es quedava nul·la per sempre, encara que la crida següent portés la data bona. Aquest era el
+   bug de debò: la caché de `localStorage` fossilitzava el forat.
+3. **El traspàs multi-personatge demana les dades que li falten**: per cada persona que arriba
+   sense any es crida `fetchPerson(qid)` a Wikidata i, quan respon, es guarda i es re-renderitza.
+   Recuperar la dada és millor que amagar la persona en silenci.
+
+`centerOnPerson()` cau a `defaultView()` si no hi ha `birth`: centrar-se en un any inexistent
+enviava la vista a l'any 0, lluny de tot.
+
+**Criteri general**: qualsevol camp que entri a una projecció aritmètica (`x()`, amplades, carrils)
+s'ha de validar *pel tipus* al límit del render, no confiar que qui l'ha escrit ho hagi fet bé. El
+`null` silenciós no peta, i això és el que el fa car de trobar.
+
+---
+
+## 5.4 Avisos d'un sol ús (2026-08-18)
+
+L'avís de girar el mòbil en vertical surt **un cop per usuari**, no un cop per sessió: el ✕ desa
+`historiabasica.rotateDismissed` a `localStorage`. Un consell útil el primer dia és una molèstia el
+desè, i qui l'ha tancat ja ha entès que el cronograma es veu millor en horitzontal.
+
+Distinció a mantenir: els avisos **informatius** (aquest) es descarten per sempre; els que depenen
+del **contingut del dia** (com el pop-up d'invitació del «Personatge del dia») es claven per data,
+perquè demà parlen d'algú altre.
+
+---
+
 ---
 
 ## 6. Esquema de dades

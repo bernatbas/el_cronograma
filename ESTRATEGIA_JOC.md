@@ -545,9 +545,36 @@ del separador de la topbar. Es va arribar aquí en dos passos: `var(--topbar-bg)
 ### Fitxa del personatge en acabar
 
 Un cop resolt, la graella queda clicable: qualsevol carta obre un overlay (`.mem-overlay`) amb
-la **foto gran, el nom** i el botó **«🗺️ Veure al cronograma»**, que envia l'event
-`joc_2_cronograma` i navega a `index.html?person=<QID>`. Es tanca amb la ✕ o clicant el fons.
-És la manera de tancar el cercle: jugues, i d'allà saltes a veure qui era aquella gent.
+**foto, nom, dates i descripció** i dos botons. Envia l'event `joc_2_cronograma` i fa el traspàs
+per `goToCronograma()`, **no** per `?person=` (v. «Traspàs unificat»). Es tanca amb la ✕ o
+clicant el fons. És la manera de tancar el cercle: jugues, i d'allà saltes a veure qui era
+aquella gent.
+
+**La fitxa no menteix mai sobre les dades que té** (2026-08-18):
+
+- La **descripció** ve del camp `descriptions` de Wikidata, com a «Personatge del dia». Arriba en
+  `ca|es|en` amb fallback, així que de vegades surt en castellà o anglès («futbolista español»).
+  S'accepta: és el que ja fa el joc germà, i una descripció en un altre idioma informa més que
+  cap descripció.
+- Els camps que **no hi són no deixen forat**: sense cap any, la línia de dates desapareix (abans
+  es veia un «? – …» buit, que no diu res); sense descripció, tampoc surt el bloc.
+- Sense any de naixement el cronograma **no pot** pintar res, així que el botó surt gris i
+  deshabilitat amb el motiu escrit al `title`. Val més dir-ho que enviar l'usuari a una vista
+  buida. El gris és `.cta:disabled{opacity:.45;filter:grayscale(1)}` — i per això el `:hover` dels
+  CTA es limita a `:not(:disabled)`: si no, un botó mort semblava viu en passar-hi el ratolí.
+
+**Caché amb versió implícita** (v3): afegir un camp nou al pool obliga a **invalidar** els pools
+d'ahir, o la fitxa d'un dia sencer surt sense el camp. En lloc d'un número de versió es comprova
+que la clau hi sigui: `'desc' in cached.pool[0]`. Regla general — **quan afegeixis un camp al
+pool, canvia la clau que es comprova.** (v2 comprovava `'birth'`.)
+
+**Landscape baix** (`@media(max-height:560px)`): en horitzontal de mòbil (375px d'alçada) la fitxa
+sencera no hi cap i el segon botó quedava **fora de pantalla**. Dues defenses, i calen totes dues:
+`max-height:100%` + `overflow-y:auto` al panell (xarxa de seguretat — si res més falla, s'hi
+arriba fent scroll), i el tram compacte que fa que no calgui: foto 72×96, descripció retallada a 2
+línies amb `-webkit-line-clamp`, menys padding. La fitxa passa de 381px a 340px i hi cap sencera.
+El llindar és per **alçada**, no per amplada ni per `pointer:coarse`: el que falta és alçada, i
+així també cobreix una finestra de desktop aixafada.
 
 ### Copys del resultat
 
@@ -581,3 +608,37 @@ bernatbas.github.io/el_cronograma/joc.html
 
 `joc_vist{joc:'memory'}` · `joc_iniciat{joc,mode}` (al primer clic, no en entrar) ·
 `joc_completat{joc,mode,errors}` · `joc_2_cronograma{joc}` (des de la fitxa).
+
+
+## Traspàs unificat joc→cronograma (2026-08-18)
+
+Tots els jocs envien al cronograma per la **mateixa porta**: `goToCronograma(source, items)` escriu
+`hb_cronograma_ctx` a `localStorage` i navega a `index.html?from=joc`. L'`index` el consumeix i
+**l'esborra** (ús únic): recarregar no reprodueix el traspàs, que seria desconcertant. `items` és
+una barreja de personatges (`{qid,…}`) i events (`{kind:'event',id,name,year}`).
+
+### La barra és una línia de temps, no dues llistes
+
+`jocBar(items, source)` rebia abans persones i events **per separat** i els pintava en dos grups.
+Ara rep **una sola llista ordenada per any**. És la decisió de fons: el cronograma tracta persones
+i esdeveniments com el mateix tipus de cosa — punts en el temps — i la barra ha de dir el mateix.
+Si «Ordena la línia» t'ha fet ordenar 5 items, la barra els ha de llistar en aquell mateix ordre, o
+el joc i la vista es contradiuen.
+
+L'àncora de l'ordre és **`p.birth`** per a les persones i `ev.year` per als events. Per a una
+persona el naixement és l'única data que sempre hi és: la mort pot ser `null` (encara viu).
+
+Amb més d'un item el nom passa a **scroll horitzontal intern** (`overflow-x:auto` dins un
+contenidor amb `min-width:0`). Sense el `min-width:0` el flex item no cedeix i el text desborda la
+pàgina sencera, que al mòbil es nota com un scroll lateral fantasma.
+
+### Encaminament: una persona i prou, o tot per la barra
+
+`bootFromJoc()` té dos camins i la condició ha de ser **exacta**:
+
+- `_np===1 && !_ne` → camí d'una sola persona (personbar amb foto i descripció, vista centrada).
+- **tot el demés** → `jocBar`.
+
+Amb `people.length===1` (com estava) un traspàs d'1 persona **més events** queia al camí d'una
+persona, que ignora `ctx.events`, i els esdeveniments desapareixien sense cap error. La condició ha
+de mirar **les dues** llistes, no només la de persones.
