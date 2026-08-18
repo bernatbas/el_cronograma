@@ -1384,7 +1384,8 @@
         const today=todayStr();
         const cached=readLS(POOL_KEY);
         let pool=null;
-        if(cached&&cached.date===today&&Array.isArray(cached.pool)&&cached.pool.length>=5){
+        if(cached&&cached.date===today&&Array.isArray(cached.pool)&&cached.pool.length>=5
+           &&cached.pool[0]&&'birth' in cached.pool[0]){     // v2: descarta caches sense birth/wiki
           pool=cached.pool;                                   // cache fresc d'avui
         } else {
           const list=(typeof window!=='undefined'&&Array.isArray(window.HB_PERSONATGES))?window.HB_PERSONATGES:[];
