@@ -642,3 +642,68 @@ pàgina sencera, que al mòbil es nota com un scroll lateral fantasma.
 Amb `people.length===1` (com estava) un traspàs d'1 persona **més events** queia al camí d'una
 persona, que ignora `ctx.events`, i els esdeveniments desapareixien sense cap error. La condició ha
 de mirar **les dues** llistes, no només la de persones.
+
+
+## Homenatges: forçar el «Personatge del dia» (2026-08-19)
+
+Els dies assenyalats (una mort recent, un dia internacional, un centenari) la tria aleatòria no
+serveix. `PD_PINNED` és un **calendari d'excepcions** dins `PersonatgeDia`, a `joc.html`:
+
+```js
+const PD_PINNED = {
+  '2026-08-19': 'Q733621'    // Juan Tamariz — mag, mort el 18/08/2026
+};
+```
+
+Data en `AAAA-MM-DD` (hora **local** del visitant, com tota la resta del joc) → QID. Per afegir un
+homenatge, una línia. **Els dies que no hi surten segueixen sent aleatoris**: no és un mode, és una
+excepció puntual.
+
+### Per què va abans de la llavor
+
+`pickDaily(ds)` consulta `PD_PINNED` **després de la caché però abans de la llavor i abans de
+comprovar el pool offline**. Aquest ordre no és arbitrari:
+
+- **Després de la caché**: qui ja hagi obert el joc avui conserva el seu personatge. Vol dir que un
+  homenatge s'ha de **publicar el dia abans**, o qui hagi entrat de matinada es queda amb el de la
+  llavor tot el dia. És l'única limitació real del mecanisme.
+- **Abans del pool**: l'homenatjat **no** ha de ser a `personatges.js`. Pots destacar qualsevol QID
+  de Wikidata sense regenerar l'índex.
+- **Amb `try/catch` i sense `return` en cas de fallada**: si Wikidata no respon o el QID és dolent,
+  es cau a la tria aleatòria. Un homenatge trencat no ha de deixar el dia **buit** — val més un
+  personatge qualsevol que una pantalla d'error.
+
+### El filtre d'idiomes no s'aplica als homenatges
+
+`isValid(e, trusted)` accepta un segon paràmetre, i `fetchPerson(qid, trusted)` el propaga. Amb
+`trusted = true` **se salta el filtre de sitelinks** (article a la Viquipèdia en ca **i** es **i**
+en). Aquest filtre té sentit per a la tria automàtica — garanteix que qui surti tingui prou
+material — però és contraproduent aquí: justament les **perles locals** que vols destacar són les
+que no tenen article en anglès, i quedarien descartades sense dir res.
+
+El criteri: **si la tria l'ha fet una persona, ja està validada.** El que `trusted` **no** relaxa
+mai és el mínim per poder pintar la fitxa — humà (`P31=Q5`), any de naixement (`P569`) i etiqueta
+en algun dels tres idiomes. Sense això no hi ha fitxa possible, i el fallback aleatori és millor.
+
+Efecte lateral: sense cap article a ca/es/en, `build()` feia `wiki:''` i el botó «Llegeix-ne més»
+es quedava sense destí. Ara cau a la fitxa de **Wikidata** (`wikidata.org/wiki/<QID>`), que sempre
+existeix.
+
+### Verificar-ho abans que arribi el dia
+
+⚠️ **Comprova sempre el QID** abans de posar-lo (`wbsearchentities`, o obrint
+`wikidata.org/wiki/Q…`): cercar pel nom retorna sorpreses. Comprova també que tingui **P18**, o la
+fitxa sortirà sense retrat.
+
+Per provar un dia que no és avui, la manera pràctica és **duplicar `joc.html`** amb la data del
+`PD_PINNED` canviada i obrir la còpia (`todayStr()` viu dins una IIFE i no es pot monkey-patchejar
+des de la consola). Casos que val la pena tocar: el dia forçat surt qui toca · un dia **no** forçat
+segueix sent aleatori · un QID inventat cau a l'aleatori en lloc de deixar la pantalla morta.
+
+### Què no s'ha fet, i per què
+
+**Efemèrides automàtiques** («els morts un 19 d'agost») demanarien SPARQL per mes-dia a cada
+càrrega: car, fràgil i contrari a la idea de pàgina estàtica sense servidor. Si algun dia es vol,
+el lloc és `gen_personatges.py` — precalcular un índex `mes-dia → [QIDs]` i servir-lo com ja es
+serveix la llista. Mentrestant, el calendari a mà cobreix el cas real, que és compartir un detall
+quan toca.

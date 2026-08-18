@@ -927,11 +927,15 @@
     function imgUrl(e){ const c=e.claims&&e.claims.P18; if(!c||!c.length) return null; const dv=c[0].mainsnak&&c[0].mainsnak.datavalue; if(!dv) return null; return COMMONS+encodeURIComponent(String(dv.value).replace(/ /g,'_'))+'?width=500'; }
     function itemQids(e,prop,max){ const c=e.claims&&e.claims[prop]; if(!c) return []; const out=[]; for(let i=0;i<c.length;i++){ const v=c[i].mainsnak&&c[i].mainsnak.datavalue&&c[i].mainsnak.datavalue.value; if(v&&v.id){ out.push(v.id); if(out.length>=max) break; } } return out; }
     function lbl(o){ return o?((o.ca||o.es||o.en||{}).value||null):null; }
-    function isValid(e){
+    // trusted=true per als homenatges de PD_PINNED: la tria l'ha fet una persona, no la llavor, i
+    // el filtre de sitelinks (ca I es I en) tombaria justament les perles locals que volem destacar.
+    // El que NO es relaxa mai: humà, any de naixement i etiqueta — sense això la fitxa no es pot pintar.
+    function isValid(e,trusted){
       if(!e || e.missing!==undefined) return false;
       if(!hasItem(e,'P31','Q5')) return false;                          // ha de ser humà
       if(!(e.claims&&e.claims.P569&&e.claims.P569.length)) return false; // ha de tenir naixement
       if(!lbl(e.labels)) return false;                                  // etiqueta en ca/es/en
+      if(trusted) return true;
       const s=e.sitelinks||{};                                          // entrada a Viquipèdia en ca I es I en (AND dels tres)
       if(!(s.cawiki && s.eswiki && s.enwiki)) return false;
       return true;
@@ -971,7 +975,7 @@
         gender:gender,
         occ:occQ.map(function(q){ const it=names[q]||{}; return (female && it.female) ? it.female : it.label; }).filter(Boolean),
         country:couQ.map(function(q){ return (names[q]||{}).label; }).filter(Boolean),
-        wiki:site.url||''
+        wiki:site.url||('https://www.wikidata.org/wiki/'+qid)   // sense article a ca/es/en (cas PD_PINNED): la fitxa de Wikidata
       };
     }
     // Selecció determinista des de l'índex offline (personatges.js → window.HB_PERSONATGES).
@@ -979,15 +983,29 @@
     // Igual per a tothom durant 24h. La llista es genera amb gen_personatges.py (humans amb
     // data de naixement i article a la Viquipèdia en català I castellà I anglès (AND)). Només IDs, res més.
     function pool(){ return (typeof window!=='undefined' && Array.isArray(window.HB_PERSONATGES)) ? window.HB_PERSONATGES : []; }
-    async function fetchPerson(qid){
+    async function fetchPerson(qid,trusted){
       const data=await wd({action:'wbgetentities',ids:qid,props:'labels|descriptions|claims|sitelinks/urls',languages:'ca|es|en',sitefilter:'cawiki|eswiki|enwiki'});
       const e=(data.entities||{})[qid];
-      if(!isValid(e)) return null;
+      if(!isValid(e,trusted)) return null;
       return build(e,qid);
     }
+    // Calendari d'homenatges: data (AAAA-MM-DD, hora local) -> QID. Té prioritat sobre la llavor
+    // del dia; els dies que no hi surten segueixen sent aleatoris. Doc a ESTRATEGIA_JOC.md.
+    const PD_PINNED={
+      '2026-08-19':'Q733621'    // Juan Tamariz — mag, mort el 18/08/2026
+    };
     async function pickDaily(ds){
       const cache=readLS(CACHE_KEY);
       if(cache && cache.date===ds && cache.person) return cache.person;
+      // L'homenatge va ABANS de la llavor i de la comprovació de la llista: no depèn del pool
+      // offline, i si Wikidata no respon es cau a la tria aleatòria en lloc de deixar el dia buit.
+      const forced=PD_PINNED[ds];
+      if(forced){
+        try{
+          const fp=await fetchPerson(forced,true);
+          if(fp){ writeLS(CACHE_KEY,{date:ds,person:fp}); return fp; }
+        }catch(_){}
+      }
       const list=pool();
       if(!list.length){ const err=new Error('LIST_MISSING'); err.code='LIST_MISSING'; throw err; }
       const rng=mulberry32(seedFromStr('pd:'+ds));
