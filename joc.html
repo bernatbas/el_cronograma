@@ -1350,6 +1350,7 @@
       throw lastErr||new Error('fetch failed');
     }
     function imgUrl(e){ const c=e.claims&&e.claims.P18; if(!c||!c.length) return null; const dv=c[0].mainsnak&&c[0].mainsnak.datavalue; if(!dv) return null; return COMMONS+encodeURIComponent(String(dv.value).replace(/ /g,'_'))+'?width=400'; }
+    function wikiUrl(e){ const sl=e.sitelinks&&(e.sitelinks.cawiki||e.sitelinks.eswiki||e.sitelinks.enwiki); if(!sl) return null; return 'https://'+((e.sitelinks.cawiki&&'ca')||(e.sitelinks.eswiki&&'es')||'en')+'.wikipedia.org/wiki/'+encodeURIComponent(sl.title.replace(/ /g,'_')); }
     function wdLbl(o){ return o?((o.ca||o.es||o.en||{}).value||null):null; }
     function wdYear(claims,prop){ const cl=claims&&claims[prop]; if(!cl||!cl.length) return null; const dv=cl[0].mainsnak&&cl[0].mainsnak.datavalue; if(!dv||!dv.value||!dv.value.time) return null; const m=/^([+-])0*(\d+)-/.exec(dv.value.time); if(!m) return null; const y=parseInt(m[2],10); return m[1]==='-'?-y:y; }
 
@@ -1396,7 +1397,7 @@
             for(let i=0;i<BATCH;i++) ids.push('Q'+list[(batchStart+i)%list.length]);
             batchStart=(batchStart+BATCH)%list.length;
             try{
-              const data=await wd({action:'wbgetentities',ids:ids.join('|'),props:'labels|claims',languages:'ca|es|en'});
+              const data=await wd({action:'wbgetentities',ids:ids.join('|'),props:'labels|claims|sitelinks',languages:'ca|es|en'});
               const ents=data.entities||{};
               for(const qid of ids){
                 if(results.length>=5) break;
@@ -1404,7 +1405,7 @@
                 if(!e||e.missing!==undefined) continue;
                 const img=imgUrl(e); if(!img) continue;
                 const name=wdLbl(e.labels); if(!name) continue;
-                results.push({qid,name,img,birth:wdYear(e.claims,'P569'),death:wdYear(e.claims,'P570')});
+                results.push({qid,name,img,birth:wdYear(e.claims,'P569'),death:wdYear(e.claims,'P570'),wiki:wikiUrl(e)});
               }
             }catch(_){}
           }
@@ -1559,10 +1560,17 @@
       const ctaEl=ov.querySelector('.cta');
       if(p.birth==null){
         ctaEl.disabled=true;
-        ctaEl.title='Ja em sap greu, però a la Viquipèdia no hi surt l'any de naixement';
+        ctaEl.title='Ja em sap greu, però a la Viquipèdia no hi surt l’any de naixement';
         ctaEl.textContent='🗺️ No disponible al cronograma';
       }else{
         ctaEl.addEventListener('click',function(){ goToCronograma('memory',[p]); });
+      }
+      if(p.wiki){
+        const wa=document.createElement('a');
+        wa.className='cta sec';wa.textContent='🔗 Llegeix-ne més';
+        wa.href=p.wiki;wa.target='_blank';wa.rel='noopener';
+        wa.addEventListener('click',function(){ track('memory_wiki',{}); });
+        ov.querySelector('.mem-panel').appendChild(wa);
       }
       ov.querySelector('.mem-pclose').addEventListener('click',function(){ ov.remove(); });
       ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
