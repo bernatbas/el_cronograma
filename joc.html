@@ -502,7 +502,7 @@
   .mem-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .4s cubic-bezier(.4,0,.2,1);}
   .mem-card.flipped .mem-inner,.mem-card.matched .mem-inner{transform:rotateY(180deg);}
   .mem-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--r-card);overflow:hidden;}
-  .mem-back{background:var(--topbar-bg);display:flex;align-items:center;justify-content:center;}
+  .mem-back{background:#D49070;display:flex;align-items:center;justify-content:center;}
   .mem-back-icon{font-size:2rem;opacity:.6;}
   .mem-front{transform:rotateY(180deg);background:var(--surface);border:2px solid var(--border);}
   .mem-card.matched .mem-front{border-color:#4caf50;background:#f0fff4;}
@@ -511,13 +511,19 @@
   .mem-name{display:flex;align-items:center;justify-content:center;height:100%;padding:10px;font-family:'Oswald','Roboto Condensed','Arial Narrow',Arial,sans-serif;font-size:15px;font-weight:600;letter-spacing:.02em;text-align:center;color:var(--text);line-height:1.25;}
   .mem-errors{text-align:center;font-size:13px;color:var(--text2);padding:2px 0 6px;}
   .mem-loading{text-align:center;padding:48px 16px;color:var(--text2);font-size:15px;}
-  .mem-grid-done .mem-card{cursor:default;}
+  .mem-grid-done .mem-card{cursor:pointer;}
   .mbanner{max-width:440px;margin:16px auto 0;border-radius:var(--r-card);background:var(--soft);border:1px solid var(--border-strong);padding:20px;text-align:center;}
   .mbanner .rtitle{font-size:18px;font-weight:700;margin-bottom:6px;}
   .mbanner .streak{font-size:13px;color:var(--text2);margin-bottom:4px;}
   .mbanner .locknote{font-size:12px;color:var(--text2);margin:8px 0 4px;}
   .mbanner .countdown{font-size:12px;color:var(--text2);}
-  @media(max-width:560px){.mem-grid{grid-template-columns:repeat(2,1fr);gap:8px;} .mem-card{aspect-ratio:3/4;}}
+  @media(max-width:560px){.mem-grid{gap:6px;padding:0 6px 12px;} .mem-name{font-size:11px;padding:4px;}}
+  .mem-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:200;}
+  .mem-panel{background:var(--canvas);border-radius:var(--r-card);padding:24px 20px 20px;max-width:300px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.28);position:relative;}
+  .mem-pclose{position:absolute;top:10px;right:12px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2);padding:4px;line-height:1;}
+  .mem-pimg{width:120px;height:160px;object-fit:cover;border-radius:var(--r-card);margin:0 auto 12px;display:block;}
+  .mem-pname{font-family:'Oswald','Roboto Condensed','Arial Narrow',Arial,sans-serif;font-size:20px;font-weight:700;margin-bottom:16px;color:var(--text);}
+  .mbanner .memshare{margin-top:14px;}
 </style>
 </head>
 <body>
@@ -1355,10 +1361,20 @@
     function savedMode(){ return readLS(MODE_KEY)||'easy'; }
     function saveMode(m){ writeLS(MODE_KEY,m); }
 
+    // Distribucio garantida: cada parella a files oposades
+    function memoryLayout(rng){
+      var cols=seededShuffle([0,1,2,3,4],rng);
+      var order=new Array(10);
+      for(var pair=0;pair<5;pair++){
+        var col=cols[pair]; var flip=rng()<0.5;
+        order[col]=flip?pair:pair+5; order[col+5]=flip?pair+5:pair;
+      }
+      return order;
+    }
     // Estat del joc
     function initModeState(m){
       const rng=mulberry32(seedFromStr('mem:'+state.date+':'+m));
-      const order=seededShuffle([0,1,2,3,4,5,6,7,8,9],rng);
+      const order=memoryLayout(rng);
       return {errors:0,found:[],order:order,done:false};
     }
     function modeState(){
@@ -1390,7 +1406,7 @@
         const front=isName
           ?'<div class="mem-name"><span>'+esc(p.name)+'</span></div>'
           :'<img class="mem-img" src="'+esc(p.img)+'" alt="'+esc(p.name)+'">';
-        return '<div class="mem-card'+(isMatched?' matched':'')+(isFlipped?' flipped':'')+'" data-idx="'+gridIdx+'">'
+        return '<div class="mem-card'+(isMatched?' matched':'')+(isFlipped?' flipped':'')+'" data-idx="'+gridIdx+'" data-person="'+personIdx+'">'
           +'<div class="mem-inner">'
           +'<div class="mem-face mem-back"><div class="mem-back-icon">🏛</div></div>'
           +'<div class="mem-face mem-front">'+front+'</div>'
@@ -1471,6 +1487,26 @@
       render();
     }
 
+    function showPersonPanel(personIdx){
+      if(!currentPool) return;
+      var p=currentPool[personIdx];
+      var ov=document.createElement('div');
+      ov.className='mem-overlay';
+      ov.innerHTML='<div class="mem-panel">'
+        +'<button class="mem-pclose" aria-label="Tanca">✕</button>'
+        +'<img class="mem-pimg" src="'+esc(p.img)+'" alt="'+esc(p.name)+'">'
+        +'<div class="mem-pname">'+esc(p.name)+'</div>'
+        +'<button class="cta">🗺️ Veure al cronograma</button>'
+        +'</div>';
+      ov.querySelector('.cta').addEventListener('click',function(){
+        if(typeof gtag!=='undefined') gtag('event','joc_2_cronograma',{joc:'memory'});
+        location.href='index.html?person='+encodeURIComponent(p.qid);
+      });
+      ov.querySelector('.mem-pclose').addEventListener('click',function(){ ov.remove(); });
+      ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+      document.body.appendChild(ov);
+    }
+
     function render(){
       if(!root||!currentPool) return;
       const ms=modeState();
@@ -1480,7 +1516,7 @@
       if(ms.done){
         const st=readLS(STREAK_KEY)||{days:1};
         const days=st.days||1;
-        const cdId='mcd'+Date.now();
+        const cdId='mcd'+Date.now(); const shareId='msh'+Date.now();
         root.innerHTML=head+renderToggle()
           +'<div class="mem-grid mem-grid-done">'+renderGrid(ms)+'</div>'
           +'<div class="mbanner">'
@@ -1488,9 +1524,19 @@
           +'<div class="streak">🔥 '+days+' '+(days===1?'dia':'dies')+' seguits</div>'
           +'<div class="locknote">Ja has resolt el repte d’avui. Torna demà per un de nou!</div>'
           +'<div class="countdown">Nou repte en <b id="'+cdId+'">--:--:--</b></div>'
+          +'<div class="memshare"><button class="cta sec" id="'+shareId+'">📤 Comparteix</button></div>'
           +'</div>';
         if(cdTimer){ clearTimeout(cdTimer); cdTimer=null; }
         (function tick(){ const el=document.getElementById(cdId); if(el){ el.textContent=fmtDur(msToMidnight()); cdTimer=setTimeout(tick,1000); } })();
+        var shareBtn=document.getElementById(shareId);
+        if(shareBtn){ shareBtn.addEventListener('click',function(){
+          var txt='🎴 Memory – '+ddmm(state.date)+'\n'+(mode==='easy'?'🟢 Fàcil':'🔴 Difícil')+' – '+resultMsg(ms.errors)+'\nbernatbas.github.io/el_cronograma/joc.html';
+          if(navigator.share){ navigator.share({text:txt}).catch(function(){}); return; }
+          if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ shareBtn.textContent='✓ Copiat!'; setTimeout(function(){ shareBtn.textContent='📤 Comparteix'; },2000); }); }
+        }); }
+        root.querySelectorAll('.mem-grid-done .mem-card').forEach(function(card){
+          card.addEventListener('click',function(){ showPersonPanel(parseInt(this.dataset.person)); });
+        });
       } else {
         root.innerHTML=head+renderToggle()
           +'<div class="mem-errors">'+ms.errors+' error'+(ms.errors!==1?'s':'')+'</div>'
