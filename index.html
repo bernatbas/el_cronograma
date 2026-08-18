@@ -1639,6 +1639,22 @@ function fitToPresent(){
   setZoom(Math.max(60,scroll.clientWidth-24)/((y2-y1)+2*pad));
   scroll.scrollLeft=Math.min(Math.max(0,x(y1-pad)),maxScroll());
 }
+// Enquadra la vista sobre la unió de persones (per id) + events del handoff.
+// Inclou tots els anys de les persones (birth..death) i l'any de cada event.
+function fitToHandoff(resolvedIds,evs){
+  const allY=[];
+  PEOPLE.filter(function(p){ return resolvedIds.includes(p.id); }).forEach(function(p){
+    if(p.birth!=null) allY.push(p.birth);
+    if(p.death!=null) allY.push(p.death); else if(p.birth!=null) allY.push(NOW_YEAR);
+  });
+  (evs||[]).forEach(function(e){ if(e&&e.year!=null) allY.push(e.year); });
+  if(!allY.length){ fitToPresent(); return; }
+  const y1=Math.min.apply(null,allY), y2=Math.max.apply(null,allY);
+  const span=Math.max(1,y2-y1);
+  const pad=Math.max(10,span*0.06);
+  setZoom(Math.max(60,scroll.clientWidth-24)/(span+2*pad));
+  scroll.scrollLeft=Math.min(Math.max(0,x(y1-pad)),maxScroll());
+}
 // Zoom centrat sobre un personatge concret (mode joc → cronograma).
 // Mostra la vida sencera + 60% de marge a cada banda. Prou context per no quedar perdut,
 // prou apropa perquè el personatge tingui protagonisme.
@@ -1927,34 +1943,53 @@ function mostraPersonatge(p,opts){
   return id;
 }
 
-// Barra multi-personatge per al handoff des del joc (?joc=): mostra N noms + anys sense etiqueta.
-// resolvedIds: ids reals a PEOPLE (deduplicats per QID a bootFromJoc).
-// Cada nom és un botó independent: clicar-lo fa flash només d'ell; ✕ elimina tots.
-function jocBar(people,resolvedIds,source){
+// Barra de handoff des del joc: mostra personatges + events en un sol resum.
+// Si total > 1, oculta els anys per estalviar espai; scroll horitzontal si no hi caben.
+// events: array de {id,name,year} (opcional).
+function jocBar(people,resolvedIds,source,events){
   pbar.textContent='';
   pbar.dataset.state='ok';
   const txt=document.createElement('div');txt.className='ptxt';
   const nm=document.createElement('div');nm.className='pname';
+  const total=(people?people.length:0)+((events&&events.length)||0);
+  const showYears=total<=1;
+  // Scroll horitzontal si hi ha més d'un ítem
+  if(total>1){nm.style.cssText='overflow-x:auto;white-space:nowrap;flex-wrap:nowrap;';}
+  // Persones
   people.forEach(function(p,i){
+    if(i>0||!showYears&&events&&events.length){/* no sep inicial si events van primer */}
     if(i>0){const sep=document.createElement('span');sep.textContent=' · ';nm.appendChild(sep);}
-    const y1=fmtY(p.birth);
-    const y2=p.death!=null?fmtY(p.death):'avui';
     const btn=document.createElement('button');
     btn.type='button';btn.className='pname-item';
-    btn.textContent=p.name+' ('+y1+'–'+y2+')';
+    if(showYears){
+      const y1=fmtY(p.birth);const y2=p.death!=null?fmtY(p.death):'avui';
+      btn.textContent=p.name+' ('+y1+'–'+y2+')';
+    }else{ btn.textContent=p.name; }
     btn.title='Torna a ressaltar-lo a la vista';
     const id=resolvedIds[i];
     btn.addEventListener('click',function(){revealPerson(id);});
+    nm.appendChild(btn);
+  });
+  // Events
+  (events||[]).forEach(function(ev,i){
+    if(people.length>0||i>0){const sep=document.createElement('span');sep.textContent=' · ';nm.appendChild(sep);}
+    const btn=document.createElement('button');
+    btn.type='button';btn.className='pname-item';
+    btn.textContent=showYears?(ev.name+(ev.year!=null?' ('+fmtY(ev.year)+')':'')):ev.name;
+    btn.title='Torna a ressaltar-lo a la vista';
+    btn.addEventListener('click',function(){ focusEvent(ev.id); });
     nm.appendChild(btn);
   });
   txt.appendChild(nm);
   pbar.appendChild(txt);
   const back=document.createElement('button');
   back.className='pback';back.type='button';back.textContent='✕';
-  back.title='Treu els personatges de la vista';
-  back.setAttribute('aria-label','Treu els personatges de la vista');
+  back.title='Treu els elements de la vista';
+  back.setAttribute('aria-label','Treu els elements de la vista');
   back.addEventListener('click',function(){
     resolvedIds.forEach(function(id){removePerson(id);});
+    (events||[]).forEach(function(ev){if(state.selectedEvent===ev.id){state.selectedEvent=null;}});
+    if(events&&events.length) render();
     pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;
   });
   pbar.appendChild(back);
@@ -2046,22 +2081,21 @@ function bootFromJoc(){
         if(b.p.birth==null) return -1;
         return a.p.birth-b.p.birth;
       });
-      jocBar(_paired.map(function(x){return x.p;}),_paired.map(function(x){return x.id;}),src);
-      // Events (p.ex. d'Ordena o AbansDespres): force-visible i flash
-      if(ctx.events&&ctx.events.length){
-        ctx.events.forEach(function(ev){
-          if(!ev||!ev.id) return;
-          if(EVENTS.some(function(e){ return e.id===ev.id; })){
-            state.showEvents=true;
-            if(!state.selectedEvent) state.selectedEvent=ev.id;
-          }
-        });
-      }
-      fitToPresent();
+      // Events del joc: force-visible al cronograma (before jocBar + fitToHandoff)
+      const _evs=ctx.events||[];
+      _evs.forEach(function(ev){
+        if(!ev||!ev.id) return;
+        if(EVENTS.some(function(e){ return e.id===ev.id; })){
+          state.showEvents=true;
+          if(!state.selectedEvent) state.selectedEvent=ev.id;
+        }
+      });
+      jocBar(_paired.map(function(x){return x.p;}),_paired.map(function(x){return x.id;}),src,_evs.filter(function(ev){ return ev&&ev.id&&EVENTS.some(function(e){ return e.id===ev.id; }); }));
+      fitToHandoff(_paired.map(function(x){return x.id;}),_evs);
       window.dispatchEvent(new Event('resize'));
       setTimeout(function(){
-        resolvedIds.forEach(function(id){ flashBar(id); });
-        if(ctx.events) ctx.events.forEach(function(ev){ if(ev&&ev.id) flashEvent(ev.id); });
+        _paired.forEach(function(x){ flashBar(x.id); });
+        _evs.forEach(function(ev){ if(ev&&ev.id) flashEvent(ev.id); });
       },500);
     });
   }
