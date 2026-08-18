@@ -940,7 +940,7 @@ function erasBlockH(){return ERAS_TOP+ERA_LABEL_H+marcLayout().totalH+MOV_PAD_BO
 function eventLabelTop(){return erasBlockH()+6;}
 function barsTop(){return eventLabelTop()+EVENT_LABEL_H+GAP_AFTER;}
 
-function visiblePeople(){return PEOPLE.filter(p=>state.present.has(p.id));}
+function visiblePeople(){return PEOPLE.filter(p=>state.present.has(p.id)&&typeof p.birth==='number');}   // sense birth no es pot situar a la linia: x(null) donaria l'any 0 i pintaria una barra fantasma fins a avui
 // Stack people into rows. Living pills grow to fit the name; dead bars keep their real lifespan
 // (the label just overflows). Lanes pack by the bar, so overlapping names are allowed (click to disambiguate).
 function packLanes(people){
@@ -1659,6 +1659,7 @@ function fitToHandoff(resolvedIds,evs){
 // Mostra la vida sencera + 60% de marge a cada banda. Prou context per no quedar perdut,
 // prou apropa perquè el personatge tingui protagonisme.
 function centerOnPerson(p){
+  if(p.birth==null){defaultView();return;}   // sense any de naixement no hi ha res a centrar (el fallback de Wikidata ja arriba)
   const y1=p.birth, y2=p.death!=null?p.death:NOW_YEAR;
   const span=Math.max(1,y2-y1);
   const pad=Math.max(20,Math.round(span*0.6));
@@ -1934,6 +1935,10 @@ function mostraPersonatge(p,opts){
   if(!existing){
     PEOPLE.push({id,wd:p.qid,name:p.name,birth:p.birth,death:p.death,cats:guessCats(p.desc),
       gender:'',wiki:p.wiki,desc:p.desc||'',_session:true,_ts:Date.now()});
+  }else{
+    // Una entrada desada d'abans pot venir sense anys: el traspas els aporta i s'han d'escriure.
+    if(existing.birth==null&&p.birth!=null) existing.birth=p.birth;
+    if(existing.death==null&&p.death!=null) existing.death=p.death;
   }
   state.present.add(id);
   state.pinned.add(id);
@@ -2044,16 +2049,19 @@ function bootFromJoc(){
     const p=people[0];
     bootDefault(function(){
       const pid=mostraPersonatge(p,{source:src});
-      centerOnPerson(p);
+      const _pe0=PEOPLE.find(function(x){return x.id===pid;});
+      centerOnPerson(_pe0||p);
       window.dispatchEvent(new Event('resize'));
       setTimeout(function(){ flashBar(pid); },500);
-      if(!p.img||p.birth==null)fetchPerson(p.qid).then(function(full){
+      if(!p.img||!_pe0||_pe0.birth==null)fetchPerson(p.qid).then(function(full){
         if(!full) return;
         const _e=PEOPLE.find(function(x){return x.id===pid;});
         if(_e){
+          const _was=_e.birth==null;
           if(_e.birth==null&&full.birth!=null){_e.birth=full.birth;}
           if(_e.death==null&&full.death!=null){_e.death=full.death;}
-          render();
+          scheduleSave();render();
+          if(_was&&_e.birth!=null){centerOnPerson(_e);flashBar(pid);}   // ara si es pot enquadrar
         }
         if(full.img&&pbar.classList.contains('on')) personBar('ok',full.name,full.desc||'',full.img,src,pid);
       }).catch(function(){});
@@ -2067,12 +2075,26 @@ function bootFromJoc(){
         if(!local){
           PEOPLE.push({id:'wd_'+p.qid,wd:p.qid,name:p.name,birth:p.birth,death:p.death,
             cats:guessCats(p.desc),gender:'',wiki:p.wiki||'',desc:p.desc||'',_session:true,_ts:Date.now()});
+        }else{
+          if(local.birth==null&&p.birth!=null) local.birth=p.birth;
+          if(local.death==null&&p.death!=null) local.death=p.death;
         }
         state.present.add(id);
         state.pinned.add(id);
         return id;
       });
       scheduleSave();
+      // Repesca de Wikidata els que segueixen sense anys: sense birth no es pinten (visiblePeople).
+      resolvedIds.forEach(function(id,i){
+        const _e=PEOPLE.find(function(x){return x.id===id;});
+        if(!_e||_e.birth!=null) return;
+        fetchPerson(people[i].qid).then(function(full){
+          if(!full||full.birth==null) return;
+          _e.birth=full.birth;
+          if(_e.death==null&&full.death!=null) _e.death=full.death;
+          scheduleSave();render();
+        }).catch(function(){});
+      });
       // Events del joc: filtrar els vàlids i marcar-los visibles
       const _evs=(ctx.events||[]).filter(function(ev){ return ev&&ev.id&&EVENTS.some(function(e){ return e.id===ev.id; }); });
       _evs.forEach(function(ev){ state.showEvents=true; if(!state.selectedEvent) state.selectedEvent=ev.id; });
