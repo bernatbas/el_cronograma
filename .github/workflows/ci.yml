@@ -11,6 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Codificació — U+FFFD i UTF-8 vàlid
+        run: python3 scripts/check_encoding.py
+
       - name: Bloc compartit byte-idèntic (index ↔ joc)
         run: |
           diff \
