@@ -1946,38 +1946,36 @@ function mostraPersonatge(p,opts){
 // Barra de handoff des del joc: mostra personatges + events en un sol resum.
 // Si total > 1, oculta els anys per estalviar espai; scroll horitzontal si no hi caben.
 // events: array de {id,name,year} (opcional).
-function jocBar(people,resolvedIds,source,events){
+function jocBar(items,source){
+  // items: [{kind:'person', p:{name,birth,death,...}, id:'wd_...'} | {kind:'event', ev:{id,name,year}}]
   pbar.textContent='';
   pbar.dataset.state='ok';
   const txt=document.createElement('div');txt.className='ptxt';
   const nm=document.createElement('div');nm.className='pname';
-  const total=(people?people.length:0)+((events&&events.length)||0);
-  const showYears=total<=1;
-  // Scroll horitzontal si hi ha més d'un ítem
-  if(total>1){nm.style.cssText='overflow-x:auto;white-space:nowrap;flex-wrap:nowrap;';}
-  // Persones
-  people.forEach(function(p,i){
-    if(i>0||!showYears&&events&&events.length){/* no sep inicial si events van primer */}
+  const showYears=items.length<=1;
+  if(items.length>1){
+    txt.style.cssText='min-width:0;flex:1 1 0%;overflow:hidden;';
+    nm.style.cssText='overflow-x:auto;overflow-y:hidden;white-space:nowrap;text-overflow:clip;';
+  }
+  items.forEach(function(item,i){
     if(i>0){const sep=document.createElement('span');sep.textContent=' · ';nm.appendChild(sep);}
     const btn=document.createElement('button');
     btn.type='button';btn.className='pname-item';
-    if(showYears){
-      const y1=fmtY(p.birth);const y2=p.death!=null?fmtY(p.death):'avui';
-      btn.textContent=p.name+' ('+y1+'–'+y2+')';
-    }else{ btn.textContent=p.name; }
-    btn.title='Torna a ressaltar-lo a la vista';
-    const id=resolvedIds[i];
-    btn.addEventListener('click',function(){revealPerson(id);});
-    nm.appendChild(btn);
-  });
-  // Events
-  (events||[]).forEach(function(ev,i){
-    if(people.length>0||i>0){const sep=document.createElement('span');sep.textContent=' · ';nm.appendChild(sep);}
-    const btn=document.createElement('button');
-    btn.type='button';btn.className='pname-item';
-    btn.textContent=showYears?(ev.name+(ev.year!=null?' ('+fmtY(ev.year)+')':'')):ev.name;
-    btn.title='Torna a ressaltar-lo a la vista';
-    btn.addEventListener('click',function(){ focusEvent(ev.id); });
+    if(item.kind==='person'){
+      const p=item.p;
+      if(showYears){
+        const y1=fmtY(p.birth);const y2=p.death!=null?fmtY(p.death):'avui';
+        btn.textContent=p.name+' ('+y1+'–'+y2+')';
+      }else{btn.textContent=p.name;}
+      btn.title='Torna a ressaltar-lo a la vista';
+      const id=item.id;
+      btn.addEventListener('click',function(){revealPerson(id);});
+    }else{
+      const ev=item.ev;
+      btn.textContent=showYears?(ev.name+(ev.year!=null?' ('+fmtY(ev.year)+')':'')):ev.name;
+      btn.title='Torna a ressaltar-lo a la vista';
+      btn.addEventListener('click',function(){focusEvent(ev.id);});
+    }
     nm.appendChild(btn);
   });
   txt.appendChild(nm);
@@ -1987,9 +1985,11 @@ function jocBar(people,resolvedIds,source,events){
   back.title='Treu els elements de la vista';
   back.setAttribute('aria-label','Treu els elements de la vista');
   back.addEventListener('click',function(){
-    resolvedIds.forEach(function(id){removePerson(id);});
-    (events||[]).forEach(function(ev){if(state.selectedEvent===ev.id){state.selectedEvent=null;}});
-    if(events&&events.length) render();
+    items.forEach(function(item){
+      if(item.kind==='person'){removePerson(item.id);}
+      else if(item.kind==='event'&&state.selectedEvent===item.ev.id){state.selectedEvent=null;}
+    });
+    if(items.some(function(item){return item.kind==='event';})) render();
     pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;
   });
   pbar.appendChild(back);
@@ -2073,7 +2073,10 @@ function bootFromJoc(){
         return id;
       });
       scheduleSave();
-      // Ordenar per any de naixement (nulls al final)
+      // Events del joc: filtrar els vàlids i marcar-los visibles
+      const _evs=(ctx.events||[]).filter(function(ev){ return ev&&ev.id&&EVENTS.some(function(e){ return e.id===ev.id; }); });
+      _evs.forEach(function(ev){ state.showEvents=true; if(!state.selectedEvent) state.selectedEvent=ev.id; });
+      // Ordenar persones per any de naixement
       const _paired=resolvedIds.map(function(id,i){ return {p:people[i],id:id}; });
       _paired.sort(function(a,b){
         if(a.p.birth==null&&b.p.birth==null) return 0;
@@ -2081,20 +2084,23 @@ function bootFromJoc(){
         if(b.p.birth==null) return -1;
         return a.p.birth-b.p.birth;
       });
-      // Events del joc: force-visible al cronograma (before jocBar + fitToHandoff)
-      const _evs=ctx.events||[];
-      _evs.forEach(function(ev){
-        if(!ev||!ev.id) return;
-        if(EVENTS.some(function(e){ return e.id===ev.id; })){
-          state.showEvents=true;
-          if(!state.selectedEvent) state.selectedEvent=ev.id;
-        }
+      // Barreja persones + events, ordenats cronologicament junts
+      const _items=[
+        ..._paired.map(function(x){ return {kind:'person',p:x.p,id:x.id,year:x.p.birth}; }),
+        ..._evs.map(function(ev){ return {kind:'event',ev:ev,year:ev.year}; })
+      ];
+      _items.sort(function(a,b){
+        if(a.year==null&&b.year==null) return 0;
+        if(a.year==null) return 1;
+        if(b.year==null) return -1;
+        return a.year-b.year;
       });
-      jocBar(_paired.map(function(x){return x.p;}),_paired.map(function(x){return x.id;}),src,_evs.filter(function(ev){ return ev&&ev.id&&EVENTS.some(function(e){ return e.id===ev.id; }); }));
-      fitToHandoff(_paired.map(function(x){return x.id;}),_evs);
+      const _resolvedIds=_paired.map(function(x){return x.id;});
+      jocBar(_items,src);
+      fitToHandoff(_resolvedIds,_evs);
       window.dispatchEvent(new Event('resize'));
       setTimeout(function(){
-        _paired.forEach(function(x){ flashBar(x.id); });
+        _resolvedIds.forEach(function(id){ flashBar(id); });
         _evs.forEach(function(ev){ if(ev&&ev.id) flashEvent(ev.id); });
       },500);
     });
