@@ -1361,20 +1361,10 @@
     function savedMode(){ return readLS(MODE_KEY)||'easy'; }
     function saveMode(m){ writeLS(MODE_KEY,m); }
 
-    // Distribucio garantida: cada parella a files oposades
-    function memoryLayout(rng){
-      var cols=seededShuffle([0,1,2,3,4],rng);
-      var order=new Array(10);
-      for(var pair=0;pair<5;pair++){
-        var col=cols[pair]; var flip=rng()<0.5;
-        order[col]=flip?pair:pair+5; order[col+5]=flip?pair+5:pair;
-      }
-      return order;
-    }
     // Estat del joc
     function initModeState(m){
       const rng=mulberry32(seedFromStr('mem:'+state.date+':'+m));
-      const order=memoryLayout(rng);
+      const order=seededShuffle([0,1,2,3,4,5,6,7,8,9],rng);
       return {errors:0,found:[],order:order,done:false};
     }
     function modeState(){
