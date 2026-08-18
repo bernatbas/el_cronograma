@@ -12,7 +12,35 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Codificació — U+FFFD i UTF-8 vàlid
-        run: python3 scripts/check_encoding.py
+        run: |
+          python3 - <<'EOF'
+          import sys, os
+          EXTS = (".html", ".js", ".css", ".json", ".md")
+          SKIP = {"node_modules", ".git", "dist", "build", "playwright-report"}
+          def ctx(t, i, pad=40):
+              a=max(0,i-pad); b=min(len(t),i+pad+1)
+              return t[a:i]+"[[»"+t[i]+"«]]"+t[i+1:b]
+          problems=0; checked=0
+          for root, dirs, files in os.walk("."):
+              dirs[:]=[d for d in dirs if d not in SKIP]
+              for name in files:
+                  if not name.endswith(EXTS): continue
+                  path=os.path.join(root,name); raw=open(path,"rb").read()
+                  try: text=raw.decode("utf-8")
+                  except UnicodeDecodeError as e:
+                      print(f"❌ {path}: bytes UTF-8 invàlids a l'offset {e.start}: {e.reason}"); problems+=1
+                      text=raw.decode("utf-8","replace")
+                  line=1; col=0
+                  for i,ch in enumerate(text):
+                      if ch=="\n": line+=1; col=0; continue
+                      col+=1
+                      if ch=="�":
+                          print(f"❌ {path}:{line} U+FFFD (col {col}) → ...{ctx(text,i).replace(chr(10),'⏎')}...")
+                          problems+=1
+                  checked+=1
+          if problems: print(f"\n{problems} problema(es)."); sys.exit(1)
+          print(f"✓ Cap U+FFFD, UTF-8 vàlid — {checked} fitxers")
+          EOF
 
       - name: Bloc compartit byte-idèntic (index ↔ joc)
         run: |
