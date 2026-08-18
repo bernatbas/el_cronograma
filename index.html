@@ -1497,7 +1497,13 @@ function removePerson(id){
   clearFitLatch();
   if(state.focus===id)state.focus=null;   // si treus l'original, ja no hi ha focus fixat a dalt
   recomputePresent();closeDetailIfGone();
-  if(_pbarId&&id===_pbarId){_pbarId=null;if(PERSON_QID&&id==='wd_'+PERSON_QID)history.replaceState(null,'',location.pathname);pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;}
+  // La URL es neteja comparant el QID REAL de l'entrada, no l'id sintetic 'wd_<QID>': si el
+  // personatge ja era a PEOPLE (Aristotil, p.ex.) mostraPersonatge reutilitza el seu id de la BD
+  // ('aristotil'), i la comparacio amb 'wd_Q868' no lligava mai => el ?person= es quedava penjat.
+  if(_pbarId&&id===_pbarId){_pbarId=null;
+    const _wd=(PEOPLE.find(x=>x.id===id)||{}).wd;
+    if(PERSON_QID&&(_wd===PERSON_QID||id==='wd_'+PERSON_QID))history.replaceState(null,'',location.pathname);
+    pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;}
   scheduleSave();render();
 }
 // "Show context": add every SEED-DB person whose life overlaps, or is within 20 years of, this person.
@@ -2015,7 +2021,10 @@ function bootPersonMode(qid){
       centerOnPerson(cached);                               // zoom + centrat sobre el personatge (no fitToPresent: enmarca tots els desats)
       window.dispatchEvent(new Event('resize'));             // re-avalua fitSecnav amb l'amplada real (fix topbar HB)
       setTimeout(()=>flashBar(pid),500);                   // retardat: sobreviu els render() de scheduleSettle (180ms)
-      if(!cached.img)fetchPerson(qid).then(p=>{if(p&&p.img&&pbar.classList.contains('on'))personBar('ok',p.name,p.desc||'',p.img);}).catch(()=>{});
+      // El refresc de la foto ha de tornar a passar `pid`: sense ell, personBar cau al fallback
+      // 'wd_'+PERSON_QID, un id que no existeix a PEOPLE quan la persona ja hi era (Aristotil =>
+      // 'aristotil'). La ✕ cridava removePerson() amb un id inexistent i deixava la barra al canvas.
+      if(!cached.img)fetchPerson(qid).then(p=>{if(p&&p.img&&pbar.classList.contains('on'))personBar('ok',p.name,p.desc||'',p.img,null,pid);}).catch(()=>{});
     });
     return;
   }
