@@ -614,13 +614,17 @@
     return {qid:p.wd,name:p.name,birth:p.birth,death:p.death||null,img:null,desc:p.desc||''};
   }
 
-  // Desa un array de persones a localStorage i navega al cronograma per mostrar-les.
-  function viewInCronogramaMulti(items,joc){
-    const people=items.map(personFromItem).filter(Boolean);
-    if(!people.length) return;
-    track('joc_2_cronograma',{joc:joc});
-    try{ localStorage.setItem('hb_joc_context',JSON.stringify(people)); }catch(_){}
-    location.href='index.html?joc='+encodeURIComponent(joc);
+  // Única funció de traspas al cronograma (big-bang joc2cronograma). Sobreescriu sempre (last-write-wins).
+  function goToCronograma(source, people){
+    const list=(people||[]).filter(function(p){ return p&&p.qid; });
+    if(!list.length) return;
+    const payload={v:1,source:source,kind:list.length>1?'set':'person',
+      people:list.map(function(p){ return {qid:p.qid,name:p.name||null,
+        birth:(p.birth!=null?p.birth:null),death:(p.death!=null?p.death:null),
+        img:p.img||null,desc:p.desc||''}; }),ts:Date.now()};
+    try{ localStorage.setItem('hb_cronograma_ctx',JSON.stringify(payload)); }catch(_){}
+    track('joc_2_cronograma',{joc:source});
+    location.href='index.html?from=joc';
   }
 
   // ===== Mòdul: «Abans o després?» — REPTE DIARI (determinista per data + 1 intent/dia) =====
@@ -810,7 +814,7 @@
         </div>`;
       const sh=root.querySelector('[data-x="share"]');
       if(sh) sh.addEventListener('click',()=>doShare(sc,days,sh));
-      if(cronoPeople.length){const cb=root.querySelector('[data-x="crono"]');if(cb)cb.addEventListener('click',()=>viewInCronogramaMulti(failPair,'abansdespres'));}
+      if(cronoPeople.length){const cb=root.querySelector('[data-x="crono"]');if(cb)cb.addEventListener('click',()=>goToCronograma('abansdespres',failPair.map(personFromItem).filter(Boolean)));}
       startCountdown();
     }
 
@@ -863,7 +867,6 @@
     const CACHE_KEY='hb_personatge_cache'; // { date, person }
     const ALBUM_KEY='hb_personatge_album'; // [ {qid,name,birth,death,img,desc,date} ]
     const FAV_KEY='hb_favorits';           // stub; enllaçarà amb Favorits quan existeixin
-    const VIEW_KEY='hb_view_person';       // handoff cap al cronograma (index.html?person=QID)
     const POPUP_KEY='hb_personatge_popup'; // { date } — pop-up d'invitacio ja mostrat/tancat AVUI (clau per DATA)
     const WD_API='https://www.wikidata.org/w/api.php';
     const COMMONS='https://commons.wikimedia.org/wiki/Special:FilePath/';
@@ -979,7 +982,7 @@
     function favs(){ return readLS(FAV_KEY)||[]; }
     function isFav(qid){ return favs().some(function(x){ return x.qid===qid; }); }
     function toggleFav(p){ let a=favs(); if(a.some(function(x){ return x.qid===p.qid; })) a=a.filter(function(x){ return x.qid!==p.qid; }); else a.push({qid:p.qid,name:p.name,birth:p.birth,death:p.death,img:p.img,desc:p.desc}); writeLS(FAV_KEY,a); return isFav(p.qid); }
-    function viewInCronograma(p){ track('joc_2_cronograma',{joc:'personatgedia'}); writeLS(VIEW_KEY,{qid:p.qid,name:p.name,birth:p.birth,death:p.death,img:p.img,desc:p.desc}); location.href='index.html?person='+encodeURIComponent(p.qid); }
+    function viewInCronograma(p){ goToCronograma('personatgedia',[p]); }
 
     // --- Pop-up d'invitacio a contribuir (nomes escenaris 2 i 3) ---
     function popupSeenToday(){ const s=readLS(POPUP_KEY); return !!(s && s.date===todayStr()); }
@@ -1230,7 +1233,7 @@
         br.innerHTML='<button class="cta ordshare" data-x="oshare">📤 Comparteix</button>'+(cronoPeople.length?'<button class="cta sec" data-x="crono">🏛️ A veure, ensenyam-ho</button>':'');
         bn.appendChild(br);
         const sb=br.querySelector('[data-x="oshare"]'); if(sb) sb.addEventListener('click',()=>ordDoShare(marks,days,sb));
-        if(cronoPeople.length){const cb=br.querySelector('[data-x="crono"]');if(cb)cb.addEventListener('click',()=>viewInCronogramaMulti(wrongItems,'ordena'));}
+        if(cronoPeople.length){const cb=br.querySelector('[data-x="crono"]');if(cb)cb.addEventListener('click',()=>goToCronograma('ordena',wrongItems.map(personFromItem).filter(Boolean)));}
       }
     }
 
@@ -1540,8 +1543,7 @@
         +'<button class="cta">🗺️ Veure al cronograma</button>'
         +'</div>';
       ov.querySelector('.cta').addEventListener('click',function(){
-        track('joc_2_cronograma',{joc:'memory'});
-        location.href='index.html?person='+encodeURIComponent(p.qid);
+        goToCronograma('memory',[p]);
       });
       ov.querySelector('.mem-pclose').addEventListener('click',function(){ ov.remove(); });
       ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });

@@ -1497,7 +1497,7 @@ function removePerson(id){
   clearFitLatch();
   if(state.focus===id)state.focus=null;   // si treus l'original, ja no hi ha focus fixat a dalt
   recomputePresent();closeDetailIfGone();
-  if(PERSON_QID&&id==='wd_'+PERSON_QID){history.replaceState(null,'',location.pathname);pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;}
+  if(_pbarId&&id===_pbarId){_pbarId=null;if(PERSON_QID&&id==='wd_'+PERSON_QID)history.replaceState(null,'',location.pathname);pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;}
   scheduleSave();render();
 }
 // "Show context": add every SEED-DB person whose life overlaps, or is within 20 years of, this person.
@@ -1834,7 +1834,15 @@ const pbar=$('#personbar');
 
 // La barra es construeix amb nodes i textContent: les dades venen de Wikidata i no es poden
 // interpolar a innerHTML.
-function personBar(estat,nom,descripcio,imgUrl){
+let _pbarId=null; // id PEOPLE de la persona actual a la personbar; null si no n'hi ha cap
+function labelForSource(src){
+  if(src==='personatgedia') return 'Personatge del dia';
+  if(src==='memory') return 'Del joc de Memory';
+  if(src==='ordena') return 'Del repte «Ordena la línia»';
+  if(src==='abansdespres') return 'Del repte «Abans o després?»';
+  return 'Personatge';
+}
+function personBar(estat,nom,descripcio,imgUrl,source,personId){
   pbar.textContent='';
   pbar.dataset.state=estat;
   if(imgUrl){
@@ -1844,11 +1852,12 @@ function personBar(estat,nom,descripcio,imgUrl){
     pbar.appendChild(im);
   }
   const txt=document.createElement('div');txt.className='ptxt';
+  _pbarId=personId||(PERSON_QID?'wd_'+PERSON_QID:null);
   const tag=document.createElement('div');tag.className='ptag';
-  tag.textContent=estat==='error'?'No s’ha pogut carregar':'Personatge del dia';
+  tag.textContent=estat==='error'?'No s’ha pogut carregar':labelForSource(source);
   const nm=document.createElement('div');nm.className='pname';nm.textContent=nom;
   nm.style.cursor='pointer';nm.title='Torna a centrar-lo a la vista';
-  nm.addEventListener('click',()=>{if(PERSON_QID)revealPerson('wd_'+PERSON_QID);});
+  nm.addEventListener('click',()=>{if(_pbarId)revealPerson(_pbarId);});
   txt.appendChild(tag);txt.appendChild(nm);
   if(descripcio){const de=document.createElement('div');de.className='pdesc';de.textContent=descripcio;txt.appendChild(de);}
   pbar.appendChild(txt);
@@ -1859,7 +1868,7 @@ function personBar(estat,nom,descripcio,imgUrl){
   back.className='pback';back.type='button';back.textContent='✕';
   back.title='Treu el personatge de la vista';
   back.setAttribute('aria-label','Treu el personatge de la vista');
-  back.addEventListener('click',()=>{removePerson('wd_'+PERSON_QID);});
+  back.addEventListener('click',()=>{if(_pbarId)removePerson(_pbarId);});
   pbar.appendChild(back);
   pbar.classList.add('on');
   scheduleSettle();   // la barra canvia l'alcada del canvas: floorH s'ha de recalcular
@@ -1916,17 +1925,18 @@ function mostraPersonatge(p,opts){
   state.pinned.add(id);
   scheduleSave();
   render();
-  if(!opts||!opts.noBar) personBar('ok',p.name,p.desc||'',p.img);
+  if(!opts||!opts.noBar) personBar('ok',p.name,p.desc||'',p.img,opts&&opts.source,id);
   return id;
 }
 
 // Barra multi-personatge per al handoff des del joc (?joc=): mostra N noms + anys sense etiqueta.
-// resolvedIds: ids reals a PEOPLE (deduplicats per QID a bootJocContext).
+// resolvedIds: ids reals a PEOPLE (deduplicats per QID a bootFromJoc).
 // Cada nom és un botó independent: clicar-lo fa flash només d'ell; ✕ elimina tots.
-function jocBar(people,resolvedIds){
+function jocBar(people,resolvedIds,source){
   pbar.textContent='';
   pbar.dataset.state='ok';
   const txt=document.createElement('div');txt.className='ptxt';
+  if(source){const tag=document.createElement('div');tag.className='ptag';tag.textContent=labelForSource(source);txt.appendChild(tag);}
   const nm=document.createElement('div');nm.className='pname';
   people.forEach(function(p,i){
     if(i>0){const sep=document.createElement('span');sep.textContent=' · ';nm.appendChild(sep);}
@@ -1982,35 +1992,54 @@ function bootPersonMode(qid){
   });
 }
 
-// [11b] MODE «JOC» (?joc=<nom>) — handoff des de joc.html quan l'usuari vol veure persones al cronograma
-// joc.html escriu hb_joc_context=[{qid,name,birth,death,img,desc},...] i navega a index.html?joc=<nom>.
-function bootJocContext(){
-  let people=null;
-  try{ people=JSON.parse(localStorage.getItem('hb_joc_context')||'null'); }catch(_){}
-  try{ localStorage.removeItem('hb_joc_context'); }catch(_){}
+// [11b] MODE «DES DEL JOC» (?from=joc) — handoff unificat des de joc.html (joc2cronograma).
+// joc.html escriu hb_cronograma_ctx={v,source,kind,people,ts} i navega a index.html?from=joc.
+// Funciona tant per a 1 persona (personatgedia, memory) com per a N (ordena, abansdespres).
+const FRESH_MS=5*60*1000;   // el traspas caduca als 5 minuts
+function bootFromJoc(){
+  let ctx=null;
+  try{ ctx=JSON.parse(localStorage.getItem('hb_cronograma_ctx')||'null'); }catch(_){}
+  try{ localStorage.removeItem('hb_cronograma_ctx'); }catch(_){}  // us unic: consumir i esborrar
   history.replaceState(null,'',location.pathname);
-  if(!people||!people.length){ restoreState(); bootDefault(); return; }
+  if(!ctx||ctx.v!==1||!ctx.people||!ctx.people.length||(Date.now()-ctx.ts)>FRESH_MS){
+    restoreState(); bootDefault(); return;
+  }
+  const src=ctx.source||null;
+  const people=ctx.people;
   restoreState();
-  bootDefault(function(){
-    // Per a cada persona, busca si ja existeix a la BD local pel QID per evitar duplicats.
-    // Si existeix, pina la seva entry local; si no, crea una entry _session nova.
-    const resolvedIds=people.map(function(p){
-      const local=PEOPLE.find(function(x){return x.wd===p.qid;});
-      const id=local?local.id:'wd_'+p.qid;
-      if(!local){
-        PEOPLE.push({id:'wd_'+p.qid,wd:p.qid,name:p.name,birth:p.birth,death:p.death,
-          cats:guessCats(p.desc),gender:'',wiki:p.wiki||'',desc:p.desc||'',_session:true,_ts:Date.now()});
-      }
-      state.present.add(id);
-      state.pinned.add(id);
-      return id;
+  if(people.length===1){
+    // Un sol personatge: usa personBar amb etiqueta de source
+    const p=people[0];
+    bootDefault(function(){
+      const pid=mostraPersonatge(p,{source:src});
+      centerOnPerson(p);
+      window.dispatchEvent(new Event('resize'));
+      setTimeout(function(){ flashBar(pid); },500);
+      if(!p.img)fetchPerson(p.qid).then(function(full){
+        if(full&&full.img&&pbar.classList.contains('on')) personBar('ok',full.name,full.desc||'',full.img,src,pid);
+      }).catch(function(){});
     });
-    scheduleSave();
-    jocBar(people,resolvedIds);
-    fitToPresent();
-    window.dispatchEvent(new Event('resize'));
-    setTimeout(function(){ resolvedIds.forEach(function(id){ flashBar(id); }); },500);
-  });
+  }else{
+    // Conjunt de personatges: jocBar amb etiqueta de source
+    bootDefault(function(){
+      const resolvedIds=people.map(function(p){
+        const local=PEOPLE.find(function(x){return x.wd===p.qid;});
+        const id=local?local.id:'wd_'+p.qid;
+        if(!local){
+          PEOPLE.push({id:'wd_'+p.qid,wd:p.qid,name:p.name,birth:p.birth,death:p.death,
+            cats:guessCats(p.desc),gender:'',wiki:p.wiki||'',desc:p.desc||'',_session:true,_ts:Date.now()});
+        }
+        state.present.add(id);
+        state.pinned.add(id);
+        return id;
+      });
+      scheduleSave();
+      jocBar(people,resolvedIds,src);
+      fitToPresent();
+      window.dispatchEvent(new Event('resize'));
+      setTimeout(function(){ resolvedIds.forEach(function(id){ flashBar(id); }); },500);
+    });
+  }
 }
 
 // Sidebar: plegada per defecte a pantalles estretes; la preferència manual es persisteix.
@@ -2026,11 +2055,10 @@ function bootJocContext(){
 
 const _urlP=new URLSearchParams(location.search);
 const PERSON_QID=_urlP.get('person');
-const JOC_PARAM=_urlP.get('joc');
 if(PERSON_QID){
-  bootPersonMode(PERSON_QID);
-}else if(JOC_PARAM){
-  bootJocContext();
+  bootPersonMode(PERSON_QID);             // deep link extern: fetch per QID (compartir)
+}else if(_urlP.get('from')==='joc'){
+  bootFromJoc();                          // traspas intern des dels jocs
 }else{
   restoreState();
   bootDefault();
