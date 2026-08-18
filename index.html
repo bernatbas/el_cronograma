@@ -1837,10 +1837,7 @@ const pbar=$('#personbar');
 let _pbarId=null; // id PEOPLE de la persona actual a la personbar; null si no n'hi ha cap
 function labelForSource(src){
   if(src==='personatgedia') return 'Personatge del dia';
-  if(src==='memory') return 'Del joc de Memory';
-  if(src==='ordena') return 'Del repte «Ordena la línia»';
-  if(src==='abansdespres') return 'Del repte «Abans o després?»';
-  return 'Personatge';
+  return null;   // els noms dels jocs no es mostren a la barra; source es guarda al payload
 }
 function personBar(estat,nom,descripcio,imgUrl,source,personId){
   pbar.textContent='';
@@ -1853,12 +1850,13 @@ function personBar(estat,nom,descripcio,imgUrl,source,personId){
   }
   const txt=document.createElement('div');txt.className='ptxt';
   _pbarId=personId||(PERSON_QID?'wd_'+PERSON_QID:null);
+  const _lbl=estat==='error'?'No s’ha pogut carregar':labelForSource(source);
   const tag=document.createElement('div');tag.className='ptag';
-  tag.textContent=estat==='error'?'No s’ha pogut carregar':labelForSource(source);
+  if(_lbl) tag.textContent=_lbl;
   const nm=document.createElement('div');nm.className='pname';nm.textContent=nom;
   nm.style.cursor='pointer';nm.title='Torna a centrar-lo a la vista';
   nm.addEventListener('click',()=>{if(_pbarId)revealPerson(_pbarId);});
-  txt.appendChild(tag);txt.appendChild(nm);
+  if(_lbl) txt.appendChild(tag);txt.appendChild(nm);
   if(descripcio){const de=document.createElement('div');de.className='pdesc';de.textContent=descripcio;txt.appendChild(de);}
   pbar.appendChild(txt);
   // Nomes la ✕, sense text (decisio d'en Bernat). La barra ja diu en quin mode estas, i qualsevol
@@ -1936,7 +1934,6 @@ function jocBar(people,resolvedIds,source){
   pbar.textContent='';
   pbar.dataset.state='ok';
   const txt=document.createElement('div');txt.className='ptxt';
-  if(source){const tag=document.createElement('div');tag.className='ptag';tag.textContent=labelForSource(source);txt.appendChild(tag);}
   const nm=document.createElement('div');nm.className='pname';
   people.forEach(function(p,i){
     if(i>0){const sep=document.createElement('span');sep.textContent=' · ';nm.appendChild(sep);}
@@ -2015,8 +2012,15 @@ function bootFromJoc(){
       centerOnPerson(p);
       window.dispatchEvent(new Event('resize'));
       setTimeout(function(){ flashBar(pid); },500);
-      if(!p.img)fetchPerson(p.qid).then(function(full){
-        if(full&&full.img&&pbar.classList.contains('on')) personBar('ok',full.name,full.desc||'',full.img,src,pid);
+      if(!p.img||p.birth==null)fetchPerson(p.qid).then(function(full){
+        if(!full) return;
+        const _e=PEOPLE.find(function(x){return x.id===pid;});
+        if(_e){
+          if(_e.birth==null&&full.birth!=null){_e.birth=full.birth;}
+          if(_e.death==null&&full.death!=null){_e.death=full.death;}
+          render();
+        }
+        if(full.img&&pbar.classList.contains('on')) personBar('ok',full.name,full.desc||'',full.img,src,pid);
       }).catch(function(){});
     });
   }else{
@@ -2034,7 +2038,15 @@ function bootFromJoc(){
         return id;
       });
       scheduleSave();
-      jocBar(people,resolvedIds,src);
+      // Ordenar per any de naixement (nulls al final)
+      const _paired=resolvedIds.map(function(id,i){ return {p:people[i],id:id}; });
+      _paired.sort(function(a,b){
+        if(a.p.birth==null&&b.p.birth==null) return 0;
+        if(a.p.birth==null) return 1;
+        if(b.p.birth==null) return -1;
+        return a.p.birth-b.p.birth;
+      });
+      jocBar(_paired.map(function(x){return x.p;}),_paired.map(function(x){return x.id;}),src);
       fitToPresent();
       window.dispatchEvent(new Event('resize'));
       setTimeout(function(){ resolvedIds.forEach(function(id){ flashBar(id); }); },500);
