@@ -1296,7 +1296,8 @@
     const WD_API   = 'https://www.wikidata.org/w/api.php';
     const COMMONS  = 'https://commons.wikimedia.org/wiki/Special:FilePath/';
     const POOL_KEY   = 'hb_memory_pool';    // { date, pool:[{qid,name,img}×5] }
-    const STATE_KEY  = 'hb_memory_state';   // { date, easy:{...}, hard:{...} }
+    const STATE_KEY  = 'hb_memory_state';   // { date, algo, easy:{...}, hard:{...} }
+    const ALGO = 2;                         // versio del generador d’ordre (Fisher-Yates pur)
     const MODE_KEY   = 'hb_memory_mode';    // 'easy' | 'hard'
     const STREAK_KEY = 'hb_memory_streak';  // { last, days }
     const BATCH = 30;
@@ -1362,14 +1363,10 @@
     function saveMode(m){ writeLS(MODE_KEY,m); }
 
     // Estat del joc
-    function sameColCount(order){
-      var n=0; for(var i=0;i<5;i++) if(order[i]%5===order[i+5]%5) n++; return n;
-    }
     function initModeState(m){
-      var base=seedFromStr('mem:'+state.date+':'+m), ord, att=0;
-      do { ord=seededShuffle([0,1,2,3,4,5,6,7,8,9],mulberry32(base+att)); att++; }
-      while(att<8 && sameColCount(ord)>=3);
-      return {errors:0,found:[],order:ord,done:false};
+      const rng=mulberry32(seedFromStr('mem:'+state.date+':'+m));
+      const order=seededShuffle([0,1,2,3,4,5,6,7,8,9],rng);
+      return {errors:0,found:[],order:order,done:false};
     }
     function modeState(){
       if(!state[mode]){ state[mode]=initModeState(mode); saveState(); }
@@ -1378,7 +1375,8 @@
     function loadState(){
       const today=todayStr();
       const s=readLS(STATE_KEY);
-      return (s&&s.date===today)?s:{date:today,easy:null,hard:null};
+      // ALGO: puja’l si canvia com es genera `order`, per descartar estats d’un algorisme antic
+      return (s&&s.date===today&&s.algo===ALGO)?s:{date:today,algo:ALGO,easy:null,hard:null};
     }
     function saveState(){ writeLS(STATE_KEY,state); }
 
