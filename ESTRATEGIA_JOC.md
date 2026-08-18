@@ -16,6 +16,7 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
 2. ⚖️ **Abans o després?** — encadenat *higher/lower* (implementat com a daily).
 3. 🕵️ **Endevina el personatge** — pistes progressives.
 4. 🤝 **Contemporanis?** — dues persones van coincidir en vida?
+5. 🃏 **Memory** — trobar les parelles de personatges. ✅ *Implementat (18/08/2026)*.
 
 ## 3. Decisions (registre)
 - **2026-08-12 · Dades: snapshot provisional (`data.js`).** De moment **dupliquem** la DB en un
@@ -450,3 +451,133 @@ placeholder 👤; pop-up títol/text correctes (gen. m/f/neutre); capcçalera am
 - **Fix 1 (global):** `main` padding `24px 18px 64px` → `20px 18px 28px` (el `padding-bottom:64px` era excessiu per a pantalles fixes). Això dona aire a totes les vistes sense afectar el mòbil (té els seus propis media a ≤600px) ni el cronograma.
 - **Fix 2 (Ordena, més alt):** `.ordfoot` margin-top `20→14`, i nou media `@media (min-width:861px) and (max-height:820px)` que compacta Ordena resolt (padding targetes, gaps, amaga `.locknote`) per a finestres de desktop baixes (barra de pestanyes+marcadors).
 - **Validat (Chromium):** overflow **0** — AD a 900/768/720/700/680; Ordena a 900/768/720/700/680; mòbil SE (375×667) Ordena resolt segueix a 0. 0 errors JS. 0 U+FFFD.
+
+---
+
+## Joc 4: «Memory» (2026-08-18)
+
+Joc de parelles amb retrats de Wikidata. **Daily challenge** com la resta: mateixa graella per
+a tothom cada dia, i l'estat es desa (si surts i tornes, segueixes on eres).
+
+### Dos modes, un toggle persistent
+
+| Mode | Cares de la parella |
+|---|---|
+| 🟢 **Fàcil** | la **mateixa foto** dues vegades |
+| 🔴 **Difícil** | **foto + nom** del mateix personatge |
+
+El mode **es recorda** (`hb_memory_mode`): si el poses a difícil, cada dia arrenca en difícil.
+Cada mode té el **seu propi estat i el seu propi ordre** (seeds `mem:<data>:easy` i
+`mem:<data>:hard`), així que jugar-ne un no destapa l'altre.
+
+### Pool diari (5 personatges)
+
+`ensurePool()` — seed `mem:<data>`, independent del `pd:<data>` del «Personatge del dia»
+perquè els dos jocs no coincideixin en la tria.
+
+- Batches de **30 QIDs** a `wbgetentities` (fins a 6 intents) filtrant per **P18** (retrat) i
+  etiqueta disponible (`ca|es|en`). Es queda amb els **5 primers** que compleixen les dues coses.
+- Es cacheja a `hb_memory_pool` amb la data. **Es precarrega en carregar la pàgina** (crida a
+  `ensurePool()` fora del `mount`, amb la Promise memoritzada) perquè en entrar al joc ja hi sigui.
+- Si no s'arriba a 5, missatge d'error de xarxa; **mai** graella a mitges.
+
+### Graella i lògica d'encert
+
+10 cartes en **5 columnes × 2 files**, sempre — també al mòbil (veure «Layout» avall). Els
+valors 0–4 són la primera cara de cada personatge i 5–9 la segona; l'encert és:
+
+```js
+(a.cardValue % 5) === (b.cardValue % 5) && a.cardValue !== b.cardValue
+```
+
+Serveix igual per als dos modes. Encert → les dues queden girades (`.matched`, vora verda 3px);
+error → vora vermella 3px i es tornen a tapar als **900 ms**. El comptador d'errors s'actualitza
+**sense re-renderitzar la graella** (si no, es perdria l'animació de gir).
+
+### ⚠️ Ordre de les cartes: Fisher-Yates pur, i per què
+
+`seededShuffle([0..9], mulberry32(seedFromStr('mem:<data>:<mode>')))`. **Sense cap correcció.**
+
+Hi va haver dos intents fallits que val la pena no repetir:
+
+1. **`memoryLayout()` (#87, viu ~30 min)** — repartia les parelles per garantir «files
+   oposades», però ho feia amb `order[col]` i `order[col+5]`: això posa cada parella a la
+   **mateixa columna**. El resultat era una graella perfectament alineada en vertical, molt
+   pitjor que l'atzar. **Revertit al #87b.**
+2. **Filtre `sameColCount()` (#89)** — rebutjava el seed si ≥3 parelles queien a la mateixa
+   columna. **Tret al #90**: qualsevol restricció regala informació al jugador («si no és
+   aquí, és allà») i redueix l'espai de cerca.
+
+**Decisió: 100 % aleatori, quedi com quedi.** El generador està verificat estadísticament
+(1460 mostres): χ² d'uniformitat posició/valor **96,2** contra un crític del 5 % de ~103, i
+mitjana de parelles en columna **0,599** contra **0,556** teòric (5 × 1/9). Que un dia les
+parelles caiguin alineades és atzar, no biaix — passa en un ~0,5 % dels dies.
+
+### Segell `ALGO` a l'estat (aprenentatge del #90)
+
+El bug del `memoryLayout` **va sobreviure al seu propi revert**: els navegadors que havien
+carregat el joc durant aquells 30 minuts tenien l'ordre dolent desat a `hb_memory_state`, i
+`loadState()` només comprovava la **data** — un estat d'avui es reutilitza sempre, vingui de
+l'algorisme que vingui. Resultat: el revert no es veia fins l'endemà i semblava que el random
+seguís trencat.
+
+```js
+const ALGO = 2;  // puja’l si canvia com es genera `order`
+return (s && s.date===today && s.algo===ALGO) ? s : {date:today, algo:ALGO, easy:null, hard:null};
+```
+
+**Regla general**: qualsevol estat persistit que depengui d'un algorisme ha de portar-ne la
+versió, si no un revert no arriba als usuaris que ja tenen estat desat.
+
+### Layout — cap scroll al mòbil
+
+Primer es va provar **2 columnes × 5 files** en portrait: obligava a un scroll molt llarg i el
+joc perdia tot el sentit (no es pot memoritzar el que no es veu). Ara **5 × 2 a totes les
+mides**; sota 560px només es redueixen `gap` (6px), padding i la mida del nom (11px). Les
+cartes queden petites (~64px) però **les 10 caben a pantalla d'un cop**, que és el que compta.
+
+### Aspecte de la carta tapada
+
+`#EBCDBE` de fons amb vora **2px `#612E25`** — el terracota clar de la marca amb la línia fosca
+del separador de la topbar. Es va arribar aquí en dos passos: `var(--topbar-bg)` era massa intens
+(#88 el va aclarir a `#D49070`, encara fort) fins al to pastel actual. Icona 🏛 al centre.
+
+### Fitxa del personatge en acabar
+
+Un cop resolt, la graella queda clicable: qualsevol carta obre un overlay (`.mem-overlay`) amb
+la **foto gran, el nom** i el botó **«🗺️ Veure al cronograma»**, que envia l'event
+`joc_2_cronograma` i navega a `index.html?person=<QID>`. Es tanca amb la ✕ o clicant el fons.
+És la manera de tancar el cercle: jugues, i d'allà saltes a veure qui era aquella gent.
+
+### Copys del resultat
+
+| Errors | Text |
+|---|---|
+| 0 | `0 ERRORS! Increïble 🤩` |
+| 1–4 | `X errors – Bona feina 😌` |
+| 5+ | `X errors – Bueno, si tu t’ho has passat bé… 🙄` |
+
+### Compartir
+
+Botó **«📤 Comparteix»** al banner de resultat: `navigator.share` al mòbil i
+`navigator.clipboard` al desktop (el botó passa a `✓ Copiat!` durant 2 s). Text:
+
+```
+🃏 Memory – 18/08/2026
+🟢 Fàcil – 0 ERRORS! Increïble 🤩
+bernatbas.github.io/el_cronograma/joc.html
+```
+
+### Persistència
+
+| Clau | Contingut |
+|---|---|
+| `hb_memory_pool` | `{date, pool:[{qid,name,img}×5]}` |
+| `hb_memory_state` | `{date, algo, easy:{errors,found,order,done}, hard:{…}}` |
+| `hb_memory_mode` | `'easy'` \| `'hard'` — **persistent entre dies** |
+| `hb_memory_streak` | `{last, days}` — dies seguits |
+
+### GA4
+
+`joc_vist{joc:'memory'}` · `joc_iniciat{joc,mode}` (al primer clic, no en entrar) ·
+`joc_completat{joc,mode,errors}` · `joc_2_cronograma{joc}` (des de la fitxa).
