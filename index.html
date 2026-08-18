@@ -2047,9 +2047,22 @@ function bootFromJoc(){
         return a.p.birth-b.p.birth;
       });
       jocBar(_paired.map(function(x){return x.p;}),_paired.map(function(x){return x.id;}),src);
+      // Events (p.ex. d'Ordena o AbansDespres): force-visible i flash
+      if(ctx.events&&ctx.events.length){
+        ctx.events.forEach(function(ev){
+          if(!ev||!ev.id) return;
+          if(EVENTS.some(function(e){ return e.id===ev.id; })){
+            state.showEvents=true;
+            if(!state.selectedEvent) state.selectedEvent=ev.id;
+          }
+        });
+      }
       fitToPresent();
       window.dispatchEvent(new Event('resize'));
-      setTimeout(function(){ resolvedIds.forEach(function(id){ flashBar(id); }); },500);
+      setTimeout(function(){
+        resolvedIds.forEach(function(id){ flashBar(id); });
+        if(ctx.events) ctx.events.forEach(function(ev){ if(ev&&ev.id) flashEvent(ev.id); });
+      },500);
     });
   }
 }

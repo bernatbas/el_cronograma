@@ -613,15 +613,24 @@
     if(!p||!p.wd) return null;
     return {qid:p.wd,name:p.name,birth:p.birth,death:p.death||null,img:null,desc:p.desc||''};
   }
+  // Retorna {kind:'event',id,name,year} per a un ítem del pool de tipus 'event', o null si és una persona.
+  function eventFromItem(it){
+    if(!it||it.kind!=='event') return null;
+    return {kind:'event',id:it.key.replace(/^ev:/,''),name:it.name,year:it.year!=null?it.year:null};
+  }
 
   // Única funció de traspas al cronograma (big-bang joc2cronograma). Sobreescriu sempre (last-write-wins).
-  function goToCronograma(source, people){
-    const list=(people||[]).filter(function(p){ return p&&p.qid; });
-    if(!list.length) return;
-    const payload={v:1,source:source,kind:list.length>1?'set':'person',
-      people:list.map(function(p){ return {qid:p.qid,name:p.name||null,
+  // items: barreja de personatges {qid,...} i/o events {kind:'event',id,name,year}.
+  function goToCronograma(source, items){
+    const peopleList=(items||[]).filter(function(x){ return x&&x.qid; });
+    const eventsList=(items||[]).filter(function(x){ return x&&x.kind==='event'&&x.id; });
+    if(!peopleList.length&&!eventsList.length) return;
+    const total=peopleList.length+eventsList.length;
+    const payload={v:1,source:source,kind:total>1?'set':'person',
+      people:peopleList.map(function(p){ return {qid:p.qid,name:p.name||null,
         birth:(p.birth!=null?p.birth:null),death:(p.death!=null?p.death:null),
         img:p.img||null,desc:p.desc||''}; }),ts:Date.now()};
+    if(eventsList.length) payload.events=eventsList.map(function(e){ return {id:e.id,name:e.name||null,year:e.year!=null?e.year:null}; });
     try{ localStorage.setItem('hb_cronograma_ctx',JSON.stringify(payload)); }catch(_){}
     track('joc_2_cronograma',{joc:source});
     location.href='index.html?from=joc';
@@ -800,6 +809,8 @@
       const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
       const title = perfect ? '<span class="perfect">Ronda perfecta! 🏆</span>' : 'Repte completat';
       const cronoPeople = !perfect && failPair ? failPair.map(personFromItem).filter(Boolean) : [];
+      const cronoEvents = !perfect && failPair ? failPair.map(eventFromItem).filter(Boolean) : [];
+      const hasCrono = cronoPeople.length || cronoEvents.length;
       root.innerHTML = `
         <div class="gameover">
           ${head()}
@@ -810,11 +821,11 @@
           </div>
           <div class="locknote">Ja has jugat el repte d'avui. Torna demà per un de nou!</div>
           <div class="countdown">Nou repte en <b id="cd">--:--:--</b></div>
-          <div class="btnrow"><button class="cta" data-x="share">📤 Comparteix</button>${cronoPeople.length?'<button class="cta sec" data-x="crono">🏛️ A veure, ensenyam-ho</button>':''}</div>
+          <div class="btnrow"><button class="cta" data-x="share">📤 Comparteix</button>${hasCrono?'<button class="cta sec" data-x="crono">🏛️ A veure, ensenyam-ho</button>':''}</div>
         </div>`;
       const sh=root.querySelector('[data-x="share"]');
       if(sh) sh.addEventListener('click',()=>doShare(sc,days,sh));
-      if(cronoPeople.length){const cb=root.querySelector('[data-x="crono"]');if(cb)cb.addEventListener('click',()=>goToCronograma('abansdespres',failPair.map(personFromItem).filter(Boolean)));}
+      if(hasCrono){const cb=root.querySelector('[data-x="crono"]');if(cb)cb.addEventListener('click',()=>goToCronograma('abansdespres',[...cronoPeople,...cronoEvents]));}
       startCountdown();
     }
 
@@ -1230,10 +1241,12 @@
         const br=document.createElement('div'); br.className='btnrow';
         const wrongItems=!correct?order.filter((_,i)=>!marks[i]):[];
         const cronoPeople=wrongItems.map(personFromItem).filter(Boolean);
-        br.innerHTML='<button class="cta ordshare" data-x="oshare">📤 Comparteix</button>'+(cronoPeople.length?'<button class="cta sec" data-x="crono">🏛️ A veure, ensenyam-ho</button>':'');
+        const cronoEvents=wrongItems.map(eventFromItem).filter(Boolean);
+        const hasCrono=cronoPeople.length||cronoEvents.length;
+        br.innerHTML='<button class="cta ordshare" data-x="oshare">📤 Comparteix</button>'+(hasCrono?'<button class="cta sec" data-x="crono">🏛️ A veure, ensenyam-ho</button>':'');
         bn.appendChild(br);
         const sb=br.querySelector('[data-x="oshare"]'); if(sb) sb.addEventListener('click',()=>ordDoShare(marks,days,sb));
-        if(cronoPeople.length){const cb=br.querySelector('[data-x="crono"]');if(cb)cb.addEventListener('click',()=>goToCronograma('ordena',wrongItems.map(personFromItem).filter(Boolean)));}
+        if(hasCrono){const cb=br.querySelector('[data-x="crono"]');if(cb)cb.addEventListener('click',()=>goToCronograma('ordena',[...cronoPeople,...cronoEvents]));}
       }
     }
 
@@ -1338,6 +1351,7 @@
     }
     function imgUrl(e){ const c=e.claims&&e.claims.P18; if(!c||!c.length) return null; const dv=c[0].mainsnak&&c[0].mainsnak.datavalue; if(!dv) return null; return COMMONS+encodeURIComponent(String(dv.value).replace(/ /g,'_'))+'?width=400'; }
     function wdLbl(o){ return o?((o.ca||o.es||o.en||{}).value||null):null; }
+    function wdYear(claims,prop){ const cl=claims&&claims[prop]; if(!cl||!cl.length) return null; const dv=cl[0].mainsnak&&cl[0].mainsnak.datavalue; if(!dv||!dv.value||!dv.value.time) return null; const m=/^([+-])0*(\d+)-/.exec(dv.value.time); if(!m) return null; const y=parseInt(m[2],10); return m[1]==='-'?-y:y; }
 
     // Precarrega les fotos del pool. Si alguna no es pot descarregar, reintenta 1 cop; si tampoc, retorna false.
     function loadImg(src){
@@ -1390,7 +1404,7 @@
                 if(!e||e.missing!==undefined) continue;
                 const img=imgUrl(e); if(!img) continue;
                 const name=wdLbl(e.labels); if(!name) continue;
-                results.push({qid,name,img});
+                results.push({qid,name,img,birth:wdYear(e.claims,'P569'),death:wdYear(e.claims,'P570')});
               }
             }catch(_){}
           }
@@ -1542,9 +1556,14 @@
         +'<div class="mem-pname">'+esc(p.name)+'</div>'
         +'<button class="cta">🗺️ Veure al cronograma</button>'
         +'</div>';
-      ov.querySelector('.cta').addEventListener('click',function(){
-        goToCronograma('memory',[p]);
-      });
+      const ctaEl=ov.querySelector('.cta');
+      if(p.birth==null){
+        ctaEl.disabled=true;
+        ctaEl.title='Ja em sap greu, però a la Viquipèdia no hi surt l'any de naixement';
+        ctaEl.textContent='🗺️ No disponible al cronograma';
+      }else{
+        ctaEl.addEventListener('click',function(){ goToCronograma('memory',[p]); });
+      }
       ov.querySelector('.mem-pclose').addEventListener('click',function(){ ov.remove(); });
       ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
       document.body.appendChild(ov);
