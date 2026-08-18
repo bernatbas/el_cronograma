@@ -1689,7 +1689,7 @@ $('#fitAll').onclick=()=>{
   fitToPresent();
   if(pxPerYear!==before.px||scroll.scrollLeft!==before.left){fitPrev=before;fitLatch(true);}   // only latch if it actually moved
 };
-$('#reset').onclick=()=>{if(typeof gtag!=='undefined')gtag('event','reset');state.present=new Set();state.pinned=new Set(SEED_PINNED);state.collections=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.focus=null;state.selected=null;state.selectedEvent=null;state.expandedClusters=new Set();$('#detail').classList.remove('open');clearFitLatch();defaultView();};
+$('#reset').onclick=()=>{if(typeof gtag!=='undefined')gtag('event','reset');state.present=new Set();state.pinned=new Set(SEED_PINNED);state.collections=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.focus=null;state.selected=null;state.selectedEvent=null;state.expandedClusters=new Set();$('#detail').classList.remove('open');_pbarId=null;pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;if(PERSON_QID)history.replaceState(null,'',location.pathname);clearFitLatch();defaultView();};
 $('#sidebarToggle').onclick=e=>{
   const collapsed=$('.body').classList.toggle('collapsed');
   e.currentTarget.textContent=collapsed?'›':'‹';
