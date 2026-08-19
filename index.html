@@ -322,7 +322,7 @@
   /* ===== People bars (the "data": a bar per lifespan; living ones fade to the future) ===== */
   .bars{position:absolute;left:0;}
   .bar{position:absolute;height:var(--bar-h,26px);border-radius:var(--r-card);display:flex;align-items:center;padding:0 10px;font-size:12px;font-weight:500;color:#fff;cursor:pointer;white-space:nowrap;overflow:visible;transition:opacity .12s;box-shadow:0 1px 3px rgba(40,44,60,.18);}
-  .bar .lbl{pointer-events:none;text-shadow:0 1px 2px rgba(0,0,0,.42);}
+  .bar .lbl{pointer-events:none;text-shadow:0 1px 2px rgba(0,0,0,.42);min-width:0;}
   .bar.sel{outline:2px solid var(--text);outline-offset:1px;}
   .bar.alive{box-shadow:none;border-top-right-radius:0;border-bottom-right-radius:0;}
   @keyframes barPop{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(39,131,222,.6);}6%{transform:scale(1.12);}16%{transform:scale(1);box-shadow:0 0 0 12px rgba(39,131,222,0);}24%{box-shadow:0 0 0 0 rgba(39,131,222,.5);}40%{box-shadow:0 0 0 11px rgba(39,131,222,0);}50%{box-shadow:0 0 0 0 rgba(39,131,222,.42);}68%{box-shadow:0 0 0 11px rgba(39,131,222,0);}78%{box-shadow:0 0 0 0 rgba(39,131,222,.34);}100%{box-shadow:0 0 0 10px rgba(39,131,222,0);}}
@@ -1081,7 +1081,9 @@ function render(){
       const pillW=p._pillW, alive=p._alive;
       const col=barBg(p);
       const fade=alive?`<span class="fade" style="left:${pillW}px;width:${FUTURE_FADE}px;background:${col}"></span>`:'';   // future fade for the living
-      return `<div class="bar${alive?' alive':''}${state.selected===p.id?' sel':''}" data-id="${p.id}" style="left:${p._startX}px;top:${top}px;width:${pillW}px;background:${col}">${fade}<span class="lbl">${esc(p.name)}</span><button class="menu" data-menu="${p.id}" title="Opcions">⋮</button></div>`;
+      const lblW=pillW-(_coarse?16:20);
+      const lblStyle=lblW<28?'display:none':'max-width:'+lblW+'px;overflow:hidden;text-overflow:ellipsis';
+      return `<div class="bar${alive?' alive':''}${state.selected===p.id?' sel':''}" data-id="${p.id}" style="left:${p._startX}px;top:${top}px;width:${pillW}px;background:${col}">${fade}<span class="lbl" style="${lblStyle}">${esc(p.name)}</span><button class="menu" data-menu="${p.id}" title="Opcions">⋮</button></div>`;
     }).join('');
   }else{
     barsLayer.innerHTML=`<div class="emptyState" style="top:6px">Clica una col·lecció a l\u0027esquerra o cerca un personatge — o estudia només els períodes.</div>`;
