@@ -395,6 +395,7 @@ function renderBacklog(list, live){
       + '<div class="qhead">'
       +   '<span class="txt">'+esc(r.title)+'</span>'
       +   '<div class="qbtns">'
+      +     '<button class="qbtn qnote" title="Afegeix nota" '+(live?'':' disabled')+'>✎</button>'
       +     '<button class="qbtn ok qclose" title="Marca com a fet" '+(live?'':' disabled')+'>✓</button>'
       +     '<button class="qbtn del qdel" title="Elimina del backlog" '+(live?'':' disabled')+'>✕</button>'
       +   '</div>'
@@ -585,6 +586,13 @@ el("queue").addEventListener("click", function(e){
   const row = e.target.closest(".qrow");
   if(!row) return;
   const title = row.dataset.title;
+  if(e.target.classList.contains("qnote")){
+    e.stopPropagation();
+    row.classList.add("open");
+    const ta = row.querySelector('.qnote-ta');
+    if(ta){ ta.focus(); ta.scrollIntoView({block:"nearest"}); }
+    return;
+  }
   if(e.target.classList.contains("qclose")){
     e.stopPropagation();
     closeItem(title);
