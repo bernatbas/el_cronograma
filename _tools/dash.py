@@ -242,7 +242,7 @@ def parse_pinned():
 def pd_state():
     pins = parse_pinned()
     today = date.today().isoformat()
-    upcoming = [p for p in pins if p["date"] >= today]
+    upcoming = [p for p in pins if p["date"] > today]
     cushion = None
     if upcoming:
         nxt = datetime.strptime(upcoming[0]["date"], "%Y-%m-%d").date()

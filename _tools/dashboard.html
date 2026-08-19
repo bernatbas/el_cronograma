@@ -274,7 +274,7 @@ const DEMO = {
     branch:"main", dirty:2, ahead:2, behind:0,
     ci:{conclusion:"success", name:"CI", when:"fa 2 h", url:"#"},
     db:{people:36, events:15, marcs:2, blocks:23, collections:2, eras:5},
-    pd:{pinned:1, future:1, next:"2026-08-19", cushion:0}
+    pd:{pinned:1, future:0, next:null, cushion:null}
   },
   queue:[
     {n:104, txt:"Etiquetes de personatge progressives per zoom", when:"avui"},
@@ -305,8 +305,9 @@ function renderStats(s, live){
   el("branch").textContent = live ? (s.branch + (OFFLINE?"":"")) : "dades d'exemple";
   const gitPend = s.dirty + s.ahead;
   const gitCls = gitPend===0 ? "ok" : (s.ahead>0 ? "warn" : "warn");
-  const gitVal = gitPend===0 ? "Sincronitzat" : (s.ahead>0 ? s.ahead+" sense pujar" : s.dirty+" sense desar");
-  const gitSub = s.dirty+" modificats · "+s.ahead+" endavant"+(s.behind?" · "+s.behind+" endarrere":"");
+  const gitVal = gitPend===0 ? "Sincronitzat" : (s.ahead>0 ? s.ahead+" commit"+(s.ahead!==1?"s":"")+" per pujar" : s.dirty+" fitxer"+(s.dirty!==1?"s":"")+" per committejar");
+  const gitSub = s.dirty+" sense committejar · "+s.ahead+" per pujar"+(s.behind?" · "+s.behind+" endarrere":"");
+  const gitTip = "Sense committejar: fitxers modificats localment que no s'han afegit a cap commit.\nPer pujar: commits locals que no s'han enviat a GitHub."+(s.behind?"\nEndarrere: commits a GitHub que no tens en local (cal fer pull).":"");
 
   // cushion = dies fins al proper homenatge. null = no n'hi ha cap clavat,
   // que no es un error: el defecte del joc es la tria aleatoria.
@@ -319,7 +320,7 @@ function renderStats(s, live){
   }
 
   el("stats").innerHTML = ""
-   + '<div class="stat '+gitCls+'"><div class="lbl"><span class="dot"></span>Git</div>'
+   + '<div class="stat '+gitCls+'" title="'+esc(gitTip)+'"><div class="lbl"><span class="dot"></span>Git</div>'
    + '<div class="val">'+esc(gitVal)+'</div><div class="sub">'+esc(gitSub)+'</div></div>'
 
    + '<div class="stat '+ciClass(s.ci.conclusion)+'"><div class="lbl"><span class="dot"></span>CI</div>'
@@ -450,7 +451,7 @@ async function boot(){
   const pins = pn.live ? pn.data : DEMO.pins;
   PINS = {};
   pins.forEach(function(p){ PINS[p.date] = p; });
-  const future = Object.keys(PINS).filter(function(k){ return k >= iso(new Date()); }).length;
+  const future = Object.keys(PINS).filter(function(k){ return k > iso(new Date()); }).length;
   el("pdhint").textContent = future + (future===1 ? " dia clavat endavant" : " dies clavats endavant");
   renderCal();
   renderPins();
