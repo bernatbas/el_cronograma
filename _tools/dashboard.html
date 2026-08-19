@@ -76,21 +76,30 @@ section{margin-bottom:26px;scroll-margin-top:66px}
 .empty{padding:22px 14px;text-align:center;color:var(--text3);font-size:13px;font-style:italic}
 
 /* ===== cua de validació ===== */
+#queue{max-height:360px;overflow-y:auto}
 .qrow{cursor:pointer}
-.qhead{display:flex;align-items:center;gap:11px;padding:9px 13px;border-bottom:1px solid var(--border)}
+.qhead{display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border)}
 .qrow:last-child:not(.open) .qhead{border-bottom:none}
 .qrow:hover .qhead,.qrow.open .qhead{background:var(--soft)}
-.qbody{display:none;padding:12px 13px 14px;border-bottom:1px solid var(--border);background:var(--soft)}
+.qhead .num{font-family:var(--mono);font-size:11px;color:var(--text3);width:30px;flex:0 0 auto}
+.qhead .txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px}
+.qhead .when{font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums;flex:0 0 auto}
+.qbtns{display:flex;gap:4px;flex:0 0 auto}
+.qbtn{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:5px;border:1px solid var(--border-strong);background:var(--canvas);cursor:pointer;font-size:12px;line-height:1;padding:0;flex:0 0 auto}
+.qbtn.ok{color:var(--ok);border-color:#CDE4D8}.qbtn.ok:hover:not(:disabled){background:var(--ok-bg)}
+.qbtn.del{color:var(--text3)}.qbtn.del:hover:not(:disabled){color:var(--bad);border-color:#EFCFC8;background:var(--bad-bg)}
+.qbtn:disabled{opacity:.35;cursor:not-allowed}
+.qbody{display:none;padding:10px 12px 12px;border-bottom:1px solid var(--border);background:var(--soft)}
 .qrow.open .qbody{display:block}
 .qrow:last-child .qbody{border-bottom:none}
-.qlabel{font-size:10.5px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
-.qdesc{font-size:12.5px;color:var(--text2);line-height:1.5;margin-bottom:11px}
-.qtest{font-size:12px;color:var(--text3);font-style:italic;border-left:2px solid var(--border-strong);padding-left:8px;margin-bottom:13px;line-height:1.4}
-.qnote-ta{display:block;width:100%;border:1px solid var(--border-strong);border-radius:var(--r);padding:7px 10px;font:inherit;font-size:12.5px;resize:vertical;min-height:54px;color:var(--text);margin-bottom:7px;background:var(--canvas)}
+.qlabel{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.qdesc{font-size:12px;color:var(--text2);line-height:1.45;margin-bottom:9px}
+.qtest{font-size:11.5px;color:var(--text3);font-style:italic;border-left:2px solid var(--border-strong);padding-left:7px;margin-bottom:11px;line-height:1.35}
+.qnote-ta{display:block;width:100%;border:1px solid var(--border-strong);border-radius:var(--r);padding:6px 9px;font:inherit;font-size:12px;resize:vertical;min-height:48px;color:var(--text);margin-bottom:6px;background:var(--canvas)}
 .qnote-ta:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blueSoft)}
 .qnote-actions{display:flex;gap:7px}
-.qadd{padding:13px;border-bottom:1px solid var(--border);background:var(--soft)}
-.qadd input,.qadd textarea{margin-bottom:8px}
+.qadd{padding:12px;border-bottom:1px solid var(--border);background:var(--soft)}
+.qadd input,.qadd textarea{margin-bottom:7px}
 .qadd textarea{resize:vertical}
 .qadd-actions{display:flex;gap:8px;justify-content:flex-end}
 
@@ -372,7 +381,7 @@ function renderStats(s, live){
 
 /* ---------- cua de validació ---------- */
 function renderQueue(list, live){
-  el("vcount").textContent = list.length + " en \u{1F9EA}";
+  el("vcount").textContent = list.length + " pendents";
   el("qpend").hidden = !!live;
   el("qaddBtn").disabled = !live;
   if(!list.length){
@@ -386,7 +395,10 @@ function renderQueue(list, live){
       +   '<span class="num">#'+r.n+'</span>'
       +   '<span class="txt">'+esc(r.title)+'</span>'
       +   '<span class="when">'+esc(r.date)+'</span>'
-      +   (live ? '<button class="btn primary qval" data-n="'+r.n+'">Valida ✅</button>' : '<button class="btn" disabled>Valida</button>')
+      +   '<div class="qbtns">'
+      +     '<button class="qbtn ok qval" data-n="'+r.n+'" title="Valida" '+(live?'':' disabled')+'>✓</button>'
+      +     '<button class="qbtn del qdel" data-n="'+r.n+'" title="Elimina de CANVIS.md" '+(live?'':' disabled')+'>✕</button>'
+      +   '</div>'
       + '</div>'
       + '<div class="qbody">'
       +   '<div class="qlabel">Descripció</div>'
@@ -415,7 +427,7 @@ async function validateItem(n){
     if(d.ok){
       row.remove();
       const left = document.querySelectorAll('.qrow').length;
-      el("vcount").textContent = left + " en \u{1F9EA}";
+      el("vcount").textContent = left + " pendents";
       if(!left) el("queue").innerHTML = '<div class="empty">Res per validar. Tot al dia! ✅</div>';
     } else {
       alert("Error: " + d.msg);
@@ -425,6 +437,25 @@ async function validateItem(n){
     alert("No s'ha pogut connectar al servidor.");
     btn.disabled = false; btn.textContent = "Valida ✅";
   }
+}
+
+async function dismissItem(n){
+  if(!confirm("Elimina l'entrada #"+n+" de CANVIS.md?\n\nAquesta acció és permanent.")) return;
+  const row = document.querySelector('.qrow[data-n="'+n+'"]');
+  if(row) row.style.opacity = "0.4";
+  try{
+    const r = await fetch("/api/dismiss/"+n, {method:"POST"});
+    const d = await r.json();
+    if(d.ok){
+      if(row) row.remove();
+      const left = document.querySelectorAll('.qrow').length;
+      el("vcount").textContent = left + " pendents";
+      if(!left) el("queue").innerHTML = '<div class="empty">Res per validar. Tot al dia! ✅</div>';
+    } else {
+      if(row) row.style.opacity = "";
+      alert("Error: " + d.msg);
+    }
+  } catch(e){ if(row) row.style.opacity = ""; alert("No s'ha pogut connectar."); }
 }
 
 async function saveNote(n, note){
@@ -564,6 +595,11 @@ el("queue").addEventListener("click", function(e){
   if(e.target.classList.contains("qclear")){
     e.stopPropagation();
     saveNote(parseInt(e.target.dataset.n, 10), "");
+    return;
+  }
+  if(e.target.classList.contains("qdel")){
+    e.stopPropagation();
+    dismissItem(parseInt(e.target.dataset.n, 10));
     return;
   }
   const head = e.target.closest(".qhead");

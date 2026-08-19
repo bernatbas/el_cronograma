@@ -337,6 +337,37 @@ def annotate_item(n, note):
         return _edit_canvis_estat(n, "\U0001f9ea Per validar")
 
 
+def delete_item(n):
+    """Elimina la fila N de CANVIS.md (qualsevol estat)."""
+    path = os.path.join(REPO, "CANVIS.md")
+    try:
+        with open(path, encoding="utf-8") as f:
+            content = f.read()
+    except Exception as e:
+        return False, str(e)
+    lines = content.splitlines(keepends=True)
+    new_lines = []
+    found = False
+    for line in lines:
+        if line.startswith("| "):
+            parts = line.split("|")
+            try:
+                if int(parts[1].strip()) == n:
+                    found = True
+                    continue
+            except (ValueError, IndexError):
+                pass
+        new_lines.append(line)
+    if not found:
+        return False, "Entrada #%d no trobada" % n
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("".join(new_lines))
+        return True, "Eliminada"
+    except Exception as e:
+        return False, str(e)
+
+
 def add_item(title, desc, test):
     """Afegeix una nova fila 🧪 al final de la taula de CANVIS.md."""
     path = os.path.join(REPO, "CANVIS.md")
@@ -418,6 +449,12 @@ class Handler(BaseHTTPRequestHandler):
         m = re.match(r"/api/annotate/(\d+)$", path)
         if m:
             ok, msg = annotate_item(int(m.group(1)), data.get("note", ""))
+            self._json(200 if ok else 404, {"ok": ok, "msg": msg})
+            return
+
+        m = re.match(r"/api/dismiss/(\d+)$", path)
+        if m:
+            ok, msg = delete_item(int(m.group(1)))
             self._json(200 if ok else 404, {"ok": ok, "msg": msg})
             return
 
