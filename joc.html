@@ -1480,9 +1480,11 @@
     function saveState(){ writeLS(STATE_KEY,state); }
 
     // Missatges de resultat
-    function resultMsg(errors){
+    function resultMsg(errors,mode){
+      var t1=mode==='easy'?1:2,t2=mode==='easy'?3:5;
       if(errors===0) return '0 ERRORS! Increïble 🤩';
-      if(errors<=4) return errors+' error'+(errors!==1?'s':'')+' – Bona feina 😌';
+      if(errors<=t1) return errors+' error'+(errors!==1?'s':'')+' – Increïble 🤩';
+      if(errors<=t2) return errors+' error'+(errors!==1?'s':'')+' – Bona feina 😌';
       return errors+' error'+(errors!==1?'s':'')+' – Bueno, si tu t’ho has passat bé… 🙄';
     }
 
@@ -1626,7 +1628,7 @@
         root.innerHTML=head+renderToggle()
           +'<div class="mem-grid mem-grid-done">'+renderGrid(ms)+'</div>'
           +'<div class="mbanner">'
-          +'<div class="rtitle">'+esc(resultMsg(ms.errors))+'</div>'
+          +'<div class="rtitle">'+esc(resultMsg(ms.errors,mode))+'</div>'
           +'<div class="streak">🔥 '+days+' '+(days===1?'dia':'dies')+' seguits</div>'
           +'<div class="locknote">Ja has resolt el repte d’avui. Torna demà per un de nou!</div>'
           +'<div class="countdown">Nou repte en <b id="'+cdId+'">--:--:--</b></div>'
@@ -1636,7 +1638,7 @@
         (function tick(){ const el=document.getElementById(cdId); if(el){ el.textContent=fmtDur(msToMidnight()); cdTimer=setTimeout(tick,1000); } })();
         var shareBtn=document.getElementById(shareId);
         if(shareBtn){ shareBtn.addEventListener('click',function(){
-          var txt='🎴 Memory – '+ddmm(state.date)+'\n'+(mode==='easy'?'🟢 Fàcil':'🔴 Difícil')+' – '+resultMsg(ms.errors)+'\nbernatbas.github.io/el_cronograma/joc.html';
+          var txt='🎴 Memory – '+ddmm(state.date)+'\n'+(mode==='easy'?'🟢 Fàcil':'🔴 Difícil')+' – '+resultMsg(ms.errors,mode)+'\nbernatbas.github.io/el_cronograma/joc.html';
           if(navigator.share){ navigator.share({text:txt}).catch(function(){}); return; }
           if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ shareBtn.textContent='✓ Copiat!'; setTimeout(function(){ shareBtn.textContent='📤 Comparteix'; },2000); }); }
         }); }
