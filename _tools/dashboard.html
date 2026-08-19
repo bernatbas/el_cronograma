@@ -168,7 +168,7 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
   <span class="brand">HB <b>· CONTROL</b></span>
   <nav class="nav">
     <a href="#estat">Estat</a>
-    <a href="#validacio">Validació</a>
+    <a href="#backlog">Backlog</a>
     <a href="#calendari">Calendari</a>
     <a href="#linter">Linter</a>
     <a href="#dades">Dades</a>
@@ -191,21 +191,20 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
     <div class="stats" id="stats"></div>
   </section>
 
-  <section id="validacio">
+  <section id="backlog">
     <div class="shead">
-      <h2>Cua de validació</h2>
+      <h2>Backlog</h2>
       <span class="pend" id="qpend" hidden>backend pendent</span>
       <span class="hint" id="vcount">—</span>
       <button class="btn" id="qaddBtn" disabled>+ Nou</button>
     </div>
     <div class="card" id="qaddForm" hidden>
       <div class="qadd">
-        <input type="text" id="qaddTitle" placeholder="Títol del canvi (obligatori)">
-        <textarea id="qaddDesc" placeholder="Descripció (opcional)" rows="3"></textarea>
-        <textarea id="qaddTest" placeholder="Proposta de test (opcional)" rows="2"></textarea>
+        <input type="text" id="qaddTitle" placeholder="Títol de l'ítem (obligatori)">
+        <textarea id="qaddBody" placeholder="Context, detalls, criteris d'acceptació (opcional)" rows="3"></textarea>
         <div class="qadd-actions">
           <button class="btn" id="qaddCancel">Cancel·la</button>
-          <button class="btn primary" id="qaddSubmit">Afegeix a CANVIS.md</button>
+          <button class="btn primary" id="qaddSubmit">Afegeix al backlog</button>
         </div>
       </div>
     </div>
@@ -320,9 +319,12 @@ const DEMO = {
     db:{people:36, events:15, marcs:2, blocks:23, collections:2, eras:5},
     pd:{pinned:1, future:0, next:null, cushion:null}
   },
-  queue:[
-    {n:104, date:"2026-08-19", title:"Etiquetes de personatge progressives per zoom", desc:"A zoom alt les barres es veuen sense text. A zoom mig el nom apareix truncat. A zoom baix el nom sencer.", test:"Activa «Els meus filòsofs», fes Vista global: barres sense text. Fes zoom in progressiu.", note:""},
-    {n:4,   date:"2026-08-03", title:"Enllaços i dades d'importància de Wikipedia", desc:"Correcció de dos enllaços massa genèrics. S'afegeix el camp sitelinks a cada event.", test:"Obrir el detall de «Fundació de Roma» i confirmar que l'enllaç és correcte.", note:"Pendent de provar amb connexió"}
+  backlog:[
+    {title:"Motor d'importància per a personatges", body:"El motor de zoom semàntic funciona per a events però no per a personatges. A zoom baix les etiquetes es trepitgen.", closed:false},
+    {title:"Poblar la BD", body:"Més esdeveniments i marcs. És manual — els blocs de període no es poden cercar a Wikidata.", closed:false},
+    {title:"Escalabilitat dels punts a zoom out", body:"Amb molts events caldrà revisar densitat i soroll visual. Lligat amb el clustering «+N».", closed:false},
+    {title:"Neteja de localStorage", body:"Podar les entrades de persones per edat i ús, o límit dur (~500 persones). Opt-in.", closed:false},
+    {title:"Opcional: encastar Oswald en base64", body:"Eliminar el FOUT del títol a la primera visita. La solució actual ja és prou bona.", closed:false},
   ],
   pins:[ {date:"2026-08-19", qid:"Q733621", name:"Juan Tamariz"} ],
   lint:[
@@ -379,78 +381,77 @@ function renderStats(s, live){
    + '<div class="sub">'+esc(pdSub)+'</div></div>';
 }
 
-/* ---------- cua de validació ---------- */
-function renderQueue(list, live){
-  el("vcount").textContent = list.length + " pendents";
+/* ---------- backlog ---------- */
+function renderBacklog(list, live){
+  el("vcount").textContent = list.length + " obert" + (list.length !== 1 ? "s" : "");
   el("qpend").hidden = !!live;
   el("qaddBtn").disabled = !live;
   if(!list.length){
-    el("queue").innerHTML = '<div class="empty">Res per validar. Tot al dia! ✅</div>';
+    el("queue").innerHTML = '<div class="empty">Backlog buit. Tot fet! ✅</div>';
     return;
   }
   el("queue").innerHTML = list.map(function(r){
-    const note = r.note || "";
-    return '<div class="qrow" data-n="'+r.n+'">'
+    return '<div class="qrow" data-title="'+esc(r.title)+'">'
       + '<div class="qhead">'
-      +   '<span class="num">#'+r.n+'</span>'
       +   '<span class="txt">'+esc(r.title)+'</span>'
-      +   '<span class="when">'+esc(r.date)+'</span>'
       +   '<div class="qbtns">'
-      +     '<button class="qbtn ok qval" data-n="'+r.n+'" title="Valida" '+(live?'':' disabled')+'>✓</button>'
-      +     '<button class="qbtn del qdel" data-n="'+r.n+'" title="Elimina de CANVIS.md" '+(live?'':' disabled')+'>✕</button>'
+      +     '<button class="qbtn ok qclose" title="Marca com a fet" '+(live?'':' disabled')+'>✓</button>'
+      +     '<button class="qbtn del qdel" title="Elimina del backlog" '+(live?'':' disabled')+'>✕</button>'
       +   '</div>'
       + '</div>'
       + '<div class="qbody">'
-      +   '<div class="qlabel">Descripció</div>'
-      +   '<div class="qdesc">'+esc(r.desc||'—')+'</div>'
-      +   '<div class="qlabel">Test proposat</div>'
-      +   '<div class="qtest">'+esc(r.test||'—')+'</div>'
-      +   '<div class="qlabel">Nota</div>'
-      +   '<textarea class="qnote-ta" data-n="'+r.n+'" placeholder="Afegeix una nota…">'+esc(note)+'</textarea>'
+      +   '<div class="qdesc" style="white-space:pre-wrap">'+esc(r.body||'—')+'</div>'
+      +   '<div class="qlabel" style="margin-top:9px">Nota</div>'
+      +   '<textarea class="qnote-ta" placeholder="Context, detalls, criteris d’acceptació…" rows="2"></textarea>'
       +   '<div class="qnote-actions">'
-      +     (live ? '<button class="btn qsave" data-n="'+r.n+'">Desa nota</button>' : '')
-      +     (live && note ? ' <button class="btn qclear" data-n="'+r.n+'">Esborra nota</button>' : '')
+      +     (live ? '<button class="btn qsave">Desa nota</button>' : '')
       +   '</div>'
       + '</div>'
       + '</div>';
   }).join("");
 }
 
-async function validateItem(n){
-  const row = document.querySelector('.qrow[data-n="'+n+'"]');
+function updateBacklogCount(){
+  const left = document.querySelectorAll('.qrow').length;
+  el("vcount").textContent = left + " obert" + (left !== 1 ? "s" : "");
+  if(!left) el("queue").innerHTML = '<div class="empty">Backlog buit. Tot fet! ✅</div>';
+}
+
+async function closeItem(title){
+  const rows = document.querySelectorAll('.qrow');
+  let row = null;
+  rows.forEach(function(r){ if(r.dataset.title === title) row = r; });
   if(!row) return;
-  const btn = row.querySelector('.qval');
-  btn.disabled = true; btn.textContent = "Validant…";
+  const btn = row.querySelector('.qclose');
+  if(btn){ btn.disabled = true; btn.textContent = "…"; }
   try{
-    const r = await fetch("/api/validate/"+n, {method:"POST"});
+    const r = await fetch("/api/backlog/close", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({title:title})});
     const d = await r.json();
     if(d.ok){
       row.remove();
-      const left = document.querySelectorAll('.qrow').length;
-      el("vcount").textContent = left + " pendents";
-      if(!left) el("queue").innerHTML = '<div class="empty">Res per validar. Tot al dia! ✅</div>';
+      updateBacklogCount();
     } else {
       alert("Error: " + d.msg);
-      btn.disabled = false; btn.textContent = "Valida ✅";
+      if(btn){ btn.disabled = false; btn.textContent = "✓"; }
     }
   } catch(e){
-    alert("No s'ha pogut connectar al servidor.");
-    btn.disabled = false; btn.textContent = "Valida ✅";
+    alert("No s'ha pogut connectar.");
+    if(btn){ btn.disabled = false; btn.textContent = "✓"; }
   }
 }
 
-async function dismissItem(n){
-  if(!confirm("Elimina l'entrada #"+n+" de CANVIS.md?\n\nAquesta acció és permanent.")) return;
-  const row = document.querySelector('.qrow[data-n="'+n+'"]');
+async function deleteItem(title){
+  if(!confirm("Elimina «"+title+"» del backlog?\n\nAquesta acció és permanent.")) return;
+  const rows = document.querySelectorAll('.qrow');
+  let row = null;
+  rows.forEach(function(r){ if(r.dataset.title === title) row = r; });
   if(row) row.style.opacity = "0.4";
   try{
-    const r = await fetch("/api/dismiss/"+n, {method:"POST"});
+    const r = await fetch("/api/backlog/delete", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({title:title})});
     const d = await r.json();
     if(d.ok){
       if(row) row.remove();
-      const left = document.querySelectorAll('.qrow').length;
-      el("vcount").textContent = left + " pendents";
-      if(!left) el("queue").innerHTML = '<div class="empty">Res per validar. Tot al dia! ✅</div>';
+      updateBacklogCount();
     } else {
       if(row) row.style.opacity = "";
       alert("Error: " + d.msg);
@@ -458,13 +459,14 @@ async function dismissItem(n){
   } catch(e){ if(row) row.style.opacity = ""; alert("No s'ha pogut connectar."); }
 }
 
-async function saveNote(n, note){
+async function annotateItem(title, note){
+  if(!note.trim()) return;
   try{
-    const r = await fetch("/api/annotate/"+n, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({note: note})});
+    const r = await fetch("/api/backlog/annotate", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({title:title, note:note})});
     const d = await r.json();
     if(!d.ok) alert("Error: " + d.msg);
     else boot();
-  } catch(e){ alert("No s'ha pogut connectar al servidor."); }
+  } catch(e){ alert("No s'ha pogut connectar."); }
 }
 
 /* ---------- calendari ---------- */
@@ -555,13 +557,13 @@ function renderPreview(){
 /* ---------- boot ---------- */
 async function boot(){
   const [st, q, pn, lt, dn] = await Promise.all([
-    api("/status"), api("/queue"), api("/pinned"), api("/lint"), api("/density")
+    api("/status"), api("/backlog"), api("/pinned"), api("/lint"), api("/density")
   ]);
 
   el("offline").hidden = !OFFLINE;
 
   renderStats(st.live ? st.data : DEMO.status, st.live);
-  renderQueue(q.live ? q.data : DEMO.queue, q.live);
+  renderBacklog(q.live ? q.data : DEMO.backlog, q.live);
   renderLint(lt.live ? lt.data : DEMO.lint);
   renderDensity(dn.live ? dn.data : DEMO.density);
 
@@ -578,33 +580,29 @@ async function boot(){
 
 el("refresh").addEventListener("click", boot);
 
-/* delegació de clics de la cua (un sol listener per a expand/validar/nota) */
+/* delegació de clics del backlog (expand / tancar / eliminar / nota) */
 el("queue").addEventListener("click", function(e){
-  if(e.target.classList.contains("qval")){
+  const row = e.target.closest(".qrow");
+  if(!row) return;
+  const title = row.dataset.title;
+  if(e.target.classList.contains("qclose")){
     e.stopPropagation();
-    validateItem(parseInt(e.target.dataset.n, 10));
-    return;
-  }
-  if(e.target.classList.contains("qsave")){
-    e.stopPropagation();
-    const n = parseInt(e.target.dataset.n, 10);
-    const ta = document.querySelector('.qnote-ta[data-n="'+n+'"]');
-    saveNote(n, ta ? ta.value : "");
-    return;
-  }
-  if(e.target.classList.contains("qclear")){
-    e.stopPropagation();
-    saveNote(parseInt(e.target.dataset.n, 10), "");
+    closeItem(title);
     return;
   }
   if(e.target.classList.contains("qdel")){
     e.stopPropagation();
-    dismissItem(parseInt(e.target.dataset.n, 10));
+    deleteItem(title);
     return;
   }
-  const head = e.target.closest(".qhead");
-  if(head){
-    head.closest(".qrow").classList.toggle("open");
+  if(e.target.classList.contains("qsave")){
+    e.stopPropagation();
+    const ta = row.querySelector('.qnote-ta');
+    annotateItem(title, ta ? ta.value : "");
+    return;
+  }
+  if(e.target.closest(".qhead")){
+    row.classList.toggle("open");
   }
 });
 
@@ -621,16 +619,16 @@ el("qaddSubmit").addEventListener("click", async function(){
   el("qaddTitle").style.borderColor = "";
   el("qaddSubmit").disabled = true; el("qaddSubmit").textContent = "Afegint…";
   try{
-    const r = await fetch("/api/queue/add", {method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({title:title, desc:el("qaddDesc").value, test:el("qaddTest").value})});
+    const r = await fetch("/api/backlog/add", {method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({title:title, body:el("qaddBody").value})});
     const d = await r.json();
     if(d.ok){
       el("qaddForm").hidden = true;
-      el("qaddTitle").value = ""; el("qaddDesc").value = ""; el("qaddTest").value = "";
+      el("qaddTitle").value = ""; el("qaddBody").value = "";
       boot();
     } else { alert("Error: " + d.msg); }
   } catch(e){ alert("No s'ha pogut connectar."); }
-  finally{ el("qaddSubmit").disabled = false; el("qaddSubmit").textContent = "Afegeix a CANVIS.md"; }
+  finally{ el("qaddSubmit").disabled = false; el("qaddSubmit").textContent = "Afegeix al backlog"; }
 });
 el("stopServer").addEventListener("click", async function(){
   if(!confirm("Atura el servidor local?\n\nTancares la connexió amb el dashboard.")) return;

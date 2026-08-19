@@ -256,147 +256,123 @@ def pd_state():
 
 
 # --------------------------------------------------------------------------
-# cua de validació (CANVIS.md)
+# backlog (BACKLOG.md)
 # --------------------------------------------------------------------------
 
-def parse_queue():
-    """Retorna la llista d'entrades 🧪 de CANVIS.md, ordenades per N."""
-    content = read("CANVIS.md")
+BACKLOG_FILE = "BACKLOG.md"
+
+
+def parse_backlog():
+    """Retorna la llista d'ítems oberts de BACKLOG.md (els [TANCAT] s'oculten)."""
+    content = read(BACKLOG_FILE)
     items = []
+    current_title = None
+    current_closed = False
+    current_lines = []
+
     for line in content.splitlines():
-        if not line.startswith("| "):
-            continue
-        parts = line.split("|")
-        if len(parts) < 8:
-            continue
-        try:
-            n = int(parts[1].strip())
-        except ValueError:
-            continue
-        estat = parts[6].strip()
-        if "\U0001f9ea" not in estat:   # 🧪
-            continue
-        note = ""
-        if "· nota:" in estat:     # · nota:
-            note = estat.split("· nota:", 1)[1].strip()
-        items.append({
-            "n": n,
-            "date": parts[2].strip(),
-            "title": parts[3].strip(),
-            "desc": parts[4].strip(),
-            "test": parts[5].strip(),
-            "note": note,
-        })
-    return sorted(items, key=lambda x: x["n"])
+        if line.startswith("## "):
+            if current_title is not None:
+                body = "\n".join(current_lines).strip()
+                if not current_closed:
+                    items.append({"title": current_title, "body": body})
+            title = line[3:].strip()
+            current_closed = title.startswith("[TANCAT]")
+            if current_closed:
+                title = title[len("[TANCAT]"):].strip()
+            current_title = title
+            current_lines = []
+        elif current_title is not None:
+            current_lines.append(line)
+
+    if current_title is not None:
+        body = "\n".join(current_lines).strip()
+        if not current_closed:
+            items.append({"title": current_title, "body": body})
+
+    return items
 
 
-def _edit_canvis_estat(n, new_estat):
-    """Substitueix el camp d'estat de la fila N a CANVIS.md."""
-    path = os.path.join(REPO, "CANVIS.md")
-    try:
-        with open(path, encoding="utf-8") as f:
-            content = f.read()
-    except Exception as e:
-        return False, str(e)
-    lines = content.splitlines(keepends=True)
+def _backlog_load():
+    path = os.path.join(REPO, BACKLOG_FILE)
+    with open(path, encoding="utf-8") as f:
+        return f.readlines(), path
+
+
+def _find_section(lines, title):
+    """(start, end) de la secció amb aquest títol, o ValueError."""
+    start = None
     for i, line in enumerate(lines):
-        if not line.startswith("| "):
-            continue
-        parts = line.split("|")
-        if len(parts) < 8:
-            continue
-        try:
-            ln = int(parts[1].strip())
-        except ValueError:
-            continue
-        if ln != n:
-            continue
-        if "\U0001f9ea" not in parts[6]:   # 🧪
-            return False, "L'entrada #%d no és 🧪" % n
-        parts[6] = " " + new_estat + " "
-        lines[i] = "|".join(parts)
-        break
-    else:
-        return False, "Entrada #%d no trobada" % n
+        t = line.rstrip("\n")
+        if t in ("## " + title, "## [TANCAT] " + title):
+            start = i
+            break
+    if start is None:
+        raise ValueError("Ítem no trobat: " + title)
+    end = len(lines)
+    for i in range(start + 1, len(lines)):
+        if lines[i].startswith("## "):
+            end = i
+            break
+    return start, end
+
+
+def _save(path, lines):
+    with open(path, "w", encoding="utf-8") as f:
+        f.writelines(lines)
+
+
+def backlog_close(title):
     try:
-        with open(path, "w", encoding="utf-8") as f:
-            f.write("".join(lines))
-        return True, "OK"
+        lines, path = _backlog_load()
+        start, _ = _find_section(lines, title)
+        if "[TANCAT]" in lines[start]:
+            return False, "Ja estava tancat"
+        lines[start] = "## [TANCAT] " + lines[start][3:]
+        _save(path, lines)
+        return True, "Tancat"
     except Exception as e:
         return False, str(e)
 
 
-def validate_item(n):
-    return _edit_canvis_estat(n, "✅ Validat (%s)" % date.today().isoformat())
-
-
-def annotate_item(n, note):
-    if note.strip():
-        return _edit_canvis_estat(n, "\U0001f9ea Per validar · nota: " + note.strip())
-    else:
-        return _edit_canvis_estat(n, "\U0001f9ea Per validar")
-
-
-def delete_item(n):
-    """Elimina la fila N de CANVIS.md (qualsevol estat)."""
-    path = os.path.join(REPO, "CANVIS.md")
+def backlog_delete(title):
     try:
+        lines, path = _backlog_load()
+        start, end = _find_section(lines, title)
+        del lines[start:end]
+        _save(path, lines)
+        return True, "Eliminat"
+    except Exception as e:
+        return False, str(e)
+
+
+def backlog_annotate(title, note):
+    try:
+        lines, path = _backlog_load()
+        start, end = _find_section(lines, title)
+        note_line = "> Nota (%s): %s\n" % (date.today().isoformat(), note.strip())
+        insert = end
+        while insert > start + 1 and lines[insert - 1].strip() == "":
+            insert -= 1
+        lines.insert(insert, note_line)
+        _save(path, lines)
+        return True, "Nota afegida"
+    except Exception as e:
+        return False, str(e)
+
+
+def backlog_add(title, body):
+    try:
+        path = os.path.join(REPO, BACKLOG_FILE)
         with open(path, encoding="utf-8") as f:
             content = f.read()
-    except Exception as e:
-        return False, str(e)
-    lines = content.splitlines(keepends=True)
-    new_lines = []
-    found = False
-    for line in lines:
-        if line.startswith("| "):
-            parts = line.split("|")
-            try:
-                if int(parts[1].strip()) == n:
-                    found = True
-                    continue
-            except (ValueError, IndexError):
-                pass
-        new_lines.append(line)
-    if not found:
-        return False, "Entrada #%d no trobada" % n
-    try:
-        with open(path, "w", encoding="utf-8") as f:
-            f.write("".join(new_lines))
-        return True, "Eliminada"
-    except Exception as e:
-        return False, str(e)
-
-
-def add_item(title, desc, test):
-    """Afegeix una nova fila 🧪 al final de la taula de CANVIS.md."""
-    path = os.path.join(REPO, "CANVIS.md")
-    try:
-        with open(path, encoding="utf-8") as f:
-            content = f.read()
-    except Exception as e:
-        return False, str(e)
-    max_n = 0
-    for line in content.splitlines():
-        if not line.startswith("| "):
-            continue
-        parts = line.split("|")
-        try:
-            max_n = max(max_n, int(parts[1].strip()))
-        except (ValueError, IndexError):
-            continue
-    new_n = max_n + 1
-    row = "| %d | %s | %s | %s | %s | \U0001f9ea Per validar |\n" % (
-        new_n, date.today().isoformat(),
-        title.replace("|", "\\|"),
-        (desc or "").replace("|", "\\|"),
-        (test or "").replace("|", "\\|"),
-    )
-    content = content.rstrip("\n") + "\n" + row
-    try:
+        section = "\n## " + title.strip() + "\n"
+        if body and body.strip():
+            section += body.strip() + "\n"
+        content = content.rstrip("\n") + "\n" + section
         with open(path, "w", encoding="utf-8") as f:
             f.write(content)
-        return True, str(new_n)
+        return True, "Afegit"
     except Exception as e:
         return False, str(e)
 
@@ -440,30 +416,40 @@ class Handler(BaseHTTPRequestHandler):
             threading.Timer(0.3, self.server.shutdown).start()
             return
 
-        m = re.match(r"/api/validate/(\d+)$", path)
-        if m:
-            ok, msg = validate_item(int(m.group(1)))
-            self._json(200 if ok else 404, {"ok": ok, "msg": msg})
-            return
-
-        m = re.match(r"/api/annotate/(\d+)$", path)
-        if m:
-            ok, msg = annotate_item(int(m.group(1)), data.get("note", ""))
-            self._json(200 if ok else 404, {"ok": ok, "msg": msg})
-            return
-
-        m = re.match(r"/api/dismiss/(\d+)$", path)
-        if m:
-            ok, msg = delete_item(int(m.group(1)))
-            self._json(200 if ok else 404, {"ok": ok, "msg": msg})
-            return
-
-        if path == "/api/queue/add":
+        if path == "/api/backlog/close":
             title = data.get("title", "").strip()
             if not title:
                 self._json(400, {"ok": False, "msg": "Títol obligatori"})
                 return
-            ok, msg = add_item(title, data.get("desc", ""), data.get("test", ""))
+            ok, msg = backlog_close(title)
+            self._json(200 if ok else 404, {"ok": ok, "msg": msg})
+            return
+
+        if path == "/api/backlog/delete":
+            title = data.get("title", "").strip()
+            if not title:
+                self._json(400, {"ok": False, "msg": "Títol obligatori"})
+                return
+            ok, msg = backlog_delete(title)
+            self._json(200 if ok else 404, {"ok": ok, "msg": msg})
+            return
+
+        if path == "/api/backlog/annotate":
+            title = data.get("title", "").strip()
+            note = data.get("note", "").strip()
+            if not title or not note:
+                self._json(400, {"ok": False, "msg": "Títol i nota obligatoris"})
+                return
+            ok, msg = backlog_annotate(title, note)
+            self._json(200 if ok else 404, {"ok": ok, "msg": msg})
+            return
+
+        if path == "/api/backlog/add":
+            title = data.get("title", "").strip()
+            if not title:
+                self._json(400, {"ok": False, "msg": "Títol obligatori"})
+                return
+            ok, msg = backlog_add(title, data.get("body", ""))
             self._json(200 if ok else 500, {"ok": ok, "msg": msg})
             return
 
@@ -496,9 +482,9 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(500, {"error": str(e)})
             return
 
-        if path == "/api/queue":
+        if path == "/api/backlog":
             try:
-                self._json(200, parse_queue())
+                self._json(200, parse_backlog())
             except Exception as e:
                 self._json(500, {"error": str(e)})
             return
