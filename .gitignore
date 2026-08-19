@@ -15,3 +15,7 @@ preview*.png
 *.tmp
 t_*.html
 build/
+
+# Cache de Python (_tools)
+__pycache__/
+*.pyc

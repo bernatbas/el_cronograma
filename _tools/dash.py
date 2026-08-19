@@ -1,0 +1,331 @@
+#!/usr/bin/env python3
+"""
+HB · Control — servidor local del dashboard.
+
+    python3 _tools/dash.py        ->  http://127.0.0.1:7777
+
+Nomes escolta a 127.0.0.1: no es accessible des de fora d'aquesta maquina.
+No fa servir cap token: el `gh` ja esta autenticat al sistema.
+
+FASE 1 — nomes lectura. L'unic endpoint implementat es /api/status; la resta
+retornen 501 i el frontend cau a dades d'exemple tot sol.
+"""
+
+import json
+import os
+import re
+import subprocess
+import sys
+from datetime import date, datetime, timezone
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.dirname(HERE)
+PORT = 7777
+HOST = "127.0.0.1"
+
+# Endpoints previstos pero encara no implementats. El frontend els demana,
+# rep 501 i ensenya la seccio en mode demo amb el badge de pendent.
+NOT_YET = ("/api/queue", "/api/pinned", "/api/lint", "/api/density")
+
+
+# --------------------------------------------------------------------------
+# utilitats
+# --------------------------------------------------------------------------
+
+def run(args, cwd=REPO, timeout=15):
+    """Executa un proces sense shell. Retorna (ok, stdout). Mai llenca."""
+    try:
+        p = subprocess.run(
+            args, cwd=cwd, timeout=timeout,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        out = p.stdout.decode("utf-8", "replace").strip()
+        return (p.returncode == 0, out)
+    except Exception:
+        return (False, "")
+
+
+def read(path):
+    """Llegeix un fitxer del repo en text. Cadena buida si no hi es."""
+    try:
+        with open(os.path.join(REPO, path), "rb") as f:
+            return f.read().decode("utf-8", "replace")
+    except Exception:
+        return ""
+
+
+def ago(iso_ts):
+    """'2026-08-19T11:20:49Z' -> 'fa 2 h'. Cadena buida si no es parseja."""
+    if not iso_ts:
+        return ""
+    try:
+        ts = datetime.strptime(iso_ts.replace("Z", "+0000"), "%Y-%m-%dT%H:%M:%S%z")
+    except Exception:
+        return ""
+    secs = (datetime.now(timezone.utc) - ts).total_seconds()
+    if secs < 90:
+        return "ara mateix"
+    mins = secs / 60
+    if mins < 60:
+        return "fa %d min" % int(mins)
+    hours = mins / 60
+    if hours < 24:
+        return "fa %d h" % int(hours)
+    days = int(hours / 24)
+    return "fa %d dia" % days if days == 1 else "fa %d dies" % days
+
+
+# --------------------------------------------------------------------------
+# git
+# --------------------------------------------------------------------------
+
+def git_state():
+    ok, branch = run(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+    branch = branch if ok else "?"
+
+    ok, porcelain = run(["git", "status", "--porcelain"])
+    dirty = len([l for l in porcelain.splitlines() if l.strip()]) if ok else 0
+
+    # --left-right compta darrere...davant respecte del remot
+    ahead = behind = 0
+    ok, counts = run(["git", "rev-list", "--left-right", "--count",
+                      "origin/%s...HEAD" % branch])
+    if ok and counts:
+        parts = counts.split()
+        if len(parts) == 2:
+            behind, ahead = int(parts[0]), int(parts[1])
+
+    return {"branch": branch, "dirty": dirty, "ahead": ahead, "behind": behind}
+
+
+# --------------------------------------------------------------------------
+# CI (gh)
+# --------------------------------------------------------------------------
+
+def ci_state():
+    blank = {"conclusion": "unknown", "name": "CI", "when": "", "url": ""}
+    ok, out = run([
+        "gh", "run", "list", "--workflow", "CI", "--limit", "1",
+        "--json", "conclusion,status,displayTitle,createdAt,url",
+    ], timeout=25)
+    if not ok or not out:
+        return blank
+    try:
+        runs = json.loads(out)
+    except Exception:
+        return blank
+    if not runs:
+        return blank
+    r = runs[0]
+    # Un run en curs no te conclusion: ho marquem com a "in_progress"
+    concl = r.get("conclusion") or ("in_progress" if r.get("status") != "completed" else "unknown")
+    return {
+        "conclusion": concl,
+        "name": (r.get("displayTitle") or "CI")[:48],
+        "when": ago(r.get("createdAt", "")),
+        "url": r.get("url", ""),
+    }
+
+
+# --------------------------------------------------------------------------
+# comptadors de la base de dades (dins index.html)
+# --------------------------------------------------------------------------
+
+def count_objects(src, i):
+    """
+    Compta els objectes de primer nivell d'un array, comencant a `i` (just
+    despres del [ que l'obre). Retorna (compte, index_del_claudator_de_tancar).
+
+    Camina els caracters portant la compta de profunditat i saltant-se el que
+    hi ha dins de strings, perque una descripcio amb un [ o un { no desquadri
+    el recompte. Les strings de DATA son sempre de cometa simple.
+
+    ⚠️ Els comentaris s'han de saltar ABANS de mirar les cometes: dins de DATA
+    n'hi ha molts i porten apostrofs catalans («// Tomas d'Aquino»), que si no
+    es tracten obren una string fantasma i desquadren tot el recompte.
+    """
+    depth = 0            # profunditat DINS de l'array
+    count = 0
+    in_str = False
+    quote = ""
+    n = len(src)
+    while i < n:
+        ch = src[i]
+        if in_str:
+            if ch == "\\":
+                i += 2
+                continue
+            if ch == quote:
+                in_str = False
+            i += 1
+            continue
+        # comentaris primer que res (veure l'avis del docstring)
+        if ch == "/" and i + 1 < n:
+            nxt = src[i + 1]
+            if nxt == "/":
+                j = src.find("\n", i)
+                i = n if j == -1 else j + 1
+                continue
+            if nxt == "*":
+                j = src.find("*/", i + 2)
+                i = n if j == -1 else j + 2
+                continue
+        if ch in ("'", '"', "`"):
+            in_str = True
+            quote = ch
+            i += 1
+            continue
+        if ch in ("{", "["):
+            if depth == 0 and ch == "{":
+                count += 1
+            depth += 1
+        elif ch in ("}", "]"):
+            if depth == 0 and ch == "]":
+                return (count, i)        # tanca l'array: fi
+            depth -= 1
+        i += 1
+    return (count, n)
+
+
+def count_entries(src, name):
+    """Objectes de primer nivell de `const NAME=[ ... ]`."""
+    m = re.search(r"const\s+" + name + r"\s*=\s*\[", src)
+    if not m:
+        return 0
+    return count_objects(src, m.end())[0]
+
+
+def count_marc_blocks(src):
+    """
+    Blocs de periode de dins de MARCS. Es el numero que importa de veritat:
+    els marcs nomes son dos contenidors (Occident, Espanya), pero els blocs
+    son contingut escrit a ma i son els que diuen com de plena esta la BD.
+    """
+    m = re.search(r"const\s+MARCS\s*=\s*\[", src)
+    if not m:
+        return 0
+    _, end = count_objects(src, m.end())
+    total = 0
+    for bm in re.finditer(r"blocks\s*:\s*\[", src[m.end():end]):
+        total += count_objects(src, m.end() + bm.end())[0]
+    return total
+
+
+def db_state():
+    src = read("index.html")
+    return {
+        "people": count_entries(src, "PEOPLE"),
+        "events": count_entries(src, "EVENTS"),
+        "marcs": count_entries(src, "MARCS"),
+        "blocks": count_marc_blocks(src),
+        "collections": count_entries(src, "COLLECTIONS"),
+        "eras": count_entries(src, "ERAS"),
+    }
+
+
+# --------------------------------------------------------------------------
+# Personatge del dia (PD_PINNED, dins joc.html)
+# --------------------------------------------------------------------------
+
+def parse_pinned():
+    """[{date, qid}] ordenat per data. Nomes llegeix; no escriu res."""
+    src = read("joc.html")
+    m = re.search(r"const\s+PD_PINNED\s*=\s*\{(.*?)\}", src, re.DOTALL)
+    if not m:
+        return []
+    body = m.group(1)
+    found = re.findall(r"['\"](\d{4}-\d{2}-\d{2})['\"]\s*:\s*['\"](Q\d+)['\"]", body)
+    return [{"date": d, "qid": q} for d, q in sorted(found)]
+
+
+def pd_state():
+    pins = parse_pinned()
+    today = date.today().isoformat()
+    upcoming = [p for p in pins if p["date"] >= today]
+    cushion = None
+    if upcoming:
+        nxt = datetime.strptime(upcoming[0]["date"], "%Y-%m-%d").date()
+        cushion = (nxt - date.today()).days
+    return {
+        "pinned": len(pins),
+        "future": len(upcoming),
+        "next": upcoming[0]["date"] if upcoming else None,
+        "cushion": cushion,
+    }
+
+
+# --------------------------------------------------------------------------
+# servidor
+# --------------------------------------------------------------------------
+
+class Handler(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+
+    def log_message(self, fmt, *args):
+        # Silenci: nomes ens interessen els errors, no cada GET.
+        pass
+
+    def _send(self, code, body, ctype):
+        if isinstance(body, str):
+            body = body.encode("utf-8")
+        self.send_response(code)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _json(self, code, payload):
+        self._send(code, json.dumps(payload, ensure_ascii=False), "application/json; charset=utf-8")
+
+    def do_GET(self):
+        path = self.path.split("?", 1)[0]
+
+        if path in ("/", "/index.html", "/dashboard.html"):
+            html = ""
+            try:
+                with open(os.path.join(HERE, "dashboard.html"), "rb") as f:
+                    html = f.read()
+            except Exception:
+                self._send(500, "dashboard.html no trobat", "text/plain; charset=utf-8")
+                return
+            self._send(200, html, "text/html; charset=utf-8")
+            return
+
+        if path == "/api/status":
+            try:
+                payload = {
+                    "ci": ci_state(),
+                    "db": db_state(),
+                    "pd": pd_state(),
+                }
+                payload.update(git_state())
+                self._json(200, payload)
+            except Exception as e:
+                self._json(500, {"error": str(e)})
+            return
+
+        if path in NOT_YET:
+            self._json(501, {"implemented": False, "endpoint": path})
+            return
+
+        self._send(404, "no", "text/plain; charset=utf-8")
+
+
+def main():
+    if not os.path.isdir(os.path.join(REPO, ".git")):
+        sys.exit("ERROR: %s no sembla un repo git." % REPO)
+    srv = ThreadingHTTPServer((HOST, PORT), Handler)
+    print("HB · Control  ->  http://%s:%d" % (HOST, PORT))
+    print("repo: %s" % REPO)
+    print("Ctrl+C per aturar.")
+    try:
+        srv.serve_forever()
+    except KeyboardInterrupt:
+        print("\nAturat.")
+        srv.server_close()
+
+
+if __name__ == "__main__":
+    main()

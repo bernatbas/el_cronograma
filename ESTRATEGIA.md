@@ -218,20 +218,6 @@ d'importància.
 - Estendre importància als **blocs** (`MARCS`).
 - Terra mínim de zoom perquè a la vista global del tot els solitaris no facin soroll.
 
-### 8.1 Càrrega de col·leccions en 2 fases (pendent d'implementar)
-
-**Problema:** en activar una col·lecció, els membres que ja són a la db local apareixen a l'instant i la resta (Wikidata) triga 1–2 s → «pop-in» en dues fases que queda estrany.
-
-**Direcció acordada:** no mostrar res fins tenir-ho tot + indicador de càrrega (spinner) al canvas/centre mentre carrega, i revelar-ho tot de cop (un sol render).
-
-**Corner cases a resoldre abans/durant:**
-1. **Error/timeout (lligat a #10):** amb el timeout de 9 s, «no mostrar res fins tenir-ho tot» pot deixar l'usuari 9 s mirant un spinner i, si falla, sense res. En error s'ha de revelar igualment el que tenim en local + toast (fallback graceful, no pantalla buida).
-2. **Flash en càrregues ràpides / cau (futur #12):** si carrega en <200 ms el spinner parpelleja. Mostrar el spinner només després d'un llindar (~200–300 ms).
-3. **Race en toggle:** si l'usuari desactiva la col·lecció o en canvia una altra mentre carrega, la promesa `byIds` pot resoldre tard i re-afegir gent (bug latent ja avui). Cal un token de seqüència / re-check d'estat després de l'`await`.
-4. **Càrregues simultànies:** dues col·leccions alhora → un sol overlay compartit amb comptador, que només desaparegui quan totes acaben.
-5. **Spinner no atrapador:** garantir que sempre es neteja (`finally`) i que no bloqueja l'usuari indefinidament.
-
-**Alternativa considerada:** mantenir els locals visibles i fer que els nouvinguts de Wikidata entrin amb un *fade-in* suau (sense amagar res, sense regressió de resiliència). Menys «buit» però potser encara es percep com 2 fases.
 
 ## 9. Mòbil / tàctil — implementat
 
@@ -251,9 +237,6 @@ s'ha fet**. (Abans vivia en un quart document, `CONTEXT.md`, que es va fusionar 
 ### Bugs
 
 - **El globus dels blocs no surt quan el text queda tallat** ✅ Resolt al canvi #68. Es mesuren els spans interiors (`.segname`, `.segyears`) en lloc del bloc pare, i s'elimina la tolerància `+1` que amagava retallades d'1px.
-- **L'error vermell de Wikidata és massa sensible?** (Bernat, 2026-08-06). Sospita que a vegades
-  surt la fila «No s'ha pogut connectar» quan no caldria, però sense context clar de quan passa.
-  **Cal definir el cas de reproducció abans de tocar res.**
 
 ### UX
 
@@ -311,6 +294,60 @@ s'ha fet**. (Abans vivia en un quart document, `CONTEXT.md`, que es va fusionar 
 
 - Encastar Oswald en base64 (.woff2) per eliminar el FOUT del títol a la primera visita.
 - Hint d'onboarding.
+
+---
+
+## 12. Dashboard de control (`_tools/`)
+
+Eina de desenvolupament per centralitzar el que ara està escampat entre `git`, `gh`, els tres
+documents i l'editor. **Substitueix el punt «Script d'ingesta a la BD»** del backlog, que era la
+versió petita d'això mateix.
+
+### Decisions d'arquitectura
+
+- **Dos fitxers**: `_tools/dashboard.html` (frontend sencer) i `_tools/dash.py` (servidor local,
+  stdlib de Python, sense dependències).
+- **La carpeta comença amb `_` a propòsit**: el repo no té `.nojekyll`, així que Pages passa per
+  Jekyll, i Jekyll **no publica** els directoris que comencen amb underscore. El dashboard queda
+  fora del web sense haver de gitignorar-lo (i així es versiona com la resta).
+- **La regla «sense build ni servidor» no aplica aquí.** És per a `index.html`, que és el producte.
+  El dashboard és eina interna i pot demanar un `python3 _tools/dash.py`.
+- **Zero tokens.** El backend crida el `gh` ja autenticat del sistema en lloc de guardar un PAT.
+  Es va descartar la via «HTML estàtic + GitHub API amb token» per dues raons: hi hauria un secret
+  viu al `localStorage`, i sobretot **un fitxer estàtic no pot llegir `.git/`**, per tant no pot
+  detectar desincronització — que és precisament una de les coses que es volien.
+- **Només escolta a `127.0.0.1`**, mai a `0.0.0.0`. Els subprocessos es criden en forma de llista,
+  mai amb `shell=True`.
+- **Contracte frontend↔backend tolerant**: un endpoint encara no implementat retorna **501** i el
+  frontend cau a dades d'exemple amb la mateixa forma, ensenyant un badge de «pendent». Així es pot
+  jutjar tota la UI des del primer dia i el backend pot créixer per trossos sense deixar la pàgina
+  a mitges.
+
+### Paranys ja trobats
+
+- **Comptar entrades de `DATA` demana saltar-se els comentaris abans de les cometes.** Els
+  comentaris de `[1] DATA` porten apòstrofs catalans (`// Tomàs d'Aquino`); si es tracten com a
+  text normal, obren una string fantasma i el recompte se'n va (donava 12 col·leccions en lloc
+  de 2).
+- **`MARCS` té dos nivells.** Hi ha 2 marcs (Occident, Espanya) i 23 blocs de període dins seu. El
+  número que interessa per saber com de plena està la BD és el de **blocs**, que és el contingut
+  escrit a mà.
+- **`[hidden]` no guanya a `display:flex`.** Un bàner amb `.banner{display:flex}` es veu igualment
+  amb l'atribut `hidden` posat; cal una regla `.banner[hidden]{display:none}` explícita.
+
+### Fases
+
+1. **Estat** (fet): git (branca, modificats, ahead/behind), CI via `gh`, comptadors de la BD,
+   proper homenatge de `PD_PINNED`. Tot **només lectura**.
+2. Cua de validació: passar entrades de `CANVIS.md` de 🧪 a ✅. Primera escriptura, i és la més
+   segura — markdown, no JS.
+3. Calendari de `PD_PINNED`: clavar i treure homenatges, amb cercador d'aniversaris rodons.
+4. Linter de dades: `birth` nul, QIDs duplicats, events sense `sitelinks`, escàner de `U+FFFD` i
+   de delimitadors corromputs.
+5. **Editor de la BD** (l'últim a propòsit): és l'única peça que escriu literals JS dins el fitxer
+   que ja s'ha trencat dues vegades. Requisit no negociable: **test de parseig abans de
+   committejar** — carregar `index.html` en un iframe i comprovar que `window.PEOPLE` existeix. Si
+   no hi és, no es puja. El camp de nom ja converteix `'` a `’` en escriure i ho diu.
 
 ---
 

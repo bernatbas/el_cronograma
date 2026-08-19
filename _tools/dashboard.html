@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HB · Control</title>
+<style>
+:root{
+  --text:#2C2C2B; --text2:#7D7A75; --text3:#A6A29B;
+  --canvas:#FFFFFF; --soft:#F9F8F7; --surface:#F0EFED;
+  --border:#E6E5E3; --border-strong:#CBC9C4;
+  --terracota:#B8503C; --terracota-dark:#612E25;
+  --ok:#2F7D5B; --ok-bg:#E8F3ED;
+  --warn:#9A6A18; --warn-bg:#FBF1DF;
+  --bad:#B23A2E; --bad-bg:#F9EAE7;
+  --blue:#2783DE; --blueSoft:#E5F2FC;
+  --r:8px; --r-pill:999px;
+  --brand:'Oswald','Roboto Condensed','Arial Narrow',system-ui,sans-serif;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--soft);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5}
+a{color:var(--terracota)}
+
+/* ===== topbar ===== */
+.topbar{position:sticky;top:0;z-index:20;background:var(--terracota);display:flex;align-items:center;gap:14px;padding:0 16px;height:52px;box-shadow:0 1px 0 rgba(0,0,0,.08)}
+.brand{font-family:var(--brand);font-size:19px;font-weight:600;letter-spacing:.06em;color:#fff;white-space:nowrap}
+.brand b{font-weight:400;opacity:.72}
+.nav{display:flex;gap:2px;margin-left:8px}
+.nav a{color:#fff;text-decoration:none;font-size:13px;padding:6px 11px;border-radius:var(--r);opacity:.78}
+.nav a:hover{background:rgba(255,255,255,.14);opacity:1}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.tb-right .clock{font-size:12px;color:rgba(255,255,255,.72);font-variant-numeric:tabular-nums}
+.btn-ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;font:inherit;font-size:13px;padding:5px 12px;border-radius:var(--r);cursor:pointer}
+.btn-ghost:hover{background:rgba(255,255,255,.24)}
+.btn-ghost:active{transform:scale(.98)}
+
+/* ===== layout ===== */
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 64px}
+section{margin-bottom:26px;scroll-margin-top:66px}
+.shead{display:flex;align-items:center;gap:9px;margin:0 0 11px}
+.shead h2{margin:0;font-size:14px;font-weight:600;letter-spacing:.01em}
+.shead .hint{font-size:12px;color:var(--text3);margin-left:auto}
+.pend{font-size:11px;color:var(--warn);background:var(--warn-bg);border:1px solid #EFD9AE;padding:2px 8px;border-radius:var(--r-pill);letter-spacing:.02em}
+.card{background:var(--canvas);border:1px solid var(--border);border-radius:12px}
+.pad{padding:14px 16px}
+
+/* ===== estat ===== */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.stat{border-radius:12px;padding:13px 15px;border:1px solid transparent;background:var(--surface)}
+.stat .lbl{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.stat .val{font-size:21px;font-weight:600;letter-spacing:-.01em;line-height:1.2}
+.stat .sub{font-size:11.5px;color:var(--text3);margin-top:3px;font-variant-numeric:tabular-nums}
+.stat.ok{background:var(--ok-bg);border-color:#CDE4D8} .stat.ok .val,.stat.ok .lbl{color:var(--ok)}
+.stat.warn{background:var(--warn-bg);border-color:#EFD9AE} .stat.warn .val,.stat.warn .lbl{color:var(--warn)}
+.stat.bad{background:var(--bad-bg);border-color:#EFCFC8} .stat.bad .val,.stat.bad .lbl{color:var(--bad)}
+.stat a{color:inherit}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:0 0 auto}
+
+/* ===== taules / files ===== */
+.rows{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--canvas)}
+.row{display:flex;align-items:center;gap:11px;padding:9px 13px;border-bottom:1px solid var(--border)}
+.row:last-child{border-bottom:none}
+.row:hover{background:var(--soft)}
+.row .num{font-family:var(--mono);font-size:11.5px;color:var(--text3);width:36px;flex:0 0 auto}
+.row .txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .when{font-size:11.5px;color:var(--text3);font-variant-numeric:tabular-nums;flex:0 0 auto}
+.btn{background:var(--canvas);border:1px solid var(--border-strong);color:var(--text);font:inherit;font-size:12px;padding:4px 11px;border-radius:var(--r);cursor:pointer;flex:0 0 auto}
+.btn:hover:not(:disabled){background:var(--surface)}
+.btn:active:not(:disabled){transform:scale(.98)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--terracota);border-color:var(--terracota);color:#fff}
+.btn.primary:hover:not(:disabled){background:#A6472F}
+.empty{padding:22px 14px;text-align:center;color:var(--text3);font-size:13px;font-style:italic}
+
+/* ===== calendari ===== */
+.cal2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media(max-width:760px){.cal2{grid-template-columns:1fr}}
+.calhead{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.calhead .m{font-size:13px;font-weight:600}
+.calhead .m::first-letter{text-transform:uppercase}
+.calhead .nav2{margin-left:auto;display:flex;gap:4px}
+.calhead .nav2 button{width:26px;height:26px;padding:0;line-height:1}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.dow span{font-size:10.5px;color:var(--text3);text-align:center;text-transform:uppercase;letter-spacing:.04em}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.day{aspect-ratio:1;border-radius:6px;background:var(--surface);border:1px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11.5px;color:var(--text2);cursor:pointer;position:relative;font-variant-numeric:tabular-nums}
+.day:hover{border-color:var(--border-strong)}
+.day.out{background:transparent;color:var(--text3);opacity:.4;cursor:default}
+.day.past{opacity:.5}
+.day.pin{background:var(--terracota);color:#fff;font-weight:600}
+.day.today{border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue)}
+.day .pd{position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:#fff;opacity:.9}
+.legend{display:flex;gap:14px;margin-top:10px;font-size:11.5px;color:var(--text2);flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* ===== linter ===== */
+.finding{display:flex;align-items:flex-start;gap:9px;padding:8px 11px;border-radius:var(--r);font-size:13px;margin-bottom:6px;line-height:1.45}
+.finding:last-child{margin-bottom:0}
+.finding.ok{background:var(--ok-bg);color:var(--ok)}
+.finding.warn{background:var(--warn-bg);color:var(--warn)}
+.finding.bad{background:var(--bad-bg);color:var(--bad)}
+.finding .ic{font-weight:700;flex:0 0 auto;width:14px;text-align:center;font-family:var(--mono)}
+.finding .det{flex:1;min-width:0}
+.finding .who{display:block;font-size:11.5px;opacity:.78;margin-top:2px;font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ===== densitat ===== */
+.bars{display:flex;align-items:flex-end;gap:3px;height:78px;margin-bottom:6px}
+.bars .b{flex:1;background:var(--border-strong);border-radius:3px 3px 0 0;min-height:2px;position:relative}
+.bars .b.hot{background:var(--terracota)}
+.bars .b.cold{background:var(--border)}
+.bars .b:hover::after{content:attr(data-t);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:11px;padding:3px 7px;border-radius:4px;white-space:nowrap;margin-bottom:4px;z-index:5}
+.blabels{display:flex;gap:3px;font-size:10px;color:var(--text3)}
+.blabels span{flex:1;text-align:center;overflow:hidden}
+
+/* ===== editor ===== */
+.fields{display:grid;grid-template-columns:2fr 1fr;gap:9px;margin-bottom:11px}
+@media(max-width:640px){.fields{grid-template-columns:1fr}}
+input[type=text],select,textarea{font:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--border-strong);border-radius:var(--r);background:var(--canvas);color:var(--text);width:100%}
+input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blueSoft)}
+.preview{background:var(--surface);border-radius:var(--r);padding:10px 12px;font-family:var(--mono);font-size:11.5px;color:var(--text2);overflow-x:auto;white-space:pre;line-height:1.6}
+.gate{display:flex;align-items:center;gap:10px;margin-top:11px;flex-wrap:wrap}
+.gate .seal{font-size:12px;display:flex;align-items:center;gap:6px;color:var(--text3)}
+.gate .seal.pass{color:var(--ok)} .gate .seal.fail{color:var(--bad)}
+.gate .spacer{flex:1}
+
+/* ===== avisos ===== */
+.banner{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r);font-size:13px;margin-bottom:18px}
+.banner[hidden]{display:none}   /* el display:flex guanyaria a [hidden] del navegador */
+.banner.off{background:var(--bad-bg);color:var(--bad);border:1px solid #EFCFC8}
+.banner code{font-family:var(--mono);font-size:12px;background:rgba(0,0,0,.06);padding:2px 6px;border-radius:4px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="brand">HB <b>· CONTROL</b></span>
+  <nav class="nav">
+    <a href="#estat">Estat</a>
+    <a href="#validacio">Validació</a>
+    <a href="#calendari">Calendari</a>
+    <a href="#linter">Linter</a>
+    <a href="#dades">Dades</a>
+  </nav>
+  <div class="tb-right">
+    <span class="clock" id="stamp">—</span>
+    <button class="btn-ghost" id="refresh">Refresca</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="banner off" id="offline" hidden>
+    <span>Backend aturat. Arrenca'l amb <code>python3 _tools/dash.py</code> — mentrestant es mostren dades d'exemple.</span>
+  </div>
+
+  <section id="estat">
+    <div class="shead"><h2>Estat</h2><span class="hint" id="branch">—</span></div>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <section id="validacio">
+    <div class="shead"><h2>Cua de validació</h2><span class="pend">escriptura pendent</span><span class="hint" id="vcount">—</span></div>
+    <div class="rows" id="queue"><div class="empty">Carregant…</div></div>
+  </section>
+
+  <section id="calendari">
+    <div class="shead"><h2>Personatge del dia</h2><span class="pend">escriptura pendent</span><span class="hint" id="pdhint">—</span></div>
+    <div class="card pad">
+      <div class="cal2">
+        <div>
+          <div class="calhead">
+            <span class="m" id="calm">—</span>
+            <span class="nav2">
+              <button class="btn" id="prevm" aria-label="Mes anterior">‹</button>
+              <button class="btn" id="nextm" aria-label="Mes següent">›</button>
+            </span>
+          </div>
+          <div class="dow"><span>dl</span><span>dt</span><span>dc</span><span>dj</span><span>dv</span><span>ds</span><span>dg</span></div>
+          <div class="grid" id="cal"></div>
+          <div class="legend">
+            <span><i style="background:var(--terracota)"></i>Clavat</span>
+            <span><i style="background:var(--surface)"></i>Aleatori</span>
+            <span><i style="background:transparent;box-shadow:inset 0 0 0 1.5px var(--blue)"></i>Avui</span>
+          </div>
+        </div>
+        <div>
+          <div class="calhead"><span class="m">Homenatges clavats</span></div>
+          <div class="rows" id="pins"><div class="empty">Carregant…</div></div>
+          <div style="margin-top:12px">
+            <div class="calhead"><span class="m">Aniversaris rodons</span></div>
+            <div class="rows" id="anniv"><div class="empty">Cercador de Wikidata pendent</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="linter">
+    <div class="shead"><h2>Linter de dades</h2><span class="hint" id="lcount">—</span></div>
+    <div class="card pad" id="lint"><div class="empty">Carregant…</div></div>
+  </section>
+
+  <section id="densitat">
+    <div class="shead"><h2>Densitat de contingut</h2><span class="hint">events per tram · on falta contingut</span></div>
+    <div class="card pad">
+      <div class="bars" id="bars"></div>
+      <div class="blabels" id="blabels"></div>
+    </div>
+  </section>
+
+  <section id="dades">
+    <div class="shead"><h2>Editor de la base de dades</h2><span class="pend">escriptura pendent</span></div>
+    <div class="card pad">
+      <div class="fields">
+        <input type="text" id="dnom" placeholder="Nom del personatge">
+        <input type="text" id="dqid" placeholder="Q733621" style="font-family:var(--mono)">
+      </div>
+      <div class="fields" style="grid-template-columns:1fr 1fr 2fr">
+        <input type="text" id="dbirth" placeholder="Naixement">
+        <input type="text" id="ddeath" placeholder="Mort (buit = viu)">
+        <select id="dcat">
+          <option value="">Sense categoria</option>
+          <option>Filosofia</option><option>Música</option><option>Literatura</option>
+          <option>Ciència</option><option>Política</option><option>Pintura</option>
+          <option>Religió</option><option>Esport</option>
+        </select>
+      </div>
+      <div class="preview" id="dprev">Omple els camps per veure el literal que s'escriurà.</div>
+      <div class="gate">
+        <span class="seal" id="dseal">Test de parseig no executat</span>
+        <span class="spacer"></span>
+        <button class="btn" id="dcheck" disabled>Verifica Q-id</button>
+        <button class="btn primary" id="dcommit" disabled>Commit i push</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+"use strict";
+const API = "/api";
+let OFFLINE = false;
+
+/* ---------- helpers ---------- */
+function el(id){ return document.getElementById(id); }
+function esc(s){ const d=document.createElement("div"); d.textContent=(s==null?"":String(s)); return d.innerHTML; }
+function pad2(n){ return (n<10?"0":"")+n; }
+function iso(d){ return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
+
+// Cada secció demana el seu endpoint. 501 = backend encara no fet -> mode demo,
+// amb el mateix contracte de dades, per poder jutjar la UI sencera des del dia u.
+async function api(path){
+  try{
+    const r = await fetch(API+path, {cache:"no-store"});
+    if(r.status === 501) return {live:false, data:null};
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    OFFLINE = false;
+    return {live:true, data: await r.json()};
+  }catch(e){
+    OFFLINE = true;
+    return {live:false, data:null};
+  }
+}
+
+/* ---------- dades d'exemple (mateixa forma que l'API) ---------- */
+const DEMO = {
+  status:{
+    branch:"main", dirty:2, ahead:2, behind:0,
+    ci:{conclusion:"success", name:"CI", when:"fa 2 h", url:"#"},
+    db:{people:36, events:15, marcs:2, blocks:23, collections:2, eras:5},
+    pd:{pinned:1, future:1, next:"2026-08-19", cushion:0}
+  },
+  queue:[
+    {n:104, txt:"Etiquetes de personatge progressives per zoom", when:"avui"},
+    {n:103, txt:"Memory: missatge de resultat ajustat per dificultat", when:"avui"},
+    {n:102, txt:"Personatge del dia: calendari d'homenatges", when:"avui"},
+    {n:101, txt:"Fix CI: la ✕ de la personbar no treia el ?person=", when:"ahir"},
+    {n:4,   txt:"Enllaços i dades d'importància de Wikipedia", when:"16 dies"}
+  ],
+  pins:[ {date:"2026-08-19", qid:"Q733621", name:"Juan Tamariz"} ],
+  lint:[
+    {sev:"bad",  txt:"2 persones sense any de naixement", who:"wd_Q11637 · wd_Q42198"},
+    {sev:"warn", txt:"4 events sense sitelinks ni imp", who:"invisibles per al motor de zoom"},
+    {sev:"warn", txt:"1 QID duplicat entre col·leccions", who:"Q9191 a filosofs i marines"},
+    {sev:"ok",   txt:"Cap delimitador corromput ni U+FFFD", who:"index.html · joc.html"}
+  ],
+  density:[
+    {label:"−10k", n:2},{label:"s.V aC", n:3},{label:"s.I", n:4},{label:"s.V", n:1},
+    {label:"s.X", n:1},{label:"s.XV", n:5},{label:"s.XVIII", n:7},{label:"s.XIX", n:6},
+    {label:"s.XX", n:12},{label:"s.XXI", n:3}
+  ]
+};
+
+/* ---------- estat ---------- */
+function ciClass(c){ return c==="success" ? "ok" : (c==="failure" ? "bad" : "warn"); }
+function ciLabel(c){ return c==="success" ? "Verd" : (c==="failure" ? "Vermell" : "En curs"); }
+
+function renderStats(s, live){
+  el("branch").textContent = live ? (s.branch + (OFFLINE?"":"")) : "dades d'exemple";
+  const gitPend = s.dirty + s.ahead;
+  const gitCls = gitPend===0 ? "ok" : (s.ahead>0 ? "warn" : "warn");
+  const gitVal = gitPend===0 ? "Sincronitzat" : (s.ahead>0 ? s.ahead+" sense pujar" : s.dirty+" sense desar");
+  const gitSub = s.dirty+" modificats · "+s.ahead+" endavant"+(s.behind?" · "+s.behind+" endarrere":"");
+
+  // cushion = dies fins al proper homenatge. null = no n'hi ha cap clavat,
+  // que no es un error: el defecte del joc es la tria aleatoria.
+  const cu = s.pd.cushion;
+  let pdCls = "", pdVal = "Cap clavat", pdSub = "la tria aleatòria ja cobreix els dies";
+  if(cu !== null && cu !== undefined){
+    pdCls = cu <= 0 ? "bad" : (cu === 1 ? "warn" : "");
+    pdVal = cu === 0 ? "Avui" : (cu === 1 ? "Demà" : "D'aquí " + cu + " dies");
+    pdSub = s.pd.future + (s.pd.future===1 ? " clavat" : " clavats") + " · publica el dia abans";
+  }
+
+  el("stats").innerHTML = ""
+   + '<div class="stat '+gitCls+'"><div class="lbl"><span class="dot"></span>Git</div>'
+   + '<div class="val">'+esc(gitVal)+'</div><div class="sub">'+esc(gitSub)+'</div></div>'
+
+   + '<div class="stat '+ciClass(s.ci.conclusion)+'"><div class="lbl"><span class="dot"></span>CI</div>'
+   + '<div class="val">'+esc(ciLabel(s.ci.conclusion))+'</div>'
+   + '<div class="sub">'+(s.ci.url&&s.ci.url!=="#"?'<a href="'+esc(s.ci.url)+'" target="_blank" rel="noopener">':'')
+   + esc(s.ci.name+" · "+s.ci.when)+(s.ci.url&&s.ci.url!=="#"?'</a>':'')+'</div></div>'
+
+   + '<div class="stat"><div class="lbl">Base de dades</div>'
+   + '<div class="val">'+s.db.people+" · "+s.db.events+" · "+s.db.blocks+'</div>'
+   + '<div class="sub">persones · events · blocs'
+   + (s.db.collections!=null ? " — "+s.db.collections+" col·leccions" : "")+'</div></div>'
+
+   + '<div class="stat '+pdCls+'"><div class="lbl">'+(pdCls?'<span class="dot"></span>':"")+'Proper homenatge</div>'
+   + '<div class="val">'+esc(pdVal)+'</div>'
+   + '<div class="sub">'+esc(pdSub)+'</div></div>';
+}
+
+/* ---------- cua de validació ---------- */
+function renderQueue(list, live){
+  el("vcount").textContent = list.length + " en 🧪";
+  if(!list.length){ el("queue").innerHTML = '<div class="empty">Res per validar. Tot al dia.</div>'; return; }
+  el("queue").innerHTML = list.map(function(r){
+    return '<div class="row"><span class="num">#'+r.n+'</span>'
+      + '<span class="txt">'+esc(r.txt)+'</span>'
+      + '<span class="when">'+esc(r.when)+'</span>'
+      + '<button class="btn" disabled title="Backend pendent">Validar</button></div>';
+  }).join("");
+}
+
+/* ---------- calendari ---------- */
+let calCursor = new Date();
+let PINS = {};
+
+function renderCal(){
+  const y = calCursor.getFullYear(), m = calCursor.getMonth();
+  const first = new Date(y, m, 1);
+  const shift = (first.getDay() + 6) % 7;          // dilluns primer
+  const days = new Date(y, m+1, 0).getDate();
+  const todayIso = iso(new Date());
+  el("calm").textContent = first.toLocaleDateString("ca-ES",{month:"long",year:"numeric"});
+
+  let html = "";
+  for(let i=0;i<shift;i++) html += '<span class="day out"></span>';
+  for(let d=1; d<=days; d++){
+    const ds = y+"-"+pad2(m+1)+"-"+pad2(d);
+    const cls = ["day"];
+    if(PINS[ds]) cls.push("pin");
+    if(ds === todayIso) cls.push("today");
+    else if(ds < todayIso) cls.push("past");
+    const tip = PINS[ds] ? PINS[ds].name+" ("+PINS[ds].qid+")" : "Aleatori";
+    html += '<span class="'+cls.join(" ")+'" data-d="'+ds+'" title="'+esc(ds+" · "+tip)+'">'+d
+         + (PINS[ds] ? '<span class="pd"></span>' : "") + '</span>';
+  }
+  el("cal").innerHTML = html;
+}
+
+function renderPins(){
+  const keys = Object.keys(PINS).sort();
+  if(!keys.length){ el("pins").innerHTML = '<div class="empty">Cap homenatge clavat.</div>'; return; }
+  const todayIso = iso(new Date());
+  el("pins").innerHTML = keys.map(function(k){
+    const p = PINS[k], stale = k < todayIso;
+    return '<div class="row"'+(stale?' style="opacity:.55"':'')+'>'
+      + '<span class="num">'+esc(k.slice(5))+'</span>'
+      + '<span class="txt">'+esc(p.name)+'</span>'
+      + '<span class="when">'+esc(p.qid)+'</span>'
+      + '<button class="btn" disabled title="Backend pendent">×</button></div>';
+  }).join("");
+}
+
+/* ---------- linter ---------- */
+function renderLint(list){
+  const bad = list.filter(function(f){ return f.sev!=="ok"; }).length;
+  el("lcount").textContent = bad===0 ? "res a corregir" : bad+" a mirar";
+  const ic = {bad:"!", warn:"?", ok:"✓"};
+  el("lint").innerHTML = list.map(function(f){
+    return '<div class="finding '+f.sev+'"><span class="ic">'+ic[f.sev]+'</span>'
+      + '<span class="det">'+esc(f.txt)
+      + (f.who ? '<span class="who">'+esc(f.who)+'</span>' : "")
+      + '</span></div>';
+  }).join("");
+}
+
+/* ---------- densitat ---------- */
+function renderDensity(list){
+  const max = Math.max.apply(null, list.map(function(d){ return d.n; })) || 1;
+  el("bars").innerHTML = list.map(function(d){
+    const pct = Math.round(d.n/max*100);
+    const cls = d.n===max ? "hot" : (d.n<=max*0.25 ? "cold" : "");
+    return '<span class="b '+cls+'" style="height:'+Math.max(pct,3)+'%" data-t="'+esc(d.label+" · "+d.n)+'"></span>';
+  }).join("");
+  el("blabels").innerHTML = list.map(function(d){ return "<span>"+esc(d.label)+"</span>"; }).join("");
+}
+
+/* ---------- editor (previsualització en viu) ---------- */
+function renderPreview(){
+  const nom = el("dnom").value.trim(), qid = el("dqid").value.trim();
+  const b = el("dbirth").value.trim(), d = el("ddeath").value.trim(), c = el("dcat").value;
+  if(!nom && !qid){ el("dprev").textContent = "Omple els camps per veure el literal que s'escriurà."; return; }
+  // L'apòstrof tipogràfic és obligatori dins DATA: un ' literal trencaria l'script.
+  const safe = nom.replace(/'/g, "’");
+  const parts = [];
+  parts.push("id:'wd_"+(qid||"Q?")+"'");
+  parts.push("wd:'"+(qid||"Q?")+"'");
+  parts.push("name:'"+safe+"'");
+  parts.push("birth:"+(b||"null"));
+  parts.push("death:"+(d||"null"));
+  parts.push("cats:["+(c?"'"+c+"'":"")+"]");
+  el("dprev").textContent = "{"+parts.join(", ")+"}";
+  if(nom.indexOf("'") >= 0){
+    el("dprev").textContent += "\n\n// l'apòstrof s'ha convertit a ’ automàticament";
+  }
+}
+
+/* ---------- boot ---------- */
+async function boot(){
+  const [st, q, pn, lt, dn] = await Promise.all([
+    api("/status"), api("/queue"), api("/pinned"), api("/lint"), api("/density")
+  ]);
+
+  el("offline").hidden = !OFFLINE;
+
+  renderStats(st.live ? st.data : DEMO.status, st.live);
+  renderQueue(q.live ? q.data : DEMO.queue, q.live);
+  renderLint(lt.live ? lt.data : DEMO.lint);
+  renderDensity(dn.live ? dn.data : DEMO.density);
+
+  const pins = pn.live ? pn.data : DEMO.pins;
+  PINS = {};
+  pins.forEach(function(p){ PINS[p.date] = p; });
+  const future = Object.keys(PINS).filter(function(k){ return k >= iso(new Date()); }).length;
+  el("pdhint").textContent = future + (future===1 ? " dia clavat endavant" : " dies clavats endavant");
+  renderCal();
+  renderPins();
+
+  el("stamp").textContent = new Date().toLocaleTimeString("ca-ES",{hour:"2-digit",minute:"2-digit"});
+}
+
+el("refresh").addEventListener("click", boot);
+el("prevm").addEventListener("click", function(){ calCursor.setMonth(calCursor.getMonth()-1); renderCal(); });
+el("nextm").addEventListener("click", function(){ calCursor.setMonth(calCursor.getMonth()+1); renderCal(); });
+["dnom","dqid","dbirth","ddeath","dcat"].forEach(function(id){
+  el(id).addEventListener("input", renderPreview);
+  el(id).addEventListener("change", renderPreview);
+});
+boot();
+</script>
+</body>
+</html>
