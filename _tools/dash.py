@@ -26,7 +26,7 @@ HOST = "127.0.0.1"
 
 # Endpoints previstos pero encara no implementats. El frontend els demana,
 # rep 501 i ensenya la seccio en mode demo amb el badge de pendent.
-NOT_YET = ("/api/pinned", "/api/lint", "/api/density")
+NOT_YET = ("/api/pinned", "/api/lint")
 
 
 # --------------------------------------------------------------------------
@@ -253,6 +253,57 @@ def pd_state():
         "next": upcoming[0]["date"] if upcoming else None,
         "cushion": cushion,
     }
+
+
+# --------------------------------------------------------------------------
+# densitat de contingut per segle
+# --------------------------------------------------------------------------
+
+_ROMAN_VALS = [
+    (1000,'M'),(900,'CM'),(500,'D'),(400,'CD'),(100,'C'),(90,'XC'),
+    (50,'L'),(40,'XL'),(10,'X'),(9,'IX'),(5,'V'),(4,'IV'),(1,'I'),
+]
+
+def _to_roman(n):
+    r = ''
+    for v, s in _ROMAN_VALS:
+        while n >= v:
+            r += s; n -= v
+    return r
+
+
+def _century_label(c):
+    """Etiqueta per al segle que comença a l'any c (múltiple de 100)."""
+    if c >= 0:
+        return "s. " + _to_roman(c // 100 + 1)
+    else:
+        return "s. " + _to_roman((-c) // 100) + " aC"
+
+
+def _field_years(src, const_name, field_name):
+    """Extreu tots els valors numèrics de 'field_name:N' dins de 'const NAME=[...]'."""
+    m = re.search(r'const\s+' + const_name + r'\s*=\s*\[', src)
+    if not m:
+        return []
+    _, end = count_objects(src, m.end())
+    chunk = src[m.end():end]
+    return [int(x) for x in re.findall(r'\b' + field_name + r'\s*:\s*(-?\d+)', chunk)]
+
+
+def density_state():
+    """Nombre d'ítems (events + naixements) per segle, ordenat cronològicament."""
+    src = read("index.html")
+    years = _field_years(src, "EVENTS", "year") + _field_years(src, "PEOPLE", "birth")
+    if not years:
+        return []
+    counts = {}
+    for y in years:
+        c = (y // 100) * 100   # Python floor-division: funciona bé per a negatius
+        counts[c] = counts.get(c, 0) + 1
+    return [
+        {"label": _century_label(c), "year": c, "n": counts[c]}
+        for c in sorted(counts)
+    ]
 
 
 # --------------------------------------------------------------------------
@@ -490,6 +541,13 @@ class Handler(BaseHTTPRequestHandler):
                 }
                 payload.update(git_state())
                 self._json(200, payload)
+            except Exception as e:
+                self._json(500, {"error": str(e)})
+            return
+
+        if path == "/api/density":
+            try:
+                self._json(200, density_state())
             except Exception as e:
                 self._json(500, {"error": str(e)})
             return
