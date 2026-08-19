@@ -35,6 +35,7 @@ a{color:var(--terracota)}
 .btn-ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;font:inherit;font-size:13px;padding:5px 12px;border-radius:var(--r);cursor:pointer}
 .btn-ghost:hover{background:rgba(255,255,255,.24)}
 .btn-ghost:active{transform:scale(.98)}
+.btn-stop{opacity:.72}.btn-stop:hover{opacity:1;background:rgba(0,0,0,.22)}
 
 /* ===== layout ===== */
 .wrap{max-width:1080px;margin:0 auto;padding:20px 16px 64px}
@@ -147,6 +148,7 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
   <div class="tb-right">
     <span class="clock" id="stamp">—</span>
     <button class="btn-ghost" id="refresh">Refresca</button>
+    <button class="btn-ghost btn-stop" id="stopServer" title="Atura el servidor local">■ Atura</button>
   </div>
 </div>
 
@@ -457,6 +459,13 @@ async function boot(){
 }
 
 el("refresh").addEventListener("click", boot);
+el("stopServer").addEventListener("click", async function(){
+  if(!confirm("Atura el servidor local?\n\nTancares la connexió amb el dashboard.")) return;
+  try{
+    await fetch("/api/shutdown",{method:"POST"});
+  }catch(e){}
+  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-size:18px;color:#7D7A75;font-family:system-ui">Servidor aturat. Tanca aquesta pestanya.</div>';
+});
 el("prevm").addEventListener("click", function(){ calCursor.setMonth(calCursor.getMonth()-1); renderCal(); });
 el("nextm").addEventListener("click", function(){ calCursor.setMonth(calCursor.getMonth()+1); renderCal(); });
 ["dnom","dqid","dbirth","ddeath","dcat"].forEach(function(id){

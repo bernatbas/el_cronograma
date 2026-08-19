@@ -279,6 +279,15 @@ class Handler(BaseHTTPRequestHandler):
     def _json(self, code, payload):
         self._send(code, json.dumps(payload, ensure_ascii=False), "application/json; charset=utf-8")
 
+    def do_POST(self):
+        path = self.path.split("?", 1)[0]
+        if path == "/api/shutdown":
+            self._json(200, {"ok": True})
+            import threading
+            threading.Timer(0.3, self.server.shutdown).start()
+            return
+        self._send(404, "no", "text/plain; charset=utf-8")
+
     def do_GET(self):
         path = self.path.split("?", 1)[0]
 
