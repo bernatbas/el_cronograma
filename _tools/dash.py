@@ -26,7 +26,7 @@ HOST = "127.0.0.1"
 
 # Endpoints previstos pero encara no implementats. El frontend els demana,
 # rep 501 i ensenya la seccio en mode demo amb el badge de pendent.
-NOT_YET = ("/api/queue", "/api/pinned", "/api/lint", "/api/density")
+NOT_YET = ("/api/pinned", "/api/lint", "/api/density")
 
 
 # --------------------------------------------------------------------------
@@ -256,6 +256,121 @@ def pd_state():
 
 
 # --------------------------------------------------------------------------
+# cua de validació (CANVIS.md)
+# --------------------------------------------------------------------------
+
+def parse_queue():
+    """Retorna la llista d'entrades 🧪 de CANVIS.md, ordenades per N."""
+    content = read("CANVIS.md")
+    items = []
+    for line in content.splitlines():
+        if not line.startswith("| "):
+            continue
+        parts = line.split("|")
+        if len(parts) < 8:
+            continue
+        try:
+            n = int(parts[1].strip())
+        except ValueError:
+            continue
+        estat = parts[6].strip()
+        if "\U0001f9ea" not in estat:   # 🧪
+            continue
+        note = ""
+        if "· nota:" in estat:     # · nota:
+            note = estat.split("· nota:", 1)[1].strip()
+        items.append({
+            "n": n,
+            "date": parts[2].strip(),
+            "title": parts[3].strip(),
+            "desc": parts[4].strip(),
+            "test": parts[5].strip(),
+            "note": note,
+        })
+    return sorted(items, key=lambda x: x["n"])
+
+
+def _edit_canvis_estat(n, new_estat):
+    """Substitueix el camp d'estat de la fila N a CANVIS.md."""
+    path = os.path.join(REPO, "CANVIS.md")
+    try:
+        with open(path, encoding="utf-8") as f:
+            content = f.read()
+    except Exception as e:
+        return False, str(e)
+    lines = content.splitlines(keepends=True)
+    for i, line in enumerate(lines):
+        if not line.startswith("| "):
+            continue
+        parts = line.split("|")
+        if len(parts) < 8:
+            continue
+        try:
+            ln = int(parts[1].strip())
+        except ValueError:
+            continue
+        if ln != n:
+            continue
+        if "\U0001f9ea" not in parts[6]:   # 🧪
+            return False, "L'entrada #%d no és 🧪" % n
+        parts[6] = " " + new_estat + " "
+        lines[i] = "|".join(parts)
+        break
+    else:
+        return False, "Entrada #%d no trobada" % n
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("".join(lines))
+        return True, "OK"
+    except Exception as e:
+        return False, str(e)
+
+
+def validate_item(n):
+    return _edit_canvis_estat(n, "✅ Validat (%s)" % date.today().isoformat())
+
+
+def annotate_item(n, note):
+    if note.strip():
+        return _edit_canvis_estat(n, "\U0001f9ea Per validar · nota: " + note.strip())
+    else:
+        return _edit_canvis_estat(n, "\U0001f9ea Per validar")
+
+
+def add_item(title, desc, test):
+    """Afegeix una nova fila 🧪 al final de la taula de CANVIS.md."""
+    path = os.path.join(REPO, "CANVIS.md")
+    try:
+        with open(path, encoding="utf-8") as f:
+            content = f.read()
+    except Exception as e:
+        return False, str(e)
+    max_n = 0
+    for line in content.splitlines():
+        if not line.startswith("| "):
+            continue
+        parts = line.split("|")
+        try:
+            max_n = max(max_n, int(parts[1].strip()))
+        except (ValueError, IndexError):
+            continue
+    new_n = max_n + 1
+    row = "| %d | %s | %s | %s | %s | \U0001f9ea Per validar |\n" % (
+        new_n, date.today().isoformat(),
+        title.replace("|", "\\|"),
+        (desc or "").replace("|", "\\|"),
+        (test or "").replace("|", "\\|"),
+    )
+    content = content.rstrip("\n") + "\n" + row
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+        return True, str(new_n)
+    except Exception as e:
+        return False, str(e)
+
+
+# --------------------------------------------------------------------------
 # servidor
 # --------------------------------------------------------------------------
 
@@ -281,11 +396,40 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = self.path.split("?", 1)[0]
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length) if length > 0 else b""
+        try:
+            data = json.loads(body) if body else {}
+        except Exception:
+            data = {}
+
         if path == "/api/shutdown":
             self._json(200, {"ok": True})
             import threading
             threading.Timer(0.3, self.server.shutdown).start()
             return
+
+        m = re.match(r"/api/validate/(\d+)$", path)
+        if m:
+            ok, msg = validate_item(int(m.group(1)))
+            self._json(200 if ok else 404, {"ok": ok, "msg": msg})
+            return
+
+        m = re.match(r"/api/annotate/(\d+)$", path)
+        if m:
+            ok, msg = annotate_item(int(m.group(1)), data.get("note", ""))
+            self._json(200 if ok else 404, {"ok": ok, "msg": msg})
+            return
+
+        if path == "/api/queue/add":
+            title = data.get("title", "").strip()
+            if not title:
+                self._json(400, {"ok": False, "msg": "Títol obligatori"})
+                return
+            ok, msg = add_item(title, data.get("desc", ""), data.get("test", ""))
+            self._json(200 if ok else 500, {"ok": ok, "msg": msg})
+            return
+
         self._send(404, "no", "text/plain; charset=utf-8")
 
     def do_GET(self):
@@ -311,6 +455,13 @@ class Handler(BaseHTTPRequestHandler):
                 }
                 payload.update(git_state())
                 self._json(200, payload)
+            except Exception as e:
+                self._json(500, {"error": str(e)})
+            return
+
+        if path == "/api/queue":
+            try:
+                self._json(200, parse_queue())
             except Exception as e:
                 self._json(500, {"error": str(e)})
             return

@@ -75,6 +75,25 @@ section{margin-bottom:26px;scroll-margin-top:66px}
 .btn.primary:hover:not(:disabled){background:#A6472F}
 .empty{padding:22px 14px;text-align:center;color:var(--text3);font-size:13px;font-style:italic}
 
+/* ===== cua de validació ===== */
+.qrow{cursor:pointer}
+.qhead{display:flex;align-items:center;gap:11px;padding:9px 13px;border-bottom:1px solid var(--border)}
+.qrow:last-child:not(.open) .qhead{border-bottom:none}
+.qrow:hover .qhead,.qrow.open .qhead{background:var(--soft)}
+.qbody{display:none;padding:12px 13px 14px;border-bottom:1px solid var(--border);background:var(--soft)}
+.qrow.open .qbody{display:block}
+.qrow:last-child .qbody{border-bottom:none}
+.qlabel{font-size:10.5px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.qdesc{font-size:12.5px;color:var(--text2);line-height:1.5;margin-bottom:11px}
+.qtest{font-size:12px;color:var(--text3);font-style:italic;border-left:2px solid var(--border-strong);padding-left:8px;margin-bottom:13px;line-height:1.4}
+.qnote-ta{display:block;width:100%;border:1px solid var(--border-strong);border-radius:var(--r);padding:7px 10px;font:inherit;font-size:12.5px;resize:vertical;min-height:54px;color:var(--text);margin-bottom:7px;background:var(--canvas)}
+.qnote-ta:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blueSoft)}
+.qnote-actions{display:flex;gap:7px}
+.qadd{padding:13px;border-bottom:1px solid var(--border);background:var(--soft)}
+.qadd input,.qadd textarea{margin-bottom:8px}
+.qadd textarea{resize:vertical}
+.qadd-actions{display:flex;gap:8px;justify-content:flex-end}
+
 /* ===== calendari ===== */
 .cal2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
 @media(max-width:760px){.cal2{grid-template-columns:1fr}}
@@ -164,7 +183,23 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
   </section>
 
   <section id="validacio">
-    <div class="shead"><h2>Cua de validació</h2><span class="pend">escriptura pendent</span><span class="hint" id="vcount">—</span></div>
+    <div class="shead">
+      <h2>Cua de validació</h2>
+      <span class="pend" id="qpend" hidden>backend pendent</span>
+      <span class="hint" id="vcount">—</span>
+      <button class="btn" id="qaddBtn" disabled>+ Nou</button>
+    </div>
+    <div class="card" id="qaddForm" hidden>
+      <div class="qadd">
+        <input type="text" id="qaddTitle" placeholder="Títol del canvi (obligatori)">
+        <textarea id="qaddDesc" placeholder="Descripció (opcional)" rows="3"></textarea>
+        <textarea id="qaddTest" placeholder="Proposta de test (opcional)" rows="2"></textarea>
+        <div class="qadd-actions">
+          <button class="btn" id="qaddCancel">Cancel·la</button>
+          <button class="btn primary" id="qaddSubmit">Afegeix a CANVIS.md</button>
+        </div>
+      </div>
+    </div>
     <div class="rows" id="queue"><div class="empty">Carregant…</div></div>
   </section>
 
@@ -277,11 +312,8 @@ const DEMO = {
     pd:{pinned:1, future:0, next:null, cushion:null}
   },
   queue:[
-    {n:104, txt:"Etiquetes de personatge progressives per zoom", when:"avui"},
-    {n:103, txt:"Memory: missatge de resultat ajustat per dificultat", when:"avui"},
-    {n:102, txt:"Personatge del dia: calendari d'homenatges", when:"avui"},
-    {n:101, txt:"Fix CI: la ✕ de la personbar no treia el ?person=", when:"ahir"},
-    {n:4,   txt:"Enllaços i dades d'importància de Wikipedia", when:"16 dies"}
+    {n:104, date:"2026-08-19", title:"Etiquetes de personatge progressives per zoom", desc:"A zoom alt les barres es veuen sense text. A zoom mig el nom apareix truncat. A zoom baix el nom sencer.", test:"Activa «Els meus filòsofs», fes Vista global: barres sense text. Fes zoom in progressiu.", note:""},
+    {n:4,   date:"2026-08-03", title:"Enllaços i dades d'importància de Wikipedia", desc:"Correcció de dos enllaços massa genèrics. S'afegeix el camp sitelinks a cada event.", test:"Obrir el detall de «Fundació de Roma» i confirmar que l'enllaç és correcte.", note:"Pendent de provar amb connexió"}
   ],
   pins:[ {date:"2026-08-19", qid:"Q733621", name:"Juan Tamariz"} ],
   lint:[
@@ -312,7 +344,7 @@ function renderStats(s, live){
   // cushion = dies fins al proper homenatge. null = no n'hi ha cap clavat,
   // que no es un error: el defecte del joc es la tria aleatoria.
   const cu = s.pd.cushion;
-  let pdCls = "", pdVal = "Cap clavat", pdSub = "la tria aleatòria ja cobreix els dies";
+  let pdCls = "", pdVal = "Cap programat", pdSub = "la tria aleatòria ja cobreix els dies";
   if(cu !== null && cu !== undefined){
     pdCls = cu <= 0 ? "bad" : (cu === 1 ? "warn" : "");
     pdVal = cu === 0 ? "Avui" : (cu === 1 ? "Demà" : "D'aquí " + cu + " dies");
@@ -340,14 +372,68 @@ function renderStats(s, live){
 
 /* ---------- cua de validació ---------- */
 function renderQueue(list, live){
-  el("vcount").textContent = list.length + " en 🧪";
-  if(!list.length){ el("queue").innerHTML = '<div class="empty">Res per validar. Tot al dia.</div>'; return; }
+  el("vcount").textContent = list.length + " en \u{1F9EA}";
+  el("qpend").hidden = !!live;
+  el("qaddBtn").disabled = !live;
+  if(!list.length){
+    el("queue").innerHTML = '<div class="empty">Res per validar. Tot al dia! ✅</div>';
+    return;
+  }
   el("queue").innerHTML = list.map(function(r){
-    return '<div class="row"><span class="num">#'+r.n+'</span>'
-      + '<span class="txt">'+esc(r.txt)+'</span>'
-      + '<span class="when">'+esc(r.when)+'</span>'
-      + '<button class="btn" disabled title="Backend pendent">Validar</button></div>';
+    const note = r.note || "";
+    return '<div class="qrow" data-n="'+r.n+'">'
+      + '<div class="qhead">'
+      +   '<span class="num">#'+r.n+'</span>'
+      +   '<span class="txt">'+esc(r.title)+'</span>'
+      +   '<span class="when">'+esc(r.date)+'</span>'
+      +   (live ? '<button class="btn primary qval" data-n="'+r.n+'">Valida ✅</button>' : '<button class="btn" disabled>Valida</button>')
+      + '</div>'
+      + '<div class="qbody">'
+      +   '<div class="qlabel">Descripció</div>'
+      +   '<div class="qdesc">'+esc(r.desc||'—')+'</div>'
+      +   '<div class="qlabel">Test proposat</div>'
+      +   '<div class="qtest">'+esc(r.test||'—')+'</div>'
+      +   '<div class="qlabel">Nota</div>'
+      +   '<textarea class="qnote-ta" data-n="'+r.n+'" placeholder="Afegeix una nota…">'+esc(note)+'</textarea>'
+      +   '<div class="qnote-actions">'
+      +     (live ? '<button class="btn qsave" data-n="'+r.n+'">Desa nota</button>' : '')
+      +     (live && note ? ' <button class="btn qclear" data-n="'+r.n+'">Esborra nota</button>' : '')
+      +   '</div>'
+      + '</div>'
+      + '</div>';
   }).join("");
+}
+
+async function validateItem(n){
+  const row = document.querySelector('.qrow[data-n="'+n+'"]');
+  if(!row) return;
+  const btn = row.querySelector('.qval');
+  btn.disabled = true; btn.textContent = "Validant…";
+  try{
+    const r = await fetch("/api/validate/"+n, {method:"POST"});
+    const d = await r.json();
+    if(d.ok){
+      row.remove();
+      const left = document.querySelectorAll('.qrow').length;
+      el("vcount").textContent = left + " en \u{1F9EA}";
+      if(!left) el("queue").innerHTML = '<div class="empty">Res per validar. Tot al dia! ✅</div>';
+    } else {
+      alert("Error: " + d.msg);
+      btn.disabled = false; btn.textContent = "Valida ✅";
+    }
+  } catch(e){
+    alert("No s'ha pogut connectar al servidor.");
+    btn.disabled = false; btn.textContent = "Valida ✅";
+  }
+}
+
+async function saveNote(n, note){
+  try{
+    const r = await fetch("/api/annotate/"+n, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({note: note})});
+    const d = await r.json();
+    if(!d.ok) alert("Error: " + d.msg);
+    else boot();
+  } catch(e){ alert("No s'ha pogut connectar al servidor."); }
 }
 
 /* ---------- calendari ---------- */
@@ -460,6 +546,56 @@ async function boot(){
 }
 
 el("refresh").addEventListener("click", boot);
+
+/* delegació de clics de la cua (un sol listener per a expand/validar/nota) */
+el("queue").addEventListener("click", function(e){
+  if(e.target.classList.contains("qval")){
+    e.stopPropagation();
+    validateItem(parseInt(e.target.dataset.n, 10));
+    return;
+  }
+  if(e.target.classList.contains("qsave")){
+    e.stopPropagation();
+    const n = parseInt(e.target.dataset.n, 10);
+    const ta = document.querySelector('.qnote-ta[data-n="'+n+'"]');
+    saveNote(n, ta ? ta.value : "");
+    return;
+  }
+  if(e.target.classList.contains("qclear")){
+    e.stopPropagation();
+    saveNote(parseInt(e.target.dataset.n, 10), "");
+    return;
+  }
+  const head = e.target.closest(".qhead");
+  if(head){
+    head.closest(".qrow").classList.toggle("open");
+  }
+});
+
+/* formulari de nou canvi */
+el("qaddBtn").addEventListener("click", function(){
+  const f = el("qaddForm");
+  f.hidden = !f.hidden;
+  if(!f.hidden) el("qaddTitle").focus();
+});
+el("qaddCancel").addEventListener("click", function(){ el("qaddForm").hidden = true; });
+el("qaddSubmit").addEventListener("click", async function(){
+  const title = el("qaddTitle").value.trim();
+  if(!title){ el("qaddTitle").focus(); el("qaddTitle").style.borderColor="var(--bad)"; return; }
+  el("qaddTitle").style.borderColor = "";
+  el("qaddSubmit").disabled = true; el("qaddSubmit").textContent = "Afegint…";
+  try{
+    const r = await fetch("/api/queue/add", {method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({title:title, desc:el("qaddDesc").value, test:el("qaddTest").value})});
+    const d = await r.json();
+    if(d.ok){
+      el("qaddForm").hidden = true;
+      el("qaddTitle").value = ""; el("qaddDesc").value = ""; el("qaddTest").value = "";
+      boot();
+    } else { alert("Error: " + d.msg); }
+  } catch(e){ alert("No s'ha pogut connectar."); }
+  finally{ el("qaddSubmit").disabled = false; el("qaddSubmit").textContent = "Afegeix a CANVIS.md"; }
+});
 el("stopServer").addEventListener("click", async function(){
   if(!confirm("Atura el servidor local?\n\nTancares la connexió amb el dashboard.")) return;
   try{
