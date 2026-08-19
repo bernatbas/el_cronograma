@@ -410,6 +410,18 @@ class Handler(BaseHTTPRequestHandler):
         except Exception:
             data = {}
 
+        if path == "/api/push":
+            try:
+                p = subprocess.run(
+                    ["git", "push"], cwd=REPO, timeout=60,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                )
+                out = (p.stdout + p.stderr).decode("utf-8", "replace").strip()
+                self._json(200, {"ok": p.returncode == 0, "output": out})
+            except Exception as e:
+                self._json(200, {"ok": False, "output": str(e)})
+            return
+
         if path == "/api/shutdown":
             self._json(200, {"ok": True})
             import threading

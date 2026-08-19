@@ -36,6 +36,7 @@ a{color:var(--terracota)}
 .btn-ghost:hover{background:rgba(255,255,255,.24)}
 .btn-ghost:active{transform:scale(.98)}
 .btn-stop{opacity:.72}.btn-stop:hover{opacity:1;background:rgba(0,0,0,.22)}
+.btn-push{opacity:.4}.btn-push:not(:disabled){opacity:1;background:rgba(255,255,255,.22)}.btn-push:not(:disabled):hover{background:rgba(255,255,255,.34)}
 
 /* ===== layout ===== */
 .wrap{max-width:1080px;margin:0 auto;padding:20px 16px 64px}
@@ -176,6 +177,7 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
   <div class="tb-right">
     <span class="clock" id="stamp">—</span>
     <button class="btn-ghost" id="refresh">Refresca</button>
+    <button class="btn-ghost btn-push" id="push" disabled title="Puja els commits locals a GitHub">↑ Push</button>
     <button class="btn-ghost btn-stop" id="stopServer" title="Atura el servidor local">■ Atura</button>
   </div>
 </div>
@@ -346,6 +348,7 @@ function ciLabel(c){ return c==="success" ? "Verd" : (c==="failure" ? "Vermell" 
 
 function renderStats(s, live){
   el("branch").textContent = live ? (s.branch + (OFFLINE?"":"")) : "dades d'exemple";
+  el("push").disabled = !live || s.ahead === 0;
   const gitPend = s.dirty + s.ahead;
   const gitCls = gitPend===0 ? "ok" : (s.ahead>0 ? "warn" : "warn");
   const gitVal = gitPend===0 ? "Sincronitzat" : (s.ahead>0 ? s.ahead+" commit"+(s.ahead!==1?"s":"")+" per pujar" : s.dirty+" fitxer"+(s.dirty!==1?"s":"")+" per committejar");
@@ -637,6 +640,24 @@ el("qaddSubmit").addEventListener("click", async function(){
     } else { alert("Error: " + d.msg); }
   } catch(e){ alert("No s'ha pogut connectar."); }
   finally{ el("qaddSubmit").disabled = false; el("qaddSubmit").textContent = "Afegeix al backlog"; }
+});
+el("push").addEventListener("click", async function(){
+  const btn = el("push");
+  btn.disabled = true; btn.textContent = "Pujant…";
+  try{
+    const r = await fetch("/api/push", {method:"POST"});
+    const d = await r.json();
+    if(d.ok){
+      btn.textContent = "✓ Pujat";
+      setTimeout(function(){ btn.textContent = "↑ Push"; boot(); }, 2000);
+    } else {
+      alert("Error al push:\n\n" + (d.output || "Error desconegut"));
+      btn.disabled = false; btn.textContent = "↑ Push";
+    }
+  } catch(e){
+    alert("No s'ha pogut connectar al servidor.");
+    btn.disabled = false; btn.textContent = "↑ Push";
+  }
 });
 el("stopServer").addEventListener("click", async function(){
   if(!confirm("Atura el servidor local?\n\nTancares la connexió amb el dashboard.")) return;
