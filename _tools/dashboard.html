@@ -336,9 +336,12 @@ const DEMO = {
     {sev:"ok",   txt:"Cap delimitador corromput ni U+FFFD", who:"index.html · joc.html"}
   ],
   density:[
-    {label:"−10k", n:2},{label:"s.V aC", n:3},{label:"s.I", n:4},{label:"s.V", n:1},
-    {label:"s.X", n:1},{label:"s.XV", n:5},{label:"s.XVIII", n:7},{label:"s.XIX", n:6},
-    {label:"s.XX", n:12},{label:"s.XXI", n:3}
+    {label:"s. I aC",n:3},{label:"s. I",n:2},{label:"s. II",n:1},{label:"s. III",n:0},
+    {label:"s. IV",n:1},{label:"s. V",n:2},{label:"s. VI",n:1},{label:"s. VII",n:0},
+    {label:"s. VIII",n:2},{label:"s. IX",n:1},{label:"s. X",n:2},{label:"s. XI",n:3},
+    {label:"s. XII",n:4},{label:"s. XIII",n:5},{label:"s. XIV",n:6},{label:"s. XV",n:8},
+    {label:"s. XVI",n:10},{label:"s. XVII",n:9},{label:"s. XVIII",n:11},
+    {label:"s. XIX",n:14},{label:"s. XX",n:12},{label:"s. XXI",n:2}
   ]
 };
 
@@ -531,8 +534,8 @@ function renderLint(list){
 function renderDensity(list){
   const max = Math.max.apply(null, list.map(function(d){ return d.n; })) || 1;
   el("bars").innerHTML = list.map(function(d){
-    const pct = Math.round(d.n/max*100);
-    const cls = d.n===max ? "hot" : (d.n<=max*0.25 ? "cold" : "");
+    const pct = d.n === 0 ? 6 : Math.round(d.n/max*100);
+    const cls = d.n === 0 ? "cold" : "";
     return '<span class="b '+cls+'" style="height:'+Math.max(pct,3)+'%" data-t="'+esc(d.label+" · "+d.n)+'"></span>';
   }).join("");
   el("blabels").innerHTML = list.map(function(d){ return "<span>"+esc(d.label)+"</span>"; }).join("");

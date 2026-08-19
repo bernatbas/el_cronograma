@@ -291,15 +291,21 @@ def _field_years(src, const_name, field_name):
 
 
 def density_state():
-    """Nombre d'ítems (events + naixements) per segle, ordenat cronològicament."""
+    """Nombre d'ítems (events + naixements) per segle, s. I aC fins avui.
+    Segles buits inclosos (n=0) per mostrar els buits. Contingut anterior
+    al s. I aC (any -100) s'ignora: massa antic per ser útil com a densitat.
+    """
     src = read("index.html")
     years = _field_years(src, "EVENTS", "year") + _field_years(src, "PEOPLE", "birth")
-    if not years:
-        return []
-    counts = {}
+
+    today_c = (date.today().year // 100) * 100
+    # Omple tots els segles del rang amb 0
+    counts = {c: 0 for c in range(-100, today_c + 100, 100)}
     for y in years:
-        c = (y // 100) * 100   # Python floor-division: funciona bé per a negatius
-        counts[c] = counts.get(c, 0) + 1
+        c = (y // 100) * 100
+        if c in counts:          # ignora el contingut anterior al s. I aC
+            counts[c] += 1
+
     return [
         {"label": _century_label(c), "year": c, "n": counts[c]}
         for c in sorted(counts)
