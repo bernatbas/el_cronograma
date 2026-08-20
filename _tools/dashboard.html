@@ -44,6 +44,7 @@ section{margin-bottom:26px;scroll-margin-top:66px}
 .shead{display:flex;align-items:center;gap:9px;margin:0 0 11px}
 .shead h2{margin:0;font-size:14px;font-weight:600;letter-spacing:.01em}
 .shead .hint{font-size:12px;color:var(--text3);margin-left:auto}
+.shead .hint.sub{margin-left:0}   /* subtitol enganxat al titol, no a la dreta */
 .pend{font-size:11px;color:var(--warn);background:var(--warn-bg);border:1px solid #EFD9AE;padding:2px 8px;border-radius:var(--r-pill);letter-spacing:.02em}
 .card{background:var(--canvas);border:1px solid var(--border);border-radius:12px}
 .pad{padding:14px 16px}
@@ -125,7 +126,7 @@ section{margin-bottom:26px;scroll-margin-top:66px}
 .legend{display:flex;gap:14px;margin-top:10px;font-size:11.5px;color:var(--text2);flex-wrap:wrap}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 
-/* ===== linter ===== */
+/* ===== diagnosi ===== */
 .finding{display:flex;align-items:flex-start;gap:9px;padding:8px 11px;border-radius:var(--r);font-size:13px;margin-bottom:6px;line-height:1.45}
 .finding:last-child{margin-bottom:0}
 .finding.ok{background:var(--ok-bg);color:var(--ok)}
@@ -171,7 +172,7 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
     <a href="#estat">Estat</a>
     <a href="#backlog">Backlog</a>
     <a href="#calendari">Calendari</a>
-    <a href="#linter">Linter</a>
+    <a href="#diagnosi">Diagnosi</a>
     <a href="#dades">Dades</a>
   </nav>
   <div class="tb-right">
@@ -245,8 +246,10 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
     </div>
   </section>
 
-  <section id="linter">
-    <div class="shead"><h2>Linter de dades</h2><span class="hint" id="lcount">—</span></div>
+  <section id="diagnosi">
+    <div class="shead"><h2>Diagnosi de la base de dades</h2>
+      <span class="hint sub" title="Incoherències que la pàgina no et dirà: no peta, simplement pinta alguna cosa rara o no la pinta. Vermell = error, groc = val la pena mirar-ho.">incoherències que la pàgina no et dirà</span>
+      <span class="hint" id="lcount">—</span></div>
     <div class="card pad" id="lint"><div class="empty">Carregant…</div></div>
   </section>
 
@@ -517,7 +520,7 @@ function renderPins(){
   }).join("");
 }
 
-/* ---------- linter ---------- */
+/* ---------- diagnosi ---------- */
 function renderLint(list){
   const bad = list.filter(function(f){ return f.sev!=="ok"; }).length;
   el("lcount").textContent = bad===0 ? "res a corregir" : bad+" a mirar";

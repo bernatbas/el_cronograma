@@ -7,8 +7,8 @@ HB · Control — servidor local del dashboard.
 Nomes escolta a 127.0.0.1: no es accessible des de fora d'aquesta maquina.
 No fa servir cap token: el `gh` ja esta autenticat al sistema.
 
-FASE 1 — nomes lectura. L'unic endpoint implementat es /api/status; la resta
-retornen 501 i el frontend cau a dades d'exemple tot sol.
+Els endpoints encara no implementats son a NOT_YET: retornen 501 i el frontend
+cau a dades d'exemple tot sol, amb el badge de pendent a la seccio.
 """
 
 import json
@@ -26,7 +26,7 @@ HOST = "127.0.0.1"
 
 # Endpoints previstos pero encara no implementats. El frontend els demana,
 # rep 501 i ensenya la seccio en mode demo amb el badge de pendent.
-NOT_YET = ("/api/pinned", "/api/lint")
+NOT_YET = ("/api/pinned",)
 
 
 # --------------------------------------------------------------------------
@@ -313,6 +313,240 @@ def density_state():
 
 
 # --------------------------------------------------------------------------
+# diagnosi de la BD (index.html)
+# --------------------------------------------------------------------------
+
+MAX_CATS = 2          # el disseny en permet 0-2 (2 = barra ratllada)
+MAX_AGE = 110         # longevitat per sobre de la qual val la pena mirar-s'ho
+
+
+def iter_objects(src, const_name):
+    """
+    Genera (text_de_l_objecte, numero_de_linia) per cada objecte de primer
+    nivell de `const NAME=[...]`. Camina els caracters com count_objects
+    (saltant strings i comentaris) pero retorna el contingut, no el compte.
+    """
+    m = re.search(r"const\s+" + const_name + r"\s*=\s*\[", src)
+    if not m:
+        return
+    i = m.end()
+    n = len(src)
+    depth = 0
+    start = None
+    in_str = False
+    quote = ""
+    while i < n:
+        ch = src[i]
+        if in_str:
+            if ch == "\\":
+                i += 2
+                continue
+            if ch == quote:
+                in_str = False
+            i += 1
+            continue
+        if ch == "/" and i + 1 < n:
+            nxt = src[i + 1]
+            if nxt == "/":
+                j = src.find("\n", i)
+                i = n if j == -1 else j + 1
+                continue
+            if nxt == "*":
+                j = src.find("*/", i + 2)
+                i = n if j == -1 else j + 2
+                continue
+        if ch in ("'", '"', "`"):
+            in_str = True
+            quote = ch
+            i += 1
+            continue
+        if ch in ("{", "["):
+            if depth == 0 and ch == "{":
+                start = i
+            depth += 1
+        elif ch in ("}", "]"):
+            if depth == 0 and ch == "]":
+                return               # tanca l'array: fi
+            depth -= 1
+            if depth == 0 and start is not None:
+                yield (src[start:i + 1], src.count("\n", 0, start) + 1)
+                start = None
+        i += 1
+
+
+def _f(obj, field):
+    """Valor d'un camp string (`camp:'text'`). None si no hi es."""
+    m = re.search(r"\b" + field + r"\s*:\s*'((?:[^'\\]|\\.)*)'", obj)
+    return m.group(1) if m else None
+
+
+def _n(obj, field):
+    """Valor d'un camp numeric. None si no hi es o es null."""
+    m = re.search(r"\b" + field + r"\s*:\s*(-?\d+)", obj)
+    return int(m.group(1)) if m else None
+
+
+def _cats(obj):
+    """Llista de categories de `cats:['A','B']`. [] si el camp no hi es."""
+    m = re.search(r"\bcats\s*:\s*\[([^\]]*)\]", obj)
+    if not m:
+        return []
+    return re.findall(r"'([^']*)'", m.group(1))
+
+
+def _known_cats(src):
+    m = re.search(r"const\s+CAT_COLORS\s*=\s*\{(.*?)\}", src, re.DOTALL)
+    return set(re.findall(r"'([^']+)'\s*:", m.group(1))) if m else set()
+
+
+def _dupes(pairs):
+    """[(valor, [etiquetes...])] pels valors que surten mes d'una vegada."""
+    seen = {}
+    for val, who in pairs:
+        seen.setdefault(val, []).append(who)
+    return [(v, w) for v, w in seen.items() if len(w) > 1]
+
+
+def lint_state():
+    """
+    Diagnosi de la base de dades: incoherencies que la pagina no et dira
+    (no petara, simplement pintara alguna cosa rara o no la pintara).
+    Retorna [{sev, txt, who}] amb sev = bad (error) | warn (avis) | ok.
+    """
+    src = read("index.html")
+    cats_ok = _known_cats(src)
+    now = date.today().year
+    out = []
+
+    def bad(txt, who=""):
+        out.append({"sev": "bad", "txt": txt, "who": who})
+
+    def warn(txt, who=""):
+        out.append({"sev": "warn", "txt": txt, "who": who})
+
+    people = list(iter_objects(src, "PEOPLE"))
+    events = list(iter_objects(src, "EVENTS"))
+    colls = list(iter_objects(src, "COLLECTIONS"))
+    eras = list(iter_objects(src, "ERAS"))
+
+    # --- ids i QIDs duplicats -------------------------------------------
+    for const, items in (("PEOPLE", people), ("EVENTS", events),
+                         ("COLLECTIONS", colls)):
+        for val, who in _dupes([(_f(o, "id"), "línia %d" % ln)
+                                for o, ln in items if _f(o, "id")]):
+            bad("%s: id duplicat ‘%s’" % (const, val), " · ".join(who))
+
+    for val, who in _dupes([(_f(o, "wd"), _f(o, "name") or "?")
+                            for o, _ in people if _f(o, "wd")]):
+        bad("PEOPLE: el QID %s surt %d vegades" % (val, len(who)),
+            " · ".join(who))
+
+    # --- personatges -----------------------------------------------------
+    for obj, ln in people:
+        nom = _f(obj, "name") or ("línia %d" % ln)
+        b, d = _n(obj, "birth"), _n(obj, "death")
+        viu = re.search(r"\bdeath\s*:\s*null", obj) is not None
+
+        if b is None:
+            bad("%s: sense any de naixement" % nom, "línia %d" % ln)
+        elif d is not None and d < b:
+            bad("%s: mor (%d) abans de néixer (%d)" % (nom, d, b),
+                "línia %d" % ln)
+        elif d is not None and d - b > MAX_AGE:
+            warn("%s: %d anys de vida (%d–%d)" % (nom, d - b, b, d),
+                 "revisa-ho, o bé és correcte i ja està")
+        elif b > now:
+            bad("%s: neix l'any %d, que encara no ha arribat" % (nom, b),
+                "línia %d" % ln)
+
+        if d is None and not viu:
+            bad("%s: sense any de mort ni death:null" % nom, "línia %d" % ln)
+
+        cs = _cats(obj)
+        if len(cs) > MAX_CATS:
+            warn("%s: %d categories (el disseny en pinta %d)"
+                 % (nom, len(cs), MAX_CATS), " · ".join(cs))
+        if len(set(cs)) < len(cs):
+            bad("%s: categoria repetida" % nom, " · ".join(cs))
+        for c in sorted(set(cs) - cats_ok):
+            bad("%s: categoria desconeguda ‘%s’" % (nom, c),
+                "no és a CAT_COLORS")
+
+        if not _f(obj, "wd"):
+            warn("%s: sense QID" % nom,
+                 "no es podrà referenciar des d'una col·lecció")
+        if not _f(obj, "wiki"):
+            warn("%s: sense enllaç a la Viquipèdia" % nom, "línia %d" % ln)
+        if not _f(obj, "desc"):
+            warn("%s: sense descripció" % nom, "la fitxa sortirà buida")
+
+    # --- events ----------------------------------------------------------
+    for obj, ln in events:
+        nom = _f(obj, "name") or ("línia %d" % ln)
+        if _n(obj, "year") is None:
+            bad("%s: sense any" % nom, "línia %d" % ln)
+        if _n(obj, "sitelinks") is None and _n(obj, "imp") is None:
+            warn("%s: sense sitelinks ni imp" % nom,
+                 "el motor de zoom no sabrà quan mostrar-lo")
+        if not _f(obj, "desc"):
+            warn("%s: sense descripció" % nom, "la fitxa sortirà buida")
+
+    # --- eres i blocs de marc --------------------------------------------
+    for obj, ln in eras:
+        nom = _f(obj, "name") or ("línia %d" % ln)
+        s, e = _n(obj, "start"), _n(obj, "end")
+        if s is not None and e is not None and e <= s:
+            bad("ERAS · %s: acaba (%d) abans o quan comença (%d)"
+                % (nom, e, s), "línia %d" % ln)
+
+    mm = re.search(r"const\s+MARCS\s*=\s*\[", src)
+    if mm:
+        _, mend = count_objects(src, mm.end())
+        for bmm in re.finditer(r"blocks\s*:\s*\[", src[mm.end():mend]):
+            off = mm.end() + bmm.end()
+            for obj, ln in iter_objects("const X=[" + src[off:mend], "X"):
+                s, e = _n(obj, "start"), _n(obj, "end")
+                nom = _f(obj, "name") or "bloc sense nom"
+                if s is not None and e is not None and e <= s:
+                    bad("MARCS · %s: acaba (%d) abans o quan comença (%d)"
+                        % (nom, e, s), "dins de blocks")
+            break   # iter_objects ja recorre tots els blocs del primer marc
+
+    # --- col·leccions ----------------------------------------------------
+    for obj, ln in colls:
+        nom = _f(obj, "name") or ("línia %d" % ln)
+        wds = re.search(r"\bwds\s*:\s*\[([^\]]*)\]", obj)
+        # Els comentaris de dins de wds porten apostrofs rectes («d'Aquino»)
+        # que desquadrarien l'extraccio: es treuen abans de llegir els QIDs.
+        raw = re.sub(r"//[^\n]*", "", wds.group(1)) if wds else ""
+        qids = re.findall(r"'([^']*)'", raw)
+        if not qids:
+            warn("%s: col·lecció buida" % nom, "línia %d" % ln)
+        for q in qids:
+            if not re.fullmatch(r"Q\d+", q):
+                bad("%s: ‘%s’ no té forma de QID" % (nom, q), "línia %d" % ln)
+        dup = _dupes([(q, q) for q in qids])
+        if dup:
+            warn("%s: QIDs repetits" % nom,
+                 " · ".join(v for v, _ in dup))
+
+    # --- integritat del fitxer -------------------------------------------
+    if "�" in src:
+        n_bad = src.count("�")
+        lines = [str(src.count("\n", 0, m.start()) + 1)
+                 for m in re.finditer("�", src)]
+        bad("%d caràcter%s corromput%s (U+FFFD)"
+            % (n_bad, "s" if n_bad != 1 else "", "s" if n_bad != 1 else ""),
+            "línies " + ", ".join(lines[:8]))
+
+    if not out:
+        out.append({"sev": "ok", "txt": "Cap incoherència a la base de dades",
+                    "who": "%d personatges · %d events · %d eres · %d col·leccions"
+                           % (len(people), len(events), len(eras), len(colls))})
+    return out
+
+
+# --------------------------------------------------------------------------
 # backlog (BACKLOG.md)
 # --------------------------------------------------------------------------
 
@@ -554,6 +788,13 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/density":
             try:
                 self._json(200, density_state())
+            except Exception as e:
+                self._json(500, {"error": str(e)})
+            return
+
+        if path == "/api/lint":
+            try:
+                self._json(200, lint_state())
             except Exception as e:
                 self._json(500, {"error": str(e)})
             return
