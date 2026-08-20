@@ -295,6 +295,12 @@
   .itemcard.flash-no::after{content:"\2717";background:#C43A2C;}
   @keyframes okpulse{0%{transform:scale(.96);box-shadow:0 0 0 0 rgba(45,150,90,.6);}55%{transform:scale(1.03);}100%{transform:scale(1);box-shadow:0 8px 24px rgba(45,150,90,.30);}}
   @keyframes nopulse{0%{transform:translateX(0);}15%{transform:translateX(-7px);}30%{transform:translateX(6px);}45%{transform:translateX(-5px);}60%{transform:translateX(4px);}75%{transform:translateX(-2px);}100%{transform:translateX(0);}}
+  .hubhead{text-align:center;margin:2px 0 20px;}
+  .hubh1{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-weight:600;letter-spacing:.02em;font-size:26px;margin:0;color:var(--text);}
+  .hubmeta{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 10px;margin-top:12px;}
+  .hubchip{display:inline-flex;align-items:center;gap:6px;background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-pill);padding:5px 12px;font-size:12.5px;font-weight:600;color:var(--text2);}
+  .hubchip.hubcount{color:var(--topbar-bg);border-color:#E7C3B8;background:#FBECEA;}
+  .hubchip b{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;color:var(--text);letter-spacing:.04em;font-weight:600;}
   .gameover{background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-card);padding:32px 24px;text-align:center;max-width:560px;margin:0 auto;}
   .gameover h2{font-family:'Oswald',Arial,sans-serif;font-weight:600;margin:0 0 8px;font-size:24px;letter-spacing:.03em;}
   .gameover .stats{display:flex;justify-content:center;gap:34px;margin:16px 0 20px;}
@@ -306,7 +312,12 @@
   .cta:disabled{opacity:.45;cursor:default;filter:grayscale(1);}
   .cta.sec{background:transparent;color:var(--topbar-bg);border:2px solid var(--topbar-bg);}
   .cta.sec:hover:not(:disabled){background:rgba(184,80,60,.08);}
+  /* Botó terciari discret "Tots els jocs" (torna al hub des del resultat). Sense classe .cta => no li afecta el width:100% del landscape, per evitar scroll. */
+  .hubbtn{background:#fff;border:2px solid var(--topbar-bg);color:var(--topbar-bg);font:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:10px 24px;border-radius:var(--r-pill);transition:color .12s,background .12s;}
+  .hubbtn:hover{background:rgba(184,80,60,.08);}
   .tagd{align-self:flex-start;margin-top:auto;background:#F7E5E0;color:#B23A2E;font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);}
+  .tagd.done{background:#E7F4EC;color:#2E7D4F;}
+  .tagd.streak{background:#FBEFD6;color:#8A5A00;}
   .gamehead{text-align:center;margin:0 0 10px;}
   .gamehead h2{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-weight:600;letter-spacing:.03em;font-size:19px;margin:0;}
   .gamehead .sub{color:var(--text2);font-size:12px;margin-top:2px;}
@@ -317,6 +328,66 @@
   .gameover .countdown{color:var(--text2);font-size:13px;margin:2px 0 18px;}
   .gameover .countdown b{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;color:var(--text);letter-spacing:.05em;font-weight:600;font-size:15px;}
   .btnrow{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+  /* «Contemporanis?» — repte diari de 5 parelles */
+  .con .conprog{display:flex;gap:6px;justify-content:flex-end;align-items:center;}
+  .condot{width:10px;height:10px;border-radius:999px;background:var(--border-strong);opacity:.45;transition:opacity .15s,background .15s;}
+  .condot.cur{opacity:1;box-shadow:0 0 0 3px rgba(184,80,60,.22);}
+  .condot.ok{background:#2E9B5B;opacity:1;}
+  .condot.no{background:#C43A2C;opacity:1;}
+  .concards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0 20px;align-items:stretch;}
+  .concards .itemcard.con{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:28px 20px;min-height:150px;}
+  .concards .itemcard.con .nm{font-size:21px;margin-top:0;}
+  .concards .itemcard.con .yr{margin-top:12px;}
+  .concards .itemcard.con .yr .q{font-size:26px;opacity:.35;}
+  .conq{text-align:center;font-size:19px;font-weight:600;color:var(--text);margin:2px 0 16px;min-height:24px;}
+  .conq.ok{color:#238049;}
+  .conq.no{color:#B4321F;}
+  .conchoices{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:420px;margin:0 auto;}
+  .conchoices .choice{display:flex;align-items:center;justify-content:center;gap:9px;padding:13px 16px;}
+  .conchoices .choice .big{display:inline;font-size:21px;line-height:1;margin:0;color:var(--topbar-bg);font-family:'Oswald','Roboto Condensed',Arial,sans-serif;}
+  .conchoices .choice.sel-ok{border-color:#2E9B5B;color:#238049;box-shadow:0 3px 0 #BFE6CC;}
+  .conchoices .choice.sel-ok .big{color:#2E9B5B;}
+  .conchoices .choice.sel-no{border-color:#C43A2C;color:#B4321F;box-shadow:0 3px 0 #E7C3B8;}
+  .conchoices .choice.sel-no .big{color:#C43A2C;}
+  .confailwrap{margin:2px 0 14px;display:flex;flex-direction:column;gap:6px;}
+  .confailt{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;font-weight:600;text-align:center;}
+  .concrono{display:block;width:100%;text-align:left;background:rgba(184,80,60,.05);border:1px solid var(--border);border-radius:var(--r-card);padding:8px 14px;font:inherit;font-size:13px;font-weight:600;color:var(--topbar-bg);cursor:pointer;}
+  .concrono:hover{background:rgba(184,80,60,.1);}
+  .concrono.dis{color:var(--text2);cursor:default;background:transparent;}
+  .concrono.okrow{background:rgba(46,155,91,.08);border-color:#BFE6CC;color:#238049;cursor:default;}
+  .concrono.failrow{background:rgba(196,58,44,.06);border-color:#E7C3B8;color:#B4321F;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .concrono.failrow.dis{cursor:default;background:rgba(196,58,44,.04);}
+  .concrono .cgo{opacity:.8;flex:0 0 auto;}
+  @media (min-width:861px){
+    .game.con{max-width:640px;min-height:58vh;display:flex;flex-direction:column;justify-content:center;}
+    .con .concards{min-height:190px;margin:16px 0 24px;}
+    .con .concards .itemcard.con{min-height:190px;}
+    .con .concards .itemcard.con .nm{font-size:23px;}
+  }
+  @media (max-width:600px){
+    .gameover.con{padding:20px 16px;}
+    .gameover.con .stats{gap:26px;margin:12px 0 12px;}
+    .gameover.con .stat .v{font-size:34px;}
+    .gameover.con .confailwrap{margin:6px 0 10px;gap:5px;}
+    .gameover.con .confailt{margin-bottom:2px;}
+    .gameover.con .concrono{padding:7px 12px;font-size:12.5px;}
+    .gameover.con .locknote{display:none;}
+    .gameover.con .countdown{margin:2px 0 12px;}
+  }
+  @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
+    .game.con{display:flex;flex-direction:column;justify-content:center;height:100%;max-width:680px;margin:0 auto;gap:6px;}
+    .con .concards{margin:4px 0 8px;min-height:0;}
+    .con .concards .itemcard.con{padding:12px 12px;min-height:0;}
+    .con .concards .itemcard.con .nm{font-size:16px;margin-top:0;}
+    .con .concards .itemcard.con .yr{font-size:22px;min-height:26px;margin-top:4px;}
+    .con .conq{font-size:15px;margin:2px 0 8px;min-height:0;}
+    .con .conchoices{max-width:none;}
+    .con .conchoices .choice{padding:10px 12px;}
+    .con .conchoices .choice .big{font-size:18px;}
+    .confailwrap{margin:2px 0 8px;gap:4px;}
+    .concrono{padding:6px 12px;font-size:12px;}
+    .gameover.con .locknote{display:none;}
+  }
 
   /* ===== Responsive (mateixos punts de tall que la topbar d'index) ===== */
   @media (max-width:860px){
@@ -534,7 +605,7 @@
     .mem-pdesc{font-size:13px;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
     .mem-pbtns{margin-top:12px;gap:8px;}
   }
-  .mbanner .memshare{margin-top:14px;}
+  .mbanner .memshare{margin-top:14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
 </style>
 </head>
 <body>
@@ -543,20 +614,20 @@
     <!-- BLOC COMPARTIT: mateix markup als dos fitxers; nomes canvia quin <a> porta .on -->
     <div class="secnav">
       <button class="brand" type="button" aria-haspopup="true" aria-expanded="false"><span class="brand-long">HISTÒRIA BASica</span><span class="brand-short">HB</span><svg class="brandcaret" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button>
-      <nav class="modeswitch" aria-label="Seccions">
-        <a class="mode" href="index.html" title="Cronograma"><svg class="mode-ic" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2.5 15h13"/><path d="M4 6h7"/><path d="M7 10.5h7.5"/></svg><span class="mode-tx">Cronograma</span></a>
-        <a class="mode on" href="joc.html" aria-current="page" title="Jocs"><svg class="mode-ic" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.4" y="2.4" width="13.2" height="13.2" rx="3.4"/><circle cx="6" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg><span class="mode-tx">Jocs</span></a>
+      <nav class="modeswitch" aria-label="Seccions" data-i18n-aria="nav_sections">
+        <a class="mode" href="index.html" title="Cronograma" data-i18n-title="nav_cronograma"><svg class="mode-ic" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2.5 15h13"/><path d="M4 6h7"/><path d="M7 10.5h7.5"/></svg><span class="mode-tx" data-i18n="nav_cronograma">Cronograma</span></a>
+        <a class="mode on" href="joc.html" aria-current="page" title="Jocs" data-i18n-title="nav_jocs"><svg class="mode-ic" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.4" y="2.4" width="13.2" height="13.2" rx="3.4"/><circle cx="6" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg><span class="mode-tx" data-i18n="nav_jocs">Jocs</span></a>
       </nav>
     </div>
   </div>
   <div class="topbar-right">
-    <button id="back" class="btn" hidden style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.4 9 3.4l6 5"/><path d="M4.6 7.8V14.4h8.8V7.8"/></svg><span>Tots els jocs</span></button>
+    <button id="back" class="btn" hidden style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.4 9 3.4l6 5"/><path d="M4.6 7.8V14.4h8.8V7.8"/></svg><span data-i18n="back_all">Tots els jocs</span></button>
   </div>
 </header>
 <main id="app"></main>
 <footer class="footer">
   <span>© 2026 HISTÒRIA BASica</span>
-  <span>Dades de <a href="https://www.wikidata.org" target="_blank" rel="noopener noreferrer">Wikidata</a> · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0</a></span>
+  <span><span data-i18n="footer_source">Dades de</span> <a href="https://www.wikidata.org" target="_blank" rel="noopener noreferrer">Wikidata</a> · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0</a></span>
 </footer>
 
 <!-- ⚠️ PROVISIONAL: data.js és una CÒPIA (snapshot) de les dades que ara viuen a
@@ -572,23 +643,189 @@
 
   // ---- Analitica: helper unic per a GA4 (unifica els events + guard contra gtag absent) ----
   function track(event, params){ try{ if(typeof gtag!=='undefined') gtag('event', event, params||{}); }catch(_){} }
+
+  // ===== i18n · internacionalitzacio (backend preparat; nomes 'ca' actiu) =====
+  // Contracte compartit amb index.html (veure i18n_requirements.md):
+  //   - clau localStorage 'hb_lang', codis ISO 639-1 ('ca'|'es'|'en').
+  //   - deteccio ACTIVA (navigator.language) pero CLAMPADA a I18N_SUPPORTED => avui sempre 'ca'.
+  // Per activar un idioma: afegir el codi a I18N_SUPPORTED, omplir I18N[codi] i validar-lo.
+  const I18N_DEFAULT='ca';
+  const I18N_SUPPORTED=['ca'];   // idiomes ACTIUS (traduits + validats). Afegir 'es'/'en' aqui.
+  const LANG_KEY='hb_lang';
+  const I18N={
+    ca:{
+      // -- comu --
+      bce:'aC',
+      daily_challenge:'Repte diari',
+      new_challenge_in:'Nou repte en',
+      streak_days: v => (v.n===1?'dia':'dies')+' seguits',
+      streak_days_hit: v => (v.n===1?'dia':'dies')+' seguits encertant',
+      locknote_played:"Ja has jugat el repte d'avui. Torna demà per un de nou!",
+      locknote_solved:"Ja has resolt el repte d'avui. Torna demà per un de nou!",
+      share_btn:'📤 Comparteix',
+      show_crono:'🏛️ A veure, ensenyam-ho',
+      copied:'Copiat! ✅',
+      copied_short:'✓ Copiat!',
+      retry:'Torna-ho a provar',
+      close:'Tanca',
+      read_more:'🔗 Llegeix-ne més',
+      err_no_data:"Ens hem quedat sense història! N'estem fabricant de nova. Torna demà 🛠️",
+      meta_birth:'🎂 naixement',
+      meta_death:'🕯️ mort',
+      // -- capcalera / peu (compartit amb index) --
+      doc_title:'Història Bàsica · Jocs',
+      nav_sections:'Seccions',
+      nav_cronograma:'Cronograma',
+      nav_jocs:'Jocs',
+      back_all:'Tots els jocs',
+      footer_source:'Dades de',
+      // -- menu de jocs --
+      badge_discover:'🌟 Descobreix',
+      badge_daily:'📅 Repte diari',
+      badge_soon:'🚧 Pròximament',
+      badge_done:'✓ Fet avui',
+      badge_streak:v=>'🔥 '+v.n+(v.n===1?' dia':' dies'),
+      hub_title:'Reptes del dia',
+      hub_done_today:'fets avui',
+      hub_reset_in:'Es reinicia en',
+      hub_all_games:'🎮 Tots els jocs',
+      toast_wip:'🚧 En construcció',
+      t_ordena:'Ordena la línia',
+      d_ordena:'Ordena aquests 5 fets històrics correctament.',
+      t_abansdespres:'Abans o després?',
+      d_abansdespres:'Encadena encerts dient si cada item és abans o després. Un repte nou cada dia.',
+      t_personatgedia:'Personatge del dia',
+      d_personatgedia:'Cada dia, una persona real de la història per descobrir i aprendre.',
+      t_memory:'Memory',
+      d_memory:'Troba les parelles de personatges. Fàcil (foto×2) o difícil (foto+nom). Nou cada dia.',
+      t_personatge:'Endevina el personatge',
+      d_personatge:'Pistes progressives (era, categoria, descripció) fins encertar-ho.',
+      t_contemporanis:'Contemporanis?',
+      d_contemporanis:'Van coincidir en vida aquestes dues persones? Sí o no.',
+      // -- Contemporanis? --
+      con_q:'Van coincidir?',
+      con_pairs:'Les parelles',
+      con_yes:'Sí',
+      con_no:'No',
+      con_alive:'avui',
+      con_meta_person:'👤 Persona',
+      con_meta_event:'📜 Fet',
+      con_fb_ok:'Correcte ✓',
+      con_fb_no:'Incorrecte ✗',
+      con_perfect:'Ple! 5/5 🏆',
+      con_done:'Repte completat',
+      con_hits:'encerts',
+      con_failed:'Parelles fallades',
+      con_err:"No hi ha prou dades per jugar. Torna demà 🛠️",
+      share_con: v => '🤝 Història BASica · Contemporanis? — '+v.dd+v.nl+v.squares+v.nl+'🎯 '+v.score+'/5 · 🔥 '+v.days+' '+(v.days===1?'dia':'dies')+' seguits',
+      // -- Abans o despres? --
+      before:'Abans',
+      after:'Després',
+      joker:'Comodí',
+      joker_spent:'Gastat',
+      joker_title:'Comodí: passa aquesta parella (un cop per partida)',
+      joker_used_title:'Comodí ja gastat en aquesta partida',
+      perfect_round:'Ronda perfecta! 🏆',
+      challenge_done:'Repte completat',
+      hits_in_row:'encerts seguits',
+      err_not_enough:'No hi ha prou dades per jugar.',
+      share_ad: v => '🏛️ Història Bàsica — Repte diari '+v.date+'\n🎯 '+v.score+' encerts seguits\n🔥 '+v.days+' '+(v.days===1?'dia':'dies')+' seguits',
+      // -- Personatge del dia --
+      searching_wikidata:'Cercant a Wikidata…',
+      no_desc:'Sense descripció disponible.',
+      fav_on:'★ Als favorits',
+      fav_off:'☆ Afegeix a favorits',
+      see_crono:'📅 Veure al cronograma',
+      album_count: v => '📇 Has descobert '+v.n+' '+(v.n===1?'personatge':'personatges'),
+      inv_who_f:'aquesta mossa',
+      inv_who_m:'aquest nano',
+      inv_who_n:'aquesta persona',
+      inv_title:'Falta la foto',
+      inv_text: v => "Si tens una imatge d'"+v.who+', et convido a pujar-la a la wikipedia: entre tots farem del món un lloc millor 🌍',
+      inv_cta:'Puja una imatge a Commons »',
+      inv_no:'Ara no',
+      inv_help:'Com es puja una imatge? ↗',
+      err_no_person:'No hem trobat cap personatge avui. Torna-ho a provar.',
+      err_list_missing:'Falta la llista de personatges (personatges.js). Cal generar-la amb gen_personatges.py.',
+      err_wikidata:"No s'ha pogut connectar amb Wikidata. Comprova la connexió i torna-ho a provar.",
+      // -- Ordena la línia --
+      ord_sub:'Arrossega per ordenar de més antic (dalt) a més nou (baix) · Repte diari',
+      oldest:'↑ més antic',
+      newest:'més nou ↓',
+      ord_submit:'Ho tinc!',
+      ord_fail_1:'Ai, per poc! 😅',
+      ord_fail_2:'Suposo que la idea era bona però… 🙄',
+      ord_fail_3:'Osti quin desastre… 🙈',
+      ord_win:'Ben ordenat! 🎉',
+      ord_streak_broken:"S'ha trencat la ratxa. En vermell, els que estaven fora de lloc.",
+      ord_locked_win:'Encertat! 🎉',
+      ord_locked_lose:'No encertat 😬',
+      share_ord: v => '🕰️ Història BASica · Ordena la línia — '+v.dd+v.nl+v.squares+v.nl+'🔥 '+v.days+' '+(v.days===1?'dia':'dies')+' seguits',
+      // -- Memory --
+      mem_easy:'🟢 Fàcil',
+      mem_hard:'🔴 Difícil',
+      easy:'Fàcil',
+      hard:'Difícil',
+      errors_count: v => v.n+' error'+(v.n!==1?'s':''),
+      mem_result: v => { var t1=v.mode==='easy'?1:2, t2=v.mode==='easy'?3:5, n=v.errors; if(n===0) return '0 ERRORS! Increïble 🤩'; if(n<=t1) return n+' error'+(n!==1?'s':'')+' – Increïble 🤩'; if(n<=t2) return n+' error'+(n!==1?'s':'')+' – Bona feina 😌'; return n+' error'+(n!==1?'s':'')+' – Bueno, si tu t’ho has passat bé… 🙄'; },
+      mem_see_crono:'🗺️ Veure al cronograma',
+      mem_no_crono:'🗺️ No disponible al cronograma',
+      mem_no_crono_title:'Ja em sap greu, però a la Viquipèdia no hi surt l’any de naixement',
+      mem_loading:'Buscant personatges…',
+      mem_err_load:'No s’han pogut carregar els personatges. Comprova la connexió i torna-ho a provar.',
+      share_mem: v => '🎴 Memory – '+v.date+'\n'+(v.mode==='easy'?'🟢 Fàcil':'🔴 Difícil')+' – '+v.msg+'\nbernatbas.github.io/el_cronograma/joc.html'
+    }
+  };
+  function detectLang(){
+    try{
+      const saved=localStorage.getItem(LANG_KEY);
+      if(saved && I18N_SUPPORTED.indexOf(saved)>=0) return saved;
+      const navs=(navigator.languages&&navigator.languages.length)?navigator.languages:[navigator.language||''];
+      for(let i=0;i<navs.length;i++){ const c=String(navs[i]||'').slice(0,2).toLowerCase(); if(I18N_SUPPORTED.indexOf(c)>=0) return c; }
+    }catch(_){}
+    return I18N_DEFAULT;
+  }
+  let LANG=detectLang();
+  try{ document.documentElement.lang=LANG; }catch(_){}
+  // t(clau[,vars]): valor de l'idioma actiu amb fallback a I18N_DEFAULT. Accepta funcions i {var}.
+  function t(key,vars){
+    const d=I18N[LANG]||I18N[I18N_DEFAULT];
+    let v=(d&&d[key]!=null)?d[key]:(I18N[I18N_DEFAULT]?I18N[I18N_DEFAULT][key]:null);
+    if(v==null) return '';
+    if(typeof v==='function') return v(vars||{});
+    if(vars) v=v.replace(/\{(\w+)\}/g,function(m,k){ return vars[k]!=null?vars[k]:m; });
+    return v;
+  }
+  function setLang(code){ if(I18N_SUPPORTED.indexOf(code)<0) return; LANG=code; try{ localStorage.setItem(LANG_KEY,code); document.documentElement.lang=code; }catch(_){} }
+  // Prioritat d'idiomes per a Wikidata segons l'idioma actiu (p.ex. 'en' => 'en|ca|es').
+  function wdLangs(){ const base=['ca','es','en']; return [LANG].concat(base.filter(function(l){return l!==LANG;})).join('|'); }
+  // Aplica els textos estatics marcats amb data-i18n / data-i18n-title / data-i18n-aria.
+  function applyI18nStatic(scope){
+    const s=scope||document;
+    s.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i18n')); });
+    s.querySelectorAll('[data-i18n-title]').forEach(function(el){ el.title=t(el.getAttribute('data-i18n-title')); });
+    s.querySelectorAll('[data-i18n-aria]').forEach(function(el){ el.setAttribute('aria-label',t(el.getAttribute('data-i18n-aria'))); });
+    try{ document.title=t('doc_title'); }catch(_){}
+  }
+
   // --- Catàleg de jocs (de moment només obren un placeholder) ---
   const GAMES=[
-    {id:'ordena',       ic:'🕰️', t:'Ordena la línia',        d:'Ordena aquests 5 fets històrics correctament.'},
-    {id:'abansdespres', ic:'⚖️', t:'Abans o després?',        d:'Encadena encerts dient si cada item és abans o després. Un repte nou cada dia.'},
-    {id:'personatgedia',ic:'🎭', t:'Personatge del dia',      d:'Cada dia, una persona real de la història per descobrir i aprendre.', discover:true},
-    {id:'memory',       ic:'🃏', t:'Memory',                  d:'Troba les parelles de personatges. Fàcil (foto×2) o difícil (foto+nom). Nou cada dia.'},
-    {id:'personatge',   ic:'🕵️', t:'Endevina el personatge',  d:'Pistes progressives (era, categoria, descripció) fins encertar-ho.'},
-    {id:'contemporanis',ic:'🤝', t:'Contemporanis?',          d:'Van coincidir en vida aquestes dues persones? Sí o no.'}
+    {id:'ordena',       ic:'🕰️', titleKey:'t_ordena',        descKey:'d_ordena'},
+    {id:'abansdespres', ic:'⚖️', titleKey:'t_abansdespres',  descKey:'d_abansdespres'},
+    {id:'personatgedia',ic:'🎭', titleKey:'t_personatgedia', descKey:'d_personatgedia', discover:true},
+    {id:'memory',       ic:'🃏', titleKey:'t_memory',        descKey:'d_memory'},
+    {id:'personatge',   ic:'🕵️', titleKey:'t_personatge',    descKey:'d_personatge'},
+    {id:'contemporanis',ic:'🤝', titleKey:'t_contemporanis', descKey:'d_contemporanis'}
   ];
   const app=document.getElementById('app');
   const back=document.getElementById('back');
   let activeModule=null;
+  let hubCd=null;
 
   function dataOk(){return !!(window.HB_DATA && HB_DATA.PEOPLE && HB_DATA.EVENTS);}
 
   // ---- Utils compartits ----
-  const fmtYear = y => y<0 ? Math.abs(y)+' aC' : String(y);
+  const fmtYear = y => y<0 ? Math.abs(y)+' '+t('bce') : String(y);
   function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
   function readLS(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(_){ return null; } }
   function writeLS(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(_){} }
@@ -649,6 +886,10 @@
     location.href='index.html?from=joc';
   }
 
+  // Botó compartit "Tots els jocs": torna al hub des de les pantalles de resultat dels jocs amb final.
+  function hubBtnHTML(){ return '<button class="hubbtn" type="button" data-x="hub">'+t('hub_all_games')+'</button>'; }
+  function wireHubBtn(scope){ if(!scope) return; const b=scope.querySelector('[data-x="hub"]'); if(b) b.addEventListener('click',function(){ location.hash=''; }); }
+
   // ===== Mòdul: «Abans o després?» — REPTE DIARI (determinista per data + 1 intent/dia) =====
   const AbansDespres = (function(){
     const DAILY_KEY='hb_ad_daily';    // { date, score, perfect }
@@ -659,8 +900,8 @@
     function meta(it){
       if(it.kind==='event') return '<div class="meta ev"></div>';
       return it.anchor==='naix'
-        ? '<div class="meta">🎂 naixement</div>'
-        : '<div class="meta">🕯️ mort</div>';
+        ? '<div class="meta">'+t('meta_birth')+'</div>'
+        : '<div class="meta">'+t('meta_death')+'</div>';
     }
     // role: 'ref' (fixada, amb xinxeta) o 'new' (elevada, apareix animada). flip: anima l'any en revelar-se.
     function card(it,opts){
@@ -671,7 +912,7 @@
       return `<div class="${cls}">${meta(it)}<div class="nm">${it.name}</div><div class="${yrCls}">${yrInner}</div></div>`;
     }
 
-    function head(){ return `<div class="gamehead"><h2>⚖️ Abans o després?</h2><div class="sub">Repte diari · ${ddmm(todayStr())}</div></div>`; }
+    function head(){ return `<div class="gamehead"><h2>⚖️ ${t('t_abansdespres')}</h2><div class="sub">${t('daily_challenge')} · ${ddmm(todayStr())}</div></div>`; }
 
     // Següent candidat de la baralla FINITA (sense rebarreig). Salta empats d'any (determinista).
     function nextCandidate(){
@@ -753,7 +994,7 @@
       root.innerHTML = `
         <div class="game">
           <div class="gtop">
-            <div class="gtitle">⚖️ Abans o després?</div>
+            <div class="gtitle">⚖️ ${t('t_abansdespres')}</div>
             <div class="gscore"><div class="n" id="scoren"><span class="ic">🎯</span><span class="v">${score}</span></div></div>
           </div>
           <div class="cards2">
@@ -762,11 +1003,11 @@
             <div id="candslot">${card(candidate,{role:'new',enter:true})}</div>
           </div>
           <div class="choices">
-            <button class="choice" data-a="abans"><span class="big">←</span>Abans</button>
-            <button class="pass" data-x="skip"${skipUsed?' disabled':''} title="${skipUsed?'Comodí ja gastat en aquesta partida':'Comodí: passa aquesta parella (un cop per partida)'}"><span class="jk">🃏</span><span class="jt">${skipUsed?'Gastat':'Comodí'}</span><span class="jn">${skipUsed?0:1}</span></button>
-            <button class="choice" data-a="despres"><span class="big">→</span>Després</button>
+            <button class="choice" data-a="abans"><span class="big">←</span>${t('before')}</button>
+            <button class="pass" data-x="skip"${skipUsed?' disabled':''} title="${skipUsed?t('joker_used_title'):t('joker_title')}"><span class="jk">🃏</span><span class="jt">${skipUsed?t('joker_spent'):t('joker')}</span><span class="jn">${skipUsed?0:1}</span></button>
+            <button class="choice" data-a="despres"><span class="big">→</span>${t('after')}</button>
           </div>
-          <div class="gamefoot">📅 Repte diari · ${ddmm(todayStr())}</div>
+          <div class="gamefoot">📅 ${t('daily_challenge')} · ${ddmm(todayStr())}</div>
         </div>`;
       root.querySelectorAll('.choice').forEach(b=>{
         b.addEventListener('click',()=>guess(b.getAttribute('data-a')));
@@ -820,7 +1061,7 @@
     function showResult(sc,perfect){
       if(timer){ clearTimeout(timer); timer=null; }
       const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
-      const title = perfect ? '<span class="perfect">Ronda perfecta! 🏆</span>' : 'Repte completat';
+      const title = perfect ? '<span class="perfect">'+t('perfect_round')+'</span>' : t('challenge_done');
       const cronoPeople = !perfect && failPair ? failPair.map(personFromItem).filter(Boolean) : [];
       const cronoEvents = !perfect && failPair ? failPair.map(eventFromItem).filter(Boolean) : [];
       const hasCrono = cronoPeople.length || cronoEvents.length;
@@ -829,23 +1070,24 @@
           ${head()}
           <h2 class="rtitle">${title}</h2>
           <div class="stats">
-            <div class="stat"><div class="v">🎯 ${sc}</div><div class="k">encerts seguits</div></div>
-            <div class="stat"><div class="v">🔥 ${days}</div><div class="k">${days===1?'dia':'dies'} seguits</div></div>
+            <div class="stat"><div class="v">🎯 ${sc}</div><div class="k">${t('hits_in_row')}</div></div>
+            <div class="stat"><div class="v">🔥 ${days}</div><div class="k">${t('streak_days',{n:days})}</div></div>
           </div>
-          <div class="locknote">Ja has jugat el repte d'avui. Torna demà per un de nou!</div>
-          <div class="countdown">Nou repte en <b id="cd">--:--:--</b></div>
-          <div class="btnrow"><button class="cta" data-x="share">📤 Comparteix</button>${hasCrono?'<button class="cta sec" data-x="crono">🏛️ A veure, ensenyam-ho</button>':''}</div>
+          <div class="locknote">${t('locknote_played')}</div>
+          <div class="countdown">${t('new_challenge_in')} <b id="cd">--:--:--</b></div>
+          <div class="btnrow"><button class="cta" data-x="share">${t('share_btn')}</button>${hasCrono?'<button class="cta sec" data-x="crono">'+t('show_crono')+'</button>':''}${hubBtnHTML()}</div>
         </div>`;
       const sh=root.querySelector('[data-x="share"]');
       if(sh) sh.addEventListener('click',()=>doShare(sc,days,sh));
       if(hasCrono){const cb=root.querySelector('[data-x="crono"]');if(cb)cb.addEventListener('click',()=>goToCronograma('abansdespres',[...cronoPeople,...cronoEvents]));}
+      wireHubBtn(root);
       startCountdown();
     }
 
     function doShare(sc,days,btn){
-      const text='🏛️ Història Bàsica — Repte diari '+ddmm(todayStr())+'\n🎯 '+sc+' encerts seguits\n🔥 '+days+' '+(days===1?'dia':'dies')+' seguits';
+      const text=t('share_ad',{date:ddmm(todayStr()),score:sc,days:days});
       if(navigator.share){ navigator.share({text:text}).catch(()=>{}); return; }
-      const done=()=>{ if(btn){ const o=btn.textContent; btn.textContent='Copiat! ✅'; setTimeout(()=>{ btn.textContent=o; },1800); } };
+      const done=()=>{ if(btn){ const o=btn.textContent; btn.textContent=t('copied'); setTimeout(()=>{ btn.textContent=o; },1800); } };
       if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(done); }
       else { done(); }
     }
@@ -876,7 +1118,7 @@
       idx=0; score=0; locked=false; skipUsed=false; current=null; candidate=null;
       current=deck[idx++]||null;
       candidate=current?nextCandidate():null;
-      if(!current||!candidate){ root.innerHTML='<div class="err">No hi ha prou dades per jugar.</div>'; return; }
+      if(!current||!candidate){ root.innerHTML='<div class="err">'+t('err_not_enough')+'</div>'; return; }
       render();
     }
 
@@ -892,6 +1134,7 @@
     const ALBUM_KEY='hb_personatge_album'; // [ {qid,name,birth,death,img,desc,date} ]
     const FAV_KEY='hb_favorits';           // stub; enllaçarà amb Favorits quan existeixin
     const POPUP_KEY='hb_personatge_popup'; // { date } — pop-up d'invitacio ja mostrat/tancat AVUI (clau per DATA)
+    const STREAK_KEY='hb_personatge_streak'; // { last, days } — ratxa de dies descobrint el personatge
     const WD_API='https://www.wikidata.org/w/api.php';
     const COMMONS='https://commons.wikimedia.org/wiki/Special:FilePath/';
     const MAX_TRIES=5; // intents deterministes (base, base+1, …) si algun QID de la llista fos invàlid/esborrat
@@ -951,7 +1194,7 @@
     // te forma femenina per a aquella ocupacio, es manté l'etiqueta per defecte (masculi generic).
     async function labelsFor(qids){
       if(!qids.length) return {};
-      const data=await wd({action:'wbgetentities',ids:qids.join('|'),props:'labels|claims',languages:'ca|es|en'});
+      const data=await wd({action:'wbgetentities',ids:qids.join('|'),props:'labels|claims',languages:wdLangs()});
       const map={}, ents=data.entities||{};
       Object.keys(ents).forEach(function(q){ const e=ents[q]; map[q]={label:lbl(e.labels), female:monolingual(e.claims,'P2521')}; });
       return map;
@@ -984,7 +1227,7 @@
     // data de naixement i article a la Viquipèdia en català I castellà I anglès (AND)). Només IDs, res més.
     function pool(){ return (typeof window!=='undefined' && Array.isArray(window.HB_PERSONATGES)) ? window.HB_PERSONATGES : []; }
     async function fetchPerson(qid,trusted){
-      const data=await wd({action:'wbgetentities',ids:qid,props:'labels|descriptions|claims|sitelinks/urls',languages:'ca|es|en',sitefilter:'cawiki|eswiki|enwiki'});
+      const data=await wd({action:'wbgetentities',ids:qid,props:'labels|descriptions|claims|sitelinks/urls',languages:wdLangs(),sitefilter:'cawiki|eswiki|enwiki'});
       const e=(data.entities||{})[qid];
       if(!isValid(e,trusted)) return null;
       return build(e,qid);
@@ -1021,6 +1264,7 @@
 
     // --- Àlbum + favorits (localStorage) ---
     function addToAlbum(p){ const a=readLS(ALBUM_KEY)||[]; if(!a.some(function(x){ return x.qid===p.qid; })){ a.push({qid:p.qid,name:p.name,birth:p.birth,death:p.death,img:p.img,desc:p.desc,date:todayStr()}); writeLS(ALBUM_KEY,a); } }
+    function bumpStreak(){ const today=todayStr(); const st=readLS(STREAK_KEY); let days=1; if(st){ if(st.last===yesterdayStr()) days=(st.days||0)+1; else if(st.last===today) days=st.days||1; else days=1; } writeLS(STREAK_KEY,{last:today,days:days}); return days; }
     function favs(){ return readLS(FAV_KEY)||[]; }
     function isFav(qid){ return favs().some(function(x){ return x.qid===qid; }); }
     function toggleFav(p){ let a=favs(); if(a.some(function(x){ return x.qid===p.qid; })) a=a.filter(function(x){ return x.qid!==p.qid; }); else a.push({qid:p.qid,name:p.name,birth:p.birth,death:p.death,img:p.img,desc:p.desc}); writeLS(FAV_KEY,a); return isFav(p.qid); }
@@ -1041,21 +1285,21 @@
       popupTimer=setTimeout(function(){ popupTimer=null; if(!alive) return; if(popupSeenToday()) return; if(document.getElementById('pinvov')) return; showInvitePopup(p); },1500);
     }
     function showInvitePopup(p){
-      const qui = p.gender==='f' ? 'aquesta mossa' : (p.gender==='m' ? 'aquest nano' : 'aquesta persona');
+      const qui = p.gender==='f' ? t('inv_who_f') : (p.gender==='m' ? t('inv_who_m') : t('inv_who_n'));
       const ov=el('div','pinvov'); ov.id='pinvov';
       const md=el('div','pinvmodal');
-      const x=el('button','pinvx','✕'); x.setAttribute('aria-label','Tanca'); x.addEventListener('click',function(){ markPopupSeen(); closeInvitePopup(); }); md.appendChild(x);
+      const x=el('button','pinvx','✕'); x.setAttribute('aria-label',t('close')); x.addEventListener('click',function(){ markPopupSeen(); closeInvitePopup(); }); md.appendChild(x);
       md.appendChild(el('div','pinvemoji','🖼️'));
-      md.appendChild(el('h3','pinvtitle','Falta la foto'));
-      md.appendChild(el('p','pinvtext','Si tens una imatge d\''+qui+', et convido a pujar-la a la wikipedia: entre tots farem del món un lloc millor 🌍'));
-      const cta=el('a','pinvcta','Puja una imatge a Commons »');
+      md.appendChild(el('h3','pinvtitle',t('inv_title')));
+      md.appendChild(el('p','pinvtext',t('inv_text',{who:qui})));
+      const cta=el('a','pinvcta',t('inv_cta'));
       cta.href='https://commons.wikimedia.org/wiki/Special:UploadWizard';
       cta.target='_blank'; cta.rel='noopener';
       cta.addEventListener('click',function(){ markPopupSeen(); closeInvitePopup(); });
       md.appendChild(cta);
-      const no=el('button','pinvno','Ara no'); no.addEventListener('click',function(){ markPopupSeen(); closeInvitePopup(); }); md.appendChild(no);
+      const no=el('button','pinvno',t('inv_no')); no.addEventListener('click',function(){ markPopupSeen(); closeInvitePopup(); }); md.appendChild(no);
       // Punt 5: enllac de suport al final ("si necessites ajuda, aqui la tens").
-      const help=el('a','pinvhelp','Com es puja una imatge? ↗');
+      const help=el('a','pinvhelp',t('inv_help'));
       help.href='https://commons.wikimedia.org/wiki/Commons:First_steps/Uploading_files';
       help.target='_blank'; help.rel='noopener'; md.appendChild(help);
       ov.appendChild(md);
@@ -1066,8 +1310,8 @@
     }
 
     // --- Render ---
-    function renderLoading(){ root.innerHTML=''; const w=el('div','pwrap'), l=el('div','ploading'); l.appendChild(el('div','pspin')); l.appendChild(document.createTextNode('Cercant a Wikidata…')); w.appendChild(l); root.appendChild(w); }
-    function renderError(msg){ root.innerHTML=''; const w=el('div','pwrap'), p=el('div','perror'); p.appendChild(el('div',null,'⚠️')); p.appendChild(el('div',null,msg)); const b=el('button','pretry','Torna-ho a provar'); b.addEventListener('click',start); p.appendChild(b); w.appendChild(p); root.appendChild(w); }
+    function renderLoading(){ root.innerHTML=''; const w=el('div','pwrap'), l=el('div','ploading'); l.appendChild(el('div','pspin')); l.appendChild(document.createTextNode(t('searching_wikidata'))); w.appendChild(l); root.appendChild(w); }
+    function renderError(msg){ root.innerHTML=''; const w=el('div','pwrap'), p=el('div','perror'); p.appendChild(el('div',null,'⚠️')); p.appendChild(el('div',null,msg)); const b=el('button','pretry',t('retry')); b.addEventListener('click',start); p.appendChild(b); w.appendChild(p); root.appendChild(w); }
     function renderPerson(p){
       track('personatge_dia_descobert',{});
       root.innerHTML='';
@@ -1076,7 +1320,7 @@
       else { card.appendChild(el('div','pimg ph','👤')); }
       const body=el('div','pbody');
       body.appendChild(el('h2','pname',p.name));
-      body.appendChild(el('p','pdesc',p.desc||'Sense descripció disponible.'));
+      body.appendChild(el('p','pdesc',p.desc||t('no_desc')));
       const chips=el('div','pchips');
       p.occ.forEach(function(o){ chips.appendChild(el('span','pchip',o)); });
       p.country.forEach(function(c){ chips.appendChild(el('span','pchip',c)); });
@@ -1086,22 +1330,22 @@
       // (La invitacio a contribuir ja no es inline: ara es mostra com a pop-up modal; veure scheduleInvitePopup.)
       const acts=el('div','pacts');
       const fav=isFav(p.qid);
-      const fb=el('button','pbtn fav'+(fav?' on':''), fav?'★ Als favorits':'☆ Afegeix a favorits');
-      fb.addEventListener('click',function(){ const on=toggleFav(p); if(on) track('personatge_dia_favorit',{}); fb.classList.toggle('on',on); fb.textContent=on?'★ Als favorits':'☆ Afegeix a favorits'; });
+      const fb=el('button','pbtn fav'+(fav?' on':''), fav?t('fav_on'):t('fav_off'));
+      fb.addEventListener('click',function(){ const on=toggleFav(p); if(on) track('personatge_dia_favorit',{}); fb.classList.toggle('on',on); fb.textContent=on?t('fav_on'):t('fav_off'); });
       acts.appendChild(fb);
-      const cb=el('button','pbtn','📅 Veure al cronograma'); cb.addEventListener('click',function(){ viewInCronograma(p); }); acts.appendChild(cb);
-      if(p.wiki){ const a=el('a','pbtn','🔗 Llegeix-ne més'); a.href=p.wiki; a.target='_blank'; a.rel='noopener'; a.addEventListener('click',function(){ track('personatge_dia_wiki',{}); }); acts.appendChild(a); }
+      const cb=el('button','pbtn',t('see_crono')); cb.addEventListener('click',function(){ viewInCronograma(p); }); acts.appendChild(cb);
+      if(p.wiki){ const a=el('a','pbtn',t('read_more')); a.href=p.wiki; a.target='_blank'; a.rel='noopener'; a.addEventListener('click',function(){ track('personatge_dia_wiki',{}); }); acts.appendChild(a); }
       card.appendChild(body); card.appendChild(acts); w.appendChild(card);
       const album=readLS(ALBUM_KEY)||[];
-      w.appendChild(el('div','palbum','📇 Has descobert '+album.length+' '+(album.length===1?'personatge':'personatges')));
+      w.appendChild(el('div','palbum',t('album_count',{n:album.length})));
       root.appendChild(w);
       scheduleInvitePopup(p);
     }
 
     function start(){
       renderLoading();
-      pickDaily(todayStr()).then(function(p){ if(!alive) return; if(!p){ renderError('No hem trobat cap personatge avui. Torna-ho a provar.'); return; } person=p; addToAlbum(p); renderPerson(p); })
-      .catch(function(err){ if(!alive) return; if(err&&err.code==='LIST_MISSING'){ renderError('Falta la llista de personatges (personatges.js). Cal generar-la amb gen_personatges.py.'); } else { renderError('No s\'ha pogut connectar amb Wikidata. Comprova la connexió i torna-ho a provar.'); } });
+      pickDaily(todayStr()).then(function(p){ if(!alive) return; if(!p){ renderError(t('err_no_person')); return; } person=p; addToAlbum(p); bumpStreak(); renderPerson(p); })
+      .catch(function(err){ if(!alive) return; if(err&&err.code==='LIST_MISSING'){ renderError(t('err_list_missing')); } else { renderError(t('err_wikidata')); } });
     }
     // Precompute en background: prepara el personatge del dia (omple la caché) en carregar la pàgina.
     function precompute(){ try{ pickDaily(todayStr()).catch(function(){}); }catch(_){} }
@@ -1164,12 +1408,12 @@
 
     function isSorted(o){ for(let i=1;i<o.length;i++){ if(o[i].year<=o[i-1].year) return false; } return true; }
     // Meta nomes per a persones (naixement/mort); els esdeveniments no porten cap etiqueta.
-    function meta(it){ if(it.kind==='event') return ''; return it.anchor==='naix'?'🎂 naixement':'🕯️ mort'; }
+    function meta(it){ if(it.kind==='event') return ''; return it.anchor==='naix'?t('meta_birth'):t('meta_death'); }
     function rowHTML(it){ const m=meta(it); const metaHTML=m?'<div class="ometa">'+m+'</div>':''; return '<div class="orditem" data-key="'+it.key+'"><span class="ogrip" aria-hidden="true">⠿</span><div class="omain">'+metaHTML+'<div class="onm">'+it.name+'</div></div><div class="oyr"><span class="q">?</span></div></div>'; }
 
     function render(){
-      const subHTML = locked ? '' : '<div class="sub">Arrossega per ordenar de més antic (dalt) a més nou (baix) · Repte diari</div>';
-      root.innerHTML='<div class="ordwrap"><div class="ordhead"><h2>🕰️ Ordena la línia</h2>'+subHTML+'</div><div class="ordbar"><span>↑ més antic</span><span>més nou ↓</span></div><div class="ordlist"></div><div class="ordfoot"><button class="cta" id="ordsubmit">Ho tinc!</button></div></div>';
+      const subHTML = locked ? '' : '<div class="sub">'+t('ord_sub')+'</div>';
+      root.innerHTML='<div class="ordwrap"><div class="ordhead"><h2>🕰️ '+t('t_ordena')+'</h2>'+subHTML+'</div><div class="ordbar"><span>'+t('oldest')+'</span><span>'+t('newest')+'</span></div><div class="ordlist"></div><div class="ordfoot"><button class="cta" id="ordsubmit">'+t('ord_submit')+'</button></div></div>';
       const list=root.querySelector('.ordlist');
       list.innerHTML=order.map(rowHTML).join('');
       list.querySelectorAll('.orditem').forEach(el=>{ el.addEventListener('pointerdown',function(e){ startDrag(e,el); }); });
@@ -1256,16 +1500,16 @@
       tick(); ocdTimer=setInterval(tick,1000);
     }
     function ordFailTitle(wrong){
-      if(wrong<=2) return 'Ai, per poc! 😅';
-      if(wrong===3) return 'Suposo que la idea era bona però… 🙄';
-      return 'Osti quin desastre… 🙈';
+      if(wrong<=2) return t('ord_fail_1');
+      if(wrong===3) return t('ord_fail_2');
+      return t('ord_fail_3');
     }
     function showBanner(correct, wrong, marks){
       const foot=root.querySelector('.ordfoot'); if(!foot) return;
       const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
       foot.innerHTML = correct
-        ? '<div class="ordbanner ok"><div class="rtitle perfect">Ben ordenat! 🎉</div><div class="streak">🔥 '+days+' '+(days===1?'dia':'dies')+' seguits encertant</div><div class="locknote">Ja has resolt el repte d\'avui. Torna demà per un de nou!</div><div class="countdown">Nou repte en <b id="ocd">--:--:--</b></div></div>'
-        : '<div class="ordbanner no"><div class="rtitle">'+ordFailTitle(wrong)+'</div><div class="streak">S\'ha trencat la ratxa. En vermell, els que estaven fora de lloc.</div><div class="locknote">Ja has resolt el repte d\'avui. Torna demà per un de nou!</div><div class="countdown">Nou repte en <b id="ocd">--:--:--</b></div></div>';
+        ? '<div class="ordbanner ok"><div class="rtitle perfect">'+t('ord_win')+'</div><div class="streak">🔥 '+days+' '+t('streak_days_hit',{n:days})+'</div><div class="locknote">'+t('locknote_solved')+'</div><div class="countdown">'+t('new_challenge_in')+' <b id="ocd">--:--:--</b></div></div>'
+        : '<div class="ordbanner no"><div class="rtitle">'+ordFailTitle(wrong)+'</div><div class="streak">'+t('ord_streak_broken')+'</div><div class="locknote">'+t('locknote_solved')+'</div><div class="countdown">'+t('new_challenge_in')+' <b id="ocd">--:--:--</b></div></div>';
       startCd();
       const bn=foot.querySelector('.ordbanner');
       if(bn){
@@ -1274,10 +1518,11 @@
         const cronoPeople=wrongItems.map(personFromItem).filter(Boolean);
         const cronoEvents=wrongItems.map(eventFromItem).filter(Boolean);
         const hasCrono=cronoPeople.length||cronoEvents.length;
-        br.innerHTML='<button class="cta ordshare" data-x="oshare">📤 Comparteix</button>'+(hasCrono?'<button class="cta sec" data-x="crono">🏛️ A veure, ensenyam-ho</button>':'');
+        br.innerHTML='<button class="cta ordshare" data-x="oshare">'+t('share_btn')+'</button>'+(hasCrono?'<button class="cta sec" data-x="crono">'+t('show_crono')+'</button>':'')+hubBtnHTML();
         bn.appendChild(br);
         const sb=br.querySelector('[data-x="oshare"]'); if(sb) sb.addEventListener('click',()=>ordDoShare(marks,days,sb));
         if(hasCrono){const cb=br.querySelector('[data-x="crono"]');if(cb)cb.addEventListener('click',()=>goToCronograma('ordena',[...cronoPeople,...cronoEvents]));}
+        wireHubBtn(br);
       }
     }
 
@@ -1287,21 +1532,21 @@
       const squares=(marks||[]).map(m=>m?'🟩':'🟥').join('');
       let url=''; try{ if(location && location.origin && location.origin!=='null') url=location.origin+location.pathname; }catch(_){}
       const NL=String.fromCharCode(10);
-      let t='🕰️ Història BASica · Ordena la línia — '+dd+NL+squares+NL+'🔥 '+days+' '+(days===1?'dia':'dies')+' seguits';
-      if(url) t+=NL+url;
-      return t;
+      let out=t('share_ord',{dd:dd,nl:NL,squares:squares,days:days});
+      if(url) out+=NL+url;
+      return out;
     }
     function ordDoShare(marks, days, btn){
       const text=ordShareText(marks,days);
       if(navigator.share){ navigator.share({text:text}).catch(()=>{}); return; }
-      const done=()=>{ if(btn){ const o=btn.textContent; btn.textContent='Copiat! ✅'; setTimeout(()=>{ btn.textContent=o; },1800); } };
+      const done=()=>{ if(btn){ const o=btn.textContent; btn.textContent=t('copied'); setTimeout(()=>{ btn.textContent=o; },1800); } };
       if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(done); }
       else { done(); }
     }
 
     function renderLocked(correct){
       const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
-      root.innerHTML='<div class="gameover"><div class="gamehead"><h2>🕰️ Ordena la línia</h2></div><h2 class="rtitle '+(correct?'perfect':'')+'">'+(correct?'Encertat! 🎉':'No encertat 😬')+'</h2><div class="stats"><div class="stat"><div class="v">🔥 '+days+'</div><div class="k">'+(days===1?'dia':'dies')+' seguits</div></div></div><div class="locknote">Ja has jugat el repte d\'avui. Torna demà per un de nou!</div><div class="countdown">Nou repte en <b id="ocd">--:--:--</b></div></div>';
+      root.innerHTML='<div class="gameover"><div class="gamehead"><h2>🕰️ '+t('t_ordena')+'</h2></div><h2 class="rtitle '+(correct?'perfect':'')+'">'+(correct?t('ord_locked_win'):t('ord_locked_lose'))+'</h2><div class="stats"><div class="stat"><div class="v">🔥 '+days+'</div><div class="k">'+t('streak_days',{n:days})+'</div></div></div><div class="locknote">'+t('locknote_played')+'</div><div class="countdown">'+t('new_challenge_in')+' <b id="ocd">--:--:--</b></div></div>';
       startCd();
     }
 
@@ -1429,7 +1674,7 @@
             for(let i=0;i<BATCH;i++) ids.push('Q'+list[(batchStart+i)%list.length]);
             batchStart=(batchStart+BATCH)%list.length;
             try{
-              const data=await wd({action:'wbgetentities',ids:ids.join('|'),props:'labels|descriptions|claims|sitelinks',languages:'ca|es|en'});
+              const data=await wd({action:'wbgetentities',ids:ids.join('|'),props:'labels|descriptions|claims|sitelinks',languages:wdLangs()});
               const ents=data.entities||{};
               for(const qid of ids){
                 if(results.length>=5) break;
@@ -1481,11 +1726,7 @@
 
     // Missatges de resultat
     function resultMsg(errors,mode){
-      var t1=mode==='easy'?1:2,t2=mode==='easy'?3:5;
-      if(errors===0) return '0 ERRORS! Increïble 🤩';
-      if(errors<=t1) return errors+' error'+(errors!==1?'s':'')+' – Increïble 🤩';
-      if(errors<=t2) return errors+' error'+(errors!==1?'s':'')+' – Bona feina 😌';
-      return errors+' error'+(errors!==1?'s':'')+' – Bueno, si tu t’ho has passat bé… 🙄';
+      return t('mem_result',{errors:errors,mode:mode});
     }
 
     // Renderitza la graella
@@ -1509,8 +1750,8 @@
 
     function renderToggle(){
       return '<div class="mem-toggle">'
-        +'<button class="mem-tbtn'+(mode==='easy'?' on':'')+'" data-mmode="easy">🟢 Fàcil</button>'
-        +'<button class="mem-tbtn'+(mode==='hard'?' on':'')+'" data-mmode="hard">🔴 Difícil</button>'
+        +'<button class="mem-tbtn'+(mode==='easy'?' on':'')+'" data-mmode="easy">'+t('mem_easy')+'</button>'
+        +'<button class="mem-tbtn'+(mode==='hard'?' on':'')+'" data-mmode="hard">'+t('mem_hard')+'</button>'
         +'</div>';
     }
 
@@ -1559,7 +1800,7 @@
               flipped=[]; locked=false;
               // Actualitza l'error counter sense re-renderitzar tota la graella
               const errEl=root.querySelector('.mem-errors');
-              if(errEl) errEl.textContent=ms.errors+' error'+(ms.errors!==1?'s':'');
+              if(errEl) errEl.textContent=t('errors_count',{n:ms.errors});
               saveState();
             },900);
           }
@@ -1587,25 +1828,25 @@
       ov.className='mem-overlay';
       const datesStr=(p.birth==null&&p.death==null)?'':((p.birth!=null?fmtYear(p.birth):'?')+' – '+(p.death!=null?fmtYear(p.death):'…'));
       ov.innerHTML='<div class="mem-panel">'
-        +'<button class="mem-pclose" aria-label="Tanca">✕</button>'
+        +'<button class="mem-pclose" aria-label="'+t('close')+'">✕</button>'
         +'<img class="mem-pimg" src="'+esc(p.img)+'" alt="'+esc(p.name)+'">'
         +'<div class="mem-pname">'+esc(p.name)+'</div>'
         +(datesStr?'<div class="mem-pdates">'+datesStr+'</div>':'')
         +(p.desc?'<div class="mem-pdesc">'+esc(p.desc)+'</div>':'')
-        +'<div class="mem-pbtns"><button class="cta">🗺️ Veure al cronograma</button></div>'
+        +'<div class="mem-pbtns"><button class="cta">'+t('mem_see_crono')+'</button></div>'
         +'</div>';
       const btns=ov.querySelector('.mem-pbtns');
       const ctaEl=ov.querySelector('.cta');
       if(p.birth==null){
         ctaEl.disabled=true;
-        ctaEl.title='Ja em sap greu, però a la Viquipèdia no hi surt l’any de naixement';
-        ctaEl.textContent='🗺️ No disponible al cronograma';
+        ctaEl.title=t('mem_no_crono_title');
+        ctaEl.textContent=t('mem_no_crono');
       }else{
         ctaEl.addEventListener('click',function(){ goToCronograma('memory',[p]); });
       }
       if(p.wiki){
         const wa=document.createElement('a');
-        wa.className='cta sec';wa.textContent='🔗 Llegeix-ne més';
+        wa.className='cta sec';wa.textContent=t('read_more');
         wa.href=p.wiki;wa.target='_blank';wa.rel='noopener';
         wa.addEventListener('click',function(){ track('memory_wiki',{}); });
         btns.appendChild(wa);
@@ -1618,9 +1859,9 @@
     function render(){
       if(!root||!currentPool) return;
       const ms=modeState();
-      const modeLbl=mode==='easy'?'Fàcil':'Difícil';
-      const head='<div class="gamehead"><h2>🃏 Memory</h2>'
-        +'<div class="sub">'+modeLbl+' · Repte diari · '+ddmm(state.date)+'</div></div>';
+      const modeLbl=mode==='easy'?t('easy'):t('hard');
+      const head='<div class="gamehead"><h2>🃏 '+t('t_memory')+'</h2>'
+        +'<div class="sub">'+modeLbl+' · '+t('daily_challenge')+' · '+ddmm(state.date)+'</div></div>';
       if(ms.done){
         const st=readLS(STREAK_KEY)||{days:1};
         const days=st.days||1;
@@ -1628,26 +1869,27 @@
         root.innerHTML=head+renderToggle()
           +'<div class="mem-grid mem-grid-done">'+renderGrid(ms)+'</div>'
           +'<div class="mbanner">'
-          +'<div class="rtitle">'+esc(resultMsg(ms.errors,mode))+'</div>'
-          +'<div class="streak">🔥 '+days+' '+(days===1?'dia':'dies')+' seguits</div>'
-          +'<div class="locknote">Ja has resolt el repte d’avui. Torna demà per un de nou!</div>'
-          +'<div class="countdown">Nou repte en <b id="'+cdId+'">--:--:--</b></div>'
-          +'<div class="memshare"><button class="cta sec" id="'+shareId+'">📤 Comparteix</button></div>'
+          +'<div class="rtitle">'+esc(t('mem_result',{errors:ms.errors,mode:mode}))+'</div>'
+          +'<div class="streak">🔥 '+days+' '+t('streak_days',{n:days})+'</div>'
+          +'<div class="locknote">'+t('locknote_solved')+'</div>'
+          +'<div class="countdown">'+t('new_challenge_in')+' <b id="'+cdId+'">--:--:--</b></div>'
+          +'<div class="memshare"><button class="cta" id="'+shareId+'">'+t('share_btn')+'</button>'+hubBtnHTML()+'</div>'
           +'</div>';
         if(cdTimer){ clearTimeout(cdTimer); cdTimer=null; }
         (function tick(){ const el=document.getElementById(cdId); if(el){ el.textContent=fmtDur(msToMidnight()); cdTimer=setTimeout(tick,1000); } })();
         var shareBtn=document.getElementById(shareId);
         if(shareBtn){ shareBtn.addEventListener('click',function(){
-          var txt='🎴 Memory – '+ddmm(state.date)+'\n'+(mode==='easy'?'🟢 Fàcil':'🔴 Difícil')+' – '+resultMsg(ms.errors,mode)+'\nbernatbas.github.io/el_cronograma/joc.html';
+          var txt=t('share_mem',{date:ddmm(state.date),mode:mode,msg:t('mem_result',{errors:ms.errors,mode:mode})});
           if(navigator.share){ navigator.share({text:txt}).catch(function(){}); return; }
-          if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ shareBtn.textContent='✓ Copiat!'; setTimeout(function(){ shareBtn.textContent='📤 Comparteix'; },2000); }); }
+          if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ shareBtn.textContent=t('copied_short'); setTimeout(function(){ shareBtn.textContent=t('share_btn'); },2000); }); }
         }); }
+        wireHubBtn(root);
         root.querySelectorAll('.mem-grid-done .mem-card').forEach(function(card){
           card.addEventListener('click',function(){ showPersonPanel(parseInt(this.dataset.person)); });
         });
       } else {
         root.innerHTML=head+renderToggle()
-          +'<div class="mem-errors">'+ms.errors+' error'+(ms.errors!==1?'s':'')+'</div>'
+          +'<div class="mem-errors">'+t('errors_count',{n:ms.errors})+'</div>'
           +'<div class="mem-grid">'+renderGrid(ms)+'</div>';
         bindCards();
       }
@@ -1666,16 +1908,16 @@
         currentPool=null;
         function load(){
           if(!root) return;
-          root.innerHTML='<div class="gamehead"><h2>🃏 Memory</h2></div>'
-            +'<div class="mem-loading"><div class="pspin"></div>Buscant personatges…</div>';
+          root.innerHTML='<div class="gamehead"><h2>🃏 '+t('t_memory')+'</h2></div>'
+            +'<div class="mem-loading"><div class="pspin"></div>'+t('mem_loading')+'</div>';
           ensurePool().then(function(p){
             if(!root) return;
             currentPool=p;
             if(!p){
-              root.innerHTML='<div class="gamehead"><h2>🃏 Memory</h2></div>'
+              root.innerHTML='<div class="gamehead"><h2>🃏 '+t('t_memory')+'</h2></div>'
                 +'<div class="perror"><div style="font-size:26px;margin-bottom:6px;">⚠️</div>'
-                +'<div>No s’han pogut carregar els personatges. Comprova la connexió i torna-ho a provar.</div>'
-                +'<button class="pretry" id="memretry">Torna-ho a provar</button></div>';
+                +'<div>'+t('mem_err_load')+'</div>'
+                +'<button class="pretry" id="memretry">'+t('retry')+'</button></div>';
               var rb=root.querySelector('#memretry');
               if(rb) rb.addEventListener('click',function(){ poolPromise=null; load(); });
               return;
@@ -1692,7 +1934,242 @@
     };
   })();
 
-  const MODULES={ abansdespres: AbansDespres, personatgedia: PersonatgeDia, ordena: OrdenaLinia, memory: MemoryGame };
+  // ===== Mòdul: «Contemporanis?» — REPTE DIARI (5 parelles, determinista per data + 1 intent/dia) =====
+  // Mostra dues entitats (persones i/o esdeveniments) i pregunta si van coincidir en el temps.
+  // Solapament biològic ESTRICTE (mínim 1 any). Vius => mort = any actual (recalculat cada dia).
+  // Anys-only => les vores (solapament 0) queden EXCLOSES. Event-event tampoc es proposa.
+  const Contemporanis = (function(){
+    const DAILY_KEY='hb_con_daily';    // { date, score, marks:[bool×5], v }
+    const STREAK_KEY='hb_con_streak';  // { last, days } — ratxa de dies jugats
+    const DAILY_V=1;
+    // Dificultat PERCEPTIVA i logarítmica, mateixa essència que «Abans o després?» i «Ordena»:
+    // g = |ln(edatA/edatB)|, edat = anyRef − any representatiu (mig de vida per persona, any per esdeveniment).
+    // g PETIT => èpoques perceptivament properes => DIFÍCIL. g GRAN => èpoques llunyanes => FÀCIL.
+    // (El nombre d’anys absolut NO serveix: la mateixa distància es percep molt diferent segons l’època.)
+    const CON_HARD_MAX=0.55, CON_EASY_MIN=1.20;
+    let root=null, round=[], marks=[], idx=0, score=0, locked=false, gaStarted=false, cdTimer=null, ansTimer=null;
+
+    function nowYear(){ return new Date().getFullYear(); }   // "viu" => any actual (en viu)
+
+    // Entitats jugables: persones amb naixement conegut + esdeveniments amb any.
+    function beings(){
+      const out=[]; const NOW=nowYear();
+      (HB_DATA.PEOPLE||[]).forEach(function(p){
+        if(typeof p.birth!=='number') return;
+        const alive=(typeof p.death!=='number');
+        out.push({uid:'pe:'+p.id, type:'person', id:p.id, name:p.name, by:p.birth, dy:alive?NOW:p.death, alive:alive,
+          crono:(p.wd?{qid:p.wd,name:p.name,birth:p.birth,death:(typeof p.death==='number'?p.death:null),img:null,desc:p.desc||''}:null)});
+      });
+      (HB_DATA.EVENTS||[]).forEach(function(e){
+        if(typeof e.year!=='number') return;
+        out.push({uid:'ev:'+e.id, type:'event', id:e.id, name:e.name, by:e.year, dy:e.year,
+          crono:{kind:'event',id:e.id,name:e.name,year:e.year}});
+      });
+      return out;
+    }
+
+    // Classifica una parella: 'yes' (coincideixen), 'no' (+gap d'anys), o 'excl' (vora ambigua / event-event).
+    function classify(a,b){
+      if(a.type==='event' && b.type==='event') return {status:'excl'};
+      if(a.type==='person' && b.type==='person'){
+        const ov=Math.min(a.dy,b.dy)-Math.max(a.by,b.by);
+        if(ov>=1) return {status:'yes'};
+        if(ov===0) return {status:'excl'};   // es toquen just en un any: no ho podem considerar
+        return {status:'no', gap:-ov};
+      }
+      const P=(a.type==='person')?a:b, E=(a.type==='event')?a:b, Y=E.by;
+      if(Y>P.by && Y<P.dy) return {status:'yes'};
+      if(Y===P.by || Y===P.dy) return {status:'excl'};
+      return {status:'no', gap:(Y<P.by)?(P.by-Y):(Y-P.dy)};
+    }
+    // Any representatiu d'una entitat: mig de la vida (persona) o l'any (esdeveniment). Els vius usen l'any actual (viu).
+    function midYear(b){ return b.type==='event' ? b.by : (b.by + b.dy)/2; }
+    function ageOf(y){ return Math.max(1, nowYear() - y); }
+    // g logarítmic entre les dues entitats (mateixa mètrica que «Abans o després?» / «Ordena»).
+    function gcalc(a,b){ return Math.abs(Math.log(ageOf(midYear(a))/ageOf(midYear(b)))); }
+    function diffOf(g){ return g<=CON_HARD_MAX ? 'hard' : (g>=CON_EASY_MIN ? 'easy' : 'med'); }
+
+    // Ronda del dia (5 parelles) 100% determinista des del rng del dia:
+    //  - coincidència ~50% PROBABILÍSTICA (no quota fixa) => no predictible
+    //  - dels "no": com a molt 1 fàcil per ronda; la resta difícils/mitjans (prioritzant difícils)
+    //  - sense repetir entitat dins la ronda (si el pool ho permet)
+    function buildRound(rng){
+      const items=beings();
+      if(items.length<10) return null;
+      const yes=[], hard=[], med=[], easy=[];
+      for(let i=0;i<items.length;i++) for(let j=i+1;j<items.length;j++){
+        const c=classify(items[i],items[j]); if(c.status==='excl') continue;
+        const pair={a:items[i], b:items[j]};
+        if(c.status==='yes'){ pair.coincide=true; yes.push(pair); }
+        else { pair.coincide=false; pair.gap=c.gap; const g=gcalc(items[i],items[j]); pair.g=g; const d=diffOf(g); (d==='easy'?easy:(d==='med'?med:hard)).push(pair); }
+      }
+      if(!yes.length || !(hard.length+med.length+easy.length)) return null;
+      const SY=seededShuffle(yes,rng), SH=seededShuffle(hard,rng), SM=seededShuffle(med,rng), SE=seededShuffle(easy,rng);
+      const wantYes=[]; for(let i=0;i<5;i++) wantYes.push(rng()<0.5);
+      const used=new Set(); const out=[]; let easyUsed=0;
+      function take(list,allowReuse){
+        list.__k=list.__k||new Set();
+        for(let i=0;i<list.length;i++){
+          if(list.__k.has(i)) continue;
+          const p=list[i];
+          if(!allowReuse && (used.has(p.a.uid)||used.has(p.b.uid))) continue;
+          list.__k.add(i); used.add(p.a.uid); used.add(p.b.uid); return p;
+        }
+        return null;
+      }
+      function takeNo(allowReuse){ let p=take(SH,allowReuse)||take(SM,allowReuse); if(!p && easyUsed<1){ p=take(SE,allowReuse); if(p) easyUsed++; } return p; }
+      for(let i=0;i<5;i++){
+        let p=null;
+        if(wantYes[i]){ p=take(SY,false); if(!p) p=takeNo(false); }
+        else { p=takeNo(false); if(!p) p=take(SY,false); }
+        if(p) out.push(p);
+      }
+      // Farciment de seguretat: si el pool no permet 5 sense repetir, permet reutilitzar entitats.
+      if(out.length<5){
+        const pools=[SH,SM,SY,SE];
+        for(let k=0;k<pools.length && out.length<5;k++){ let p; while(out.length<5 && (p=take(pools[k],true))) out.push(p); }
+      }
+      return out.length===5?out:null;
+    }
+
+    function q(pair){ return t('con_q'); }
+    function yearsLabel(b){ return b.type==='event'?fmtYear(b.by):(fmtYear(b.by)+'–'+(b.alive?t('con_alive'):fmtYear(b.dy))); }
+    function card(b, reveal, flash){
+      const isEv=b.type==='event';
+      const yr=reveal?yearsLabel(b):'<span class="q">?</span>';
+      const cls='itemcard con'+(flash?(' '+flash):'');
+      return '<div class="'+cls+'"><div class="nm">'+b.name+'</div><div class="yr'+(reveal?' reveal':'')+'">'+yr+'</div></div>';
+    }
+    function dots(){
+      let h='';
+      for(let i=0;i<5;i++){ let c='condot'; if(i<marks.length){ c+=marks[i]?' ok':' no'; } else if(i===idx){ c+=' cur'; } h+='<span class="'+c+'"></span>'; }
+      return h;
+    }
+    function head(){ return '<div class="gamehead"><h2>🤝 '+t('t_contemporanis')+'</h2><div class="sub">'+t('daily_challenge')+' · '+ddmm(todayStr())+'</div></div>'; }
+
+    function render(){
+      const pair=round[idx];
+      root.innerHTML='<div class="game con">'
+        +'<div class="gtop"><div class="gtitle">🤝 '+t('t_contemporanis')+'</div><div class="conprog">'+dots()+'</div></div>'
+        +'<div class="concards">'+card(pair.a,false)+card(pair.b,false)+'</div>'
+        +'<div class="conq">'+q(pair)+'</div>'
+        +'<div class="conchoices"><button class="choice conyes" data-a="yes"><span class="big">✓</span>'+t('con_yes')+'</button><button class="choice conno" data-a="no"><span class="big">✗</span>'+t('con_no')+'</button></div>'
+        +'<div class="gamefoot">📅 '+t('daily_challenge')+' · '+ddmm(todayStr())+'</div>'
+        +'</div>';
+      root.querySelectorAll('.conchoices .choice').forEach(function(b){ b.addEventListener('click',function(){ answer(b.getAttribute('data-a')); }); });
+    }
+
+    function answer(ans){
+      if(locked) return; locked=true;
+      if(!gaStarted){ gaStarted=true; track('joc_iniciat',{joc:'contemporanis',mode:'default'}); }
+      const pair=round[idx];
+      const correct=((ans==='yes')===pair.coincide);
+      marks[idx]=correct; if(correct) score++;
+      const flash=correct?'flash-ok':'flash-no';
+      const cc=root.querySelector('.concards'); if(cc) cc.innerHTML=card(pair.a,true,flash)+card(pair.b,true,flash);
+      const cq=root.querySelector('.conq'); if(cq){ cq.textContent=correct?t('con_fb_ok'):t('con_fb_no'); cq.className='conq '+(correct?'ok':'no'); }
+      root.querySelectorAll('.conchoices .choice').forEach(function(b){ b.disabled=true; if(b.getAttribute('data-a')===ans) b.classList.add(correct?'sel-ok':'sel-no'); });
+      const prog=root.querySelector('.conprog'); if(prog) prog.innerHTML=dots();
+      const delay=correct?2400:3800;
+      ansTimer=setTimeout(function(){ idx++; locked=false; if(idx<5) render(); else finish(); }, delay);
+    }
+
+    function bumpStreak(){
+      const today=todayStr(); const st=readLS(STREAK_KEY); let days=1;
+      if(st){ if(st.last===yesterdayStr()) days=(st.days||0)+1; else if(st.last===today) days=st.days||1; else days=1; }
+      writeLS(STREAK_KEY,{last:today,days:days}); return days;
+    }
+    function finish(){
+      const days=bumpStreak();
+      track('joc_completat',{joc:'contemporanis',mode:'default',encerts:score,errors:5-score,ratxa:days});
+      writeLS(DAILY_KEY,{date:todayStr(), score:score, marks:marks.slice(), v:DAILY_V});
+      showResult();
+    }
+
+    function doShare(days,btn){
+      const p=function(n){ return String(n).padStart(2,'0'); }; const d=new Date();
+      const dd=p(d.getDate())+'/'+p(d.getMonth()+1);
+      const NL=String.fromCharCode(10);
+      const squares=marks.map(function(m){ return m?'🟩':'🟥'; }).join('');
+      let out=t('share_con',{dd:dd,nl:NL,squares:squares,score:score,days:days});
+      let url=''; try{ if(location && location.origin && location.origin!=='null') url=location.origin+location.pathname; }catch(_){}
+      if(url) out+=NL+url;
+      if(navigator.share){ navigator.share({text:out}).catch(function(){}); return; }
+      const done=function(){ if(btn){ const o=btn.textContent; btn.textContent=t('copied'); setTimeout(function(){ btn.textContent=o; },1800); } };
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(out).then(done).catch(done); }
+      else done();
+    }
+
+    function startCountdown(){
+      if(cdTimer){ clearInterval(cdTimer); cdTimer=null; }
+      const tick=function(){ const el=root&&root.querySelector('#ccd'); if(!el){ if(cdTimer){clearInterval(cdTimer);cdTimer=null;} return; } el.textContent=fmtDur(msToMidnight()); };
+      tick(); cdTimer=setInterval(tick,1000);
+    }
+
+    function showResult(){
+      if(ansTimer){ clearTimeout(ansTimer); ansTimer=null; }
+      const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
+      const perfect=(score===5);
+      const title=perfect?'<span class="perfect">'+t('con_perfect')+'</span>':t('con_done');
+      let failHTML='';
+      {
+        let rows='';
+        for(let i=0;i<round.length;i++){
+          const pr=round[i];
+          const ok=marks[i]!==false;
+          const label=pr.a.name+' · '+pr.b.name;
+          if(ok){ rows+='<div class="concrono okrow">✅ '+label+'</div>'; }
+          else {
+            const items=[pr.a.crono,pr.b.crono].filter(Boolean);
+            if(items.length) rows+='<button class="concrono failrow" data-fi="'+i+'">❌ '+label+' <span class="cgo">📅</span></button>';
+            else rows+='<div class="concrono failrow dis">❌ '+label+'</div>';
+          }
+        }
+        failHTML='<div class="confailwrap"><div class="confailt">'+t('con_pairs')+'</div>'+rows+'</div>';
+      }
+      root.innerHTML='<div class="gameover con">'+head()
+        +'<h2 class="rtitle">'+title+'</h2>'
+        +'<div class="stats"><div class="stat"><div class="v">🎯 '+score+'/5</div><div class="k">'+t('con_hits')+'</div></div>'
+        +'<div class="stat"><div class="v">🔥 '+days+'</div><div class="k">'+t('streak_days',{n:days})+'</div></div></div>'
+        +failHTML
+        +'<div class="locknote">'+t('locknote_played')+'</div>'
+        +'<div class="countdown">'+t('new_challenge_in')+' <b id="ccd">--:--:--</b></div>'
+        +'<div class="btnrow"><button class="cta" data-x="share">'+t('share_btn')+'</button>'+hubBtnHTML()+'</div>'
+        +'</div>';
+      const sh=root.querySelector('[data-x="share"]'); if(sh) sh.addEventListener('click',function(){ doShare(days,sh); });
+      root.querySelectorAll('.concrono[data-fi]').forEach(function(bt){
+        bt.addEventListener('click',function(){ const i=parseInt(bt.getAttribute('data-fi'),10); const pr=round[i]; goToCronograma('contemporanis',[pr.a.crono,pr.b.crono].filter(Boolean)); });
+      });
+      wireHubBtn(root);
+      startCountdown();
+    }
+
+    function start(){
+      if(ansTimer){ clearTimeout(ansTimer); ansTimer=null; }
+      if(cdTimer){ clearInterval(cdTimer); cdTimer=null; }
+      if(!dataOk()){ root.innerHTML='<div class="err">'+t('err_no_data')+'</div>'; return; }
+      const rng=mulberry32(seedFromStr('con:'+todayStr()));
+      round=buildRound(rng);
+      if(!round){ root.innerHTML='<div class="err">'+t('con_err')+'</div>'; return; }
+      const daily=readLS(DAILY_KEY);
+      if(daily && daily.date===todayStr()){
+        marks=(daily.marks && daily.marks.length===5)?daily.marks.slice():round.map(function(){return false;});
+        score=(daily.score!=null)?daily.score:marks.filter(Boolean).length;
+        showResult(); return;
+      }
+      idx=0; score=0; marks=[]; locked=false; render();
+    }
+
+    // Hook de depuració per als tests (no afecta el joc).
+    try{ window.__CON={ round:function(ds){ return buildRound(mulberry32(seedFromStr('con:'+(ds||todayStr())))); } }; }catch(_){}
+
+    return {
+      mount(container){ root=container; gaStarted=false; track('joc_vist',{joc:'contemporanis'}); start(); },
+      unmount(){ if(ansTimer){ clearTimeout(ansTimer); ansTimer=null; } if(cdTimer){ clearInterval(cdTimer); cdTimer=null; } root=null; }
+    };
+  })();
+
+  const MODULES={ abansdespres: AbansDespres, personatgedia: PersonatgeDia, ordena: OrdenaLinia, memory: MemoryGame, contemporanis: Contemporanis };
 
   // Avís "pròximament" tipus toast (com a index.html): per als jocs sense mòdul no naveguem enlloc.
   let toastEl=null, toastT=null;
@@ -1705,33 +2182,71 @@
     toastT=setTimeout(function(){ if(toastEl) toastEl.classList.remove('show'); }, 1800);
   }
 
+  // Estat del dia per targeta: ✓ fet avui, 🔥 ratxa, o el badge per defecte. Només llegeix localStorage (cap canvi de dades).
+  function aliveDays(key){ const s=readLS(key); if(!s||!s.days) return 0; return (s.last===todayStr()||s.last===yesterdayStr())?s.days:0; }
+  function doneToday(id){
+    const T=todayStr();
+    if(id==='personatgedia'){ const c=readLS('hb_personatge_cache'); return !!(c&&c.date===T); }
+    if(id==='abansdespres'){ const d=readLS('hb_ad_daily'); return !!(d&&d.date===T); }
+    if(id==='ordena'){ const d=readLS('hb_ord_daily'); return !!(d&&d.date===T); }
+    if(id==='memory'){ const ms=readLS('hb_memory_state'); return !!(ms&&ms.date===T&&((ms.easy&&ms.easy.done)||(ms.hard&&ms.hard.done))); }
+    if(id==='contemporanis'){ const d=readLS('hb_con_daily'); return !!(d&&d.date===T); }
+    return false;
+  }
+  const STREAK_KEYS={abansdespres:'hb_ad_streak',ordena:'hb_ord_streak',memory:'hb_memory_streak',contemporanis:'hb_con_streak'};
+  function gameBadge(g){
+    if(!MODULES[g.id]) return '<span class="soon">'+t('badge_soon')+'</span>';
+    if(g.id==='personatgedia'){
+      const pdone=doneToday('personatgedia'); const pdays=aliveDays('hb_personatge_streak');
+      if(pdone) return '<span class="tagd done">'+t('badge_done')+(pdays>0?' · 🔥'+pdays:'')+'</span>';
+      if(pdays>0) return '<span class="tagd streak">'+t('badge_streak',{n:pdays})+'</span>';
+      return '<span class="tagd">'+t('badge_discover')+'</span>';
+    }
+    const done=doneToday(g.id); const days=STREAK_KEYS[g.id]?aliveDays(STREAK_KEYS[g.id]):0;
+    if(done) return '<span class="tagd done">'+t('badge_done')+(days>0?' · 🔥'+days:'')+'</span>';
+    if(days>0) return '<span class="tagd streak">'+t('badge_streak',{n:days})+'</span>';
+    return '<span class="tagd">'+(g.discover?t('badge_discover'):t('badge_daily'))+'</span>';
+  }
+  function stopHubCd(){ if(hubCd){ clearInterval(hubCd); hubCd=null; } }
+  function startHubCd(){
+    stopHubCd();
+    const tick=function(){ const el=document.getElementById('hubcd'); if(!el){ stopHubCd(); return; } el.textContent=fmtDur(msToMidnight()); };
+    tick(); hubCd=setInterval(tick,1000);
+  }
   function renderMenu(){
     back.hidden=true;
     if(!dataOk()){
-      app.innerHTML=`<div class="err">Ens hem quedat sense història! N'estem fabricant de nova. Torna demà 🛠️</div>`;
+      app.innerHTML=`<div class="err">${t('err_no_data')}</div>`;
       return;
     }
     let cards='';
+    let doneCount=0, totalCount=0;
     GAMES.forEach(g=>{
-      const badge = MODULES[g.id] ? (g.discover ? '<span class="tagd">🌟 Descobreix</span>' : '<span class="tagd">📅 Repte diari</span>') : '<span class="soon">🚧 Pròximament</span>';
-      cards+=`<button class="gamecard" data-id="${g.id}"><span class="ic">${g.ic}</span><span class="t">${g.t}</span><span class="d">${g.d}</span>${badge}</button>`;
+      const badge = gameBadge(g);
+      if(MODULES[g.id]){ totalCount++; if(doneToday(g.id)) doneCount++; }
+      cards+=`<button class="gamecard" data-id="${g.id}"><span class="ic">${g.ic}</span><span class="t">${t(g.titleKey)}</span><span class="d">${t(g.descKey)}</span>${badge}</button>`;
     });
-    app.innerHTML=`<div class="menu">${cards}</div>`;
+    const _d=new Date(), _p=n=>String(n).padStart(2,'0');
+    const hd=_p(_d.getDate())+'/'+_p(_d.getMonth()+1)+'/'+_d.getFullYear();
+    const header=`<div class="hubhead"><h1 class="hubh1">${t('hub_title')}</h1><div class="hubmeta"><span class="hubchip">📅 ${hd}</span><span class="hubchip hubcount">🎯 ${doneCount}/${totalCount} ${t('hub_done_today')}</span><span class="hubchip">⏳ ${t('hub_reset_in')} <b id="hubcd">--:--:--</b></span></div></div>`;
+    app.innerHTML=`${header}<div class="menu">${cards}</div>`;
+    startHubCd();
     app.querySelectorAll('.gamecard').forEach(btn=>{
       btn.addEventListener('click',()=>{
         const id=btn.getAttribute('data-id');
         if(MODULES[id]){ location.hash='#/'+id; }
-        else { showToast('🚧 En construcció'); }   // joc no disponible: avis, sense navegar
+        else { showToast(t('toast_wip')); }   // joc no disponible: avis, sense navegar
       });
     });
   }
 
   function renderGame(g){
     back.hidden=false;
-    app.innerHTML=`<div class="placeholder"><div class="ic">${g.ic}</div><h2>${g.t}</h2><p class="d">${g.d}</p><span class="badge">🚧 Pròximament</span></div>`;
+    app.innerHTML=`<div class="placeholder"><div class="ic">${g.ic}</div><h2>${t(g.titleKey)}</h2><p class="d">${t(g.descKey)}</p><span class="badge">${t('badge_soon')}</span></div>`;
   }
 
   function router(){
+    stopHubCd();
     if(activeModule && activeModule.unmount){ try{activeModule.unmount();}catch(_){} activeModule=null; }
     const m=(location.hash||'').match(/^#\/(.+)$/);
     if(m){
@@ -1747,6 +2262,7 @@
 
   back.addEventListener('click',()=>{location.hash='';});
   window.addEventListener('hashchange',router);
+  applyI18nStatic();
   router();
   // Precompute del «Personatge del dia» en background, tan bon punt carrega la pàgina de jocs.
   try{ if(MODULES.personatgedia && MODULES.personatgedia.precompute) MODULES.personatgedia.precompute(); }catch(_){}
