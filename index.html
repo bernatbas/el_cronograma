@@ -55,6 +55,8 @@
   .topbar .search input::placeholder{color:rgba(255,255,255,.55);}
   .topbar .search input:focus{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.55);}
   .topbar-left{display:flex;align-items:center;gap:14px;min-width:0;}
+  .btn-undo:disabled{opacity:.38;cursor:default;}
+  .btn-undo:disabled:hover{background:transparent;}
   .topbar-right{display:flex;align-items:center;gap:14px;flex:0 0 auto;}
   .brand{font-family:'Oswald','Roboto Condensed','Arial Narrow','Helvetica Neue',Arial,sans-serif;font-weight:600;font-size:20px;letter-spacing:.06em;white-space:nowrap;}
   /* ===== Botons de secció (Cronograma · Jocs · …) =====
@@ -413,8 +415,8 @@
     .search input{padding:7px 10px;font-size:13px;}
     /* El Reset es queda SEMPRE visible. Abans s'amagava aquí, però (a) amb els botons d'acció
        quadrats de 34px només costa 34px, (b) és una acció útil justament en pantalla petita, i
-       (c) només desapareixia amb ratolí: en tàctil, la regla de .controls #fitAll,#reset de més
-       avall li tornava a posar display i es quedava. Mateixa amplada, comportament diferent. */
+       (c) només desapareixia amb ratolí: en tàctil, la regla de .controls #fitAll,#reset,#undo
+       de més avall li tornava a posar display i es quedava. Mateixa amplada, comportament diferent. */
   }
 
   /* ===== Compact vertical metrics (phone in landscape: ~340px of usable height) =====
@@ -461,9 +463,10 @@
     .search input{min-height:30px;padding-top:4px;padding-bottom:4px;padding-right:38px;font-size:14px;}
     .search.has-text .qclear{display:flex;}
     .qclear{color:rgba(255,255,255,.9);width:28px;height:28px;font-size:20px;}
-    /* Reset + Vista global: es queden a la barra superior (no tapen el canvas); només s'amaga el zoom ±. */
+    /* Desfés + Vista global + Reset: els tres es queden a la barra superior i amb la mateixa
+       amplada. El Desfés és MÉS necessari en tàctil que amb ratolí (hi toques barres sense
+       voler), així que aquí no s'amaga mai. */
     .controls{gap:8px;}
-    .controls #zoomIn,.controls #zoomOut{display:none;}
     .controls #reset{display:inline-flex;}
     .controls .btn{min-height:30px;min-width:30px;padding:3px 10px;font-size:13px;display:inline-flex;align-items:center;justify-content:center;}
     /* Vista global + Reset com a icones (el text es reserva per al desktop). */
@@ -471,7 +474,7 @@
     .controls #fitAll::after{display:none;}
     .controls #fitAll .btn-tx,.controls #reset .btn-tx{display:none;}
     .controls #fitAll .btn-ic,.controls #reset .btn-ic{display:inline-flex;align-items:center;justify-content:center;}
-    .controls #fitAll,.controls #reset{display:inline-flex;align-items:center;justify-content:center;padding:3px 8px;min-width:36px;}
+    .controls #fitAll,.controls #reset,.controls #undo{display:inline-flex;align-items:center;justify-content:center;padding:3px 8px;min-width:36px;}
     .controls #fitAll .btn-ic,.controls #reset .btn-ic{display:block;}
     /* L'eix sempre enganxat a baix: el contingut omple l'alçada disponible encara que hi hagi poques files. */
     .inner{min-height:calc(100% - var(--axis-h));}
@@ -537,8 +540,7 @@
         <div class="results" id="results"></div>
       </div>
       <div class="controls">
-        <button class="btn" id="zoomOut" title="Allunya" data-i18n-title="cro_zoom_out"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><line x1="12.5" y1="12.5" x2="18" y2="18"/><line x1="5.5" y1="8" x2="10.5" y2="8"/></svg></button>
-        <button class="btn" id="zoomIn" title="Apropa" data-i18n-title="cro_zoom_in"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="5.5"/><line x1="12.5" y1="12.5" x2="18" y2="18"/><line x1="5.8" y1="8" x2="10.2" y2="8"/><line x1="8" y1="5.8" x2="8" y2="10.2"/></svg></button>
+        <button class="btn btn-undo" id="undo" type="button" disabled title="Desfés" data-i18n-title="cro_undo" aria-label="Desfés" data-i18n-aria="cro_undo"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 5.5 4 9l3.5 3.5"/><path d="M4 9h7.5a4.5 4.5 0 0 1 0 9H9"/></svg></button>
         <button class="btn" id="fitAll" title="Ajusta el zoom per encabir tot el visible; torna a clicar per desfer" data-i18n-title="cro_fit_title"><span class="btn-tx" data-i18n="cro_fit">Vista global</span><svg class="btn-ic" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V3h4"/><path d="M17 7V3h-4"/><path d="M3 13v4h4"/><path d="M17 13v4h-4"/></svg></button>
         <button class="btn" id="reset" title="Restableix" data-i18n-title="cro_reset_title"><span class="btn-tx" data-i18n="cro_reset">Reset</span><svg class="btn-ic" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 6.2A6 6 0 1 0 16 10"/><path d="M15.8 3v3.4h-3.4"/></svg></button>
       </div>
@@ -636,8 +638,16 @@ const I18N={
     // -- topbar del cronograma --
     cro_search_ph:'Cerca i afegeix un personatge…',
     cro_search_clear:'Esborra la cerca',
-    cro_zoom_out:'Allunya',
-    cro_zoom_in:'Apropa',
+    cro_undo:'Desfés',
+    cro_undo_of: v => 'Desfés: '+v.what,
+    cro_act_context:'mostra context',
+    cro_act_coll_on: v => 'activar «'+v.name+'»',
+    cro_act_coll_off: v => 'desactivar «'+v.name+'»',
+    cro_act_add: v => 'afegir '+v.name,
+    cro_act_remove: v => 'treure '+v.name,
+    cro_act_marc: v => 'canviar «'+v.name+'»',
+    cro_act_events:'canviar els esdeveniments',
+    cro_act_reset:'Reset',
     cro_fit:'Vista global',
     cro_fit_title:'Ajusta el zoom per encabir tot el visible; torna a clicar per desfer',
     cro_reset:'Reset',
@@ -967,6 +977,55 @@ function restoreState(){
   recomputePresent();
 }
 scroll.addEventListener('scroll',scheduleSave);   // persist pan position (no-op until lsReady)
+
+// ============================================================
+// UNDO — desfa l'ULTIMA ACCIO SOBRE LES DADES (no la vista)
+// ============================================================
+// Guarda una foto de l'estat ABANS de cada accio que afegeix o treu coses de cop
+// (mostra context, col·leccions, Reset...). Deliberadament NO cobreix zoom ni pan:
+// si ho fes, cada scroll ompliria la pila i «desfés» deixaria de ser previsible.
+// Viu NOMES en memoria: recarregar deixa la pila neta, perque un desfés que arribi
+// a la sessio de la setmana passada es desconcertant.
+// Les col·leccions carreguen en asincron, pero el guard de toggleCollection
+// (`if(!state.collections.has(cid))return;`) ja descarta els resultats zombis, aixi
+// que desfer mentre una peticio esta en vol no reintrodueix ningu.
+const UNDO_MAX=25;
+const undoStack=[];
+function undoSnap(){
+  return {pinned:[...state.pinned],collections:[...state.collections],
+          marcs:[...state.marcs],showEvents:state.showEvents,focus:state.focus};
+}
+// labelKey/vars es resolen al MOSTRAR el títol, no aquí: així el text del botó
+// segueix l'idioma actiu encara que l'accio s'hagi fet abans de canviar-lo.
+function pushUndo(labelKey,vars){
+  undoStack.push({k:labelKey,v:vars||null,snap:undoSnap()});
+  if(undoStack.length>UNDO_MAX)undoStack.shift();
+  syncUndo();
+}
+function syncUndo(){
+  const b=$('#undo');if(!b)return;
+  const last=undoStack[undoStack.length-1];
+  b.disabled=!last;
+  b.title=last?t('cro_undo_of',{what:t(last.k,last.v)}):t('cro_undo');
+}
+function doUndo(){
+  const e=undoStack.pop();if(!e)return;
+  state.pinned=new Set(e.snap.pinned);
+  state.collections=new Set(e.snap.collections);
+  state.marcs=new Set(e.snap.marcs);
+  state.showEvents=e.snap.showEvents;
+  state.focus=e.snap.focus;
+  recomputePresent();
+  // Si la persona de la personbar ja no hi es, la barra ha de marxar: mateixa
+  // neteja que fa removePerson(), inclos el ?person= de la URL.
+  if(_pbarId&&!state.present.has(_pbarId)){
+    const _wd=(PEOPLE.find(x=>x.id===_pbarId)||{}).wd;
+    if(PERSON_QID&&(_wd===PERSON_QID||_pbarId==='wd_'+PERSON_QID))history.replaceState(null,'',location.pathname);
+    _pbarId=null;pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;
+  }
+  closeDetailIfGone();clearFitLatch();render();scheduleSave();syncUndo();
+}
+
 let toastTimer=null;
 let _settleT;   // ha d'anar aquí dalt: personBar() crida scheduleSettle() durant el boot de ?person=, molt abans de [12]
 // Amplada del canvas tapada per la barra lateral (0 si està minimitzada). Serveix per centrar
@@ -1407,6 +1466,7 @@ function highlightSearch(i){
 function activateRow(r){if(!r)return;if(r.dataset.add)addFromSearch(r.dataset.add);else if(r.dataset.evsearch)focusEvent(r.dataset.evsearch);else if(r.dataset.wd)addWikidataPerson(r.dataset.wd);}
 function addFromSearch(id){
   if(!id||state.present.has(id))return;
+  pushUndo('cro_act_add',{name:L((PEOPLE.find(p=>p.id===id)||{}).name)});
   state.selectedEvent=null;state.pinned.add(id);q.value='';results.classList.remove('open');wdTerm='';wdResults=[];clearFitLatch();render();revealPerson(id);
 }
 // Wikidata person -> session-only entry in PEOPLE (no category; lost on reload)
@@ -1498,8 +1558,9 @@ $('#qclear').addEventListener('click',()=>{q.value='';syncQClear();results.class
 // [8] EVENT LISTENERS (sidebar toggles · bar & event clicks)
 // ============================================================
 $('#regions').addEventListener('change',e=>{
-  if(e.target.hasAttribute('data-events')){state.showEvents=e.target.checked;render();return;}   // events on/off
+  if(e.target.hasAttribute('data-events')){pushUndo('cro_act_events');state.showEvents=e.target.checked;render();return;}   // events on/off
   const m=e.target.getAttribute('data-marc');if(!m)return;
+  pushUndo('cro_act_marc',{name:L((MARCS.find(x=>x.id===m)||{}).name)});
   if(e.target.checked)state.marcs.add(m);else state.marcs.delete(m);render();
 });
 $('#onview').addEventListener('mousemove',e=>{   // same styled tooltip as the bars, so a bare ⚠ is discoverable
@@ -1647,6 +1708,7 @@ function focusEvent(id){
 // Remove a person from the canvas (same as the × in "A la vista"). Seed-pinned people can't be removed.
 function removePerson(id){
   if(SEED_PINNED.includes(id))return;
+  pushUndo('cro_act_remove',{name:L((PEOPLE.find(p=>p.id===id)||{}).name)});
   state.pinned.delete(id);
   clearFitLatch();
   if(state.focus===id)state.focus=null;   // si treus l'original, ja no hi ha focus fixat a dalt
@@ -1666,6 +1728,7 @@ function removePerson(id){
 // El dataset canònic el controla l'autor editant la llista PEOPLE; qui vulgui més gent l'afegeix a mà.
 function showContext(id){
   const t=PEOPLE.find(p=>p.id===id);if(!t)return;
+  pushUndo('cro_act_context');
   hideDetail();   // tanca el panell de detall perquè es vegi el context que s'afegeix (mòbil i desktop)
   state.focus=id;   // l'original queda fixat al carril de dalt; els personatges de context, a sota
   const a1=t.birth,a2=deathOf(t);
@@ -1742,6 +1805,7 @@ function refreshStale(qids){
 }
 async function toggleCollection(cid){
   const c=COLLECTIONS.find(x=>x.id===cid);if(!c)return;
+  pushUndo(state.collections.has(cid)?'cro_act_coll_off':'cro_act_coll_on',{name:c.name});
   if(state.collections.has(cid)){                  // same button takes it away again
     state.collections.delete(cid);
     const stillWanted=new Set([...state.collections].flatMap(id=>(COLLECTIONS.find(x=>x.id===id)||{wds:[]}).wds));
@@ -1836,13 +1900,20 @@ function zoomAt(clientX,factor){clearFitLatch();
   const newInner=(yearAt-YEAR_MIN)*pxPerYear;
   scroll.scrollLeft=Math.min(Math.max(0,newInner-(clientX-rect.left)),maxScroll());   // must be clamped: during a fast pinch this lands against not-yet-reflowed layout and an out-of-range value sticks, parking the view past the end of the canvas (blank right side, endless-feeling scroll)
 }
-$('#zoomIn').onclick=()=>{const r=scroll.getBoundingClientRect();zoomAt(r.left+scroll.clientWidth/2,1.4);};
-$('#zoomOut').onclick=()=>{const r=scroll.getBoundingClientRect();zoomAt(r.left+scroll.clientWidth/2,1/1.4);};
 // "Veure tot": botó de doble estat. 1r clic → zoom out per encabir tot el visible i queda marcat;
 // 2n clic → desfà el zoom out i torna a la vista anterior.
 let fitPrev=null;
 function fitLatch(on){$('#fitAll').classList.toggle('on',on);}
 function clearFitLatch(){fitPrev=null;fitLatch(false);}
+$('#undo').onclick=()=>{if(typeof gtag!=='undefined')gtag('event','undo');doUndo();};
+// ⌘Z / Ctrl+Z, pero no mentre s'escriu al cercador (allà Z ha de ser una lletra)
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&!e.shiftKey&&!e.altKey&&(e.key==='z'||e.key==='Z')){
+    const a=document.activeElement;
+    if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'))return;
+    e.preventDefault();doUndo();
+  }
+});
 $('#fitAll').onclick=()=>{
   if(typeof gtag!=='undefined')gtag('event','vista_global');
   if(fitPrev){pxPerYear=Math.max(fitPx(),Math.min(20,fitPrev.px));render();scroll.scrollLeft=Math.min(Math.max(0,fitPrev.left),maxScroll());clearFitLatch();return;}
@@ -1850,7 +1921,7 @@ $('#fitAll').onclick=()=>{
   fitToPresent();
   if(pxPerYear!==before.px||scroll.scrollLeft!==before.left){fitPrev=before;fitLatch(true);}   // only latch if it actually moved
 };
-$('#reset').onclick=()=>{if(typeof gtag!=='undefined')gtag('event','reset');state.present=new Set();state.pinned=new Set(SEED_PINNED);state.collections=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.focus=null;state.selected=null;state.selectedEvent=null;state.expandedClusters=new Set();$('#detail').classList.remove('open');_pbarId=null;pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;if(PERSON_QID)history.replaceState(null,'',location.pathname);clearFitLatch();defaultView();};
+$('#reset').onclick=()=>{if(typeof gtag!=='undefined')gtag('event','reset');pushUndo('cro_act_reset');state.present=new Set();state.pinned=new Set(SEED_PINNED);state.collections=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.focus=null;state.selected=null;state.selectedEvent=null;state.expandedClusters=new Set();$('#detail').classList.remove('open');_pbarId=null;pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;if(PERSON_QID)history.replaceState(null,'',location.pathname);clearFitLatch();defaultView();};
 $('#sidebarToggle').onclick=e=>{
   const collapsed=$('.body').classList.toggle('collapsed');
   e.currentTarget.textContent=collapsed?'›':'‹';
