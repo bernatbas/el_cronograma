@@ -263,14 +263,17 @@
   .personbar .pdesc{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .personbar .pname-item{background:none;border:none;padding:0;font:inherit;color:inherit;cursor:pointer;line-height:inherit;}
   .personbar .pname-item:hover{text-decoration:underline;}
+  .personbar .pjoc{flex:0 0 auto;margin-right:auto;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;border:none;background:var(--topbar-bg);border-radius:var(--r-pill);padding:9px 16px;font-size:13.5px;font-weight:600;letter-spacing:.01em;line-height:1;color:#fff;cursor:pointer;box-shadow:0 2px 9px rgba(184,80,60,.32);-webkit-appearance:none;appearance:none;}
+  .personbar .pjoc:hover{filter:brightness(.93);}
+  .personbar .pjoc:active{filter:brightness(.86);}
   .personbar .pback{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--border-strong);background:#fff;border-radius:50%;font-size:15px;line-height:1;color:var(--text2);cursor:pointer;padding:0;-webkit-appearance:none;appearance:none;}
   .personbar .pback:hover{background:var(--surface);color:var(--text);}
   .personbar[data-state="error"]{box-shadow:inset 3px 0 0 #B23A2E;}
   .personbar[data-state="error"] .ptag{color:#B23A2E;}
   @media (max-width:860px){ .personbar{padding:6px 14px;gap:10px;} .personbar .pname{font-size:15px;} }
   @media (max-width:600px){ .personbar .pdesc{display:none;} }
-  @media (max-width:430px){ .personbar .pimg{width:26px;height:26px;} }   /* la foto es fa petita, però NO desapareix: en vertical era l'única cosa que no sortia */
-  @media (pointer:coarse){ .personbar{padding-top:5px;padding-bottom:5px;} .personbar .pimg{width:30px;height:30px;} .personbar .pname{font-size:15px;} }
+  @media (max-width:430px){ .personbar .pimg{width:26px;height:26px;} .personbar .pjoc{padding:8px 12px;font-size:13px;} }   /* la foto es fa petita, però NO desapareix: en vertical era l'única cosa que no sortia */
+  @media (pointer:coarse){ .personbar .pjoc{min-height:34px;} .personbar{padding-top:5px;padding-bottom:5px;} .personbar .pimg{width:30px;height:30px;} .personbar .pname{font-size:15px;} }
 
   /* ===== Stage: the scrolling timeline canvas ===== */
   .stage{flex:1 1 auto;position:relative;min-width:0;display:flex;flex-direction:column;}
@@ -540,7 +543,7 @@
         <div class="results" id="results"></div>
       </div>
       <div class="controls">
-        <button class="btn btn-undo" id="undo" type="button" disabled title="Desfés" data-i18n-title="cro_undo" aria-label="Desfés" data-i18n-aria="cro_undo"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 5.5 4 9l3.5 3.5"/><path d="M4 9h7.5a4.5 4.5 0 0 1 0 9H9"/></svg></button>
+        <button class="btn btn-undo" id="undo" type="button" disabled title="Desfés" data-i18n-title="cro_undo" aria-label="Desfés" data-i18n-aria="cro_undo"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.2 4.3 3.7 7.8l3.5 3.5"/><path d="M3.7 7.8H11a4 4 0 0 1 0 8H8.6"/></svg></button>
         <button class="btn" id="fitAll" title="Ajusta el zoom per encabir tot el visible; torna a clicar per desfer" data-i18n-title="cro_fit_title"><span class="btn-tx" data-i18n="cro_fit">Vista global</span><svg class="btn-ic" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V3h4"/><path d="M17 7V3h-4"/><path d="M3 13v4h4"/><path d="M17 13v4h-4"/></svg></button>
         <button class="btn" id="reset" title="Restableix" data-i18n-title="cro_reset_title"><span class="btn-tx" data-i18n="cro_reset">Reset</span><svg class="btn-ic" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 6.2A6 6 0 1 0 16 10"/><path d="M15.8 3v3.4h-3.4"/></svg></button>
       </div>
@@ -688,6 +691,8 @@ const I18N={
     cro_coll_lost: v => v.name+' · '+v.n+" no s'han pogut carregar",
     // -- barra de personatge (mode ?person=) --
     cro_pb_fail:'No s’ha pogut carregar',
+    cro_back_to_game:'Al joc',
+    cro_back_to_game_t:'Torna al joc on estaves',
     cro_pb_recenter:'Torna a centrar-lo a la vista',
     cro_pb_rehighlight:'Torna a ressaltar-lo a la vista',
     cro_pb_remove_person:'Treu el personatge de la vista',
@@ -2084,6 +2089,44 @@ const pbar=$('#personbar');
 // La barra es construeix amb nodes i textContent: les dades venen de Wikidata i no es poden
 // interpolar a innerHTML.
 let _pbarId=null; // id PEOPLE de la persona actual a la personbar; null si no n'hi ha cap
+// Ve del joc? NOMES ho podem saber pel referrer:
+//   - el traspas ?from=joc s'esborra la URL tot seguit (replaceState), aixi que no en queda rastre;
+//   - el ?person= tambe arriba d'enllaços COMPARTITS, i alla «torna al joc» no vol dir res.
+// Aixi el boto surt quan de veritat hi ha un joc al darrere, i no quan un amic t'ha enviat el link.
+const CAME_FROM_JOC=(function(){
+  try{
+    // 1) ?from=joc es el traspas intern del joc (joc.html:889 hi navega sempre): senyal
+    //    DETERMINISTA i sense dependencies. Cal llegir-lo AQUI perque bootFromJoc()
+    //    esborra la URL tot seguit amb replaceState. Es parseja amb un URLSearchParams
+    //    propi i no amb _urlP, que es declara molt mes avall (TDZ: usar-lo aqui aturaria
+    //    tot l'script). I sobretot: aixo funciona amb file://, on el navegador NO dona
+    //    referrer — que es com s'obre la pagina amb doble clic.
+    if(new URLSearchParams(location.search).get('from')==='joc')return true;
+    // 2) ?person= NO l'usa el joc: ve d'enllaços compartits. Aqui l'unic senyal es el
+    //    referrer, i que falti es el comportament correcte — si un amic t'envia el link,
+    //    «torna al joc» no vol dir res.
+    if(!document.referrer)return false;
+    const u=new URL(document.referrer);
+    return u.origin===location.origin&&/(^|\/)joc\.html$/.test(u.pathname);
+  }catch(_){return false;}
+})();
+// history.back() i no un enllaç a joc.html: torna el joc TAL COM el vas deixar (mateixa
+// pregunta, ratxa intacta). Un enllaç recarregaria el menu de jocs i perdries la partida.
+function backToJocBtn(){
+  if(!CAME_FROM_JOC)return null;
+  const b=document.createElement('button');
+  b.className='pjoc';b.type='button';
+  b.title=t('cro_back_to_game_t');
+  b.setAttribute('aria-label',t('cro_back_to_game_t'));
+  b.innerHTML='<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2.5 1.5 7 6 11.5"/><path d="M1.5 7h11"/></svg>';
+  const s=document.createElement('span');s.className='pjoc-tx';s.textContent=t('cro_back_to_game');
+  b.appendChild(s);
+  b.addEventListener('click',function(){
+    if(typeof gtag!=='undefined')gtag('event','torna_al_joc');
+    history.back();
+  });
+  return b;
+}
 function labelForSource(src){
   if(src==='personatgedia') return t('t_personatgedia');
   return null;   // els noms dels jocs no es mostren a la barra; source es guarda al payload
@@ -2091,6 +2134,7 @@ function labelForSource(src){
 function personBar(estat,nom,descripcio,imgUrl,source,personId){
   pbar.textContent='';
   pbar.dataset.state=estat;
+  {const _bj=backToJocBtn();if(_bj)pbar.appendChild(_bj);}   // primer fill: queda a l'esquerra via margin-right:auto
   if(imgUrl){
     const im=document.createElement('img');
     im.className='pimg';im.alt='';im.referrerPolicy='no-referrer';im.src=imgUrl;
@@ -2187,6 +2231,7 @@ function jocBar(items,source){
   // items: [{kind:'person', p:{name,birth,death,...}, id:'wd_...'} | {kind:'event', ev:{id,name,year}}]
   pbar.textContent='';
   pbar.dataset.state='ok';
+  {const _bj=backToJocBtn();if(_bj)pbar.appendChild(_bj);}   // fix a l'esquerra; els noms fan scroll entre ell i la ✕
   const txt=document.createElement('div');txt.className='ptxt';
   const nm=document.createElement('div');nm.className='pname';
   const showYears=items.length<=1;
