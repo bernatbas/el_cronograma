@@ -1228,7 +1228,7 @@ function render(){
       const fade=alive?`<span class="fade" style="left:${pillW}px;width:${FUTURE_FADE}px;background:${col}"></span>`:'';   // future fade for the living
       const lblW=pillW-(_coarse?16:20);
       const lblStyle=lblW<28?'display:none':'max-width:'+lblW+'px;overflow:hidden;text-overflow:ellipsis';
-      return `<div class="bar${alive?' alive':''}${state.selected===p.id?' sel':''}" data-id="${p.id}" style="left:${p._startX}px;top:${top}px;width:${pillW}px;background:${col}">${fade}<span class="lbl" style="${lblStyle}">${esc(p.name)}</span><button class="menu" data-menu="${p.id}" title="Opcions">⋮</button></div>`;
+      return `<div class="bar${alive?' alive':''}${state.selected===p.id?' sel':''}" data-id="${p.id}" style="left:${p._startX}px;top:${top}px;width:${pillW}px;background:${col}">${fade}<span class="lbl" style="${lblStyle}">${esc(L(p.name))}</span><button class="menu" data-menu="${p.id}" title="Opcions">⋮</button></div>`;
     }).join('');
   }else{
     barsLayer.innerHTML=`<div class="emptyState" style="top:6px">${t('cro_empty_canvas')}</div>`;
@@ -1282,8 +1282,8 @@ function renderSidebar(){
   const extIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3H3a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1v-3"/><path d="M10 2h4v4M14 2L8 8"/></svg>';
   $('#collections').innerHTML=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}<span class="cname">${c.name}</span><span class="cnt">${c.wds.length}</span>${c.url?`<a class="extlink" href="${c.url}" target="_blank" rel="noopener" title="${t('cro_open_site')}" onclick="event.stopPropagation()">${extIco}</a>`:''}</button>`).join('')
     +`<button class="newcol" data-newcol>${t('cro_newcol')}</button>`;
-  const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>a.name.localeCompare(b.name,'ca'));   // always alphabetical
-  $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}" title="${t('cro_center')}">${esc(p.name)}</button>${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}">⚠</button><button class="x" data-remove="${p.id}" title="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
+  const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>L(a.name).localeCompare(L(b.name),LANG));   // always alphabetical, en l'idioma actiu
+  $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}" title="${t('cro_center')}">${esc(L(p.name))}</button>${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}">⚠</button><button class="x" data-remove="${p.id}" title="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
 }
 
 // ============================================================
@@ -1301,13 +1301,13 @@ function eraLabel(year){
 }
 
 function openDetail(p){
-  if(typeof gtag!=='undefined')gtag('event','fitxa_oberta',{personatge:p.name});
+  if(typeof gtag!=='undefined')gtag('event','fitxa_oberta',{personatge:L(p.name)});
   state.selected=p.id;state.selectedEvent=null;
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   d.innerHTML=`<button class="close" id="closeDetail" aria-label="${t('close')}">×</button>
-    <h2>${esc(p.name)}</h2>
+    <h2>${esc(L(p.name))}</h2>
     <div class="dhead"><span class="life">${fmtY(p.birth)} – ${isAlive(p)?t('cro_present'):fmtY(p.death)}</span>${hasCat(p)?p.cats.map(a=>`<span class="chip"><span class="swatch" style="background:${CAT_COLORS[a]}"></span>${t('cat_'+a)}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${t('cat_none')}</span>`}<span class="chip era">${eraLabel(p.birth)}</span></div>
-    <div class="desc">${esc(p.desc)}</div>
+    <div class="desc">${esc(L(p.desc))}</div>
     <div class="actions">
       <button class="dbtn" data-act="context">${t('cro_context')}</button>
       ${p.wiki?`<button class="dbtn" data-act="wiki">${linkLabel(p.wiki)} ↗</button>`:''}
@@ -1318,7 +1318,7 @@ function openDetail(p){
     const act=btn.getAttribute('data-act');
     if(act==='remove')removePerson(p.id);
     else if(act==='wiki')window.open(p.wiki,'_blank','noopener,noreferrer');
-    else{if(typeof gtag!=='undefined')gtag('event','mostra_context',{personatge:p.name});showContext(p.id);}
+    else{if(typeof gtag!=='undefined')gtag('event','mostra_context',{personatge:L(p.name)});showContext(p.id);}
   });
   render();
 }
@@ -1359,13 +1359,13 @@ let searchIdx=-1, wdTerm='', wdResults=[], wdStatus='idle', wdTimer=null, wdSeq=
 const wdCache=new Map();   // cau de resultats de cerca per terme normalitzat (només memòria): repetir una cerca és instantani, sense xarxa
 const dropKnown=arr=>{const inDB=new Set(PEOPLE.map(p=>p.wd).filter(Boolean));return arr.filter(w=>!inDB.has(w.qid));};   // del cau, treu qui ja tinguem/afegit
 
-const localRow=p=>{const added=state.present.has(p.id);return `<div class="row ${added?'disabled':''}" data-add="${p.id}"><span class="swatch" style="background:${swatchBg(p)}"></span>${esc(p.name)}<span class="yr">${added?t('cro_already_added'):p.birth+'\u2013'+(p.death==null?'':p.death)}</span></div>`;};
+const localRow=p=>{const added=state.present.has(p.id);return `<div class="row ${added?'disabled':''}" data-add="${p.id}"><span class="swatch" style="background:${swatchBg(p)}"></span>${esc(L(p.name))}<span class="yr">${added?t('cro_already_added'):p.birth+'\u2013'+(p.death==null?'':p.death)}</span></div>`;};
 const wdRow=w=>`<div class="row" data-wd="${w.qid}"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${w.name}<span class="yr">${w.birth}${w.death!=null?'\u2013'+w.death:'\u2013'}</span></div>`;
 const evSearchRow=ev=>`<div class="row evrow" data-evsearch="${ev.id}"><span class="swatch" style="background:var(--eventc)"></span>${L(ev.name)}<span class="yr">${fmtY(ev.year)}</span></div>`;
 function renderDropdown(){
   const term=deaccent(q.value.trim());
   if(!term){results.classList.remove('open');return;}
-  const local=PEOPLE.filter(p=>deaccent(p.name).includes(term));
+  const local=PEOPLE.filter(p=>deaccent(L(p.name)).includes(term));
   const localEv=EVENTS.filter(ev=>deaccent(L(ev.name)).includes(term));
   let html=local.map(localRow).join('');
   if(localEv.length)html+=`<div class="rowsep">${t('cro_events')}</div>`+localEv.map(evSearchRow).join('');
@@ -1540,7 +1540,7 @@ barsLayer.addEventListener('mousemove',e=>{
   if(!bar){hideBartip();return;}
   const p=PEOPLE.find(x=>x.id===bar.getAttribute('data-id'));
   if(!p){hideBartip();return;}
-  placeBartip(`${p.name} · ${fmtY(p.birth)} – ${isAlive(p)?t('cro_present'):fmtY(p.death)}`,e.clientX,e.clientY);
+  placeBartip(`${L(p.name)} · ${fmtY(p.birth)} – ${isAlive(p)?t('cro_present'):fmtY(p.death)}`,e.clientX,e.clientY);
 });
 barsLayer.addEventListener('mouseleave',hideBartip);
 eraTracksEl.addEventListener('mousemove',e=>{
@@ -2105,7 +2105,7 @@ function mostraPersonatge(p,opts){
   state.pinned.add(id);
   scheduleSave();
   render();
-  if(!opts||!opts.noBar) personBar('ok',p.name,p.desc||'',p.img,opts&&opts.source,id);
+  if(!opts||!opts.noBar) personBar('ok',L(p.name),L(p.desc)||'',p.img,opts&&opts.source,id);
   return id;
 }
 
@@ -2131,8 +2131,8 @@ function jocBar(items,source){
       const p=item.p;
       if(showYears){
         const y1=fmtY(p.birth);const y2=p.death!=null?fmtY(p.death):'avui';
-        btn.textContent=p.name+' ('+y1+'–'+y2+')';
-      }else{btn.textContent=p.name;}
+        btn.textContent=L(p.name)+' ('+y1+'–'+y2+')';
+      }else{btn.textContent=L(p.name);}
       btn.title=t('cro_pb_rehighlight');
       const id=item.id;
       btn.addEventListener('click',function(){revealPerson(id);});
