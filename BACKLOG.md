@@ -10,6 +10,25 @@ Primer pas: estendre PEOPLE amb `sitelinks` i `imp`, baixar sitelinks de Wikidat
 
 Segon pas: toggle «mostra-ho tot / filtra per importància» — Fase 3 del full de ruta.
 
+## Activar es/en (selector d’idioma + traduccions)
+
+El backend i18n ja hi és a les dues pàgines i està provat: activar un idioma són dos passos
+(codi a `I18N_SUPPORTED` + bloc a `I18N`). El que falta és el contingut i la manera de canviar-lo.
+
+1. **Selector d’idioma** a la topbar. És bloc compartit: ha de sortir igual a `index.html` i
+   `joc.html`, i crida `setLang()` + `applyI18nStatic()` + `render()`. Compte: `applyI18nStatic()`
+   ha de tornar a passar per la topbar **abans** de re-mesurar-la (`fitSecnav` mesura amplades).
+2. **Omplir els diccionaris**: ~69 claus a l’index, ~113 al joc. Les 11 compartides han de mantenir
+   el mateix valor als dos fitxers (tret de `doc_title`, que és propi de cada pàgina).
+3. **Traduir el contingut de `[1] DATA`**: passar `name`/`desc` d’eres, marcs, blocs i events a la
+   forma `{ca:'…', es:'…'}`. `L()` ja ho accepta i cau a `ca` mentre no hi siguin, així que es pot
+   fer de mica en mica sense trencar res. Els noms de `COLLECTIONS` queden fora a propòsit.
+
+Val la pena arreglar dues coses del contracte alhora, i **als dos fitxers**:
+- `t()` retorna `''` quan falta una clau, en lloc de la clau. Amb dos idiomes a mig omplir això
+  vol dir buits invisibles arreu: millor `return key`.
+- El nucli no cobreix `placeholder`; afegir-hi `data-i18n-ph` estalvia posar-los a mà.
+
 ## Poblar la BD
 Més esdeveniments i marcs. És manual — els blocs de període no es poden cercar a Wikidata.
 
