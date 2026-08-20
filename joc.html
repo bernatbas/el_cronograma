@@ -9,8 +9,8 @@
 <title>Història Bàsica · Jocs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=swap" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=swap"></noscript>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&display=swap"></noscript>
 <style>
   /* Paleta idèntica a index.html (mantenir sincronitzada) */
   :root{
@@ -366,6 +366,9 @@
   }
   @media (max-width:600px){
     .gameover.con{padding:20px 16px;}
+    /* Anys de les cartes mes finets i en una sola linia en mobil vertical */
+    .con .concards .itemcard.con .yr{font-size:26px;font-weight:400;white-space:nowrap;letter-spacing:.01em;}
+    .con .concards .itemcard.con .yr .q{font-size:22px;}
     .gameover.con .stats{gap:26px;margin:12px 0 12px;}
     .gameover.con .stat .v{font-size:34px;}
     .gameover.con .confailwrap{margin:6px 0 10px;gap:5px;}
