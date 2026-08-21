@@ -55,3 +55,5 @@ Per garantir que el joc no canvia al llarg del dia, i el seed no genera contingu
 
 ## Afegir el mapping de paraules clau a categories en el dashboard
 Poder editar el mapping de paraules clau a categories des del dashboard, veure quines paraules clau són les que porten a algú a catalogar-lo com a músic, i afegir les que detecti que hi falten.
+
+## PErmetre editar la categoria quan no es pot detectar i està "sense categoria"
