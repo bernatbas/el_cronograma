@@ -609,8 +609,21 @@ def _find_section(lines, title):
 
 
 def _save(path, lines):
+    """Escriu i normalitza el final del fitxer a UN sol salt de linia: esborrar
+    una seccio deixava una linia buida de mes, i cada escriptura n'anava
+    acumulant una (es veia al diff, no a la pagina)."""
+    text = "".join(lines).rstrip("\n") + "\n"
     with open(path, "w", encoding="utf-8") as f:
-        f.writelines(lines)
+        f.write(text)
+
+
+def _commit_backlog(msg):
+    """Committeja el BACKLOG.md tot sol, perque un item afegit des del dashboard no
+    es quedi com un canvi solt que es pot perdre. Path-limited A PROPOSIT: si en
+    Bernat te l'index.html a mig editar, un commit ampli se l'enduria pel mig.
+    Si no hi ha res a committejar, git retorna != 0 i ho deixem passar."""
+    ok, out = run(["git", "commit", "-m", msg, "--", BACKLOG_FILE])
+    return ok, out
 
 
 def backlog_close(title):
@@ -621,6 +634,7 @@ def backlog_close(title):
             return False, "Ja estava tancat"
         lines[start] = "## [TANCAT] " + lines[start][3:]
         _save(path, lines)
+        _commit_backlog("Backlog: tanca «%s»" % title.strip())
         return True, "Tancat"
     except Exception as e:
         return False, str(e)
@@ -632,6 +646,7 @@ def backlog_delete(title):
         start, end = _find_section(lines, title)
         del lines[start:end]
         _save(path, lines)
+        _commit_backlog("Backlog: elimina «%s»" % title.strip())
         return True, "Eliminat"
     except Exception as e:
         return False, str(e)
@@ -647,6 +662,7 @@ def backlog_annotate(title, note):
             insert -= 1
         lines.insert(insert, note_line)
         _save(path, lines)
+        _commit_backlog("Backlog: nota a «%s»" % title.strip())
         return True, "Nota afegida"
     except Exception as e:
         return False, str(e)
@@ -663,6 +679,7 @@ def backlog_add(title, body):
         content = content.rstrip("\n") + "\n" + section
         with open(path, "w", encoding="utf-8") as f:
             f.write(content)
+        _commit_backlog("Backlog: afegeix «%s»" % title.strip())
         return True, "Afegit"
     except Exception as e:
         return False, str(e)
