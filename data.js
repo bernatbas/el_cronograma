@@ -1,11 +1,11 @@
 /* =============================================================================
  * data.js — SNAPSHOT PROVISIONAL de la base de dades del cronograma.
- * Generat automàticament des d'index.html el 2026-08-12.
+ * Generat automàticament des d'index.html el 2026-08-21.
  *
  * ⚠️  PROVISIONAL: això és una CÒPIA de les dades que ara viuen a index.html,
  *     feta per facilitar el testeig local (file://). Quan existeixi la DB externa,
  *     substituir aquest fitxer pel carregador real (fetch a la DB/API) i esborrar
- *     el snapshot. NO editar a mà: regenerar amb _gen_data.js.
+ *     el snapshot. NO editar a mà: regenerar amb dash.py /api/db/regen.
  * ============================================================================= */
 
 
@@ -18,7 +18,7 @@ window.HB_DATA = {
       "birth": -470,
       "death": -399,
       "cats": [
-        "Filosofia"
+        "philosophy"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Sòcrates",
@@ -31,7 +31,7 @@ window.HB_DATA = {
       "birth": -428,
       "death": -348,
       "cats": [
-        "Filosofia"
+        "philosophy"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Plató",
@@ -44,7 +44,7 @@ window.HB_DATA = {
       "birth": -412,
       "death": -323,
       "cats": [
-        "Filosofia"
+        "philosophy"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Diògenes_de_Sinope",
@@ -57,8 +57,8 @@ window.HB_DATA = {
       "birth": -384,
       "death": -322,
       "cats": [
-        "Filosofia",
-        "Ciència"
+        "philosophy",
+        "science"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Aristòtil",
@@ -71,7 +71,7 @@ window.HB_DATA = {
       "birth": -356,
       "death": -323,
       "cats": [
-        "Política"
+        "politics"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Alexandre_el_Gran",
@@ -84,7 +84,7 @@ window.HB_DATA = {
       "birth": -341,
       "death": -270,
       "cats": [
-        "Filosofia"
+        "philosophy"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Epicur",
@@ -97,7 +97,7 @@ window.HB_DATA = {
       "birth": -100,
       "death": -44,
       "cats": [
-        "Política"
+        "politics"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Juli_Cèsar",
@@ -110,7 +110,7 @@ window.HB_DATA = {
       "birth": -69,
       "death": -30,
       "cats": [
-        "Política"
+        "politics"
       ],
       "gender": "F",
       "wiki": "https://ca.wikipedia.org/wiki/Cleòpatra",
@@ -123,7 +123,7 @@ window.HB_DATA = {
       "birth": -4,
       "death": 30,
       "cats": [
-        "Religió"
+        "religion"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Jesús_de_Natzaret",
@@ -136,7 +136,7 @@ window.HB_DATA = {
       "birth": 1162,
       "death": 1227,
       "cats": [
-        "Política"
+        "politics"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Gengis_Khan",
@@ -149,7 +149,7 @@ window.HB_DATA = {
       "birth": 1400,
       "death": 1468,
       "cats": [
-        "Ciència"
+        "science"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Johannes_Gutenberg",
@@ -162,7 +162,7 @@ window.HB_DATA = {
       "birth": 1412,
       "death": 1431,
       "cats": [
-        "Política"
+        "politics"
       ],
       "gender": "F",
       "wiki": "https://ca.wikipedia.org/wiki/Joana_d'Arc",
@@ -175,8 +175,8 @@ window.HB_DATA = {
       "birth": 1452,
       "death": 1519,
       "cats": [
-        "Pintura",
-        "Ciència"
+        "painting",
+        "science"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Leonardo_da_Vinci",
@@ -189,7 +189,7 @@ window.HB_DATA = {
       "birth": 1473,
       "death": 1543,
       "cats": [
-        "Ciència"
+        "science"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Nicolau_Copèrnic",
@@ -202,7 +202,7 @@ window.HB_DATA = {
       "birth": 1475,
       "death": 1564,
       "cats": [
-        "Pintura"
+        "painting"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Miquel_Àngel",
@@ -215,7 +215,7 @@ window.HB_DATA = {
       "birth": 1564,
       "death": 1642,
       "cats": [
-        "Ciència"
+        "science"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Galileu_Galilei",
@@ -228,7 +228,7 @@ window.HB_DATA = {
       "birth": 1564,
       "death": 1616,
       "cats": [
-        "Literatura"
+        "literature"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/William_Shakespeare",
@@ -241,7 +241,7 @@ window.HB_DATA = {
       "birth": 1643,
       "death": 1727,
       "cats": [
-        "Ciència"
+        "science"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Isaac_Newton",
@@ -254,7 +254,7 @@ window.HB_DATA = {
       "birth": 1685,
       "death": 1750,
       "cats": [
-        "Música"
+        "music"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Johann_Sebastian_Bach",
@@ -267,8 +267,8 @@ window.HB_DATA = {
       "birth": 1694,
       "death": 1778,
       "cats": [
-        "Filosofia",
-        "Literatura"
+        "philosophy",
+        "literature"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Voltaire",
@@ -281,8 +281,8 @@ window.HB_DATA = {
       "birth": 1706,
       "death": 1790,
       "cats": [
-        "Ciència",
-        "Política"
+        "science",
+        "politics"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Benjamin_Franklin",
@@ -295,7 +295,7 @@ window.HB_DATA = {
       "birth": 1756,
       "death": 1791,
       "cats": [
-        "Música"
+        "music"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Wolfgang_Amadeus_Mozart",
@@ -308,8 +308,8 @@ window.HB_DATA = {
       "birth": 1759,
       "death": 1797,
       "cats": [
-        "Filosofia",
-        "Literatura"
+        "philosophy",
+        "literature"
       ],
       "gender": "F",
       "wiki": "https://ca.wikipedia.org/wiki/Mary_Wollstonecraft",
@@ -322,7 +322,7 @@ window.HB_DATA = {
       "birth": 1769,
       "death": 1821,
       "cats": [
-        "Política"
+        "politics"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Napoleó_Bonaparte",
@@ -335,7 +335,7 @@ window.HB_DATA = {
       "birth": 1775,
       "death": 1817,
       "cats": [
-        "Literatura"
+        "literature"
       ],
       "gender": "F",
       "wiki": "https://ca.wikipedia.org/wiki/Jane_Austen",
@@ -348,7 +348,7 @@ window.HB_DATA = {
       "birth": 1809,
       "death": 1882,
       "cats": [
-        "Ciència"
+        "science"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Charles_Darwin",
@@ -361,7 +361,7 @@ window.HB_DATA = {
       "birth": 1815,
       "death": 1852,
       "cats": [
-        "Ciència"
+        "science"
       ],
       "gender": "F",
       "wiki": "https://ca.wikipedia.org/wiki/Ada_Lovelace",
@@ -374,8 +374,8 @@ window.HB_DATA = {
       "birth": 1818,
       "death": 1883,
       "cats": [
-        "Filosofia",
-        "Política"
+        "philosophy",
+        "politics"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Karl_Marx",
@@ -388,7 +388,7 @@ window.HB_DATA = {
       "birth": 1853,
       "death": 1890,
       "cats": [
-        "Pintura"
+        "painting"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Vincent_van_Gogh",
@@ -401,7 +401,7 @@ window.HB_DATA = {
       "birth": 1867,
       "death": 1934,
       "cats": [
-        "Ciència"
+        "science"
       ],
       "gender": "F",
       "wiki": "https://ca.wikipedia.org/wiki/Marie_Curie",
@@ -414,7 +414,7 @@ window.HB_DATA = {
       "birth": 1869,
       "death": 1948,
       "cats": [
-        "Política"
+        "politics"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Mahatma_Gandhi",
@@ -427,7 +427,7 @@ window.HB_DATA = {
       "birth": 1879,
       "death": 1955,
       "cats": [
-        "Ciència"
+        "science"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Albert_Einstein",
@@ -440,7 +440,7 @@ window.HB_DATA = {
       "birth": 1881,
       "death": 1973,
       "cats": [
-        "Pintura"
+        "painting"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Pablo_Picasso",
@@ -453,7 +453,7 @@ window.HB_DATA = {
       "birth": 1907,
       "death": 1954,
       "cats": [
-        "Pintura"
+        "painting"
       ],
       "gender": "F",
       "wiki": "https://ca.wikipedia.org/wiki/Frida_Kahlo",
@@ -466,7 +466,7 @@ window.HB_DATA = {
       "birth": 1918,
       "death": 2013,
       "cats": [
-        "Política"
+        "politics"
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Nelson_Mandela",
@@ -482,6 +482,45 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "",
       "desc": "Neix el 1991.<br>Crea aquesta pàgina el 2026.<br>Encara no ha mort."
+    },
+    {
+      "id": "lordbyron",
+      "wd": "Q5679",
+      "name": "Lord Byron",
+      "birth": 1788,
+      "death": 1824,
+      "cats": [
+        "literature"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Lord_Byron",
+      "desc": "Poeta anglès"
+    },
+    {
+      "id": "rosaluxemburg",
+      "wd": "Q7231",
+      "name": "Rosa Luxemburg",
+      "birth": 1871,
+      "death": 1919,
+      "cats": [
+        "philosophy"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Rosa_Luxemburg",
+      "desc": "Marxista revolucionària polonesa-alemanya"
+    },
+    {
+      "id": "confuci",
+      "wd": "Q4604",
+      "name": "Confuci",
+      "birth": -551,
+      "death": -479,
+      "cats": [
+        "philosophy"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Confuci",
+      "desc": "Filòsof xinès"
     }
   ],
   "EVENTS": [
@@ -603,175 +642,8 @@ window.HB_DATA = {
       "year": 2022,
       "wiki": "https://deltproject.com/",
       "sitelinks": 0,
-      "desc": "Projecte sense ànim de lucre que combina intel·ligència artificial i drons per ajudar organitzacions de conservació de fauna, sobretot la detecció i protecció de tortugues marines davant la caça furtiva."
-    }
-  ],
-  "MARCS": [
-    {
-      "id": "west",
-      "name": "Occident",
-      "color": "#5E9FE8",
-      "blocks": [
-        {
-          "name": "Paleolític",
-          "start": -12000,
-          "end": -9000,
-          "wiki": "https://ca.wikipedia.org/wiki/Paleolític"
-        },
-        {
-          "name": "Neolític",
-          "start": -9000,
-          "end": -3000,
-          "wiki": "https://ca.wikipedia.org/wiki/Neolític"
-        },
-        {
-          "name": "Edat dels Metalls",
-          "start": -3000,
-          "end": -800,
-          "wiki": "https://ca.wikipedia.org/wiki/Edat_dels_metalls"
-        },
-        {
-          "name": "Primeres civilitzacions",
-          "start": -3300,
-          "end": -500,
-          "wiki": "https://ca.wikipedia.org/wiki/Bressol_de_la_civilització"
-        },
-        {
-          "name": "Grècia clàssica",
-          "start": -800,
-          "end": -323,
-          "wiki": "https://ca.wikipedia.org/wiki/Antiga_Grècia"
-        },
-        {
-          "name": "Hel·lenisme",
-          "start": -323,
-          "end": -31,
-          "wiki": "https://ca.wikipedia.org/wiki/Hel·lenisme"
-        },
-        {
-          "name": "República romana",
-          "start": -509,
-          "end": -27,
-          "wiki": "https://ca.wikipedia.org/wiki/República_Romana"
-        },
-        {
-          "name": "Imperi Romà",
-          "start": -27,
-          "end": 476,
-          "wiki": "https://ca.wikipedia.org/wiki/Imperi_Romà"
-        },
-        {
-          "name": "Alta edat mitjana",
-          "start": 476,
-          "end": 1000,
-          "wiki": "https://ca.wikipedia.org/wiki/Alta_edat_mitjana"
-        },
-        {
-          "name": "Plena edat mitjana",
-          "start": 1000,
-          "end": 1300,
-          "wiki": "https://ca.wikipedia.org/wiki/Plena_edat_mitjana"
-        },
-        {
-          "name": "Baixa edat mitjana",
-          "start": 1300,
-          "end": 1492,
-          "wiki": "https://ca.wikipedia.org/wiki/Baixa_edat_mitjana"
-        },
-        {
-          "name": "Renaixement",
-          "start": 1400,
-          "end": 1600,
-          "wiki": "https://ca.wikipedia.org/wiki/Renaixement"
-        },
-        {
-          "name": "Barroc",
-          "start": 1600,
-          "end": 1750,
-          "wiki": "https://ca.wikipedia.org/wiki/Barroc"
-        },
-        {
-          "name": "Il·lustració",
-          "start": 1685,
-          "end": 1789,
-          "wiki": "https://ca.wikipedia.org/wiki/Il·lustració"
-        },
-        {
-          "name": "Romanticisme",
-          "start": 1800,
-          "end": 1850,
-          "wiki": "https://ca.wikipedia.org/wiki/Romanticisme"
-        },
-        {
-          "name": "Realisme i positivisme",
-          "start": 1850,
-          "end": 1900,
-          "wiki": "https://ca.wikipedia.org/wiki/Realisme"
-        },
-        {
-          "name": "Avantguardes",
-          "start": 1905,
-          "end": 1945,
-          "wiki": "https://ca.wikipedia.org/wiki/Avantguardisme"
-        },
-        {
-          "name": "Món contemporani",
-          "start": 1945,
-          "end": 2026,
-          "wiki": "https://ca.wikipedia.org/wiki/Edat_contemporània"
-        }
-      ]
-    },
-    {
-      "id": "es",
-      "name": "Espanya",
-      "color": "#C2A07C",
-      "blocks": [
-        {
-          "name": "Antic Règim borbònic",
-          "start": 1700,
-          "end": 1808,
-          "wiki": "https://ca.wikipedia.org/wiki/Antic_Règim"
-        },
-        {
-          "name": "Construcció de l’estat liberal a Espanya",
-          "start": 1808,
-          "end": 1874,
-          "wiki": "https://ca.wikipedia.org/wiki/Construcci%C3%B3_de_l%27estat_liberal_a_Espanya"
-        },
-        {
-          "name": "Restauració",
-          "start": 1874,
-          "end": 1931,
-          "wiki": "https://ca.wikipedia.org/wiki/Restauració_borbònica"
-        },
-        {
-          "name": "II República",
-          "start": 1931,
-          "end": 1939,
-          "wiki": "https://ca.wikipedia.org/wiki/Segona_República_Espanyola"
-        },
-        {
-          "name": "Franquisme",
-          "start": 1939,
-          "end": 1975,
-          "wiki": "https://ca.wikipedia.org/wiki/Franquisme"
-        }
-      ]
+      "desc": "Projecte sense ànim de lucre que combina intel·ligència artificial i drons per ajudar organitzacions de conservació de fauna, sobretot la detecció i protecció de tortugues marines davant la caça furtiva.",
+      "imp": 8
     }
   ]
 };
-
-
-
-/*
-window.HB_DATA = {
-  PEOPLE: [],
-  EVENTS: [
-    { id: "e1", name: "Fundació de Roma",   year: -753, wiki: "", sitelinks: 0, desc: "" },
-    { id: "e2", name: "Descobriment d'Amèrica", year: 1492, wiki: "", sitelinks: 0, desc: "" },
-    { id: "e3", name: "Arribada a la Lluna", year: 1969, wiki: "", sitelinks: 0, desc: "" }
-  ],
-  MARCS: []
-};
-*/
