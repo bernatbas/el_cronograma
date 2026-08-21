@@ -334,10 +334,10 @@
   .condot.cur{opacity:1;box-shadow:0 0 0 3px rgba(184,80,60,.22);}
   .condot.ok{background:#2E9B5B;opacity:1;}
   .condot.no{background:#C43A2C;opacity:1;}
-  .concards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0 20px;align-items:stretch;}
-  .concards .itemcard.con{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:28px 20px;min-height:150px;}
-  .concards .itemcard.con .nm{font-size:21px;margin-top:0;}
-  .concards .itemcard.con .yr{margin-top:12px;}
+  .concards{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin:14px 0 20px;align-items:stretch;}
+  .concards .itemcard.con{display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;text-align:center;padding:28px 20px;min-height:150px;}
+  .concards .itemcard.con .nm{font-size:21px;margin-top:0;flex:1 1 auto;display:flex;align-items:center;justify-content:center;}
+  .concards .itemcard.con .yr{margin-top:12px;flex:0 0 auto;}
   .concards .itemcard.con .yr .q{font-size:26px;opacity:.35;}
   .conq{text-align:center;font-size:19px;font-weight:600;color:var(--text);margin:2px 0 16px;min-height:24px;}
   .conq.ok{color:#238049;}
@@ -366,8 +366,16 @@
   }
   @media (max-width:600px){
     .gameover.con{padding:20px 16px;}
-    /* Anys de les cartes mes finets i en una sola linia en mobil vertical */
-    .con .concards .itemcard.con .yr{font-size:26px;font-weight:400;white-space:nowrap;letter-spacing:.01em;}
+    /* Anys de les cartes mes finets i en una sola linia en mobil vertical.
+       El cos ha de deixar cabre el pitjor cas realista («100 aC–44 aC») dins de
+       MITJA graella, perque des d'ara les dues columnes son exactament iguals. */
+    .con .concards .itemcard.con{padding:22px 8px;}
+    .con .concards .itemcard.con .yr{font-size:21px;font-weight:400;white-space:nowrap;letter-spacing:.01em;}
+    /* Dues dates aC no caben a 21px: baixem de cos NOMES quan cal, i a les dues cartes
+       alhora (ho decideix pairYrClass). «470 aC-399 aC» = 13, «1200 aC-1150 aC» = 15. */
+    .con .concards .itemcard.con .yr.yr-sm{font-size:19px;}
+    .con .concards .itemcard.con .yr.yr-xs{font-size:17px;}
+    .con .concards .itemcard.con .yr.yr-xxs{font-size:15px;}   /* xarxa per a anys aC de 5 xifres */
     .con .concards .itemcard.con .yr .q{font-size:22px;}
     .gameover.con .stats{gap:26px;margin:12px 0 12px;}
     .gameover.con .stat .v{font-size:34px;}
@@ -2037,11 +2045,18 @@
 
     function q(pair){ return t('con_q'); }
     function yearsLabel(b){ return b.type==='event'?fmtYear(b.by):(fmtYear(b.by)+'–'+(b.alive?t('con_alive'):fmtYear(b.dy))); }
-    function card(b, reveal, flash){
+    // Les DUES cartes han de dur el mateix cos d'any: si una digues «622» gran i
+    // l'altra «100 aC-44 aC» petit quedaria pitjor que desalineat. I ha de cabre a
+    // mitja graella, que en mobil vertical son ~120px. Manda la mes llarga.
+    function pairYrClass(pair){
+      const n=Math.max(yearsLabel(pair.a).length, yearsLabel(pair.b).length);
+      return n>=17?' yr-xxs':(n>=15?' yr-xs':(n>=13?' yr-sm':''));
+    }
+    function card(b, reveal, flash, ysz){
       const isEv=b.type==='event';
       const yr=reveal?yearsLabel(b):'<span class="q">?</span>';
       const cls='itemcard con'+(flash?(' '+flash):'');
-      return '<div class="'+cls+'"><div class="nm">'+b.name+'</div><div class="yr'+(reveal?' reveal':'')+'">'+yr+'</div></div>';
+      return '<div class="'+cls+'"><div class="nm">'+b.name+'</div><div class="yr'+(reveal?' reveal':'')+(ysz||'')+'">'+yr+'</div></div>';
     }
     function dots(){
       let h='';
@@ -2054,7 +2069,7 @@
       const pair=round[idx];
       root.innerHTML='<div class="game con">'
         +'<div class="gtop"><div class="gtitle">🤝 '+t('t_contemporanis')+'</div><div class="conprog">'+dots()+'</div></div>'
-        +'<div class="concards">'+card(pair.a,false)+card(pair.b,false)+'</div>'
+        +'<div class="concards">'+card(pair.a,false,null,pairYrClass(pair))+card(pair.b,false,null,pairYrClass(pair))+'</div>'
         +'<div class="conq">'+q(pair)+'</div>'
         +'<div class="conchoices"><button class="choice conyes" data-a="yes"><span class="big">✓</span>'+t('con_yes')+'</button><button class="choice conno" data-a="no"><span class="big">✗</span>'+t('con_no')+'</button></div>'
         +'<div class="gamefoot">📅 '+t('daily_challenge')+' · '+ddmm(todayStr())+'</div>'
@@ -2069,7 +2084,7 @@
       const correct=((ans==='yes')===pair.coincide);
       marks[idx]=correct; if(correct) score++;
       const flash=correct?'flash-ok':'flash-no';
-      const cc=root.querySelector('.concards'); if(cc) cc.innerHTML=card(pair.a,true,flash)+card(pair.b,true,flash);
+      const cc=root.querySelector('.concards'); if(cc) cc.innerHTML=card(pair.a,true,flash,pairYrClass(pair))+card(pair.b,true,flash,pairYrClass(pair));
       const cq=root.querySelector('.conq'); if(cq){ cq.textContent=correct?t('con_fb_ok'):t('con_fb_no'); cq.className='conq '+(correct?'ok':'no'); }
       root.querySelectorAll('.conchoices .choice').forEach(function(b){ b.disabled=true; if(b.getAttribute('data-a')===ans) b.classList.add(correct?'sel-ok':'sel-no'); });
       const prog=root.querySelector('.conprog'); if(prog) prog.innerHTML=dots();
