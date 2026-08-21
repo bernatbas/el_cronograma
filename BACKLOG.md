@@ -49,3 +49,6 @@ En mobil no m'acaba de convencer, crec que potser alguna funció simplement s'ha
 
 ## Unificar DB: data.js com a font única per a index.html i joc.html
 Ara la DB viu embedded a index.html i es copia a data.js. Objectiu: invertir-ho. data.js (o equivalent) és la font única, i cada pàgina carrega el que necessita (PEOPLE+EVENTS per al joc, tot per al cronograma). ERAS, MARCS, COLLECTIONS seguirien embedded a index.html perquè el joc no les necessita. Afecta: db_add_person escriu a data.js, index.html llegeix HB_DATA.PEOPLE via script src. Prerequisit: i18n real (les entrades de PEOPLE podrien tenir L() en data.js). Veure CLAUDE.md opció B.
+
+## Desfer el copy de la db i data.js
+Per garantir que el joc no canvia al llarg del dia, i el seed no genera contingut diferent, proposo només editar la db embeded, i que un cop al día, al final de dia, programar que es corri l'scrip per sincronitzar data.js només a les 11h30 de la nit cada dia, o algo així. Segurament git pot oferir coses així
