@@ -31,6 +31,12 @@ a{color:var(--terracota)}
 .nav a{color:#fff;text-decoration:none;font-size:13px;padding:6px 11px;border-radius:var(--r);opacity:.78}
 .nav a.on{opacity:1;background:rgba(255,255,255,.22);font-weight:600}
 #dwarn{margin:10px 0 2px;display:flex;flex-direction:column;gap:5px}
+.dgrid{margin-top:10px}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.f label{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text3)}
+.f label b{color:var(--terracota);font-weight:700}
+.f .wm{cursor:help;color:var(--warn);font-size:12px;font-style:normal}
+.f input.warn,.f select.warn{border-color:var(--warn);background:var(--warn-bg)}
 #dwarn .w{font-size:12.5px;padding:7px 11px;border-radius:6px;background:var(--warn-bg);color:var(--warn);border-left:3px solid var(--warn)}
 #dwarn .e{background:var(--bad-bg);color:var(--bad);border-left-color:var(--bad)}
 .nav a:hover{background:rgba(255,255,255,.14);opacity:1}
@@ -242,30 +248,45 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
         <button class="btn primary" id="dgo">Cerca</button>
       </div>
       <div id="dwarn"></div>
-      <div class="fields">
-        <input type="text" id="dnom" placeholder="Nom *">
-        <input type="text" id="dqid" placeholder="Q733621" style="font-family:var(--mono)">
+
+      <div class="fields dgrid" style="grid-template-columns:2fr 1fr">
+        <div class="f"><label for="dnom">Nom <b>*</b><i class="wm" id="w-dnom" hidden>⚠</i></label>
+          <input type="text" id="dnom"></div>
+        <div class="f"><label for="dqid">Q-id de Wikidata<i class="wm" id="w-dqid" hidden>⚠</i></label>
+          <input type="text" id="dqid" style="font-family:var(--mono)"></div>
       </div>
-      <div class="fields" style="grid-template-columns:1fr 2fr">
-        <input type="text" id="did" placeholder="id *" style="font-family:var(--mono)">
-        <input type="text" id="dwiki" placeholder="Enllaç a la Viquipèdia">
+
+      <div class="fields dgrid" style="grid-template-columns:1fr 2fr">
+        <div class="f"><label for="did">id intern <b>*</b><i class="wm" id="w-did" hidden>⚠</i></label>
+          <input type="text" id="did" style="font-family:var(--mono)"></div>
+        <div class="f"><label for="dwiki">Enllaç a la Viquipèdia<i class="wm" id="w-dwiki" hidden>⚠</i></label>
+          <input type="text" id="dwiki"></div>
       </div>
-      <div class="fields" style="grid-template-columns:1fr 1fr 2fr">
-        <input type="text" id="dbirth" placeholder="Naixement *">
-        <input type="text" id="ddeath" placeholder="Mort (buit = viu)">
-        <select id="dcat">
-          <option value="">Sense categoria</option>
-          <option value="philosophy">Filosofia</option><option value="music">Música</option>
-          <option value="literature">Literatura</option><option value="science">Ciència</option>
-          <option value="politics">Política</option><option value="painting">Pintura</option>
-          <option value="religion">Religió</option><option value="sport">Esport</option>
-        </select>
+
+      <div class="fields dgrid" style="grid-template-columns:1fr 1fr 2fr">
+        <div class="f"><label for="dbirth">Naixement <b>*</b><i class="wm" id="w-dbirth" hidden>⚠</i></label>
+          <input type="text" id="dbirth" placeholder="negatiu = aC"></div>
+        <div class="f"><label for="ddeath">Mort<i class="wm" id="w-ddeath" hidden>⚠</i></label>
+          <input type="text" id="ddeath" placeholder="buit = viu"></div>
+        <div class="f"><label for="dcat">Categoria<i class="wm" id="w-dcat" hidden>⚠</i></label>
+          <select id="dcat">
+            <option value="">Sense categoria</option>
+            <option value="philosophy">Filosofia</option><option value="music">Música</option>
+            <option value="literature">Literatura</option><option value="science">Ciència</option>
+            <option value="politics">Política</option><option value="painting">Pintura</option>
+            <option value="religion">Religió</option><option value="sport">Esport</option>
+          </select></div>
       </div>
-      <input type="text" id="ddesc" placeholder="Descripció" style="width:100%;margin-top:8px">
-      <div class="preview" id="dprev">Enganxa un enllaç a dalt, o omple els camps a mà.</div>
+
+      <div class="fields dgrid" style="grid-template-columns:1fr">
+        <div class="f"><label for="ddesc">Descripció<i class="wm" id="w-ddesc" hidden>⚠</i></label>
+          <input type="text" id="ddesc"></div>
+      </div>
+
       <div class="gate">
         <span class="seal" id="dseal">Falten camps obligatoris</span>
         <span class="spacer"></span>
+        <button class="btn" id="dclear">Buida</button>
         <button class="btn primary" id="dcommit" disabled>Afegeix a la BD i committeja</button>
       </div>
     </div>
@@ -580,62 +601,80 @@ function renderDensity(list){
 /* ---------- editor (previsualització en viu) ---------- */
 const DF = ["did","dnom","dqid","dbirth","ddeath","dcat","dwiki","ddesc"];
 function dval(id){ return el(id).value.trim(); }
-/* L'apòstrof tipogràfic és obligatori dins DATA: un ' recte trencaria l'script.
-   El backend torna a fer la conversió; això és només per a la previsualització. */
-function jsStr(s){ return (s||"").replace(/'/g, "’"); }
 
+/* Obligatoris: sense aquests l'entrada no es pot pintar al cronograma.
+   Nomes fa de porta al boto; el literal que s'escriura el construeix el
+   backend, aixi que aqui no cal previsualitzar-lo. */
 function renderPreview(){
-  const id=dval("did"), nom=dval("dnom"), qid=dval("dqid");
-  const b=dval("dbirth"), d=dval("ddeath"), c=el("dcat").value;
-  const wiki=dval("dwiki"), desc=dval("ddesc");
-
-  // Obligatoris: sense aquests l'entrada no es pot pintar al cronograma.
   const falten=[];
-  if(!id) falten.push("id");
-  if(!nom) falten.push("nom");
+  if(!dval("did"))   falten.push("id");
+  if(!dval("dnom"))  falten.push("nom");
+  const b=dval("dbirth");
   if(!b || isNaN(parseInt(b,10))) falten.push("naixement");
   const ok = falten.length===0;
   el("dcommit").disabled = !ok;
   el("dseal").textContent = ok ? "Llest per afegir" : ("Falta: "+falten.join(", "));
   el("dseal").className = "seal" + (ok ? " ok" : "");
-
-  if(!nom && !id && !qid){
-    el("dprev").textContent = "Enganxa un enllaç a dalt, o omple els camps a mà.";
-    return;
-  }
-  const parts=["id:'"+id+"'"];
-  if(qid) parts.push("wd:'"+qid+"'");
-  parts.push("name:'"+jsStr(nom)+"'");
-  parts.push("birth:"+(b||"null"));
-  parts.push("death:"+(d===""?"null":d));
-  parts.push("cats:["+(c?"'"+c+"'":"")+"]");
-  if(wiki) parts.push("wiki:'"+wiki+"'");
-  if(desc) parts.push("desc:'"+jsStr(desc)+"'");
-  el("dprev").textContent = "{"+parts.join(",")+"}";
 }
 
-function dwarn(list, kind){
-  el("dwarn").innerHTML = (list||[]).map(function(w){
-    return '<div class="w'+(kind==="e"?" e":"")+'">'+esc(w)+'</div>';
-  }).join("");
+/* Els avisos van AL COSTAT del seu camp: un ⚠ groc a l'etiqueta amb
+   l'explicacio al title, i el camp ressaltat. Els que no porten camp (errors
+   durs de la cerca) van al bloc de sobre. */
+function clearWarns(){
+  DF.forEach(function(f){
+    const w=el("w-"+f); if(w){ w.hidden=true; w.removeAttribute("title"); }
+    el(f).classList.remove("warn");
+  });
+  el("dwarn").innerHTML = "";
+}
+function showWarns(list){
+  clearWarns();
+  const orfes=[];
+  (list||[]).forEach(function(w){
+    const f = w && w.field, msg = (w && w.msg) || w;
+    const mark = f && el("w-"+f);
+    if(mark){
+      const prev = mark.getAttribute("title");
+      mark.title = prev ? (prev+"\n\n"+msg) : msg;
+      mark.hidden = false;
+      el(f).classList.add("warn");
+    } else { orfes.push(msg); }
+  });
+  if(orfes.length){
+    el("dwarn").innerHTML = orfes.map(function(x){ return '<div class="w">'+esc(x)+'</div>'; }).join("");
+  }
+}
+function showError(msg){
+  clearWarns();
+  el("dwarn").innerHTML = '<div class="w e">'+esc(msg)+'</div>';
+}
+
+/* Buidar el cercador buida tambe els camps: si no acabes afegint ningu, no has
+   de treure-ho tot a ma. */
+function clearFields(){
+  DF.forEach(function(f){ el(f).value=""; });
+  clearWarns();
+  renderPreview();
 }
 
 async function resolveQ(){
-  const q = dval("dq"); if(!q) return;
+  const q = dval("dq");
+  if(!q){ clearFields(); return; }
   const btn = el("dgo");
-  btn.disabled = true; btn.textContent = "Cercant…"; dwarn([]);
+  btn.disabled = true; btn.textContent = "Cercant…"; clearWarns();
   try{
     const r = await fetch("/api/db/resolve", {method:"POST",
       headers:{"Content-Type":"application/json"}, body:JSON.stringify({q:q})});
     const d = await r.json();
-    if(!d.ok){ dwarn([d.msg], "e"); return; }
+    if(!d.ok){ showError(d.msg); return; }
     el("did").value=d.id||""; el("dnom").value=d.name||""; el("dqid").value=d.qid||"";
     el("dbirth").value=(d.birth==null)?"":d.birth;
     el("ddeath").value=(d.death==null)?"":d.death;
     el("dwiki").value=d.wiki||""; el("ddesc").value=d.desc||"";
     el("dcat").value=(d.cats&&d.cats[0])||"";
-    dwarn(d.warnings); renderPreview();
-  } catch(e){ dwarn(["No s'ha pogut connectar al servidor."], "e"); }
+    renderPreview();
+    showWarns(d.warnings);
+  } catch(e){ showError("No s'ha pogut connectar al servidor."); }
   finally { btn.disabled=false; btn.textContent="Cerca"; }
 }
 
@@ -650,11 +689,10 @@ async function dbCommit(){
         birth:dval("dbirth"), death:dval("ddeath"),
         cats:cat?[cat]:[], wiki:dval("dwiki"), desc:dval("ddesc")})});
     const d = await r.json();
-    if(!d.ok){ dwarn([d.msg],"e"); btn.textContent="Afegeix a la BD i committeja"; renderPreview(); return; }
-    btn.textContent="✓ "+d.msg; dwarn([]);
-    DF.forEach(function(f){ el(f).value=""; }); el("dq").value="";
+    if(!d.ok){ showError(d.msg); btn.textContent="Afegeix a la BD i committeja"; renderPreview(); return; }
+    btn.textContent="✓ "+d.msg; clearFields(); el("dq").value="";
     setTimeout(function(){ btn.textContent="Afegeix a la BD i committeja"; boot(); }, 1600);
-  } catch(e){ dwarn(["No s'ha pogut connectar al servidor."],"e"); btn.textContent="Afegeix a la BD i committeja"; }
+  } catch(e){ showError("No s'ha pogut connectar al servidor."); btn.textContent="Afegeix a la BD i committeja"; }
 }
 
 /* ---------- boot ---------- */
@@ -770,6 +808,8 @@ el("prevm").addEventListener("click", function(){ calCursor.setMonth(calCursor.g
 el("nextm").addEventListener("click", function(){ calCursor.setMonth(calCursor.getMonth()+1); renderCal(); });
 el("dgo").addEventListener("click", resolveQ);
 el("dq").addEventListener("keydown", function(e){ if(e.key==="Enter") resolveQ(); });
+el("dq").addEventListener("input", function(){ if(!el("dq").value.trim()) clearFields(); });
+el("dclear").addEventListener("click", function(){ el("dq").value=""; clearFields(); });
 el("dcommit").addEventListener("click", dbCommit);
 DF.forEach(function(id){
   el(id).addEventListener("input", renderPreview);

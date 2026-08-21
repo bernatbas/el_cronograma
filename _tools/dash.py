@@ -247,7 +247,7 @@ def resolve_person(q):
     if "Q5" not in ids_of("P31"):
         return {"ok": False, "msg": "%s no es una persona (de moment nomes persones)" % qid}
 
-    warnings = []
+    warnings = []   # [{field, msg}]
     ca_link = (ent.get("sitelinks") or {}).get("cawiki") or {}
     ca_title = ca_link.get("title") or ""
     # Ordre a proposit: titol de l'article enganxat > titol de l'article catala >
@@ -258,23 +258,23 @@ def resolve_person(q):
     if not name and not q.startswith("http") and not re.fullmatch(r"[Qq]\d+", q):
         name = q
     if not name:
-        warnings.append("Sense nom en catala: posa'l a ma")
+        warnings.append({"field": "dnom", "msg": "Sense nom en catala a Wikidata: escriu-lo tu"})
     desc = ((ent.get("descriptions") or {}).get("ca") or {}).get("value") or ""
     if not desc:
-        warnings.append("Sense descripcio en catala: escriu-la a ma")
+        warnings.append({"field": "ddesc", "msg": "Sense descripcio en catala a Wikidata: escriu-la tu"})
 
     birth, bp, bn = _wd_year(claims, "P569")
     death, dp, dn = _wd_year(claims, "P570")
     if birth is None:
-        warnings.append("Sense any de naixement: es obligatori, posa'l a ma")
+        warnings.append({"field": "dbirth", "msg": "Wikidata no en dona cap any de naixement. Es obligatori: posa'l tu."})
     elif bp is not None and bp < 9:
-        warnings.append("Naixement de precisio baixa (%s): comprova'l" % PREC.get(bp, bp))
+        warnings.append({"field": "dbirth", "msg": "La data nomes te precisio de %s, no d'any exacte. Comprova-la." % PREC.get(bp, bp)})
     if death is not None and dp is not None and dp < 9:
-        warnings.append("Mort de precisio baixa (%s): comprova-la" % PREC.get(dp, dp))
+        warnings.append({"field": "ddeath", "msg": "La data nomes te precisio de %s, no d'any exacte. Comprova-la." % PREC.get(dp, dp)})
     if bn > 1:
-        warnings.append("Wikidata dona %d anys de naixement diferents: he agafat el preferit (%s)" % (bn, birth))
+        warnings.append({"field": "dbirth", "msg": "Wikidata en dona %d de diferents, de fonts que no es posen d'acord. He agafat la preferida (%s), pero es una estimacio." % (bn, birth)})
     if dn > 1:
-        warnings.append("Wikidata dona %d anys de mort diferents: he agafat el preferit (%s)" % (dn, death))
+        warnings.append({"field": "ddeath", "msg": "Wikidata en dona %d de diferents, de fonts que no es posen d'acord. He agafat la preferida (%s), pero es una estimacio." % (dn, death)})
 
     cats, occ = [], set(ids_of("P106"))
     for slug, qids in CAT_BY_P106:
@@ -282,7 +282,7 @@ def resolve_person(q):
             cats.append(slug)
     cats = cats[:2]
     if not cats:
-        warnings.append("Categoria no deduida de l'ocupacio: tria-la tu")
+        warnings.append({"field": "dcat", "msg": "No he pogut deduir la categoria de l'ocupacio (P106) de Wikidata: tria-la tu"})
 
     gender = ""
     g = ids_of("P21")
@@ -293,7 +293,7 @@ def resolve_person(q):
         if ca_title:
             wiki_url = "https://ca.wikipedia.org/wiki/" + urllib.parse.quote(ca_title.replace(" ", "_"))
         else:
-            warnings.append("Sense article a la Viquipedia catalana")
+            warnings.append({"field": "dwiki", "msg": "Aquesta entitat no te article a la Viquipedia catalana"})
 
     ids_taken, qids_taken = existing_people()
     if qid in qids_taken:
