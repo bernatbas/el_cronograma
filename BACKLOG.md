@@ -43,3 +43,6 @@ Eliminar el FOUT (flash de tipografia de marca) a la primera visita. La solució
 
 ## Opcional: hint d'onboarding
 Un tooltip o overlay que expliqui els gestos bàsics (zoom, cerca, col·leccions) a la primera visita.
+
+## Editar layout mòbil i replantejar funcions
+En mobil no m'acaba de convencer, crec que potser alguna funció simplement s'ha d'eliminar, com veure eres i marcs històrics. També la barra lateral crec que no funciona, suggereixo posar-hi un botó tipus a baix a la dreta de settings (o icone a definir) que permeti modificar la vista amb afegir coleccons, veure personatges de la vista actual, i aquesta interacció que en desktop sí que ofereix la lat bar.
