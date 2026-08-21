@@ -16,6 +16,9 @@ import os
 import re
 import subprocess
 import sys
+import unicodedata
+import urllib.parse
+import urllib.request
 from datetime import date, datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -74,6 +77,310 @@ def ago(iso_ts):
         return "fa %d h" % int(hours)
     days = int(hours / 24)
     return "fa %d dia" % days if days == 1 else "fa %d dies" % days
+
+
+
+# --------------------------------------------------------------------------
+# INGESTA A LA BD — d'un enllac / QID / nom a una entrada de PEOPLE
+# --------------------------------------------------------------------------
+# Sense IA i sense raspar HTML: cada article de la Viquipedia sap el seu QID, i
+# Wikidata dona les dades ja estructurades. Dues crides i prou.
+# De moment NOMES persones (es valida P31=Q5) i NOMES en catala.
+
+WD_API = "https://www.wikidata.org/w/api.php"
+UA = {"User-Agent": "HB-Control/1.0 (dashboard local)"}
+PREC = {6: "mil·lenni", 7: "segle", 8: "decada", 9: "any", 10: "mes", 11: "dia"}
+
+# Ocupacio (P106) -> slug de CAT_COLORS, per ordre d'especificitat: la primera
+# que encaixa mana. P106 en dona moltes (Rosa Luxemburg en te 11) i a l'index
+# nomes hi caben 2 per persona.
+CAT_BY_P106 = [
+    ("philosophy", {"Q4964182", "Q1234713", "Q16267607"}),
+    ("science",    {"Q901", "Q169470", "Q170790", "Q11063", "Q593644", "Q81096",
+                    "Q205375", "Q39631", "Q864503", "Q2374149", "Q13418253"}),
+    ("literature", {"Q36180", "Q49757", "Q6625963", "Q214917", "Q482980",
+                    "Q1930187", "Q4853732", "Q18939491"}),
+    ("music",      {"Q36834", "Q639669", "Q486748", "Q1259917", "Q158852", "Q177220"}),
+    ("painting",   {"Q1028181", "Q1281618", "Q11569986", "Q33231", "Q644687"}),
+    ("politics",   {"Q82955", "Q193391", "Q116", "Q47064", "Q189290", "Q30461",
+                    "Q372436", "Q842782", "Q10076267", "Q1097498"}),
+    ("religion",   {"Q42603", "Q2259532", "Q3315492"}),
+    ("sport",      {"Q937857", "Q2066131", "Q10833314", "Q3665646", "Q11513337",
+                    "Q13141064", "Q13381863", "Q10843402", "Q2309784"}),
+]
+
+
+def _wd_get(url):
+    """GET + JSON contra una API de Wikimedia. None si falla."""
+    try:
+        r = urllib.request.Request(url, headers=UA)
+        with urllib.request.urlopen(r, timeout=12) as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+def _qid_from_wikipedia(url):
+    """Enllac d'article -> (QID, titol). Via pageprops; cap parseig d'HTML."""
+    try:
+        host = url.split("//", 1)[1].split("/", 1)[0]
+        title = urllib.parse.unquote(url.rstrip("/").rsplit("/", 1)[1])
+    except Exception:
+        return None, None
+    d = _wd_get("https://%s/w/api.php?action=query&prop=pageprops&ppprop=wikibase_item"
+                "&titles=%s&format=json&origin=*" % (host, urllib.parse.quote(title)))
+    if not d:
+        return None, title
+    for pg in ((d.get("query") or {}).get("pages") or {}).values():
+        q = (pg.get("pageprops") or {}).get("wikibase_item")
+        if q:
+            return q, pg.get("title") or title
+    return None, title
+
+
+def _qid_from_name(name):
+    """Nom lliure -> QID. wbsearchentities vol UN sol codi d'idioma, no llista."""
+    d = _wd_get(WD_API + "?action=wbsearchentities&format=json&origin=*&type=item"
+                "&limit=8&language=ca&uselang=ca&search=" + urllib.parse.quote(name))
+    for hit in (d or {}).get("search") or []:
+        if re.fullmatch(r"Q\d+", hit.get("id", "")):
+            return hit["id"]
+    return None
+
+
+def _wd_year(claims, pid):
+    """(any, precisio, quantes_dates_diferents) de P569/P570.
+    Prefereix el rank 'preferred'. Alguns antics tenen 5 dates de fonts
+    diferents, i cal poder avisar-ne.
+    ⚠️ wbgetentities NO desplaça les dates aC: -0384 son 384 aC i prou. El -1
+    nomes cal per a SPARQL (veure els avisos del CLAUDE.md)."""
+    best, anys = None, set()
+    for c in claims.get(pid, []):
+        if c.get("rank") == "deprecated":
+            continue
+        v = ((c.get("mainsnak") or {}).get("datavalue") or {}).get("value")
+        if not v or not v.get("time"):
+            continue
+        t0 = v["time"]
+        try:
+            anys.add(int(t0[1:5]) * (-1 if t0[0] == "-" else 1))
+        except Exception:
+            pass
+        if c.get("rank") == "preferred":
+            best = v
+            break
+        if best is None:
+            best = v
+    if not best:
+        return None, None, 0
+    t = best["time"]
+    try:
+        year = int(t[1:5]) * (-1 if t[0] == "-" else 1)
+    except Exception:
+        return None, None, 0
+    return year, best.get("precision"), len(anys)
+
+
+def _slug_id(name, taken):
+    """id a partir del nom: sense accents, minuscules, nomes lletres i xifres."""
+    s = unicodedata.normalize("NFD", name or "")
+    s = "".join(ch for ch in s if unicodedata.category(ch) != "Mn")
+    s = re.sub(r"[^A-Za-z0-9]+", "", s).lower()[:22] or "persona"
+    base, n = s, 2
+    while s in taken:
+        s = "%s%d" % (base, n)
+        n += 1
+    return s
+
+
+def existing_people():
+    """(ids, qids) que ja son a PEOPLE, per no duplicar."""
+    src = read("index.html")
+    m = re.search(r"const\s+PEOPLE\s*=\s*\[", src)
+    if not m:
+        return set(), set()
+    _, end = count_objects(src, m.end())
+    seg = src[m.end():end]
+    return (set(re.findall(r"id:'([^']+)'", seg)),
+            set(re.findall(r"wd:'(Q\d+)'", seg)))
+
+
+def resolve_person(q):
+    """Enllac | QID | nom -> camps per omplir el formulari + avisos."""
+    q = (q or "").strip()
+    if not q:
+        return {"ok": False, "msg": "Escriu un enllac, un QID o un nom"}
+
+    wiki_url, title = "", ""
+    if q.startswith("http"):
+        if "wikipedia.org" not in q:
+            return {"ok": False, "msg": "Nomes enllaços de la Viquipedia"}
+        qid, title = _qid_from_wikipedia(q)
+        wiki_url = q
+        if not qid:
+            return {"ok": False, "msg": "Aquest article no te item de Wikidata"}
+    elif re.fullmatch(r"[Qq]\d+", q):
+        qid = "Q" + q[1:]
+    else:
+        qid = _qid_from_name(q)
+        if not qid:
+            return {"ok": False, "msg": "No he trobat res amb aquest nom"}
+
+    e = _wd_get(WD_API + "?action=wbgetentities&ids=%s&props=labels|descriptions|claims|sitelinks"
+                "&languages=ca&format=json&origin=*" % qid)
+    ent = ((e or {}).get("entities") or {}).get(qid)
+    if not ent or "missing" in ent:
+        return {"ok": False, "msg": "Wikidata no retorna cap entitat per a " + qid}
+    claims = ent.get("claims") or {}
+
+    def ids_of(pid):
+        out = []
+        for c in claims.get(pid, []):
+            if c.get("rank") == "deprecated":
+                continue
+            v = ((c.get("mainsnak") or {}).get("datavalue") or {}).get("value")
+            if isinstance(v, dict) and v.get("id"):
+                out.append(v["id"])
+        return out
+
+    # VALIDACIO: nomes persones, igual que el cercador de l'index (humansOnly)
+    if "Q5" not in ids_of("P31"):
+        return {"ok": False, "msg": "%s no es una persona (de moment nomes persones)" % qid}
+
+    warnings = []
+    ca_link = (ent.get("sitelinks") or {}).get("cawiki") or {}
+    ca_title = ca_link.get("title") or ""
+    # Ordre a proposit: titol de l'article enganxat > titol de l'article catala >
+    # label de Wikidata > el que hagi escrit l'usuari. Hi ha entitats sense label
+    # en catala (Q7231) i el label d'un altre idioma donava «Rosa Luxemburgo».
+    name = (title or ca_title
+            or ((ent.get("labels") or {}).get("ca") or {}).get("value") or "")
+    if not name and not q.startswith("http") and not re.fullmatch(r"[Qq]\d+", q):
+        name = q
+    if not name:
+        warnings.append("Sense nom en catala: posa'l a ma")
+    desc = ((ent.get("descriptions") or {}).get("ca") or {}).get("value") or ""
+    if not desc:
+        warnings.append("Sense descripcio en catala: escriu-la a ma")
+
+    birth, bp, bn = _wd_year(claims, "P569")
+    death, dp, dn = _wd_year(claims, "P570")
+    if birth is None:
+        warnings.append("Sense any de naixement: es obligatori, posa'l a ma")
+    elif bp is not None and bp < 9:
+        warnings.append("Naixement de precisio baixa (%s): comprova'l" % PREC.get(bp, bp))
+    if death is not None and dp is not None and dp < 9:
+        warnings.append("Mort de precisio baixa (%s): comprova-la" % PREC.get(dp, dp))
+    if bn > 1:
+        warnings.append("Wikidata dona %d anys de naixement diferents: he agafat el preferit (%s)" % (bn, birth))
+    if dn > 1:
+        warnings.append("Wikidata dona %d anys de mort diferents: he agafat el preferit (%s)" % (dn, death))
+
+    cats, occ = [], set(ids_of("P106"))
+    for slug, qids in CAT_BY_P106:
+        if occ & qids and slug not in cats:
+            cats.append(slug)
+    cats = cats[:2]
+    if not cats:
+        warnings.append("Categoria no deduida de l'ocupacio: tria-la tu")
+
+    gender = ""
+    g = ids_of("P21")
+    if g:
+        gender = "F" if g[0] == "Q6581072" else ("M" if g[0] == "Q6581097" else "")
+
+    if not wiki_url:
+        if ca_title:
+            wiki_url = "https://ca.wikipedia.org/wiki/" + urllib.parse.quote(ca_title.replace(" ", "_"))
+        else:
+            warnings.append("Sense article a la Viquipedia catalana")
+
+    ids_taken, qids_taken = existing_people()
+    if qid in qids_taken:
+        return {"ok": False, "msg": "%s ja es a PEOPLE" % qid}
+
+    return {"ok": True, "qid": qid, "id": _slug_id(name or qid, ids_taken),
+            "name": name, "desc": desc, "birth": birth, "death": death,
+            "cats": cats, "gender": gender, "wiki": wiki_url,
+            "sitelinks": len(ent.get("sitelinks") or {}), "warnings": warnings}
+
+
+def _js_str(s):
+    """Literal per a [1] DATA. Les strings son de cometa simple: un ' recte
+    deixaria la pagina en blanc, aixi que passa a l'apostrof tipografic."""
+    return (s or "").replace("\\", "").replace("'", "\u2019").replace("\n", " ").strip()
+
+
+def person_literal(d):
+    cats = ",".join("'%s'" % c for c in (d.get("cats") or []))
+    death = d.get("death")
+    parts = [
+        "id:'%s'" % d["id"],
+        ("wd:'%s'" % d["qid"]) if d.get("qid") else None,
+        "name:'%s'" % _js_str(d.get("name")),
+        "birth:%d" % int(d["birth"]),
+        "death:%s" % ("null" if death in (None, "") else int(death)),
+        "cats:[%s]" % cats,
+        ("gender:'%s'" % d["gender"]) if d.get("gender") else None,
+        ("wiki:'%s'" % d["wiki"]) if d.get("wiki") else None,
+        ("desc:'%s'" % _js_str(d["desc"])) if d.get("desc") else None,
+    ]
+    return "  {" + ",".join(x for x in parts if x) + "},"
+
+
+def db_add_person(d):
+    """Insereix la persona al final de PEOPLE i committeja. Comprova ABANS que
+    els essencials hi son i DESPRES que l'array segueix quadrant."""
+    name = (d.get("name") or "").strip()
+    if not name:
+        return False, "Falta el nom"
+    try:
+        birth = int(str(d.get("birth")).strip())
+    except Exception:
+        return False, "Falta l'any de naixement (o no es un numero)"
+    death = d.get("death")
+    if death not in (None, ""):
+        try:
+            death = int(str(death).strip())
+        except Exception:
+            return False, "L'any de mort no es un numero"
+        if death < birth:
+            return False, "Mor abans de neixer"
+    pid = (d.get("id") or "").strip()
+    if not re.fullmatch(r"[a-z0-9]+", pid or ""):
+        return False, "L'id ha de ser lletres minuscules i xifres"
+
+    ids_taken, qids_taken = existing_people()
+    if pid in ids_taken:
+        return False, "L'id '%s' ja existeix" % pid
+    if d.get("qid") and d["qid"] in qids_taken:
+        return False, "%s ja es a PEOPLE" % d["qid"]
+
+    src0 = read("index.html")
+    m = re.search(r"const\s+PEOPLE\s*=\s*\[", src0)
+    if not m:
+        return False, "No trobo PEOPLE a l'index.html"
+    before, close = count_objects(src0, m.end())
+
+    rec = dict(d)
+    rec.update({"id": pid, "birth": birth, "death": death, "name": name})
+    head = src0[:close].rstrip()
+    if not head.endswith(","):
+        head += ","
+    new_src = head + "\n" + person_literal(rec) + "\n" + src0[close:]
+
+    # xarxes: l'array ha de quadrar i haver crescut EXACTAMENT en 1
+    m2 = re.search(r"const\s+PEOPLE\s*=\s*\[", new_src)
+    after, _ = count_objects(new_src, m2.end())
+    if after != before + 1:
+        return False, "El recompte no quadra (%d -> %d): no toco res" % (before, after)
+    if "\ufffd" in new_src:
+        return False, "S'han colat caracters corromputs: no toco res"
+
+    with open(os.path.join(REPO, "index.html"), "w", encoding="utf-8") as f:
+        f.write(new_src)
+    ok, out = run(["git", "commit", "-m", "BD: afegeix %s" % name, "--", "index.html"])
+    return True, ("Afegit i committejat" if ok else "Afegit (el commit ha fallat: %s)" % out[:120])
 
 
 # --------------------------------------------------------------------------
@@ -762,6 +1069,15 @@ class Handler(BaseHTTPRequestHandler):
                 return
             ok, msg = backlog_annotate(title, note)
             self._json(200 if ok else 404, {"ok": ok, "msg": msg})
+            return
+
+        if path == "/api/db/resolve":
+            self._json(200, resolve_person(data.get("q", "")))
+            return
+
+        if path == "/api/db/add":
+            ok, msg = db_add_person(data)
+            self._json(200, {"ok": ok, "msg": msg})
             return
 
         if path == "/api/backlog/add":

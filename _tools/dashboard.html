@@ -30,6 +30,9 @@ a{color:var(--terracota)}
 .nav{display:flex;gap:2px;margin-left:8px}
 .nav a{color:#fff;text-decoration:none;font-size:13px;padding:6px 11px;border-radius:var(--r);opacity:.78}
 .nav a.on{opacity:1;background:rgba(255,255,255,.22);font-weight:600}
+#dwarn{margin:10px 0 2px;display:flex;flex-direction:column;gap:5px}
+#dwarn .w{font-size:12.5px;padding:7px 11px;border-radius:6px;background:var(--warn-bg);color:var(--warn);border-left:3px solid var(--warn)}
+#dwarn .e{background:var(--bad-bg);color:var(--bad);border-left-color:var(--bad)}
 .nav a:hover{background:rgba(255,255,255,.14);opacity:1}
 .tb-right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .tb-right .clock{font-size:12px;color:rgba(255,255,255,.72);font-variant-numeric:tabular-nums}
@@ -231,14 +234,24 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
   </section>
 
   <section id="dades">
-    <div class="shead"><h2>Editor de la base de dades</h2><span class="pend">escriptura pendent</span></div>
+    <div class="shead"><h2>Editor de la base de dades</h2>
+      <span class="hint sub" title="Enganxa un enllaç de la Viquipèdia, un QID o un nom. Va a Wikidata i omple el que pot; el que quedi buit o malament, corregeix-ho a mà. Només persones, de moment.">enllaç, QID o nom → omple sol</span></div>
     <div class="card pad">
+      <div class="fields" style="grid-template-columns:1fr auto">
+        <input type="text" id="dq" placeholder="https://ca.wikipedia.org/wiki/… · Q7231 · Rosa Luxemburg">
+        <button class="btn primary" id="dgo">Cerca</button>
+      </div>
+      <div id="dwarn"></div>
       <div class="fields">
-        <input type="text" id="dnom" placeholder="Nom del personatge">
+        <input type="text" id="dnom" placeholder="Nom *">
         <input type="text" id="dqid" placeholder="Q733621" style="font-family:var(--mono)">
       </div>
+      <div class="fields" style="grid-template-columns:1fr 2fr">
+        <input type="text" id="did" placeholder="id *" style="font-family:var(--mono)">
+        <input type="text" id="dwiki" placeholder="Enllaç a la Viquipèdia">
+      </div>
       <div class="fields" style="grid-template-columns:1fr 1fr 2fr">
-        <input type="text" id="dbirth" placeholder="Naixement">
+        <input type="text" id="dbirth" placeholder="Naixement *">
         <input type="text" id="ddeath" placeholder="Mort (buit = viu)">
         <select id="dcat">
           <option value="">Sense categoria</option>
@@ -248,12 +261,12 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
           <option value="religion">Religió</option><option value="sport">Esport</option>
         </select>
       </div>
-      <div class="preview" id="dprev">Omple els camps per veure el literal que s'escriurà.</div>
+      <input type="text" id="ddesc" placeholder="Descripció" style="width:100%;margin-top:8px">
+      <div class="preview" id="dprev">Enganxa un enllaç a dalt, o omple els camps a mà.</div>
       <div class="gate">
-        <span class="seal" id="dseal">Test de parseig no executat</span>
+        <span class="seal" id="dseal">Falten camps obligatoris</span>
         <span class="spacer"></span>
-        <button class="btn" id="dcheck" disabled>Verifica Q-id</button>
-        <button class="btn primary" id="dcommit" disabled>Commit i push</button>
+        <button class="btn primary" id="dcommit" disabled>Afegeix a la BD i committeja</button>
       </div>
     </div>
   </section>
@@ -565,23 +578,83 @@ function renderDensity(list){
 }
 
 /* ---------- editor (previsualització en viu) ---------- */
+const DF = ["did","dnom","dqid","dbirth","ddeath","dcat","dwiki","ddesc"];
+function dval(id){ return el(id).value.trim(); }
+/* L'apòstrof tipogràfic és obligatori dins DATA: un ' recte trencaria l'script.
+   El backend torna a fer la conversió; això és només per a la previsualització. */
+function jsStr(s){ return (s||"").replace(/'/g, "’"); }
+
 function renderPreview(){
-  const nom = el("dnom").value.trim(), qid = el("dqid").value.trim();
-  const b = el("dbirth").value.trim(), d = el("ddeath").value.trim(), c = el("dcat").value;
-  if(!nom && !qid){ el("dprev").textContent = "Omple els camps per veure el literal que s'escriurà."; return; }
-  // L'apòstrof tipogràfic és obligatori dins DATA: un ' literal trencaria l'script.
-  const safe = nom.replace(/'/g, "’");
-  const parts = [];
-  parts.push("id:'wd_"+(qid||"Q?")+"'");
-  parts.push("wd:'"+(qid||"Q?")+"'");
-  parts.push("name:'"+safe+"'");
-  parts.push("birth:"+(b||"null"));
-  parts.push("death:"+(d||"null"));
-  parts.push("cats:["+(c?"'"+c+"'":"")+"]");
-  el("dprev").textContent = "{"+parts.join(", ")+"}";
-  if(nom.indexOf("'") >= 0){
-    el("dprev").textContent += "\n\n// l'apòstrof s'ha convertit a ’ automàticament";
+  const id=dval("did"), nom=dval("dnom"), qid=dval("dqid");
+  const b=dval("dbirth"), d=dval("ddeath"), c=el("dcat").value;
+  const wiki=dval("dwiki"), desc=dval("ddesc");
+
+  // Obligatoris: sense aquests l'entrada no es pot pintar al cronograma.
+  const falten=[];
+  if(!id) falten.push("id");
+  if(!nom) falten.push("nom");
+  if(!b || isNaN(parseInt(b,10))) falten.push("naixement");
+  const ok = falten.length===0;
+  el("dcommit").disabled = !ok;
+  el("dseal").textContent = ok ? "Llest per afegir" : ("Falta: "+falten.join(", "));
+  el("dseal").className = "seal" + (ok ? " ok" : "");
+
+  if(!nom && !id && !qid){
+    el("dprev").textContent = "Enganxa un enllaç a dalt, o omple els camps a mà.";
+    return;
   }
+  const parts=["id:'"+id+"'"];
+  if(qid) parts.push("wd:'"+qid+"'");
+  parts.push("name:'"+jsStr(nom)+"'");
+  parts.push("birth:"+(b||"null"));
+  parts.push("death:"+(d===""?"null":d));
+  parts.push("cats:["+(c?"'"+c+"'":"")+"]");
+  if(wiki) parts.push("wiki:'"+wiki+"'");
+  if(desc) parts.push("desc:'"+jsStr(desc)+"'");
+  el("dprev").textContent = "{"+parts.join(",")+"}";
+}
+
+function dwarn(list, kind){
+  el("dwarn").innerHTML = (list||[]).map(function(w){
+    return '<div class="w'+(kind==="e"?" e":"")+'">'+esc(w)+'</div>';
+  }).join("");
+}
+
+async function resolveQ(){
+  const q = dval("dq"); if(!q) return;
+  const btn = el("dgo");
+  btn.disabled = true; btn.textContent = "Cercant…"; dwarn([]);
+  try{
+    const r = await fetch("/api/db/resolve", {method:"POST",
+      headers:{"Content-Type":"application/json"}, body:JSON.stringify({q:q})});
+    const d = await r.json();
+    if(!d.ok){ dwarn([d.msg], "e"); return; }
+    el("did").value=d.id||""; el("dnom").value=d.name||""; el("dqid").value=d.qid||"";
+    el("dbirth").value=(d.birth==null)?"":d.birth;
+    el("ddeath").value=(d.death==null)?"":d.death;
+    el("dwiki").value=d.wiki||""; el("ddesc").value=d.desc||"";
+    el("dcat").value=(d.cats&&d.cats[0])||"";
+    dwarn(d.warnings); renderPreview();
+  } catch(e){ dwarn(["No s'ha pogut connectar al servidor."], "e"); }
+  finally { btn.disabled=false; btn.textContent="Cerca"; }
+}
+
+async function dbCommit(){
+  const btn=el("dcommit");
+  btn.disabled=true; btn.textContent="Escrivint…";
+  const cat=el("dcat").value;
+  try{
+    const r = await fetch("/api/db/add", {method:"POST",
+      headers:{"Content-Type":"application/json"}, body:JSON.stringify({
+        id:dval("did"), qid:dval("dqid"), name:dval("dnom"),
+        birth:dval("dbirth"), death:dval("ddeath"),
+        cats:cat?[cat]:[], wiki:dval("dwiki"), desc:dval("ddesc")})});
+    const d = await r.json();
+    if(!d.ok){ dwarn([d.msg],"e"); btn.textContent="Afegeix a la BD i committeja"; renderPreview(); return; }
+    btn.textContent="✓ "+d.msg; dwarn([]);
+    DF.forEach(function(f){ el(f).value=""; }); el("dq").value="";
+    setTimeout(function(){ btn.textContent="Afegeix a la BD i committeja"; boot(); }, 1600);
+  } catch(e){ dwarn(["No s'ha pogut connectar al servidor."],"e"); btn.textContent="Afegeix a la BD i committeja"; }
 }
 
 /* ---------- boot ---------- */
@@ -695,7 +768,10 @@ el("stopServer").addEventListener("click", async function(){
 });
 el("prevm").addEventListener("click", function(){ calCursor.setMonth(calCursor.getMonth()-1); renderCal(); });
 el("nextm").addEventListener("click", function(){ calCursor.setMonth(calCursor.getMonth()+1); renderCal(); });
-["dnom","dqid","dbirth","ddeath","dcat"].forEach(function(id){
+el("dgo").addEventListener("click", resolveQ);
+el("dq").addEventListener("keydown", function(e){ if(e.key==="Enter") resolveQ(); });
+el("dcommit").addEventListener("click", dbCommit);
+DF.forEach(function(id){
   el(id).addEventListener("input", renderPreview);
   el(id).addEventListener("change", renderPreview);
 });
