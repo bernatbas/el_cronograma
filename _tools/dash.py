@@ -393,8 +393,171 @@ def db_add_person(d):
 
     with open(os.path.join(REPO, "index.html"), "w", encoding="utf-8") as f:
         f.write(new_src)
-    ok, out = run(["git", "commit", "-m", "BD: afegeix %s" % name, "--", "index.html"])
-    return True, ("Afegit i committejat" if ok else "Afegit (el commit ha fallat: %s)" % out[:120])
+    regen_ok, regen_msg = gen_data_js()
+    commit_files = ["--", "index.html"] + (["data.js"] if regen_ok else [])
+    ok, out = run(["git", "commit", "-m", "BD: afegeix %s" % name] + commit_files)
+    suffix = "" if regen_ok else " (data.js NO regenerat: %s)" % regen_msg
+    return True, ("Afegit i committejat" + suffix if ok else "Afegit (el commit ha fallat: %s)" % out[:120])
+
+
+# --------------------------------------------------------------------------
+# Regeneració de data.js
+# --------------------------------------------------------------------------
+
+def _unescape_js_str(raw):
+    """Desescapa el contingut d'una string JS (entre cometes simples)."""
+    result = []
+    i = 0
+    while i < len(raw):
+        if raw[i] == '\\' and i + 1 < len(raw):
+            nxt = raw[i + 1]
+            if nxt == 'u' and i + 5 <= len(raw):
+                try:
+                    result.append(chr(int(raw[i + 2:i + 6], 16)))
+                    i += 6
+                    continue
+                except ValueError:
+                    pass
+            result.append(nxt)
+            i += 2
+        else:
+            result.append(raw[i])
+            i += 1
+    return ''.join(result)
+
+
+def _split_top_objects(text):
+    """Retorna els objectes {...} de primer nivell d'un text d'array JS."""
+    objects = []
+    i = 0
+    n = len(text)
+    while i < n:
+        if text[i] != '{':
+            i += 1
+            continue
+        depth = 0
+        in_str = False
+        quote = ''
+        j = i
+        while j < n:
+            c = text[j]
+            if in_str:
+                if c == '\\':
+                    j += 2
+                    continue
+                if c == quote:
+                    in_str = False
+            elif c in ("'", '"'):
+                in_str = True
+                quote = c
+            elif c == '{':
+                depth += 1
+            elif c == '}':
+                depth -= 1
+                if depth == 0:
+                    objects.append(text[i:j + 1])
+                    i = j + 1
+                    break
+            j += 1
+        else:
+            break
+    return objects
+
+
+def _extract_people_events(html):
+    """Extreu PEOPLE i EVENTS de index.html com a llistes de dicts Python."""
+
+    def get_str(text, field):
+        m = re.search(field + r":'((?:[^'\\]|\\.)*)'", text)
+        if m:
+            return _unescape_js_str(m.group(1))
+        m = re.search(field + r':"((?:[^"\\]|\\.)*)"', text)
+        return _unescape_js_str(m.group(1)) if m else None
+
+    def get_int(text, field):
+        m = re.search(field + r':(-?\d+)', text)
+        return int(m.group(1)) if m else None
+
+    def get_death(text):
+        m = re.search(r'death:(null|-?\d+)', text)
+        if not m:
+            return None
+        return None if m.group(1) == 'null' else int(m.group(1))
+
+    def get_cats(text):
+        m = re.search(r'cats:\[([^\]]*)\]', text)
+        if not m:
+            return []
+        return re.findall(r"['\"]([^'\"]+)['\"]", m.group(1))
+
+    def arr_text(name):
+        pat = re.search(r'const\s+' + name + r'\s*=\s*\[', html)
+        if not pat:
+            return ''
+        _, close = count_objects(html, pat.end())
+        return html[pat.end():close]
+
+    people = []
+    for obj in _split_top_objects(arr_text('PEOPLE')):
+        entry = {
+            'id':     get_str(obj, 'id'),
+            'wd':     get_str(obj, 'wd') or '',
+            'name':   get_str(obj, 'name'),
+            'birth':  get_int(obj, 'birth'),
+            'death':  get_death(obj),
+            'cats':   get_cats(obj),
+            'gender': get_str(obj, 'gender') or '',
+            'wiki':   get_str(obj, 'wiki') or '',
+            'desc':   get_str(obj, 'desc') or '',
+        }
+        if entry['id'] and entry['name'] is not None:
+            people.append(entry)
+
+    events = []
+    for obj in _split_top_objects(arr_text('EVENTS')):
+        entry = {
+            'id':        get_str(obj, 'id'),
+            'name':      get_str(obj, 'name'),
+            'year':      get_int(obj, 'year'),
+            'wiki':      get_str(obj, 'wiki') or '',
+            'sitelinks': get_int(obj, 'sitelinks') or 0,
+            'desc':      get_str(obj, 'desc') or '',
+        }
+        imp = get_int(obj, 'imp')
+        if imp is not None:
+            entry['imp'] = imp
+        if entry['id'] and entry['name'] is not None:
+            events.append(entry)
+
+    return people, events
+
+
+def gen_data_js():
+    """Regenera data.js a partir de PEOPLE i EVENTS de index.html."""
+    import datetime
+    html = read("index.html")
+    people, events = _extract_people_events(html)
+    if not people:
+        return False, "No s'han pogut extreure PEOPLE de index.html"
+
+    today = datetime.date.today().isoformat()
+    header = (
+        "/* " + "=" * 77 + "\n"
+        " * data.js — SNAPSHOT PROVISIONAL de la base de dades del cronograma.\n"
+        " * Generat automàticament des d'index.html el %s.\n"
+        " *\n"
+        " * ⚠️  PROVISIONAL: això és una CÒPIA de les dades que ara viuen a index.html,\n"
+        " *     feta per facilitar el testeig local (file://). Quan existeixi la DB externa,\n"
+        " *     substituir aquest fitxer pel carregador real (fetch a la DB/API) i esborrar\n"
+        " *     el snapshot. NO editar a mà: regenerar amb dash.py /api/db/regen.\n"
+        " * " + "=" * 77 + " */" % today
+    )
+    body = json.dumps({"PEOPLE": people, "EVENTS": events}, ensure_ascii=False, indent=2)
+    content = header + "\n\n\nwindow.HB_DATA = " + body + ";\n"
+    data_js_path = os.path.join(REPO, "data.js")
+    with open(data_js_path, "w", encoding="utf-8") as f:
+        f.write(content)
+    return True, "data.js regenerat (%d persones, %d events)" % (len(people), len(events))
 
 
 # --------------------------------------------------------------------------
@@ -1091,6 +1254,11 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/db/add":
             ok, msg = db_add_person(data)
+            self._json(200, {"ok": ok, "msg": msg})
+            return
+
+        if path == "/api/db/regen":
+            ok, msg = gen_data_js()
             self._json(200, {"ok": ok, "msg": msg})
             return
 
