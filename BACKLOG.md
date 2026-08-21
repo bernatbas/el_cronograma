@@ -52,3 +52,6 @@ Ara la DB viu embedded a index.html i es copia a data.js. Objectiu: invertir-ho.
 
 ## Desfer el copy de la db i data.js
 Per garantir que el joc no canvia al llarg del dia, i el seed no genera contingut diferent, proposo només editar la db embeded, i que un cop al día, al final de dia, programar que es corri l'scrip per sincronitzar data.js només a les 11h30 de la nit cada dia, o algo així. Segurament git pot oferir coses així
+
+## Afegir el mapping de paraules clau a categories en el dashboard
+Poder editar el mapping de paraules clau a categories des del dashboard, veure quines paraules clau són les que porten a algú a catalogar-lo com a músic, i afegir les que detecti que hi falten.
