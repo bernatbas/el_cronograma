@@ -29,6 +29,7 @@ a{color:var(--terracota)}
 .brand b{font-weight:400;opacity:.72}
 .nav{display:flex;gap:2px;margin-left:8px}
 .nav a{color:#fff;text-decoration:none;font-size:13px;padding:6px 11px;border-radius:var(--r);opacity:.78}
+.nav a.on{opacity:1;background:rgba(255,255,255,.22);font-weight:600}
 .nav a:hover{background:rgba(255,255,255,.14);opacity:1}
 .tb-right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .tb-right .clock{font-size:12px;color:rgba(255,255,255,.72);font-variant-numeric:tabular-nums}
@@ -169,11 +170,8 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
 <div class="topbar">
   <span class="brand">HB <b>· CONTROL</b></span>
   <nav class="nav">
-    <a href="#estat">Estat</a>
-    <a href="#backlog">Backlog</a>
-    <a href="#calendari">Calendari</a>
-    <a href="#diagnosi">Diagnosi</a>
-    <a href="#dades">Dades</a>
+    <a href="#general" data-tab="general">General</a>
+    <a href="#personatgedia" data-tab="personatgedia">Personatge del dia</a>
   </nav>
   <div class="tb-right">
     <span class="clock" id="stamp">—</span>
@@ -188,6 +186,8 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
   <div class="banner off" id="offline" hidden>
     <span>Backend aturat. Arrenca'l amb <code>python3 _tools/dash.py</code> — mentrestant es mostren dades d'exemple.</span>
   </div>
+
+  <div class="tabpane" id="tab-general">
 
   <section id="estat">
     <div class="shead"><h2>Estat</h2><span class="hint" id="branch">—</span></div>
@@ -214,6 +214,53 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
     <div class="rows" id="queue"><div class="empty">Carregant…</div></div>
   </section>
 
+
+  <section id="diagnosi">
+    <div class="shead"><h2>Diagnosi de la base de dades</h2>
+      <span class="hint sub" title="Repassa PEOPLE, EVENTS, ERAS, MARCS i COLLECTIONS de l'index.html i avisa del que no quadra. Res d'això peta la pàgina: simplement pinta alguna cosa rara, o no la pinta.&#10;&#10;Vermell = error clar (id duplicat, mor abans de néixer, categoria inexistent).&#10;Groc = val la pena mirar-ho, però pot ser correcte (150 anys de vida, event sense sitelinks).">duplicats, dates impossibles, camps que falten…</span>
+      <span class="hint" id="lcount">—</span></div>
+    <div class="card pad" id="lint"><div class="empty">Carregant…</div></div>
+  </section>
+
+  <section id="densitat">
+    <div class="shead"><h2>Densitat de contingut</h2><span class="hint">events per tram · on falta contingut</span></div>
+    <div class="card pad">
+      <div class="bars" id="bars"></div>
+      <div class="blabels" id="blabels"></div>
+    </div>
+  </section>
+
+  <section id="dades">
+    <div class="shead"><h2>Editor de la base de dades</h2><span class="pend">escriptura pendent</span></div>
+    <div class="card pad">
+      <div class="fields">
+        <input type="text" id="dnom" placeholder="Nom del personatge">
+        <input type="text" id="dqid" placeholder="Q733621" style="font-family:var(--mono)">
+      </div>
+      <div class="fields" style="grid-template-columns:1fr 1fr 2fr">
+        <input type="text" id="dbirth" placeholder="Naixement">
+        <input type="text" id="ddeath" placeholder="Mort (buit = viu)">
+        <select id="dcat">
+          <option value="">Sense categoria</option>
+          <option value="philosophy">Filosofia</option><option value="music">Música</option>
+          <option value="literature">Literatura</option><option value="science">Ciència</option>
+          <option value="politics">Política</option><option value="painting">Pintura</option>
+          <option value="religion">Religió</option><option value="sport">Esport</option>
+        </select>
+      </div>
+      <div class="preview" id="dprev">Omple els camps per veure el literal que s'escriurà.</div>
+      <div class="gate">
+        <span class="seal" id="dseal">Test de parseig no executat</span>
+        <span class="spacer"></span>
+        <button class="btn" id="dcheck" disabled>Verifica Q-id</button>
+        <button class="btn primary" id="dcommit" disabled>Commit i push</button>
+      </div>
+    </div>
+  </section>
+
+  </div><!-- /tab-general -->
+
+  <div class="tabpane" id="tab-personatgedia" hidden>
   <section id="calendari">
     <div class="shead"><h2>Personatge del dia</h2><span class="pend">escriptura pendent</span><span class="hint" id="pdhint">—</span></div>
     <div class="card pad">
@@ -245,48 +292,7 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
       </div>
     </div>
   </section>
-
-  <section id="diagnosi">
-    <div class="shead"><h2>Diagnosi de la base de dades</h2>
-      <span class="hint sub" title="Repassa PEOPLE, EVENTS, ERAS, MARCS i COLLECTIONS de l'index.html i avisa del que no quadra. Res d'això peta la pàgina: simplement pinta alguna cosa rara, o no la pinta.&#10;&#10;Vermell = error clar (id duplicat, mor abans de néixer, categoria inexistent).&#10;Groc = val la pena mirar-ho, però pot ser correcte (150 anys de vida, event sense sitelinks).">duplicats, dates impossibles, camps que falten…</span>
-      <span class="hint" id="lcount">—</span></div>
-    <div class="card pad" id="lint"><div class="empty">Carregant…</div></div>
-  </section>
-
-  <section id="densitat">
-    <div class="shead"><h2>Densitat de contingut</h2><span class="hint">events per tram · on falta contingut</span></div>
-    <div class="card pad">
-      <div class="bars" id="bars"></div>
-      <div class="blabels" id="blabels"></div>
-    </div>
-  </section>
-
-  <section id="dades">
-    <div class="shead"><h2>Editor de la base de dades</h2><span class="pend">escriptura pendent</span></div>
-    <div class="card pad">
-      <div class="fields">
-        <input type="text" id="dnom" placeholder="Nom del personatge">
-        <input type="text" id="dqid" placeholder="Q733621" style="font-family:var(--mono)">
-      </div>
-      <div class="fields" style="grid-template-columns:1fr 1fr 2fr">
-        <input type="text" id="dbirth" placeholder="Naixement">
-        <input type="text" id="ddeath" placeholder="Mort (buit = viu)">
-        <select id="dcat">
-          <option value="">Sense categoria</option>
-          <option>Filosofia</option><option>Música</option><option>Literatura</option>
-          <option>Ciència</option><option>Política</option><option>Pintura</option>
-          <option>Religió</option><option>Esport</option>
-        </select>
-      </div>
-      <div class="preview" id="dprev">Omple els camps per veure el literal que s'escriurà.</div>
-      <div class="gate">
-        <span class="seal" id="dseal">Test de parseig no executat</span>
-        <span class="spacer"></span>
-        <button class="btn" id="dcheck" disabled>Verifica Q-id</button>
-        <button class="btn primary" id="dcommit" disabled>Commit i push</button>
-      </div>
-    </div>
-  </section>
+  </div><!-- /tab-personatgedia -->
 
 </div>
 
@@ -294,6 +300,20 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
 "use strict";
 const API = "/api";
 let OFFLINE = false;
+
+/* ---------- tabs ----------
+   La pagina principal es per a ajustos GENERICS; tot el que sigui d'un joc concret
+   va a la seva propia tab. El hash guarda quina esta oberta, aixi refrescar no et
+   treu del lloc (i el boto Refresca del navegador tampoc). */
+function showTab(name){
+  document.querySelectorAll(".tabpane").forEach(function(p){ p.hidden = (p.id !== "tab-"+name); });
+  document.querySelectorAll(".nav a").forEach(function(a){ a.classList.toggle("on", a.dataset.tab===name); });
+}
+function tabFromHash(){
+  const h=(location.hash||"").replace("#","");
+  return document.getElementById("tab-"+h) ? h : "general";
+}
+window.addEventListener("hashchange", function(){ showTab(tabFromHash()); });
 
 /* ---------- helpers ---------- */
 function el(id){ return document.getElementById(id); }
@@ -586,6 +606,7 @@ async function boot(){
   renderPins();
 
   el("stamp").textContent = new Date().toLocaleTimeString("ca-ES",{hour:"2-digit",minute:"2-digit"});
+  showTab(tabFromHash());
 }
 
 el("refresh").addEventListener("click", boot);
