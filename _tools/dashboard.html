@@ -35,7 +35,9 @@ a{color:var(--terracota)}
 .f{display:flex;flex-direction:column;gap:4px;min-width:0}
 .f label{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text3)}
 .f label b{color:var(--terracota);font-weight:700}
-.f .wm{cursor:help;color:var(--warn);font-size:12px;font-style:normal}
+.f .wm{cursor:pointer;color:var(--warn);font-size:12px;font-style:normal;background:none;border:0;padding:0 2px;line-height:1}
+.f .wm:hover{color:var(--bad)}
+.f .wmsg{margin-top:5px;font-size:12.5px;line-height:1.4;padding:7px 10px;border-radius:6px;background:var(--warn-bg);color:var(--warn);border-left:3px solid var(--warn);text-transform:none;letter-spacing:0;font-weight:400}
 .f input.warn,.f select.warn{border-color:var(--warn);background:var(--warn-bg)}
 #dwarn .w{font-size:12.5px;padding:7px 11px;border-radius:6px;background:var(--warn-bg);color:var(--warn);border-left:3px solid var(--warn)}
 #dwarn .e{background:var(--bad-bg);color:var(--bad);border-left-color:var(--bad)}
@@ -250,37 +252,37 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
       <div id="dwarn"></div>
 
       <div class="fields dgrid" style="grid-template-columns:2fr 1fr">
-        <div class="f"><label for="dnom">Nom <b>*</b><i class="wm" id="w-dnom" hidden>⚠</i></label>
-          <input type="text" id="dnom"></div>
-        <div class="f"><label for="dqid">Q-id de Wikidata<i class="wm" id="w-dqid" hidden>⚠</i></label>
-          <input type="text" id="dqid" style="font-family:var(--mono)"></div>
+        <div class="f"><label for="dnom">Nom <b>*</b><button type="button" class="wm" id="w-dnom" hidden aria-label="Mostra l\'avís">⚠</button></label>
+          <input type="text" id="dnom"><div class="wmsg" id="m-dnom" hidden></div></div>
+        <div class="f"><label for="dqid">Q-id de Wikidata<button type="button" class="wm" id="w-dqid" hidden aria-label="Mostra l\'avís">⚠</button></label>
+          <input type="text" id="dqid" style="font-family:var(--mono)"><div class="wmsg" id="m-dqid" hidden></div></div>
       </div>
 
       <div class="fields dgrid" style="grid-template-columns:1fr 2fr">
-        <div class="f"><label for="did">id intern <b>*</b><i class="wm" id="w-did" hidden>⚠</i></label>
-          <input type="text" id="did" style="font-family:var(--mono)"></div>
-        <div class="f"><label for="dwiki">Enllaç a la Viquipèdia<i class="wm" id="w-dwiki" hidden>⚠</i></label>
-          <input type="text" id="dwiki"></div>
+        <div class="f"><label for="did">id intern <b>*</b><button type="button" class="wm" id="w-did" hidden aria-label="Mostra l\'avís">⚠</button></label>
+          <input type="text" id="did" style="font-family:var(--mono)"><div class="wmsg" id="m-did" hidden></div></div>
+        <div class="f"><label for="dwiki">Enllaç a la Viquipèdia<button type="button" class="wm" id="w-dwiki" hidden aria-label="Mostra l\'avís">⚠</button></label>
+          <input type="text" id="dwiki"><div class="wmsg" id="m-dwiki" hidden></div></div>
       </div>
 
       <div class="fields dgrid" style="grid-template-columns:1fr 1fr 2fr">
-        <div class="f"><label for="dbirth">Naixement <b>*</b><i class="wm" id="w-dbirth" hidden>⚠</i></label>
-          <input type="text" id="dbirth" placeholder="negatiu = aC"></div>
-        <div class="f"><label for="ddeath">Mort<i class="wm" id="w-ddeath" hidden>⚠</i></label>
-          <input type="text" id="ddeath" placeholder="buit = viu"></div>
-        <div class="f"><label for="dcat">Categoria<i class="wm" id="w-dcat" hidden>⚠</i></label>
+        <div class="f"><label for="dbirth">Naixement <b>*</b><button type="button" class="wm" id="w-dbirth" hidden aria-label="Mostra l\'avís">⚠</button></label>
+          <input type="text" id="dbirth" placeholder="negatiu = aC"><div class="wmsg" id="m-dbirth" hidden></div></div>
+        <div class="f"><label for="ddeath">Mort<button type="button" class="wm" id="w-ddeath" hidden aria-label="Mostra l\'avís">⚠</button></label>
+          <input type="text" id="ddeath" placeholder="buit = viu"><div class="wmsg" id="m-ddeath" hidden></div></div>
+        <div class="f"><label for="dcat">Categoria<button type="button" class="wm" id="w-dcat" hidden aria-label="Mostra l\'avís">⚠</button></label>
           <select id="dcat">
             <option value="">Sense categoria</option>
             <option value="philosophy">Filosofia</option><option value="music">Música</option>
             <option value="literature">Literatura</option><option value="science">Ciència</option>
             <option value="politics">Política</option><option value="painting">Pintura</option>
             <option value="religion">Religió</option><option value="sport">Esport</option>
-          </select></div>
+          </select><div class="wmsg" id="m-dcat" hidden></div></div>
       </div>
 
       <div class="fields dgrid" style="grid-template-columns:1fr">
-        <div class="f"><label for="ddesc">Descripció<i class="wm" id="w-ddesc" hidden>⚠</i></label>
-          <input type="text" id="ddesc"></div>
+        <div class="f"><label for="ddesc">Descripció<button type="button" class="wm" id="w-ddesc" hidden aria-label="Mostra l\'avís">⚠</button></label>
+          <input type="text" id="ddesc"><div class="wmsg" id="m-ddesc" hidden></div></div>
       </div>
 
       <div class="gate">
@@ -623,6 +625,7 @@ function renderPreview(){
 function clearWarns(){
   DF.forEach(function(f){
     const w=el("w-"+f); if(w){ w.hidden=true; w.removeAttribute("title"); }
+    const m=el("m-"+f); if(m){ m.hidden=true; m.textContent=""; }
     el(f).classList.remove("warn");
   });
   el("dwarn").innerHTML = "";
@@ -632,10 +635,11 @@ function showWarns(list){
   const orfes=[];
   (list||[]).forEach(function(w){
     const f = w && w.field, msg = (w && w.msg) || w;
-    const mark = f && el("w-"+f);
-    if(mark){
-      const prev = mark.getAttribute("title");
-      mark.title = prev ? (prev+"\n\n"+msg) : msg;
+    const mark = f && el("w-"+f), box = f && el("m-"+f);
+    if(mark && box){
+      const prev = box.textContent;
+      box.textContent = prev ? (prev+" · "+msg) : msg;
+      mark.title = box.textContent;      // el hover segueix funcionant amb ratoli
       mark.hidden = false;
       el(f).classList.add("warn");
     } else { orfes.push(msg); }
@@ -810,6 +814,14 @@ el("dgo").addEventListener("click", resolveQ);
 el("dq").addEventListener("keydown", function(e){ if(e.key==="Enter") resolveQ(); });
 el("dq").addEventListener("input", function(){ if(!el("dq").value.trim()) clearFields(); });
 el("dclear").addEventListener("click", function(){ el("dq").value=""; clearFields(); });
+/* El ⚠ es clicable: al mobil no hi ha hover, i el tooltip natiu del navegador
+   tarda i no es pot fixar. El title es queda per al ratoli. */
+DF.forEach(function(f){
+  const w=el("w-"+f); if(!w) return;
+  w.addEventListener("click", function(){
+    const box=el("m-"+f); if(box) box.hidden = !box.hidden;
+  });
+});
 el("dcommit").addEventListener("click", dbCommit);
 DF.forEach(function(id){
   el(id).addEventListener("input", renderPreview);

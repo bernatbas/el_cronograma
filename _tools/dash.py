@@ -110,6 +110,20 @@ CAT_BY_P106 = [
 ]
 
 
+def _clean_desc(s):
+    """La description de Wikidata es una etiqueta per desambiguar en una llista,
+    no una descripcio: «filòsof xinès (cir. 551 – cir. 479 aC)». Li traiem el
+    parentesi final si porta xifres —els anys ja son als seus camps— i li posem
+    majuscula, que es la forma que tenen les de PEOPLE escrites a ma. Queda una
+    llavor curta i correcta per ampliar.
+    Un parentesi SENSE xifres es contingut («pintor (escola de Barbizon)») i es queda."""
+    s = (s or "").strip()
+    m = re.match(r"^(.*?)\s*\(([^()]*)\)\s*$", s)
+    if m and re.search(r"\d", m.group(2)):
+        s = m.group(1).strip()
+    return (s[0].upper() + s[1:]) if s else s
+
+
 def _wd_get(url):
     """GET + JSON contra una API de Wikimedia. None si falla."""
     try:
@@ -259,7 +273,7 @@ def resolve_person(q):
         name = q
     if not name:
         warnings.append({"field": "dnom", "msg": "Sense nom en catala a Wikidata: escriu-lo tu"})
-    desc = ((ent.get("descriptions") or {}).get("ca") or {}).get("value") or ""
+    desc = _clean_desc(((ent.get("descriptions") or {}).get("ca") or {}).get("value") or "")
     if not desc:
         warnings.append({"field": "ddesc", "msg": "Sense descripcio en catala a Wikidata: escriu-la tu"})
 
