@@ -57,3 +57,5 @@ Per garantir que el joc no canvia al llarg del dia, i el seed no genera contingu
 Poder editar el mapping de paraules clau a categories des del dashboard, veure quines paraules clau són les que porten a algú a catalogar-lo com a músic, i afegir les que detecti que hi falten.
 
 ## PErmetre editar la categoria quan no es pot detectar i està "sense categoria"
+
+## verdi, beethoven, david caraben... es marquen com a literatura enlloc de música. Cal revisar si hi ha bug
