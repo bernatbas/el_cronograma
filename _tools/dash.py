@@ -550,8 +550,8 @@ def gen_data_js():
         " *     feta per facilitar el testeig local (file://). Quan existeixi la DB externa,\n"
         " *     substituir aquest fitxer pel carregador real (fetch a la DB/API) i esborrar\n"
         " *     el snapshot. NO editar a mà: regenerar amb dash.py /api/db/regen.\n"
-        " * " + "=" * 77 + " */" % today
-    )
+        " * " + "=" * 77 + " */"
+    ) % today
     body = json.dumps({"PEOPLE": people, "EVENTS": events}, ensure_ascii=False, indent=2)
     content = header + "\n\n\nwindow.HB_DATA = " + body + ";\n"
     data_js_path = os.path.join(REPO, "data.js")
