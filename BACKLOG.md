@@ -62,3 +62,6 @@ Poder editar el mapping de paraules clau a categories des del dashboard, veure q
 
 ## [TANCAT] Aniversaris: filtrar només els rodons quan la BD creixi
 Ara la caixa «Aniversaris propers» del dashboard llista TOTS els aniversaris dels propers 30 dies perquè amb 59 persones filtrar per rodons la deixava buida gairebé sempre (~0,4 encerts per finestra). Però 869 anys de Ricard Cor de Lleó no és cap efemèride: ningú clava un personatge per celebrar-li els 73 anys de la mort. Quan la BD tingui prou gent, filtrar a múltiples de 50 (o 25) i tornar el títol a «Aniversaris rodons». El camp round ja ve calculat des de anniv_state() a _tools/dash.py: només cal filtrar la llista. Llindar orientatiu: amb ~300 persones ja surten uns 2 rodons per finestra de 30 dies.
+
+## Personatge del dia: text lliure per al motiu de l'homenatge
+Ara PD_PINNED només guarda data i QID, i el comentari de la línia és el nom + la descripció de Wikidata. Voldria poder-hi escriure jo el motiu: «avui fa 100 anys de la seva mort», «ahir va guanyar una medalla d'or», etc. Cal decidir on viu aquest text: al comentari de PD_PINNED no serveix perquè el joc no llegeix comentaris — hauria de passar a un objecte {qid, motiu} o a una segona constant. I al joc, decidir on es pinta (sota el nom? un badge?). Afegir el camp al formulari del calendari del dashboard.
