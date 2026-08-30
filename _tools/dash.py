@@ -29,7 +29,7 @@ HOST = "127.0.0.1"
 
 # Endpoints previstos pero encara no implementats. El frontend els demana,
 # rep 501 i ensenya la seccio en mode demo amb el badge de pendent.
-NOT_YET = ("/api/pinned",)
+NOT_YET = ()
 
 
 # --------------------------------------------------------------------------
@@ -219,7 +219,7 @@ def existing_people():
             set(re.findall(r"wd:'(Q\d+)'", seg)))
 
 
-def resolve_person(q):
+def resolve_person(q, allow_existing=False):
     """Enllac | QID | nom -> camps per omplir el formulari + avisos."""
     q = (q or "").strip()
     if not q:
@@ -309,8 +309,11 @@ def resolve_person(q):
         else:
             warnings.append({"field": "dwiki", "msg": "Aquesta entitat no te article a la Viquipedia catalana"})
 
+    # Ser ja a PEOPLE nomes es un problema si vols AFEGIR-lo. Per clavar-lo com a
+    # personatge del dia es indiferent (de fet es bon senyal), i per aixo qui crida
+    # pot demanar que no bloquegi.
     ids_taken, qids_taken = existing_people()
-    if qid in qids_taken:
+    if qid in qids_taken and not allow_existing:
         return {"ok": False, "msg": "%s ja es a PEOPLE" % qid}
 
     return {"ok": True, "qid": qid, "id": _slug_id(name or qid, ids_taken),
@@ -712,15 +715,107 @@ def db_state():
 # Personatge del dia (PD_PINNED, dins joc.html)
 # --------------------------------------------------------------------------
 
+PD_BLOCK = re.compile(r"(const\s+PD_PINNED\s*=\s*\{)(.*?)(\n[ \t]*\};)", re.DOTALL)
+
+# 'AAAA-MM-DD':'Qxxx',   // Nom — motiu
+PD_LINE = re.compile(
+    r"^\s*['\"](\d{4}-\d{2}-\d{2})['\"]\s*:\s*['\"](Q\d+)['\"]\s*,?\s*(?://\s*(.*?))?\s*$"
+)
+
+
 def parse_pinned():
-    """[{date, qid}] ordenat per data. Nomes llegeix; no escriu res."""
+    """
+    [{date, qid, name, note}] ordenat per data. Nomes llegeix; no escriu res.
+
+    El nom surt del comentari de la linia (el troç abans del guio llarg): PD_PINNED
+    nomes guarda el QID —que es l'unic que el joc necessita— i el comentari ja hi
+    era. Aixi el calendari pinta noms sense haver de trucar a Wikidata.
+    """
     src = read("joc.html")
-    m = re.search(r"const\s+PD_PINNED\s*=\s*\{(.*?)\}", src, re.DOTALL)
+    m = PD_BLOCK.search(src)
     if not m:
         return []
-    body = m.group(1)
-    found = re.findall(r"['\"](\d{4}-\d{2}-\d{2})['\"]\s*:\s*['\"](Q\d+)['\"]", body)
-    return [{"date": d, "qid": q} for d, q in sorted(found)]
+    out = []
+    for line in m.group(2).splitlines():
+        lm = PD_LINE.match(line)
+        if not lm:
+            continue
+        note = (lm.group(3) or "").strip()
+        name = note.split("—")[0].strip() if note else ""
+        out.append({
+            "date": lm.group(1),
+            "qid": lm.group(2),
+            "name": name or lm.group(2),
+            "note": note,
+        })
+    out.sort(key=lambda p: p["date"])
+    return out
+
+
+def _pinned_write(entries, commit_msg):
+    """Reescriu el bloc PD_PINNED sencer, ordenat per data, i committeja joc.html."""
+    src = read("joc.html")
+    m = PD_BLOCK.search(src)
+    if not m:
+        return False, "No trobo el bloc PD_PINNED a joc.html"
+
+    entries = sorted(entries, key=lambda p: p["date"])
+    lines = []
+    for i, e in enumerate(entries):
+        coma = "," if i < len(entries) - 1 else ""
+        note = e.get("note") or ""
+        # el comentari no pot tancar el bloc ni saltar de linia
+        note = note.replace("*/", "").replace("\n", " ").strip()
+        lines.append("      '%s':'%s'%s%s" % (
+            e["date"], e["qid"], coma, ("    // " + note) if note else ""))
+    body = ("\n" + "\n".join(lines)) if lines else ""
+    new_src = src[:m.start()] + m.group(1) + body + m.group(3) + src[m.end():]
+
+    if "�" in new_src:
+        return False, "S'han colat caracters corromputs: no toco res"
+    # xarxa: el bloc reescrit ha de tornar a parsejar amb les entrades que toca
+    m2 = PD_BLOCK.search(new_src)
+    if not m2 or len([l for l in m2.group(2).splitlines() if PD_LINE.match(l)]) != len(entries):
+        return False, "El bloc reescrit no quadra: no toco res"
+
+    with open(os.path.join(REPO, "joc.html"), "w", encoding="utf-8") as f:
+        f.write(new_src)
+    ok, out = run(["git", "commit", "-m", commit_msg, "--", "joc.html"])
+    return True, ("Desat i committejat" if ok else "Desat (el commit ha fallat: %s)" % out[:120])
+
+
+def pinned_set(d):
+    """Clava (o reassigna) un dia. {date, qid, name, note}."""
+    ds = (d.get("date") or "").strip()
+    qid = (d.get("qid") or "").strip().upper()
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", ds):
+        return False, "Data invalida (cal AAAA-MM-DD)"
+    try:
+        datetime.strptime(ds, "%Y-%m-%d")
+    except ValueError:
+        return False, "Aquesta data no existeix"
+    if not re.fullmatch(r"Q\d+", qid):
+        return False, "QID invalid"
+
+    note = (d.get("note") or "").strip()
+    if not note:
+        name = (d.get("name") or "").strip()
+        note = name or qid
+
+    entries = [p for p in parse_pinned() if p["date"] != ds]
+    entries.append({"date": ds, "qid": qid, "note": note})
+    return _pinned_write(entries, "Joc: clava %s al %s" % (note.split("—")[0].strip(), ds))
+
+
+def pinned_del(d):
+    """Treu un dia clavat."""
+    ds = (d.get("date") or "").strip()
+    pins = parse_pinned()
+    keep = [p for p in pins if p["date"] != ds]
+    if len(keep) == len(pins):
+        return False, "El %s no estava clavat" % ds
+    gone = next(p for p in pins if p["date"] == ds)
+    return _pinned_write(keep, "Joc: desclava %s (%s)" % (gone["name"], ds))
 
 
 def pd_state():
@@ -1249,7 +1344,8 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/db/resolve":
-            self._json(200, resolve_person(data.get("q", "")))
+            self._json(200, resolve_person(data.get("q", ""),
+                                           bool(data.get("allow_existing"))))
             return
 
         if path == "/api/db/add":
@@ -1259,6 +1355,16 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/db/regen":
             ok, msg = gen_data_js()
+            self._json(200, {"ok": ok, "msg": msg})
+            return
+
+        if path == "/api/pinned/set":
+            ok, msg = pinned_set(data)
+            self._json(200, {"ok": ok, "msg": msg})
+            return
+
+        if path == "/api/pinned/del":
+            ok, msg = pinned_del(data)
             self._json(200, {"ok": ok, "msg": msg})
             return
 
@@ -1317,6 +1423,13 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/backlog":
             try:
                 self._json(200, parse_backlog())
+            except Exception as e:
+                self._json(500, {"error": str(e)})
+            return
+
+        if path == "/api/pinned":
+            try:
+                self._json(200, parse_pinned())
             except Exception as e:
                 self._json(500, {"error": str(e)})
             return
