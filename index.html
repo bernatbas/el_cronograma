@@ -637,6 +637,7 @@ const I18N={
     cat_painting:'Pintura',
     cat_religion:'Religió',
     cat_sport:'Esport',
+    cat_cinema:'Cinema',
     cat_none:'Sense categoria',
     // -- topbar del cronograma --
     cro_search_ph:'Cerca i afegeix un personatge…',
@@ -759,7 +760,7 @@ function L(v){
 const CAT_COLORS={
   'philosophy':'#5E9FE8','music':'#BF8EDA','literature':'#DE9255',
   'science':'#72BC8F','politics':'#DF84A8','painting':'#D4A72C','religion':'#A24E5E',
-  'sport':'#94AD3C'
+  'sport':'#94AD3C','cinema':'#FF7875'
 };
 const NOW_YEAR=new Date().getFullYear();
 // COL·LECCIONS: playlists de persones. Guarden **Q-ids, no persones** — la mateixa referència
@@ -931,7 +932,7 @@ const PEOPLE=[
   {id:'madonna',wd:'Q1744',name:'Madonna',birth:1958,death:null,cats:['music'],wiki:'https://ca.wikipedia.org/wiki/Madonna',desc:'Cantant estatunidenca'},
   {id:'chetbaker',wd:'Q2274',name:'Chet Baker',birth:1929,death:1988,cats:['music'],wiki:'https://ca.wikipedia.org/wiki/Chet_Baker',desc:'Trompetista i cantant americà de jazz'},
   {id:'isaacasimov',wd:'Q34981',name:'Isaac Asimov',birth:1920,death:1992,cats:['literature'],wiki:'https://ca.wikipedia.org/wiki/Isaac_Asimov',desc:'Escriptor estatunidenc'},
-  {id:'martinscorsese',wd:'Q41148',name:'Martin Scorsese',birth:1942,death:null,cats:['literature'],wiki:'https://ca.wikipedia.org/wiki/Martin_Scorsese',desc:'Director de cinema estatunidenc'},
+  {id:'martinscorsese',wd:'Q41148',name:'Martin Scorsese',birth:1942,death:null,cats:['cinema'],wiki:'https://ca.wikipedia.org/wiki/Martin_Scorsese',desc:'Director de cinema estatunidenc'},
   {id:'epictet',wd:'Q183144',name:'Epictet',birth:50,death:138,cats:['philosophy'],wiki:'https://ca.wikipedia.org/wiki/Epictet',desc:'Filòsof grec'},
   {id:'tomasdaquino',wd:'Q9438',name:'Tomàs d’Aquino',birth:1225,death:1274,cats:['philosophy'],wiki:'https://ca.wikipedia.org/wiki/Tom%C3%A0s_d%27Aquino',desc:'Frare i filòsof italià'},
   {id:'migueldecervantessaave',wd:'Q5682',name:'Miguel de Cervantes Saavedra',birth:1547,death:1616,cats:['literature'],wiki:'https://ca.wikipedia.org/wiki/Miguel_de_Cervantes_Saavedra',desc:'Escriptor castellà'},
@@ -1102,6 +1103,7 @@ const guessCats=desc=>{if(!desc)return[];const d=desc.toLowerCase(),a=[];
   if(/físic|physicist|matemàtic|mathematician|astrònom|astronomer|científic|scientist|naturalista|naturalist/.test(d))a.push('science');
   if(/polític|político|politician|politique|rei|king|emperador|emperor|dictador|dictator|militar|military|president|independentista|ministre|minister/.test(d))a.push('politics');
   if(/pintor|painter|escultor|sculptor/.test(d))a.push('painting');
+  if(/cineasta|director[a]? de cinema|film director|filmmaker|guionista|screenwriter|actor de cinema|actriu de cinema|film actor|productor[a]? de cinema|film producer|director[a]? de fotografia|cinematographer|cinema/.test(d))a.push('cinema');   // «director» i «actor» sols no: cauen sobre directors d’orquestra i actors de teatre
   if(/profeta|prophet|religiós|religious|sant|saint/.test(d))a.push('religion');
   if(/futbolista|jugador de futbol|footballer|football player|tennista|tenista|tennis player|jugador de tennis|basquetbol|bàsquet|baloncestista|basketball|boxejador|boxeador|boxer|atleta|athlete|track and field|velocista|sprinter|gimnasta|gymnast|nedador|nadador|swimmer|ciclista|cyclist|golfista|golfer|automobilista|racing driver|motorcycle racer/.test(d)
      ||/(pilot|piloto)[^,;.]{0,18}(autom|motocicl)/.test(d))a.push('sport');   // "pilot" sol cauria sobre aviadors, així que exigim context de motor

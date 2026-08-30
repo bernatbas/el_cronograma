@@ -112,6 +112,10 @@ CAT_BY_P106 = [
     ("religion",   {"Q42603", "Q2259532", "Q3315492"}),
     ("sport",      {"Q937857", "Q2066131", "Q10833314", "Q3665646", "Q11513337",
                     "Q13141064", "Q13381863", "Q10843402", "Q2309784"}),
+    # Nomes ocupacions especifiques de cinema. L'«actor» generic (Q33999) queda
+    # FORA a proposit: el porta tambe en Shakespeare, i li encolomaria cinema.
+    ("cinema",     {"Q2526255", "Q10800557", "Q3282637", "Q28389", "Q7042855",
+                    "Q2405480", "Q2059704", "Q20971250"}),
 ]
 
 

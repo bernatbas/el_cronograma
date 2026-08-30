@@ -594,7 +594,7 @@ window.HB_DATA = {
       "birth": 1942,
       "death": null,
       "cats": [
-        "literature"
+        "cinema"
       ],
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Martin_Scorsese",
