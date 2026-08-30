@@ -58,7 +58,7 @@ Poder editar el mapping de paraules clau a categories des del dashboard, veure q
 
 ## PErmetre editar la categoria quan no es pot detectar i està "sense categoria"
 
-## verdi, beethoven, david caraben... es marquen com a literatura enlloc de música. Cal revisar si hi ha bug
+## [TANCAT] verdi, beethoven, david caraben... es marquen com a literatura enlloc de música. Cal revisar si hi ha bug
 
 ## [TANCAT] Aniversaris: filtrar només els rodons quan la BD creixi
 Ara la caixa «Aniversaris propers» del dashboard llista TOTS els aniversaris dels propers 30 dies perquè amb 59 persones filtrar per rodons la deixava buida gairebé sempre (~0,4 encerts per finestra). Però 869 anys de Ricard Cor de Lleó no és cap efemèride: ningú clava un personatge per celebrar-li els 73 anys de la mort. Quan la BD tingui prou gent, filtrar a múltiples de 50 (o 25) i tornar el títol a «Aniversaris rodons». El camp round ja ve calculat des de anniv_state() a _tools/dash.py: només cal filtrar la llista. Llindar orientatiu: amb ~300 persones ja surten uns 2 rodons per finestra de 30 dies.
