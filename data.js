@@ -807,6 +807,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Franz_Kafka",
       "desc": "Escriptor austríac i txec"
+    },
+    {
+      "id": "mahoma",
+      "wd": "Q9458",
+      "name": "Mahoma",
+      "birth": 571,
+      "death": 632,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Mahoma",
+      "desc": "Fundador de l’islam"
     }
   ],
   "EVENTS": [
