@@ -781,6 +781,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Marc_Aureli",
       "desc": "Filòsof estoic, emperador romà del 161 al 180"
+    },
+    {
+      "id": "virginiawoolf",
+      "wd": "Q40909",
+      "name": "Virginia Woolf",
+      "birth": 1882,
+      "death": 1941,
+      "cats": [
+        "literature"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Virginia_Woolf",
+      "desc": "Escriptora modernista anglesa"
     }
   ],
   "EVENTS": [
