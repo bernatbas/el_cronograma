@@ -794,6 +794,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Virginia_Woolf",
       "desc": "Escriptora modernista anglesa"
+    },
+    {
+      "id": "franzkafka",
+      "wd": "Q905",
+      "name": "Franz Kafka",
+      "birth": 1883,
+      "death": 1924,
+      "cats": [
+        "literature"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Franz_Kafka",
+      "desc": "Escriptor austríac i txec"
     }
   ],
   "EVENTS": [
