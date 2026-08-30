@@ -96,8 +96,13 @@ PREC = {6: "mil·lenni", 7: "segle", 8: "decada", 9: "any", 10: "mes", 11: "dia"
 # nomes hi caben 2 per persona.
 CAT_BY_P106 = [
     ("philosophy", {"Q4964182", "Q1234713", "Q16267607"}),
+    # Les ciencies naturals de camp hi faltaven, i el forat feia mal: Darwin obre
+    # amb geoleg, explorador, etoleg i naturalista —cap hi era— i acabava sortint
+    # de filosofia, que a ell li ve a la sisena posicio.
     ("science",    {"Q901", "Q169470", "Q170790", "Q11063", "Q593644", "Q81096",
-                    "Q205375", "Q39631", "Q864503", "Q2374149", "Q13418253"}),
+                    "Q205375", "Q39631", "Q864503", "Q2374149", "Q13418253",
+                    "Q520549", "Q18805", "Q16831721", "Q350979", "Q2055046",
+                    "Q10872101"}),
     ("literature", {"Q36180", "Q49757", "Q6625963", "Q214917", "Q482980",
                     "Q1930187", "Q4853732", "Q18939491"}),
     ("music",      {"Q36834", "Q639669", "Q486748", "Q1259917", "Q158852", "Q177220"}),
@@ -290,11 +295,19 @@ def resolve_person(q, allow_existing=False):
     if dn > 1:
         warnings.append({"field": "ddeath", "msg": "Wikidata en dona %d de diferents, de fonts que no es posen d'acord. He agafat la preferida (%s), pero es una estimacio." % (dn, death)})
 
-    cats, occ = [], set(ids_of("P106"))
-    for slug, qids in CAT_BY_P106:
-        if occ & qids and slug not in cats:
-            cats.append(slug)
-    cats = cats[:2]
+    # Mana l'ordre de P106, no el de CAT_BY_P106. Wikidata posa «escriptor»
+    # (Q36180) a tothom qui hagi escrit res, i amb l'ordre de la nostra llista
+    # —literature abans que music— Verdi i Beethoven sortien de literatura.
+    # A P106, en canvi, la principal va primer: Verdi obre amb «compositor»,
+    # Leonardo amb «pintor», Voltaire amb «filosof». Per aixo guanya la categoria
+    # de l'ocupacio que apareix abans.
+    occ = ids_of("P106")
+    primera = {}
+    for i, q in enumerate(occ):
+        for slug, qids in CAT_BY_P106:
+            if q in qids:
+                primera.setdefault(slug, i)
+    cats = sorted(primera, key=primera.get)[:2]
     if not cats:
         warnings.append({"field": "dcat", "msg": "No he pogut deduir la categoria de l'ocupacio (P106) de Wikidata: tria-la tu"})
 

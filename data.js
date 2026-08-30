@@ -555,7 +555,7 @@ window.HB_DATA = {
       "birth": 1958,
       "death": null,
       "cats": [
-        "literature"
+        "music"
       ],
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Madonna",
@@ -698,7 +698,7 @@ window.HB_DATA = {
       "birth": 1770,
       "death": 1827,
       "cats": [
-        "literature"
+        "music"
       ],
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Ludwig_van_Beethoven",
@@ -711,7 +711,7 @@ window.HB_DATA = {
       "birth": 1813,
       "death": 1901,
       "cats": [
-        "literature"
+        "music"
       ],
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Giuseppe_Verdi",
