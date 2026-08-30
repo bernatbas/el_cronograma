@@ -820,6 +820,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Mahoma",
       "desc": "Fundador de l’islam"
+    },
+    {
+      "id": "carlemany",
+      "wd": "Q3044",
+      "name": "Carlemany",
+      "birth": 748,
+      "death": 814,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Carlemany",
+      "desc": "Emperador carolingi del 800 al 814"
     }
   ],
   "EVENTS": [
