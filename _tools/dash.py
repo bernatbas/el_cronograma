@@ -882,13 +882,19 @@ def _fetch_daymonth(qids):
     return out
 
 
-def anniv_state(window=30):
-    """
-    Qui de la BD fa anys (de naixement o de mort) durant els propers `window` dies.
+ANNIV_ROUND = 25       # que compta com a rodo: quarts de segle (25, 50, 75, 100...)
+ANNIV_WINDOW = 365     # horitzo en dies
 
-    Amb 59 persones, exigir aniversaris RODONS deixaria la llista buida gairebe
-    sempre (~0,4 encerts per finestra de 30 dies), aixi que es llisten tots i els
-    rodons —multiples de 50— van marcats.
+
+def anniv_state(window=ANNIV_WINDOW):
+    """
+    Aniversaris RODONS (de naixement o de mort) dels propers `window` dies.
+
+    Nomes multiples de 25: ningu clava un personatge per celebrar-li 73 anys de
+    res. Aixo fa la llista molt escassa, i per aixo la finestra es de dotze mesos
+    i no de trenta dies: un centenari es una efemeride d'escala anual i es
+    planifica amb temps —a 90 dies la caixa sortia buida; a un any, hi ha els 200
+    de Beethoven i els 300 de Newton—. Els multiples de 100 van marcats a part.
     """
     people = [p for p in _extract_people_events(read("index.html"))[0] if p.get("wd")]
     cache = _anniv_cache()
@@ -918,14 +924,14 @@ def anniv_state(window=30):
                 if not (today <= quan <= today + timedelta(days=window)):
                     continue
                 anys = any_ - orig
-                if anys <= 0:
+                if anys <= 0 or anys % ANNIV_ROUND:
                     continue
                 out.append({
                     "date": quan.isoformat(), "qid": p["wd"], "name": p["name"],
                     "desc": p.get("desc", ""), "kind": mena, "years": anys,
-                    "round": anys % 50 == 0,
+                    "century": anys % 100 == 0,
                 })
-    out.sort(key=lambda a: (a["date"], not a["round"]))
+    out.sort(key=lambda a: a["date"])
     return out
 
 

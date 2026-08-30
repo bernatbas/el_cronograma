@@ -361,8 +361,8 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
           <div class="calhead"><span class="m">Homenatges clavats</span></div>
           <div class="rows" id="pins"><div class="empty">Carregant…</div></div>
           <div style="margin-top:12px">
-            <div class="calhead"><span class="m">Aniversaris propers</span>
-              <span class="hint sub" title="Qui de la teva BD fa anys —de naixement o de mort— durant els propers 30 dies. Clica'l per clavar-lo aquell dia.">30 dies</span></div>
+            <div class="calhead"><span class="m">Aniversaris rodons</span>
+              <span class="hint sub" title="Qui de la teva BD fa un nombre rodó d'anys —múltiples de 25, de naixement o de mort— durant els propers dotze mesos. Clica'l per clavar-lo aquell dia.">12 mesos</span></div>
             <div class="rows" id="anniv"><div class="empty">Carregant…</div></div>
           </div>
         </div>
@@ -430,8 +430,8 @@ const DEMO = {
   ],
   pins:[ {date:"2026-08-19", qid:"Q733621", name:"Juan Tamariz"} ],
   anniv:[
-    {date:"2026-09-08", qid:"Q42305", name:"Ricard Cor de Lleó", desc:"", kind:"naixement", years:869, round:false},
-    {date:"2026-09-10", qid:"Q101638", name:"Mary Wollstonecraft", desc:"", kind:"mort", years:229, round:false}
+    {date:"2027-03-26", qid:"Q255", name:"Ludwig van Beethoven", desc:"", kind:"mort", years:200, century:true},
+    {date:"2027-04-15", qid:"Q762", name:"Leonardo da Vinci", desc:"", kind:"naixement", years:575, century:false}
   ],
   lint:[
     {sev:"bad",  txt:"2 persones sense any de naixement", who:"wd_Q11637 · wd_Q42198"},
@@ -626,24 +626,25 @@ function renderPins(){
   }).join("");
 }
 
-/* ---------- aniversaris propers ----------
-   Nomes hi surt qui ja es a la BD. Amb 59 persones, exigir aniversaris rodons
-   deixaria la caixa buida gairebe sempre, aixi que hi son tots i els rodons
-   (multiples de 50) van marcats. Clicar-ne un l'obre ja carregat al seu dia. */
+/* ---------- aniversaris rodons ----------
+   Nomes hi surt qui ja es a la BD, i nomes els multiples de 25. Com que aixo els
+   fa escassos, la finestra es de dotze mesos: un centenari es planifica amb
+   temps. Clicar-ne un l'obre ja carregat al seu dia. */
 let ANNIV = [];
 
 function renderAnniv(list){
   ANNIV = list || [];
   if(!ANNIV.length){
-    el("anniv").innerHTML = '<div class="empty">Cap aniversari els propers 30 dies.</div>';
+    el("anniv").innerHTML = '<div class="empty">Cap aniversari rodó els propers dotze mesos.</div>';
     return;
   }
   el("anniv").innerHTML = ANNIV.map(function(a, i){
+    const p = a.date.split("-");                 // la finestra creua l'any: cal veure'l
     return '<div class="row" data-i="'+i+'" title="'+esc(a.name+" · "+a.date)+'">'
-      + '<span class="num">'+esc(a.date.slice(5))+'</span>'
+      + '<span class="num">'+p[2]+'/'+p[1]+'/'+p[0].slice(2)+'</span>'
       + '<span class="txt">'+esc(a.name)+'</span>'
-      + '<span class="when">'+a.years+' anys · '+esc(a.kind)
-      + (a.round ? ' <b class="rodo">rodó</b>' : '') + '</span></div>';
+      + '<span class="when">'+(a.century ? '<b class="rodo">'+a.years+'</b>' : a.years)
+      + ' anys · '+esc(a.kind)+'</span></div>';
   }).join("");
 }
 
