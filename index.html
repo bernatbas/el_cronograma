@@ -1097,7 +1097,7 @@ const linkLabel=url=>/wikipedia\.org/.test(url)?'Wikipedia':/wikidata\.org/.test
 // Guess categories from Wikidata itemDescription (conservative keyword matching)
 const guessCats=desc=>{if(!desc)return[];const d=desc.toLowerCase(),a=[];
   if(/filòsof|filósofo|philosopher/.test(d))a.push('philosophy');
-  if(/compositor|composer|música|music/.test(d))a.push('music');
+  if(/compositor|composer|músic|music|cantant|cantante|singer|cantautor|songwriter|guitarr|pianist|violinist|violoncel|trompetist|trumpet|saxofon|saxophon|percussion|drummer|rapper|raper|jazz|òpera|soprano|orquestra|orchestra/.test(d))a.push('music');   // només hi havia compositor: ni músic, ni cantant, ni cap instrumentista
   if(/escriptor|escritor|writer|poeta|poet|dramaturgo|dramaturg|novel·lista|novelist/.test(d))a.push('literature');
   if(/físic|physicist|matemàtic|mathematician|astrònom|astronomer|científic|scientist|naturalista|naturalist/.test(d))a.push('science');
   if(/polític|político|politician|politique|rei|king|emperador|emperor|dictador|dictator|militar|military|president|independentista|ministre|minister/.test(d))a.push('politics');
