@@ -131,9 +131,15 @@ section{margin-bottom:26px;scroll-margin-top:66px}
 .day{aspect-ratio:1;border-radius:6px;background:var(--surface);border:1px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11.5px;color:var(--text2);cursor:pointer;position:relative;font-variant-numeric:tabular-nums}
 .day:hover{border-color:var(--border-strong)}
 .day.out{background:transparent;color:var(--text3);opacity:.4;cursor:default}
-.day.past{opacity:.5}
+.day.past{opacity:.5;cursor:default}
+.day.past:hover{border-color:transparent}
 .day.pin{background:var(--terracota);color:#fff;font-weight:600}
-.day.today{border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue)}
+/* Avui = anella neutra, no blava: el blau es el color de SELECCIO (el dia obert
+   a l'editor) i tenir-lo a l'avui feia que el calendari semblés obert de serie. */
+.day.today{border-color:var(--border-strong);box-shadow:inset 0 0 0 1px var(--border-strong);color:var(--text);font-weight:600}
+.day.pin.today{border-color:rgba(255,255,255,.75);box-shadow:inset 0 0 0 1px rgba(255,255,255,.75)}
+.day.sel{border-color:var(--blue);box-shadow:inset 0 0 0 1.5px var(--blue)}
+.day.pin.sel{border-color:var(--blue);box-shadow:inset 0 0 0 1.5px var(--blue),0 0 0 2px var(--blueSoft)}
 .day .pd{position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:#fff;opacity:.9}
 /* `hidden` ha de guanyar sempre: els blocs de sota es pinten amb display:flex,
    que per especificitat li passava per davant i deixava caixes buides a la vista. */
@@ -145,6 +151,7 @@ section{margin-bottom:26px;scroll-margin-top:66px}
 .pdres .q{font-family:var(--mono);font-size:11px;color:var(--text3);margin-left:auto;flex:0 0 auto}
 .pdres .yr{color:var(--text2);font-variant-numeric:tabular-nums}
 .pdmsg{margin-top:9px;font-size:12.5px;line-height:1.4;padding:7px 10px;border-radius:6px;background:var(--bad-bg);color:var(--bad);border-left:3px solid var(--bad)}
+.rows .row.stale{opacity:.55;cursor:default}
 .pdactions{display:flex;gap:7px;margin-top:10px}
 .pdactions .del{color:var(--bad);border-color:#EFCFC8}
 .pdactions .del:hover{background:var(--bad-bg)}
@@ -329,14 +336,14 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
           <div class="legend">
             <span><i style="background:var(--terracota)"></i>Clavat</span>
             <span><i style="background:var(--surface)"></i>Aleatori</span>
-            <span><i style="background:transparent;box-shadow:inset 0 0 0 1.5px var(--blue)"></i>Avui</span>
+            <span><i style="background:transparent;box-shadow:inset 0 0 0 1.5px var(--border-strong)"></i>Avui</span>
           </div>
         </div>
         <div>
           <div class="pdedit" id="pdedit" hidden>
             <div class="calhead"><span class="m" id="pdday">—</span>
               <span class="nav2"><button class="btn" id="pdclose" aria-label="Tanca">✕</button></span></div>
-            <div class="fields" style="grid-template-columns:1fr auto">
+            <div class="fields" id="pdsearch" style="grid-template-columns:1fr auto">
               <input type="text" id="pdq" placeholder="Enllaç, QID o nom">
               <button class="btn primary" id="pdgo">Cerca</button>
             </div>
@@ -344,6 +351,7 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
             <div class="pdmsg" id="pdmsg" hidden></div>
             <div class="pdactions">
               <button class="btn primary" id="pdsave" disabled>Clava aquest dia</button>
+              <button class="btn" id="pdchange" hidden>Canvia’l</button>
               <button class="btn del" id="pdrm" hidden>Treu l’homenatge</button>
             </div>
           </div>
@@ -584,7 +592,10 @@ function renderCal(){
     if(PINS[ds]) cls.push("pin");
     if(ds === todayIso) cls.push("today");
     else if(ds < todayIso) cls.push("past");
-    const tip = PINS[ds] ? PINS[ds].name+" ("+PINS[ds].qid+")" : "Aleatori";
+    if(ds === PD_SEL) cls.push("sel");
+    const tip = ds < todayIso
+      ? (PINS[ds] ? PINS[ds].name+" ("+PINS[ds].qid+") · ja passat" : "Ja passat")
+      : (PINS[ds] ? PINS[ds].name+" ("+PINS[ds].qid+")" : "Aleatori");
     html += '<span class="'+cls.join(" ")+'" data-d="'+ds+'" title="'+esc(ds+" · "+tip)+'">'+d
          + (PINS[ds] ? '<span class="pd"></span>' : "") + '</span>';
   }
@@ -597,11 +608,13 @@ function renderPins(){
   const todayIso = iso(new Date());
   el("pins").innerHTML = keys.map(function(k){
     const p = PINS[k], stale = k < todayIso;
-    return '<div class="row" data-d="'+k+'"'+(stale?' style="opacity:.55"':'')+'>'
+    // Els dies passats ja s'han emes: no es toquen ni es poden treure.
+    return '<div class="row'+(stale?" stale":"")+'" data-d="'+k+'"'+(stale?' title="Ja passat"':'')+'>'
       + '<span class="num">'+esc(k.slice(5))+'</span>'
       + '<span class="txt">'+esc(p.name)+'</span>'
       + '<span class="when">'+esc(p.qid)+'</span>'
-      + '<button class="btn pinrm" title="Treu l\'homenatge del '+esc(k)+'">×</button></div>';
+      + (stale ? '' : '<button class="btn pinrm" title="Treu l\'homenatge del '+esc(k)+'">×</button>')
+      + '</div>';
   }).join("");
 }
 
@@ -620,23 +633,56 @@ function pdLabel(ds){
     .toLocaleDateString("ca-ES",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 }
 
+function isPast(ds){ return ds < iso(new Date()); }
+
+/* Un dia amb homenatge s'obre amb la fitxa de qui hi ha, no amb el cercador en
+   blanc: el cas normal es venir a mirar qui hi vas posar, no a substituir-lo. */
+function pdCard(name, extra, qid){
+  el("pdres").innerHTML = '<b>'+esc(name)+'</b><span class="yr">'+esc(extra||"")+'</span>'
+    + '<span class="q">'+esc(qid)+'</span>';
+  el("pdres").hidden = false;
+}
+
 function openPd(ds){
+  if(isPast(ds)) return;              // els dies passats ja s'han emes
   PD_SEL = ds; PD_CAND = null;
   const pin = PINS[ds];
   el("pdday").textContent = pdLabel(ds);
   el("pdq").value = "";
-  el("pdres").hidden = true;
-  el("pdsave").disabled = true;
-  el("pdsave").textContent = pin ? "Reassigna aquest dia" : "Clava aquest dia";
-  el("pdrm").hidden = !pin;
-  pdMsg(pin ? "Ara hi ha " + pin.name + " (" + pin.qid + ")." : "");
-  if(pin) el("pdmsg").style.cssText = "background:var(--surface);color:var(--text2);border-left-color:var(--border-strong)";
-  else el("pdmsg").style.cssText = "";
+  pdMsg("");
+  if(pin){
+    // mode fitxa: qui hi ha, i prou. El cercador surt si prems «Canvia’l».
+    pdCard(pin.name, (pin.note || "").split("—").slice(1).join("—").trim(), pin.qid);
+    el("pdsearch").hidden = true;
+    el("pdsave").hidden = true;
+    el("pdchange").hidden = false;
+    el("pdrm").hidden = false;
+  } else {
+    el("pdres").hidden = true;
+    el("pdsearch").hidden = false;
+    el("pdsave").hidden = false;
+    el("pdsave").disabled = true;
+    el("pdsave").textContent = "Clava aquest dia";
+    el("pdchange").hidden = true;
+    el("pdrm").hidden = true;
+  }
   el("pdedit").hidden = false;
+  renderCal();
+  if(!pin) el("pdq").focus();
+}
+
+/* «Canvia’l»: treu la fitxa i obre el cercador, ja en mode reassignacio. */
+function pdChange(){
+  el("pdres").hidden = true;
+  el("pdchange").hidden = true;
+  el("pdsearch").hidden = false;
+  el("pdsave").hidden = false;
+  el("pdsave").disabled = true;
+  el("pdsave").textContent = "Reassigna aquest dia";
   el("pdq").focus();
 }
 
-function closePd(){ el("pdedit").hidden = true; PD_SEL = null; PD_CAND = null; }
+function closePd(){ el("pdedit").hidden = true; PD_SEL = null; PD_CAND = null; renderCal(); }
 
 async function pdResolve(){
   const q = el("pdq").value.trim();
@@ -650,10 +696,7 @@ async function pdResolve(){
     const d = await r.json();
     if(!d.ok){ pdMsg(d.msg); el("pdres").hidden = true; el("pdsave").disabled = true; return; }
     PD_CAND = d;
-    const anys = (d.birth==null ? "?" : d.birth) + "–" + (d.death==null ? "" : d.death);
-    el("pdres").innerHTML = '<b>'+esc(d.name)+'</b><span class="yr">'+esc(anys)+'</span>'
-      + '<span class="q">'+esc(d.qid)+'</span>';
-    el("pdres").hidden = false;
+    pdCard(d.name, (d.birth==null ? "?" : d.birth) + "–" + (d.death==null ? "" : d.death), d.qid);
     el("pdsave").disabled = false;
   } catch(e){ pdMsg("No s'ha pogut connectar al servidor."); }
   finally { btn.disabled = false; btn.textContent = "Cerca"; }
@@ -675,6 +718,7 @@ async function pdSave(){
 }
 
 async function pdRemove(ds){
+  if(isPast(ds)) return;              // un dia ja emes no es desfa
   try{
     const r = await fetch("/api/pinned/del", {method:"POST",
       headers:{"Content-Type":"application/json"}, body:JSON.stringify({date: ds})});
@@ -837,10 +881,11 @@ el("refresh").addEventListener("click", boot);
 /* calendari: clicar un dia obre l'editor d'aquell dia */
 el("cal").addEventListener("click", function(e){
   const d = e.target.closest(".day");
-  if(!d || d.classList.contains("out") || !d.dataset.d) return;
+  if(!d || d.classList.contains("out") || d.classList.contains("past") || !d.dataset.d) return;
   openPd(d.dataset.d);
 });
 el("pdclose").addEventListener("click", closePd);
+el("pdchange").addEventListener("click", pdChange);
 el("pdgo").addEventListener("click", pdResolve);
 el("pdq").addEventListener("keydown", function(e){ if(e.key==="Enter") pdResolve(); });
 el("pdsave").addEventListener("click", pdSave);
@@ -849,7 +894,7 @@ el("pdrm").addEventListener("click", function(){ if(PD_SEL) pdRemove(PD_SEL); })
 /* llista d'homenatges: clicar la fila l'obre, la × el treu */
 el("pins").addEventListener("click", function(e){
   const row = e.target.closest(".row");
-  if(!row || !row.dataset.d) return;
+  if(!row || !row.dataset.d || row.classList.contains("stale")) return;
   if(e.target.classList.contains("pinrm")){ e.stopPropagation(); pdRemove(row.dataset.d); return; }
   openPd(row.dataset.d);
 });

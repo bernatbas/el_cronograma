@@ -796,6 +796,8 @@ def pinned_set(d):
         return False, "Aquesta data no existeix"
     if not re.fullmatch(r"Q\d+", qid):
         return False, "QID invalid"
+    if ds < date.today().isoformat():
+        return False, "El %s ja ha passat: els dies emesos no es toquen" % ds
 
     note = (d.get("note") or "").strip()
     if not note:
@@ -810,6 +812,8 @@ def pinned_set(d):
 def pinned_del(d):
     """Treu un dia clavat."""
     ds = (d.get("date") or "").strip()
+    if ds < date.today().isoformat():
+        return False, "El %s ja ha passat: l'historic no es desfa" % ds
     pins = parse_pinned()
     keep = [p for p in pins if p["date"] != ds]
     if len(keep) == len(pins):
