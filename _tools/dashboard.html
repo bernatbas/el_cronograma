@@ -152,6 +152,9 @@ section{margin-bottom:26px;scroll-margin-top:66px}
 .pdres .yr{color:var(--text2);font-variant-numeric:tabular-nums}
 .pdmsg{margin-top:9px;font-size:12.5px;line-height:1.4;padding:7px 10px;border-radius:6px;background:var(--bad-bg);color:var(--bad);border-left:3px solid var(--bad)}
 .rows .row.stale{opacity:.55;cursor:default}
+#anniv .row{cursor:pointer}
+#anniv .row:hover{background:var(--soft)}
+.rodo{color:var(--terracota);font-weight:700;letter-spacing:.02em}
 .pdactions{display:flex;gap:7px;margin-top:10px}
 .pdactions .del{color:var(--bad);border-color:#EFCFC8}
 .pdactions .del:hover{background:var(--bad-bg)}
@@ -358,8 +361,9 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
           <div class="calhead"><span class="m">Homenatges clavats</span></div>
           <div class="rows" id="pins"><div class="empty">Carregant…</div></div>
           <div style="margin-top:12px">
-            <div class="calhead"><span class="m">Aniversaris rodons</span></div>
-            <div class="rows" id="anniv"><div class="empty">Cercador de Wikidata pendent</div></div>
+            <div class="calhead"><span class="m">Aniversaris propers</span>
+              <span class="hint sub" title="Qui de la teva BD fa anys —de naixement o de mort— durant els propers 30 dies. Clica'l per clavar-lo aquell dia.">30 dies</span></div>
+            <div class="rows" id="anniv"><div class="empty">Carregant…</div></div>
           </div>
         </div>
       </div>
@@ -425,6 +429,10 @@ const DEMO = {
     {title:"Opcional: encastar Oswald en base64", body:"Eliminar el FOUT del títol a la primera visita. La solució actual ja és prou bona.", closed:false},
   ],
   pins:[ {date:"2026-08-19", qid:"Q733621", name:"Juan Tamariz"} ],
+  anniv:[
+    {date:"2026-09-08", qid:"Q42305", name:"Ricard Cor de Lleó", desc:"", kind:"naixement", years:869, round:false},
+    {date:"2026-09-10", qid:"Q101638", name:"Mary Wollstonecraft", desc:"", kind:"mort", years:229, round:false}
+  ],
   lint:[
     {sev:"bad",  txt:"2 persones sense any de naixement", who:"wd_Q11637 · wd_Q42198"},
     {sev:"warn", txt:"4 events sense sitelinks ni imp", who:"invisibles per al motor de zoom"},
@@ -618,6 +626,27 @@ function renderPins(){
   }).join("");
 }
 
+/* ---------- aniversaris propers ----------
+   Nomes hi surt qui ja es a la BD. Amb 59 persones, exigir aniversaris rodons
+   deixaria la caixa buida gairebe sempre, aixi que hi son tots i els rodons
+   (multiples de 50) van marcats. Clicar-ne un l'obre ja carregat al seu dia. */
+let ANNIV = [];
+
+function renderAnniv(list){
+  ANNIV = list || [];
+  if(!ANNIV.length){
+    el("anniv").innerHTML = '<div class="empty">Cap aniversari els propers 30 dies.</div>';
+    return;
+  }
+  el("anniv").innerHTML = ANNIV.map(function(a, i){
+    return '<div class="row" data-i="'+i+'" title="'+esc(a.name+" · "+a.date)+'">'
+      + '<span class="num">'+esc(a.date.slice(5))+'</span>'
+      + '<span class="txt">'+esc(a.name)+'</span>'
+      + '<span class="when">'+a.years+' anys · '+esc(a.kind)
+      + (a.round ? ' <b class="rodo">rodó</b>' : '') + '</span></div>';
+  }).join("");
+}
+
 /* ---------- clavar un dia ----------
    El calendari nomes mostra el que tu tries. Els dies aleatoris queden buits a
    proposit: qui va sortir aquell dia el decideix la llavor a cada navegador i no
@@ -683,6 +712,16 @@ function pdChange(){
 }
 
 function closePd(){ el("pdedit").hidden = true; PD_SEL = null; PD_CAND = null; renderCal(); }
+
+/* Des d'un aniversari: obre el dia amb la persona ja carregada i a punt de clavar.
+   Si aquell dia ja te homenatge no la trepitgem: mana el que ja hi ha. */
+function pdPreload(a){
+  openPd(a.date);
+  if(PINS[a.date]) return;
+  PD_CAND = {qid:a.qid, name:a.name, desc:a.desc};
+  pdCard(a.name, a.years + " anys de " + a.kind, a.qid);
+  el("pdsave").disabled = false;
+}
 
 async function pdResolve(){
   const q = el("pdq").value.trim();
@@ -853,8 +892,9 @@ async function dbCommit(){
 
 /* ---------- boot ---------- */
 async function boot(){
-  const [st, q, pn, lt, dn] = await Promise.all([
-    api("/status"), api("/backlog"), api("/pinned"), api("/lint"), api("/density")
+  const [st, q, pn, lt, dn, an] = await Promise.all([
+    api("/status"), api("/backlog"), api("/pinned"), api("/lint"), api("/density"),
+    api("/anniversaries")
   ]);
 
   el("offline").hidden = !OFFLINE;
@@ -871,6 +911,7 @@ async function boot(){
   el("pdhint").textContent = future + (future===1 ? " dia clavat endavant" : " dies clavats endavant");
   renderCal();
   renderPins();
+  renderAnniv(an.live ? an.data : DEMO.anniv);
 
   el("stamp").textContent = new Date().toLocaleTimeString("ca-ES",{hour:"2-digit",minute:"2-digit"});
   showTab(tabFromHash());
@@ -890,6 +931,14 @@ el("pdgo").addEventListener("click", pdResolve);
 el("pdq").addEventListener("keydown", function(e){ if(e.key==="Enter") pdResolve(); });
 el("pdsave").addEventListener("click", pdSave);
 el("pdrm").addEventListener("click", function(){ if(PD_SEL) pdRemove(PD_SEL); });
+
+/* aniversaris: clicar-ne un obre el seu dia amb la persona ja carregada */
+el("anniv").addEventListener("click", function(e){
+  const row = e.target.closest(".row");
+  if(!row || row.dataset.i === undefined) return;
+  const a = ANNIV[+row.dataset.i];
+  if(a) pdPreload(a);
+});
 
 /* llista d'homenatges: clicar la fila l'obre, la × el treu */
 el("pins").addEventListener("click", function(e){

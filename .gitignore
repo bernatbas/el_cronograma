@@ -19,3 +19,6 @@ build/
 # Cache de Python (_tools)
 __pycache__/
 *.pyc
+
+# Cau de dates completes de Wikidata (es regenera sol)
+_tools/.anniv_cache.json

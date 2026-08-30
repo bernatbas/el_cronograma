@@ -19,7 +19,7 @@ import sys
 import unicodedata
 import urllib.parse
 import urllib.request
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -839,6 +839,97 @@ def pd_state():
 
 
 # --------------------------------------------------------------------------
+# Aniversaris propers (des de PEOPLE)
+# --------------------------------------------------------------------------
+
+# PEOPLE nomes guarda l'ANY: sense mes i dia no hi ha «propers 30 dies». El dia
+# el demanem a Wikidata, pero NOMES per als QIDs que ja tenim a la BD —no es cap
+# cerca oberta— i es guarda en cau: una data de naixement no canvia mai.
+ANNIV_CACHE = os.path.join(REPO, "_tools", ".anniv_cache.json")
+
+
+def _anniv_cache():
+    try:
+        with open(ANNIV_CACHE, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _fetch_daymonth(qids):
+    """{qid: {'b':'MM-DD'|None, 'd':'MM-DD'|None}} per als qids que falten al cau."""
+    out = {}
+    for i in range(0, len(qids), 50):          # l'API accepta 50 ids per crida
+        lot = qids[i:i + 50]
+        data = _wd_get(WD_API + "?action=wbgetentities&ids=%s&props=claims"
+                       "&format=json&origin=*" % "|".join(lot))
+        for qid in lot:
+            ent = ((data or {}).get("entities") or {}).get(qid) or {}
+            claims = ent.get("claims") or {}
+            rec = {"b": None, "d": None}
+            for pid, key in (("P569", "b"), ("P570", "d")):
+                for c in (claims.get(pid) or []):
+                    val = (((c.get("mainsnak") or {}).get("datavalue") or {}).get("value") or {})
+                    # precisio 11 = dia. Menys que aixo no serveix per a un aniversari.
+                    if val.get("precision", 0) < 11:
+                        continue
+                    t = val.get("time") or ""
+                    m = re.match(r"[+-]\d+-(\d{2})-(\d{2})", t)
+                    if m and m.group(1) != "00" and m.group(2) != "00":
+                        rec[key] = m.group(1) + "-" + m.group(2)
+                        break
+            out[qid] = rec
+    return out
+
+
+def anniv_state(window=30):
+    """
+    Qui de la BD fa anys (de naixement o de mort) durant els propers `window` dies.
+
+    Amb 59 persones, exigir aniversaris RODONS deixaria la llista buida gairebe
+    sempre (~0,4 encerts per finestra de 30 dies), aixi que es llisten tots i els
+    rodons —multiples de 50— van marcats.
+    """
+    people = [p for p in _extract_people_events(read("index.html"))[0] if p.get("wd")]
+    cache = _anniv_cache()
+    falten = [p["wd"] for p in people if p["wd"] not in cache]
+    if falten:
+        try:
+            cache.update(_fetch_daymonth(falten))
+            with open(ANNIV_CACHE, "w", encoding="utf-8") as f:
+                json.dump(cache, f, ensure_ascii=False, indent=1, sort_keys=True)
+        except Exception:
+            pass                                # sense xarxa: tirem del que ja hi hagi
+
+    today = date.today()
+    out = []
+    for p in people:
+        rec = cache.get(p["wd"]) or {}
+        for key, camp, mena in (("b", "birth", "naixement"), ("d", "death", "mort")):
+            md, orig = rec.get(key), p.get(camp)
+            if not md or orig is None:
+                continue
+            mm, dd = int(md[:2]), int(md[3:])
+            for any_ in (today.year, today.year + 1):   # la finestra pot creuar l'any
+                try:
+                    quan = date(any_, mm, dd)
+                except ValueError:                       # 29 de febrer en any no de traspas
+                    continue
+                if not (today <= quan <= today + timedelta(days=window)):
+                    continue
+                anys = any_ - orig
+                if anys <= 0:
+                    continue
+                out.append({
+                    "date": quan.isoformat(), "qid": p["wd"], "name": p["name"],
+                    "desc": p.get("desc", ""), "kind": mena, "years": anys,
+                    "round": anys % 50 == 0,
+                })
+    out.sort(key=lambda a: (a["date"], not a["round"]))
+    return out
+
+
+# --------------------------------------------------------------------------
 # densitat de contingut per segle
 # --------------------------------------------------------------------------
 
@@ -1434,6 +1525,13 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/pinned":
             try:
                 self._json(200, parse_pinned())
+            except Exception as e:
+                self._json(500, {"error": str(e)})
+            return
+
+        if path == "/api/anniversaries":
+            try:
+                self._json(200, anniv_state())
             except Exception as e:
                 self._json(500, {"error": str(e)})
             return
