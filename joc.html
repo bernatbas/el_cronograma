@@ -2211,7 +2211,10 @@
   function aliveDays(key){ const s=readLS(key); if(!s||!s.days) return 0; return (s.last===todayStr()||s.last===yesterdayStr())?s.days:0; }
   function doneToday(id){
     const T=todayStr();
-    if(id==='personatgedia'){ const c=readLS('hb_personatge_cache'); return !!(c&&c.date===T); }
+    // ⚠️ NO pot mirar 'hb_personatge_cache': aquell cau l'omple el precompute() en carregar
+    // la pagina, aixi que la targeta sortia amb el ✓ sense haver-hi entrat. La ratxa, en
+    // canvi, nomes s'escriu quan el personatge es pinta de veritat (bumpStreak dins start).
+    if(id==='personatgedia'){ const s=readLS('hb_personatge_streak'); return !!(s&&s.last===T); }
     if(id==='abansdespres'){ const d=readLS('hb_ad_daily'); return !!(d&&d.date===T); }
     if(id==='ordena'){ const d=readLS('hb_ord_daily'); return !!(d&&d.date===T); }
     if(id==='memory'){ const ms=readLS('hb_memory_state'); return !!(ms&&ms.date===T&&((ms.easy&&ms.easy.done)||(ms.hard&&ms.hard.done))); }
