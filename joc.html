@@ -1250,11 +1250,16 @@
       '2026-08-31':'Q740256'    // Josep Pla i Casadevall — Escriptor i periodista català
     };
     async function pickDaily(ds){
-      const cache=readLS(CACHE_KEY);
-      if(cache && cache.date===ds && cache.person) return cache.person;
       // L'homenatge va ABANS de la llavor i de la comprovació de la llista: no depèn del pool
       // offline, i si Wikidata no respon es cau a la tria aleatòria en lloc de deixar el dia buit.
       const forced=PD_PINNED[ds];
+      // ⚠️ I va abans del CAU. Mirar el cau primer era un bug: si algú havia obert el joc
+      // aquell dia abans que el pin fos viu, es quedava l'aleatori 24 h i clavar un dia no
+      // servia de res (va passar amb en Josep Pla el 31/08/2026). Si el dia està clavat i el
+      // que hi ha desat no és qui toca, el cau es descarta.
+      const cache=readLS(CACHE_KEY);
+      if(cache && cache.date===ds && cache.person && (!forced || cache.person.qid===forced))
+        return cache.person;
       if(forced){
         try{
           const fp=await fetchPerson(forced,true);
