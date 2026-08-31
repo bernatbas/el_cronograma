@@ -1,6 +1,6 @@
 /* =============================================================================
  * data.js — SNAPSHOT PROVISIONAL de la base de dades del cronograma.
- * Generat automàticament des d'index.html el 2026-08-30.
+ * Generat automàticament des d'index.html el 2026-08-31.
  *
  * ⚠️  PROVISIONAL: això és una CÒPIA de les dades que ara viuen a index.html,
  *     feta per facilitar el testeig local (file://). Quan existeixi la DB externa,
@@ -833,6 +833,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Carlemany",
       "desc": "Emperador carolingi del 800 al 814"
+    },
+    {
+      "id": "ramsesii",
+      "wd": "Q1523",
+      "name": "Ramsès II",
+      "birth": -1303,
+      "death": -1213,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Rams%C3%A8s_II",
+      "desc": "Tercer faraó de la dinastia XIX d’Egipte"
     }
   ],
   "EVENTS": [
