@@ -586,7 +586,11 @@ async function annotateItem(title, note){
 }
 
 /* ---------- calendari ---------- */
+// ⚠️ Sempre el dia 1. Amb el dia real, setMonth() desborda als mesos curts: des del
+// 31 d'agost, «mes següent» intenta el 31 de setembre i JS ho tira a l'1 d'octubre,
+// saltant-se el setembre. Va passar de veritat: un homenatge clavat un mes mes tard.
 let calCursor = new Date();
+calCursor.setDate(1);
 let PINS = {};
 
 function renderCal(){
@@ -1035,8 +1039,14 @@ el("stopServer").addEventListener("click", async function(){
   }catch(e){}
   document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-size:18px;color:#7D7A75;font-family:system-ui">Servidor aturat. Tanca aquesta pestanya.</div>';
 });
-el("prevm").addEventListener("click", function(){ calCursor.setMonth(calCursor.getMonth()-1); renderCal(); });
-el("nextm").addEventListener("click", function(){ calCursor.setMonth(calCursor.getMonth()+1); renderCal(); });
+// Es reconstrueix la data en lloc de fer setMonth(): el constructor normalitza els
+// canvis d'any i, amb el dia fixat a 1, no hi ha desbordament de mesos curts.
+function mouMes(n){
+  calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() + n, 1);
+  renderCal();
+}
+el("prevm").addEventListener("click", function(){ mouMes(-1); });
+el("nextm").addEventListener("click", function(){ mouMes(1); });
 el("dgo").addEventListener("click", resolveQ);
 el("dq").addEventListener("keydown", function(e){ if(e.key==="Enter") resolveQ(); });
 el("dq").addEventListener("input", function(){ if(!el("dq").value.trim()) clearFields(); });
