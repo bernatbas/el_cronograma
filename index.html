@@ -265,7 +265,6 @@
            padding:5px;border-radius:6px;display:inline-flex;align-items:center;}
   .collpen svg{width:15px;height:15px;}
   .collpen:hover{background:var(--surface);color:var(--text);}
-  .dbtn.primary{background:var(--topbar-bg);border-color:var(--topbar-bg);color:#fff;font-weight:600;}
   .collname:hover{border-color:var(--border);}
   .collname:focus{outline:none;border-color:var(--blue);background:var(--canvas);box-shadow:0 0 0 3px var(--blueSoft);}
   .collmembers{margin:12px 0 4px;border-top:1px solid var(--border);}
@@ -385,7 +384,9 @@
   /* Hover tooltip on a person bar. Not a native `title`: that waits ~1s and, zoomed out, the pill is
      too small to hold a readable label — the name and dates have to be reachable without clicking. */
   /* ===== Toast (feedback curt per accions encara no implementades) ===== */
-  .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,12px);background:var(--text);color:#fff;font-size:13px;padding:10px 18px;border-radius:var(--r-card);z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.26);opacity:0;visibility:hidden;transition:opacity .18s,transform .18s,visibility 0s .18s;pointer-events:none;}
+  /* bottom 28 el deixava DINS del footer (30px) i gairebe no es llegia. Ara el sobrepassa,
+     amb el safe-area del mobil comptat. */
+  .toast{position:fixed;left:50%;bottom:calc(46px + env(safe-area-inset-bottom));transform:translate(-50%,12px);background:var(--text);color:#fff;font-size:13px;padding:10px 18px;border-radius:var(--r-card);z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.26);opacity:0;visibility:hidden;transition:opacity .18s,transform .18s,visibility 0s .18s;pointer-events:none;}
   .toast.on{opacity:1;visibility:visible;transform:translate(-50%,0);transition:opacity .18s,transform .18s,visibility 0s;}
   .bartip{position:fixed;display:none;background:var(--text);color:#fff;font-size:12px;font-weight:500;padding:5px 10px;border-radius:var(--r-card);white-space:nowrap;z-index:40;pointer-events:none;box-shadow:0 3px 10px rgba(0,0,0,.24);}
   .bartip.on{display:block;}
@@ -426,6 +427,17 @@
   .detail .actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
   .detail .dbtn{border:1px solid var(--border);background:#fff;border-radius:var(--r-card);padding:7px 9px;font-size:12.5px;cursor:pointer;color:var(--text);white-space:nowrap;}
   .detail .dbtn:hover{background:var(--soft);}
+  /* Un esborrany no es una fitxa amb eines, es una decisio per confirmar: per aixo el parell
+     va a la DRETA i amb el primari l'ultim, que es la convencio de dialeg (macOS, Material,
+     la majoria del web). La resta de fitxes mantenen la seva fila alineada a l'esquerra.
+     `.detail .dbtn.primary` i no `.dbtn.primary`: la genèrica perdia contra `.detail .dbtn`
+     per ordre al fitxer, i el «Desa» sortia blanc. */
+  .detail .actions.confirm{justify-content:flex-end;}
+  .detail .dbtn.primary{background:var(--topbar-bg);border-color:var(--topbar-bg);color:#fff;font-weight:600;}
+  .detail .dbtn.primary:hover{filter:brightness(1.07);background:var(--topbar-bg);}
+  .detail .dbtn.primary:disabled{opacity:.45;cursor:default;filter:none;}
+  .detail .dbtn.quiet{border-color:transparent;color:var(--text2);}
+  .detail .dbtn.quiet:hover{background:var(--surface);color:var(--text);}
   .detail .dbtn.danger{color:#C0392B;border-color:#E7B7B0;}
   .detail .dbtn.danger:hover{background:#FBEDEB;}
 
@@ -1651,9 +1663,9 @@ function drawCollCard(nom,wds,cid,url){
     </div>
     <div class="dhead"><span class="life">${t('cro_coll_n',{n:wds.length})}</span></div>
     <div class="collmembers">${files||`<div class="empty">${t('cro_coll_empty_members')}</div>`}</div>
-    <div class="actions">${draft
-      ? `<button class="dbtn primary" data-act="save" ${nom.trim()?'':'disabled'}>${t('cro_coll_savebtn')}</button>`
-        +`<button class="dbtn" data-act="cancel">${t('cro_coll_cancel')}</button>`
+    <div class="actions${draft?' confirm':''}">${draft
+      ? `<button class="dbtn quiet" data-act="cancel">${t('cro_coll_cancel')}</button>`
+        +`<button class="dbtn primary" data-act="save" ${nom.trim()?'':'disabled'}>${t('cro_coll_savebtn')}</button>`
       : (url?`<button class="dbtn" data-act="link">${linkLabel(url)} ↗</button>`:'')
         +`<button class="dbtn danger" data-act="del">${t('cro_coll_del_btn')}</button>`}
     </div>`;
@@ -1749,11 +1761,14 @@ function openAddToColl(pid,anchorEl){
   const q=personQid(pid);
   if(!q){showToast(t('cro_coll_noqid'));closeBarMenu();return;}   // sense QID no es pot tornar a resoldre
   const mine=myColls();
+  // ⚠️ El rectangle es llegeix ABANS de reescriure l'innerHTML: quan l'ancoratge es un boto de
+  // dins d'aquest mateix menu (el cas del ⋮), reescriure'l el desconnecta i el seu rect passa a
+  // ser tot zeros —el menu sortia a dalt a l'esquerra de la pantalla.
+  const r=anchorEl.getBoundingClientRect();
   barmenu.innerHTML=`<div class="bmhead">${t('cro_coll_addto')}</div>`
     +mine.map(c=>`<button data-act="addto" data-cid="${c.id}" data-q="${q}">`
       +`<span class="bmtick">${c.wds.includes(q)?'✓':''}</span>${esc(c.name)}</button>`).join('')
     +`<button class="bmnew" data-act="addnew" data-q="${q}">${t('cro_coll_addnew')}</button>`;
-  const r=anchorEl.getBoundingClientRect();
   barmenu.style.left=Math.min(r.left,window.innerWidth-190)+'px';
   barmenu.style.top=Math.min(r.bottom+4,window.innerHeight-40)+'px';
   barmenu.classList.add('open');
@@ -2024,8 +2039,13 @@ let _stickRAF=0;
 scroll.addEventListener('scroll',()=>{if(_stickRAF)return;_stickRAF=requestAnimationFrame(()=>{_stickRAF=0;stickLabels();});});
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
+  // El menu flotant tambe: sense aixo, sortir de la fitxa amb Esc deixava el «Col·lecciona»
+  // penjat enmig de la pantalla, sense res a sota.
+  closeBarMenu();
   const d=$('#detail');
-  if(d.classList.contains('open')){hideDetail();state.selected=null;render();}
+  if(d.classList.contains('open')){
+    hideDetail();state.selected=null;state.selectedColl=null;collDraft=null;render();
+  }
 });
 eventsRail.addEventListener('click',e=>{
   const el=e.target.closest('[data-ev]');if(!el)return;   // only the name is clickable (not the year)
@@ -2265,16 +2285,10 @@ function deleteColl(cid){
   if(i<0)return;                        // les de serie no s'esborren
   const c=COLLECTIONS[i];
   pushUndo('undo_coll_del',{name:c.name});
-  // si estava activa, la seva gent ha de marxar de la vista, igual que en desactivar-la
-  if(state.collections.has(cid)){
-    state.collections.delete(cid);
-    const stillWanted=new Set([...state.collections].flatMap(id=>(COLLECTIONS.find(x=>x.id===id)||{wds:[]}).wds));
-    c.wds.forEach(q=>{
-      if(stillWanted.has(q))return;
-      const p=PEOPLE.find(x=>x.wd===q);
-      if(p&&!SEED_PINNED.includes(p.id))state.pinned.delete(p.id);
-    });
-  }
+  // ⚠️ La gent es queda a la vista. Esborrar una llista es una operacio sobre la LLISTA, no
+  // sobre el cronograma: igual que treure'n un membre (#151). Nomes l'interruptor d'engegar i
+  // apagar la colleccio mou gent de la vista.
+  state.collections.delete(cid);
   COLLECTIONS.splice(i,1);
   saveMyColls();recomputePresent();closeDetailIfGone();clearFitLatch();scheduleSave();render();
 }
