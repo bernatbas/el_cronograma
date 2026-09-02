@@ -1179,7 +1179,12 @@ const guessCats=desc=>{if(!desc)return[];const d=desc.toLowerCase(),a=[];
   if(/físic|physicist|matemàtic|mathematician|astrònom|astronomer|científic|scientist|naturalista|naturalist/.test(d))a.push('science');
   if(/polític|político|politician|politique|rei|king|emperador|emperor|dictador|dictator|militar|military|president|independentista|ministre|minister/.test(d))a.push('politics');
   if(/pintor|painter|escultor|sculptor/.test(d))a.push('painting');
-  if(/cineasta|director[a]? de cinema|film director|filmmaker|guionista|screenwriter|actor de cinema|actriu de cinema|film actor|productor[a]? de cinema|film producer|director[a]? de fotografia|cinematographer|cinema/.test(d))a.push('cinema');   // «director» i «actor» sols no: cauen sobre directors d’orquestra i actors de teatre
+  // ⚠️ Aqui «actor» SOL sí que val, i al mapa de P106 (dash.py) NO: son dos senyals diferents.
+  // A P106 en Shakespeare porta l’ocupacio «actor» (Q33999) i li encolomaria cinema; la seva
+  // DESCRIPCIO, en canvi, diu «dramaturg i poeta angles» i no hi surt la paraula. Excloure-la
+  // tambe aqui deixava fora tothom descrit nomes com a «actor»: en Tom Cruise sortia sense
+  // categoria. El teatre s’aparta amb el guard de sota, no amagant la paraula.
+  if(/cineasta|director[a]? de cinema|film director|filmmaker|guionista|screenwriter|actor|actriu|film producer|productor[a]? de cinema|director[a]? de fotografia|cinematographer|cinema/.test(d) && !/teatre|teatral/.test(d))a.push('cinema');
   if(/profeta|prophet|religiós|religious|sant|saint/.test(d))a.push('religion');
   if(/futbolista|jugador de futbol|footballer|football player|tennista|tenista|tennis player|jugador de tennis|basquetbol|bàsquet|baloncestista|basketball|boxejador|boxeador|boxer|atleta|athlete|track and field|velocista|sprinter|gimnasta|gymnast|nedador|nadador|swimmer|ciclista|cyclist|golfista|golfer|automobilista|racing driver|motorcycle racer/.test(d)
      ||/(pilot|piloto)[^,;.]{0,18}(autom|motocicl)/.test(d))a.push('sport');   // "pilot" sol cauria sobre aviadors, així que exigim context de motor
