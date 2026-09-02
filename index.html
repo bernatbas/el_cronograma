@@ -256,8 +256,16 @@
   .colx svg{width:11px;height:11px;}
   /* Fitxa de la colleccio: el nom es un camp, no un titol, perque es pot editar allà mateix.
      Manté la mida del <h2> de les altres fitxes perquè no salti en canviar de tipus de fitxa. */
-  .collname{width:100%;font:600 20px/1.25 inherit;color:var(--text);border:1px solid transparent;
-            background:none;border-radius:var(--r-card);padding:3px 6px;margin:0 0 2px -6px;font-family:inherit;}
+  /* El nom i el llapis van en fila, amb aire a la dreta per a la ✕ del panell (absoluta a
+     16px): sense aquest padding, el camp li passava per sota i se solapaven. */
+  .collhead{display:flex;align-items:center;gap:4px;padding-right:34px;margin:0 0 2px -6px;}
+  .collname{flex:1 1 auto;min-width:0;font:600 20px/1.25 inherit;color:var(--text);border:1px solid transparent;
+            background:none;border-radius:var(--r-card);padding:3px 6px;font-family:inherit;}
+  .collpen{flex:0 0 auto;border:none;background:none;cursor:pointer;color:var(--text2);
+           padding:5px;border-radius:6px;display:inline-flex;align-items:center;}
+  .collpen svg{width:15px;height:15px;}
+  .collpen:hover{background:var(--surface);color:var(--text);}
+  .dbtn.primary{background:var(--topbar-bg);border-color:var(--topbar-bg);color:#fff;font-weight:600;}
   .collname:hover{border-color:var(--border);}
   .collname:focus{outline:none;border-color:var(--blue);background:var(--canvas);box-shadow:0 0 0 3px var(--blueSoft);}
   .collmembers{margin:12px 0 4px;border-top:1px solid var(--border);}
@@ -357,7 +365,9 @@
   .bar .fade{position:absolute;top:0;bottom:0;pointer-events:none;-webkit-mask-image:linear-gradient(to right,#000,transparent);mask-image:linear-gradient(to right,#000,transparent);}
   .emptyState{position:absolute;left:24px;font-size:14px;color:var(--text2);font-style:italic;pointer-events:none;}
   /* Floating context menu (bar ⋮ button) */
-  .barmenu{position:fixed;display:none;background:#fff;border:1px solid var(--border);border-radius:var(--r-card);box-shadow:0 6px 18px rgba(0,0,0,.14);z-index:30;overflow:hidden;min-width:150px;}
+  /* z-index 80: ha de sortir per sobre de la fitxa (50) i del popup de configuracio (70),
+     perque s'obre des de tots dos llocs. Amb 30 quedava a sota i no es veia. */
+  .barmenu{position:fixed;display:none;background:#fff;border:1px solid var(--border);border-radius:var(--r-card);box-shadow:0 6px 18px rgba(0,0,0,.14);z-index:80;overflow:hidden;min-width:150px;}
   .barmenu.open{display:block;}
   .barmenu button{display:block;width:100%;text-align:left;border:none;background:none;padding:9px 14px;font-size:13px;cursor:pointer;color:var(--text);white-space:nowrap;}
   .barmenu button:hover{background:var(--soft);}
@@ -411,8 +421,10 @@
   .detail .desc{font-size:14px;margin:14px 0;}
   .detail a.wiki{display:inline-block;margin-top:8px;color:var(--blue);text-decoration:none;font-size:14px;}
   .detail a.wiki:hover{text-decoration:underline;}
-  .detail .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
-  .detail .dbtn{border:1px solid var(--border);background:#fff;border-radius:var(--r-card);padding:7px 12px;font-size:13px;cursor:pointer;color:var(--text);}
+  /* Amb quatre botons feien 403px en 372 de panell i el darrer saltava de fila. Amb gap 6 i
+     padding 9 hi caben; al mobil el bloc de (pointer:coarse) els torna a fer grossos. */
+  .detail .actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+  .detail .dbtn{border:1px solid var(--border);background:#fff;border-radius:var(--r-card);padding:7px 9px;font-size:12.5px;cursor:pointer;color:var(--text);white-space:nowrap;}
   .detail .dbtn:hover{background:var(--soft);}
   .detail .dbtn.danger{color:#C0392B;border-color:#E7B7B0;}
   .detail .dbtn.danger:hover{background:#FBEDEB;}
@@ -537,7 +549,8 @@
     .detail::before{content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);width:42px;height:4px;border-radius:2px;background:var(--border-strong);}
     .detail h2{margin-top:6px;}
     .detail .close{top:12px;right:12px;min-width:40px;min-height:40px;display:flex;align-items:center;justify-content:center;font-size:26px;}
-    .detail .dbtn{min-height:44px;padding:11px 14px;}
+    .detail .dbtn{min-height:44px;padding:11px 14px;font-size:13px;}
+    .detail .actions{gap:8px;}
     /* Fitxa compacta i horitzontal al mòbil: menys aire, capçalera a tota amplada, menys scroll. */
     .detail{max-height:72dvh;padding:16px 16px calc(14px + env(safe-area-inset-bottom));}
     .detail h2{font-size:18px;margin:6px 0 2px;}
@@ -790,14 +803,17 @@ const I18N={
     cro_coll_include: v => 'Inclou ' + (v.n===1 ? 'el de la vista' : 'els '+v.n+' de la vista'),
     cro_coll_name_ph:'Nom de la col·lecció',
     cro_coll_del:'Esborra aquesta col·lecció',
-    cro_coll_untitled:'Sense nom',
+    cro_coll_rename:'Canvia-li el nom',
+    cro_coll_savebtn:'Desa',
+    cro_coll_cancel:'Cancel·la',
+    cro_coll_needname:'Posa-li un nom abans de desar-la',
     cro_coll_opts:'Opcions de la col·lecció',
     cro_coll_n: v => v.n===1 ? 'Col·lecció · 1 personatge' : 'Col·lecció · '+v.n+' personatges',
     cro_coll_empty_members:'Encara no hi ha ningú. Afegeix-hi gent des de la seva fitxa o des de «A la vista».',
     cro_coll_rm_member:'Treu-lo de la col·lecció',
     cro_coll_del_btn:'Esborra la col·lecció',
     cro_coll_renamed: v => 'ara es diu «'+v.name+'»',
-    cro_coll_addto:'Afegeix a…',
+    cro_coll_addto:'Col·lecciona',
     cro_coll_addnew:'+ Col·lecció nova',
     cro_coll_noqid:'Aquest personatge no té Q-id de Wikidata: no es pot desar en una col·lecció.',
     cro_coll_added: v => 'afegit a «'+v.name+'»',
@@ -1580,9 +1596,12 @@ function openDetail(p){
       ${SEED_PINNED.includes(p.id)?'':`<button class="dbtn danger" data-act="remove">${t('cro_delete')}</button>`}
     </div>`;
   $('#closeDetail').onclick=()=>{hideDetail();state.selected=null;render();};
-  d.querySelectorAll('.dbtn').forEach(btn=>btn.onclick=()=>{
+  d.querySelectorAll('.dbtn').forEach(btn=>btn.onclick=(ev)=>{
     const act=btn.getAttribute('data-act');
-    if(act==='addto'){openAddToColl(p.id,btn);return;}
+    // ⚠️ stopPropagation obligatori: el handler de «clic fora» viu al document i, sense aixo,
+    // tancava el menu just despres d'obrir-lo. El + d'«A la vista» ja el portava, i per aixo
+    // aquell funcionava i aquests dos no.
+    if(act==='addto'){ev.stopPropagation();openAddToColl(p.id,btn);return;}
     if(act==='remove')removePerson(p.id);
     else if(act==='wiki')window.open(p.wiki,'_blank','noopener,noreferrer');
     else{if(typeof gtag!=='undefined')gtag('event','mostra_context',{personatge:L(p.name)});showContext(p.id);}
@@ -1595,42 +1614,96 @@ function openDetail(p){
 // panell lateral, al mobil puja des de baix. Es la «pagina de la playlist»: nom editable, qui
 // hi ha (amb ✕ a cada un), l'enllac i esborrar. Nomes per a les propies —les de serie
 // s'editen al dashboard.
+let collDraft=null;   // colleccio que s'esta creant i encara NO existeix: {name, wds}
+const penIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11.2 2.6l2.2 2.2L5.6 12.6 2.8 13.2l.6-2.8z"/></svg>';
+
 function openCollDetail(cid){
   const c=COLLECTIONS.find(x=>x.id===cid&&x._mine);
   if(!c){hideDetail();state.selectedColl=null;return;}
+  collDraft=null;
+  drawCollCard(c.name,c.wds,cid,c.url);
+}
+// Una colleccio nova NO es crea en obrir la fitxa: es queda en esborrany fins que prems Desa.
+// Aixi pots posar-li nom, treure'n algu o cancelar sense deixar restes a la llista.
+function openNewCollCard(qid){
+  collDraft={name:'',wds:qid?[qid]:[]};
+  drawCollCard('',collDraft.wds,null,null);
+}
+
+function drawCollCard(nom,wds,cid,url){
+  const draft=!cid;
   state.selected=null;state.selectedEvent=null;state.selectedColl=cid;
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
-  const files=c.wds.map(q=>{
+  const files=wds.map(q=>{
     const p=PEOPLE.find(x=>x.wd===q);
     // Si la colleccio no s'ha activat mai, el personatge encara no es a PEOPLE: es mostra el
     // QID en lloc d'inventar-se un nom.
-    const nom=p?esc(L(p.name)):q;
+    const t1=p?esc(L(p.name)):q;
     const color=p?swatchBg(p):'var(--border-strong)';
     return `<div class="collrow"><span class="swatch" style="background:${color}"></span>`
-      + `<span class="collnm${p?'':' unknown'}">${nom}</span>`
+      + `<span class="collnm${p?'':' unknown'}">${t1}</span>`
       + `<button class="collrm" data-q="${q}" title="${t('cro_coll_rm_member')}">×</button></div>`;
   }).join('');
   d.innerHTML=`<button class="close" id="closeDetail" aria-label="${t('close')}">×</button>
-    <input class="collname" id="collname" type="text" maxlength="60" value="${esc(c.name)}" aria-label="${t('cro_coll_name_ph')}">
-    <div class="dhead"><span class="life">${t('cro_coll_n',{n:c.wds.length})}</span></div>
+    <div class="collhead">
+      <input class="collname" id="collname" type="text" maxlength="60" value="${esc(nom)}" placeholder="${t('cro_coll_name_ph')}" aria-label="${t('cro_coll_name_ph')}">
+      <button class="collpen" id="collpen" type="button" title="${t('cro_coll_rename')}" aria-label="${t('cro_coll_rename')}">${penIco}</button>
+    </div>
+    <div class="dhead"><span class="life">${t('cro_coll_n',{n:wds.length})}</span></div>
     <div class="collmembers">${files||`<div class="empty">${t('cro_coll_empty_members')}</div>`}</div>
-    <div class="actions">
-      ${c.url?`<button class="dbtn" data-act="link">${linkLabel(c.url)} ↗</button>`:''}
-      <button class="dbtn danger" data-act="del">${t('cro_coll_del_btn')}</button>
+    <div class="actions">${draft
+      ? `<button class="dbtn primary" data-act="save" ${nom.trim()?'':'disabled'}>${t('cro_coll_savebtn')}</button>`
+        +`<button class="dbtn" data-act="cancel">${t('cro_coll_cancel')}</button>`
+      : (url?`<button class="dbtn" data-act="link">${linkLabel(url)} ↗</button>`:'')
+        +`<button class="dbtn danger" data-act="del">${t('cro_coll_del_btn')}</button>`}
     </div>`;
-  $('#closeDetail').onclick=()=>{hideDetail();state.selectedColl=null;render();};
-  // El nom es confirma al sortir del camp o amb Enter, no a cada lletra: si no, el desfes
-  // s'ompliria d'un pas per pulsacio.
+  const tanca=()=>{hideDetail();state.selectedColl=null;collDraft=null;render();};
+  $('#closeDetail').onclick=tanca;
   const inp=$('#collname');
-  inp.onchange=()=>renameColl(cid,inp.value);
-  inp.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();inp.blur();}
-                     else if(ev.key==='Escape'){inp.value=c.name;inp.blur();}};
-  d.querySelectorAll('.collrm').forEach(b=>b.onclick=()=>removeFromColl(cid,b.getAttribute('data-q')));
-  d.querySelectorAll('.dbtn').forEach(b=>b.onclick=()=>{
-    if(b.getAttribute('data-act')==='del'){hideDetail();state.selectedColl=null;deleteColl(cid);}
-    else if(c.url)window.open(c.url,'_blank','noopener,noreferrer');
+  $('#collpen').onclick=()=>{inp.focus();inp.select();};
+  if(draft){
+    // En esborrany el nom es va guardant a cada lletra —no crea res— i el Desa s'activa
+    // nomes quan hi ha nom: una colleccio sense nom no es desa.
+    inp.oninput=()=>{collDraft.name=inp.value;
+      const b=d.querySelector('[data-act="save"]');if(b)b.disabled=!inp.value.trim();};
+    inp.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();saveCollDraft();}
+                       else if(ev.key==='Escape'){ev.preventDefault();tanca();}};
+    inp.focus();inp.select();
+  }else{
+    // Ja existeix: el nom es confirma al sortir del camp o amb Enter, no a cada lletra, que si
+    // no el desfes s'ompliria d'un pas per pulsacio.
+    inp.onchange=()=>renameColl(cid,inp.value);
+    inp.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();inp.blur();}
+                       else if(ev.key==='Escape'){inp.value=nom;inp.blur();}};
+  }
+  d.querySelectorAll('.collrm').forEach(b=>b.onclick=()=>{
+    const q=b.getAttribute('data-q');
+    if(draft){ collDraft.wds=collDraft.wds.filter(x=>x!==q);
+               drawCollCard(collDraft.name,collDraft.wds,null,null); }
+    else removeFromColl(cid,q);
+  });
+  d.querySelectorAll('.dbtn').forEach(b=>b.onclick=ev=>{
+    ev.stopPropagation();
+    const act=b.getAttribute('data-act');
+    if(act==='save')saveCollDraft();
+    else if(act==='cancel')tanca();
+    else if(act==='del'){hideDetail();state.selectedColl=null;deleteColl(cid);}
+    else if(url)window.open(url,'_blank','noopener,noreferrer');
   });
   render();
+}
+
+function saveCollDraft(){
+  if(!collDraft)return;
+  const name=(collDraft.name||'').trim().slice(0,60);
+  if(!name){showToast(t('cro_coll_needname'));const i=$('#collname');if(i)i.focus();return;}
+  const wds=[...collDraft.wds];
+  let i=1,id;do{id='my'+(i++);}while(COLLECTIONS.some(c=>c.id===id));
+  pushUndo('undo_coll_new',{name});
+  COLLECTIONS.push({id,name,wds,vis:'private',_mine:true});
+  collDraft=null;
+  saveMyColls();scheduleSave();hideDetail();state.selectedColl=null;render();
+  showToast(wds.length?t('cro_coll_saved',{name,n:wds.length}):t('cro_coll_saved_empty',{name}));
 }
 
 function renameColl(cid,nom){
@@ -1655,15 +1728,9 @@ function setMember(cid,qid,on){
     if(i<0)return false;
     pushUndo('undo_coll_rm',{name:c.name});
     c.wds.splice(i,1);
-    // Si la colleccio esta activa i ninguna altra el vol, el personatge marxa de la vista:
-    // mateixa regla que en desactivar una colleccio.
-    if(state.collections.has(cid)){
-      const stillWanted=new Set([...state.collections].flatMap(id=>(COLLECTIONS.find(x=>x.id===id)||{wds:[]}).wds));
-      if(!stillWanted.has(qid)){
-        const p=PEOPLE.find(x=>x.wd===qid);
-        if(p&&!SEED_PINNED.includes(p.id))state.pinned.delete(p.id);
-      }
-    }
+    // ⚠️ NO es treu de la vista. Editar una llista i mirar el cronograma son dues coses: treure
+    // algu d'una colleccio no ha de fer-lo desapareixer de sota els peus. Qui el vulgui fora de
+    // la vista te la ✕ d'«A la vista». (Desactivar la colleccio SENCERA si que se l'emporta.)
   }
   saveMyColls();recomputePresent();clearFitLatch();scheduleSave();
   return true;
@@ -1691,15 +1758,8 @@ function openAddToColl(pid,anchorEl){
   barmenu.style.top=Math.min(r.bottom+4,window.innerHeight-40)+'px';
   barmenu.classList.add('open');
 }
-// Una colleccio nova des d'aqui neix amb aquest personatge i obre la seva fitxa, que ja es
-// on es posa el nom: aixi no cal un segon camp de text enmig d'un menu.
-function newCollWith(q){
-  let i=1,id;do{id='my'+(i++);}while(COLLECTIONS.some(c=>c.id===id));
-  pushUndo('undo_coll_new',{name:t('cro_coll_untitled')});
-  COLLECTIONS.push({id,name:t('cro_coll_untitled'),wds:[q],vis:'private',_mine:true});
-  saveMyColls();scheduleSave();closeBarMenu();openCollDetail(id);
-  const el=$('#collname');if(el){el.focus();el.select();}
-}
+// Des dels menus, una colleccio nova s'obre en ESBORRANY (no es crea fins que prems Desa).
+function newCollWith(q){ closeBarMenu();openNewCollCard(q); }
 
 function openEvent(ev){
   state.selected=null;state.selectedEvent=ev.id;
@@ -2079,7 +2139,7 @@ function closeBarMenu(){barmenu.classList.remove('open');}
 barmenu.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
   const id=b.getAttribute('data-id'),act=b.getAttribute('data-act');
-  if(act==='addmenu'){openAddToColl(id,b);return;}            // reobre el menu amb les colleccions
+  if(act==='addmenu'){e.stopPropagation();openAddToColl(id,b);return;}   // reobre el menu; sense stopPropagation es tancaria de seguida
   if(act==='addto'){
     const cid=b.getAttribute('data-cid'),q=b.getAttribute('data-q');
     const c=COLLECTIONS.find(x=>x.id===cid);
@@ -2110,7 +2170,11 @@ $('#collections').addEventListener('change',e=>{
 });
 $('#collections').addEventListener('keydown',e=>{
   if(e.target.id!=='newcolin')return;
-  if(e.key==='Enter'){const v=e.target.value,inc=newCollInc;newCollOpen=false;newCollDraft='';newCollInc=false;createColl(v,inc);}
+  if(e.key==='Enter'){
+    const v=e.target.value,inc=newCollInc;
+    if(!v.trim()){showToast(t('cro_coll_needname'));return;}   // el camp es queda obert
+    newCollOpen=false;newCollDraft='';newCollInc=false;createColl(v,inc);
+  }
   else if(e.key==='Escape'){closeNewColl();}
 });
 // A collection is a list of Q-ids: resolve each against the local DB first, fetch the rest from
@@ -2181,9 +2245,10 @@ function viewQids(){
 }
 
 function createColl(nom,incloure){
+  const name=(nom||'').trim().slice(0,60);
+  if(!name){showToast(t('cro_coll_needname'));return false;}   // sense nom no es desa
   const wds=incloure?viewQids():[];
   let i=1,id;do{id='my'+(i++);}while(COLLECTIONS.some(c=>c.id===id));
-  const name=(nom||'').trim().slice(0,60)||t('cro_coll_untitled');
   pushUndo('undo_coll_new',{name});
   // `vis` es guarda des d'ara encara que no hi hagi cap interruptor: el dia que hi hagi
   // servidor, les colleccions ja desades no necessitaran migracio.
@@ -2192,6 +2257,7 @@ function createColl(nom,incloure){
   if(wds.length)state.collections.add(id);
   saveMyColls();scheduleSave();render();
   showToast(wds.length?t('cro_coll_saved',{name,n:wds.length}):t('cro_coll_saved_empty',{name}));
+  return true;
 }
 
 function deleteColl(cid){
