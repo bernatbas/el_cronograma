@@ -275,9 +275,14 @@
           cursor:pointer;padding:2px 6px;border-radius:6px;}
   .collrm:hover{background:var(--surface);color:var(--text);}
   .collmembers .empty{padding:12px 2px;color:var(--text2);font-size:13px;line-height:1.45;border-bottom:none;}
-  @media (pointer:coarse){ .collrow{padding:9px 0;} .collrm{padding:6px 10px;font-size:19px;} }
+  @media (pointer:coarse){
+    .collrow{padding:7px 0;}
+    .collrm{min-width:36px;min-height:36px;padding:0;font-size:20px;display:inline-flex;align-items:center;justify-content:center;}
+    .collpen{min-width:36px;min-height:36px;justify-content:center;padding:0;}
+    .collpen svg{width:17px;height:17px;}
+  }
   .colx:hover{opacity:1;color:var(--bad,#B3492F);background:var(--surface);}
-  @media (pointer:coarse){ .colx{width:26px;height:26px;opacity:.7;} .colx svg{width:12px;height:12px;} }
+  @media (pointer:coarse){ .colx{width:36px;height:36px;opacity:.7;} .colx svg{width:13px;height:13px;} }
   .onview .empty{color:var(--text2);font-size:13px;font-style:italic;}
 
   /* ===== Mode «personatge unic» (?person=QID, handoff des de joc.html) ===== */
@@ -380,7 +385,20 @@
   .onview .item .addc{flex:0 0 auto;border:none;background:none;color:var(--text2);font-size:17px;
         line-height:1;padding:2px 5px;border-radius:6px;cursor:pointer;font-family:inherit;}
   .onview .item .addc:hover{background:var(--surface);color:var(--text);}
-  @media (pointer:coarse){ .onview .item .addc{padding:5px 8px;font-size:19px;} }
+  /* ⚠️ Mides tactils de la fila d'«A la vista». Mesurat al mobil: la × feia 19x19, el ⚠ 22x16
+     i el + 27x29 —tots per sota de qualsevol minim raonable— i van de tres en tres en una
+     fila estreta, o sigui que errar el dit era facil. 36px es el mateix minim que ja fan
+     servir els botons de la topbar en tactil.
+     Toco el ⚠ i la × que JA hi havia perque, si nomes pujava el meu +, la fila quedava
+     descompensada. Costa alcada: la fila passa de ~34 a ~40px. */
+  @media (pointer:coarse){
+    .onview .item{gap:2px;}
+    .onview .item .addc,.onview .item .x,.onview .item .rp{
+      min-width:36px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0;}
+    .onview .item .addc{font-size:20px;}
+    .onview .item .x{font-size:20px;}
+    .onview .item .rp{font-size:13px;}
+  }
   /* Hover tooltip on a person bar. Not a native `title`: that waits ~1s and, zoomed out, the pill is
      too small to hold a readable label — the name and dates have to be reachable without clicking. */
   /* ===== Toast (feedback curt per accions encara no implementades) ===== */
@@ -407,7 +425,7 @@
   /* ===== Detail panel — modal popup ===== */
   .detail-backdrop{position:fixed;inset:0;background:rgba(20,8,10,.3);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);z-index:49;visibility:hidden;opacity:0;transition:opacity .2s,visibility 0s .2s;}
   .detail-backdrop.open{visibility:visible;opacity:1;transition:opacity .2s,visibility 0s;}
-  .detail{position:fixed;top:50dvh;left:50%;transform:translate(-50%,-50%) scale(.95);width:min(420px,calc(100vw - 32px));max-height:calc(100dvh - 80px);overflow-y:auto;background:#fff;border-radius:16px;padding:24px 24px 20px;box-shadow:0 24px 64px rgba(0,0,0,.18),0 4px 20px rgba(0,0,0,.08);z-index:50;visibility:hidden;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s,visibility 0s .2s;}
+  .detail{position:fixed;top:50dvh;left:50%;transform:translate(-50%,-50%) scale(.95);width:min(520px,calc(100vw - 32px));max-height:calc(100dvh - 80px);overflow-y:auto;background:#fff;border-radius:16px;padding:24px 24px 20px;box-shadow:0 24px 64px rgba(0,0,0,.18),0 4px 20px rgba(0,0,0,.08);z-index:50;visibility:hidden;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s,visibility 0s .2s;}
   .detail.open{visibility:visible;opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);transition:opacity .2s,transform .2s,visibility 0s;}
   .detail .close{position:absolute;top:14px;right:16px;border:none;background:none;font-size:22px;cursor:pointer;color:var(--text2);line-height:1;padding:2px 6px;border-radius:6px;}
   .detail .close:hover{background:var(--soft);}
@@ -422,10 +440,16 @@
   .detail .desc{font-size:14px;margin:14px 0;}
   .detail a.wiki{display:inline-block;margin-top:8px;color:var(--blue);text-decoration:none;font-size:14px;}
   .detail a.wiki:hover{text-decoration:underline;}
-  /* Amb quatre botons feien 403px en 372 de panell i el darrer saltava de fila. Amb gap 6 i
-     padding 9 hi caben; al mobil el bloc de (pointer:coarse) els torna a fer grossos. */
-  .detail .actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
-  .detail .dbtn{border:1px solid var(--border);background:#fff;border-radius:var(--r-card);padding:7px 9px;font-size:12.5px;cursor:pointer;color:var(--text);white-space:nowrap;}
+  .detail .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+  .detail .dbtn{border:1px solid var(--border);background:#fff;border-radius:var(--r-card);padding:7px 12px;font-size:13px;cursor:pointer;color:var(--text);white-space:nowrap;}
+  /* Amb ratoli els botons d'eines reparteixen l'amplada a parts iguals: quatre pastilles de
+     mides diferents es llegien com quatre coses de pes diferent, i no ho son. El panell
+     passa de 420 a 520px per encabir-los (al desktop hi ha lloc de sobra).
+     La fila de confirmar (.confirm) en queda FORA: alli el parell ha de ser [petit][primari],
+     no dos botons iguals que semblarien la mateixa cosa. */
+  @media (pointer:fine){
+    .detail .actions:not(.confirm) .dbtn{flex:1 1 0;min-width:0;}
+  }
   .detail .dbtn:hover{background:var(--soft);}
   /* Un esborrany no es una fitxa amb eines, es una decisio per confirmar: per aixo el parell
      va a la DRETA i amb el primari l'ultim, que es la convencio de dialeg (macOS, Material,
@@ -624,7 +648,10 @@
   /* Mes calmat que a la barra lateral: vora clara, fons pla (fora el degradat) i l'estat actiu
      marcat NOMES amb la barreta terracota de l'esquerra i el fons tenyit fluix. Amb sis files
      actives seguides, la vora fosca i el degradat de cada una feien massa soroll. */
-  .cfgbody .colitem{padding:6px 9px;font-size:13px;gap:8px;box-shadow:none;
+  /* padding vertical 0 + min-height: l'alcada de la fila la mana el ⋮ (36px tactils) i no
+     se sumen. Amb padding 6 la fila pujava a 48px i al popup nomes se'n veien TRES, quan
+     n'hi han de cabre cinc o sis. */
+  .cfgbody .colitem{padding:0 9px;min-height:38px;font-size:13px;gap:8px;box-shadow:none;
        border-color:var(--border);background:var(--canvas);}
   .cfgbody .colitem.on{background:#FBF1EE;box-shadow:inset 3px 0 0 var(--topbar-bg);
        border-color:#E8D2CB;font-weight:600;}
