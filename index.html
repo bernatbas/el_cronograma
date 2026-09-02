@@ -238,6 +238,21 @@
   .colitem.on .ico{opacity:.8;}
   .newcol{width:100%;border:1px dashed var(--border-strong);background:none;border-radius:var(--r-card);padding:8px 10px;font-size:13px;color:var(--text2);cursor:pointer;font-family:inherit;}
   .newcol:hover{background:var(--surface);color:var(--text);}
+  .newcol:disabled{opacity:.5;cursor:default;}
+  .newcol:disabled:hover{background:none;color:var(--text2);}
+  /* Camp de nom al mateix lloc que el boto: substituir-lo evita un dialeg dins d'un dialeg,
+     que al mobil (on la seccio ja viu en un popup) quedava molt malament. */
+  .newcolin{width:100%;border:1px solid var(--blue);background:var(--canvas);border-radius:var(--r-card);
+            padding:8px 10px;font-size:13px;font-family:inherit;color:var(--text);
+            box-shadow:0 0 0 3px var(--blueSoft);}
+  .newcolin:focus{outline:none;}
+  /* La ✕ nomes surt a les colleccions propies. Va dins del boto de toggle, d'aqui el
+     stopPropagation del handler. */
+  .colx{flex:0 0 auto;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;
+        border-radius:5px;color:var(--text2);opacity:.55;cursor:pointer;}
+  .colx svg{width:11px;height:11px;}
+  .colx:hover{opacity:1;color:var(--bad,#B3492F);background:var(--surface);}
+  @media (pointer:coarse){ .colx{width:26px;height:26px;opacity:.7;} .colx svg{width:12px;height:12px;} }
   .onview .empty{color:var(--text2);font-size:13px;font-style:italic;}
 
   /* ===== Mode «personatge unic» (?person=QID, handoff des de joc.html) ===== */
@@ -718,6 +733,8 @@ const I18N={
     cro_undo_of: v => 'Desfés: '+v.what,
     cro_act_context:'mostra context',
     cro_act_coll_on: v => 'activar «'+v.name+'»',
+    undo_coll_new: v => 'desar «'+v.name+'»',
+    undo_coll_del: v => 'esborrar «'+v.name+'»',
     cro_act_coll_off: v => 'desactivar «'+v.name+'»',
     cro_act_add: v => 'afegir '+v.name,
     cro_act_remove: v => 'treure '+v.name,
@@ -737,6 +754,14 @@ const I18N={
     cro_onview:'A la vista',
     cro_events:'Esdeveniments',
     cro_newcol:'+ Nova col·lecció',
+    // El botó de desar diu QUANTS en desarà: «+ Nova col·lecció» no explicava d'on sortiria
+    // el contingut, i el que fa és desar la gent que ja tens a la vista.
+    cro_coll_save: v => '+ Desa ' + (v.n===1 ? 'el que tens' : 'els '+v.n) + ' de la vista',
+    cro_coll_save_empty:'Cerca algú per desar una col·lecció',
+    cro_coll_name_ph:'Nom de la col·lecció',
+    cro_coll_del:'Esborra aquesta col·lecció',
+    cro_coll_untitled:'Sense nom',
+    cro_coll_saved: v => '«'+v.name+'» desada amb '+v.n+(v.n===1?' personatge':' personatges'),
     cro_open_site:'Obre el lloc web',
     cro_center:"Centra'l a la vista",
     cro_remove:'Treu',
@@ -1069,6 +1094,10 @@ function saveNow(){
 function scheduleSave(){if(!lsReady)return;clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,400);}   // debounced: render() and scroll fire often
 window.addEventListener('beforeunload',()=>{if(lsReady)saveNow();});   // flush debounce before navigating to joc.html or elsewhere
 function restoreState(){
+  // ABANS de restaurar: l'estat desat pot tenir una colleccio propia activa, i si la seva
+  // definicio encara no es a COLLECTIONS, l'id actiu no apuntaria a res. loadMyColls es
+  // idempotent, aixi que no importa que restoreState es cridi per mes d'un cami.
+  loadMyColls();
   let d;try{d=JSON.parse(localStorage.getItem(LS_KEY)||'null');}catch(e){d=null;}
   if(!d||d.v!==1)return;
   // Migracio v1: fins a l'i18n, cats guardava el nom catala com a clau ('Filosofia').
@@ -1102,7 +1131,11 @@ const UNDO_MAX=25;
 const undoStack=[];
 function undoSnap(){
   return {pinned:[...state.pinned],collections:[...state.collections],
-          marcs:[...state.marcs],showEvents:state.showEvents,focus:state.focus};
+          marcs:[...state.marcs],showEvents:state.showEvents,focus:state.focus,
+          // ⚠️ Les DEFINICIONS de les colleccions propies tambe hi han d'anar. Sense aixo,
+          // desfer un esborrat tornava l'id a state.collections pero no la colleccio a
+          // COLLECTIONS: quedava un id actiu apuntant a res (comprovat, no es teoric).
+          mine:COLLECTIONS.filter(c=>c._mine).map(c=>({id:c.id,name:c.name,wds:[...c.wds]}))};
 }
 // labelKey/vars es resolen al MOSTRAR el títol, no aquí: així el text del botó
 // segueix l'idioma actiu encara que l'accio s'hagi fet abans de canviar-lo.
@@ -1124,6 +1157,12 @@ function doUndo(){
   state.marcs=new Set(e.snap.marcs);
   state.showEvents=e.snap.showEvents;
   state.focus=e.snap.focus;
+  // Restaura les colleccions propies tal com eren: les de serie no es toquen mai.
+  if(e.snap.mine){
+    for(let i=COLLECTIONS.length-1;i>=0;i--)if(COLLECTIONS[i]._mine)COLLECTIONS.splice(i,1);
+    e.snap.mine.forEach(c=>COLLECTIONS.push({id:c.id,name:c.name,wds:[...c.wds],_mine:true}));
+    saveMyColls();
+  }
   recomputePresent();
   // Si la persona de la personbar ja no hi es, la barra ha de marxar: mateixa
   // neteja que fa removePerson(), inclos el ?person= de la URL.
@@ -1454,8 +1493,14 @@ function renderSidebar(){
   $('#regions').innerHTML=`<label class="filter"><input type="checkbox" data-events ${state.showEvents?'checked':''}><span class="swatch" style="background:var(--eventc)"></span>${t('cro_events')}</label>`+MARCS.map(m=>`<label class="filter"><input type="checkbox" data-marc="${m.id}" ${state.marcs.has(m.id)?'checked':''}><span class="swatch" style="background:${m.color}"></span>${L(m.name)}</label>`).join('');
   const colIco='<svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 4.5h9M2 8h9M2 11.5h6"/><circle cx="12.5" cy="11" r="2.2"/></svg>';
   const extIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3H3a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1v-3"/><path d="M10 2h4v4M14 2L8 8"/></svg>';
-  $('#collections').innerHTML=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}<span class="cname">${c.name}</span><span class="cnt">${c.wds.length}</span>${c.url?`<a class="extlink" href="${c.url}" target="_blank" rel="noopener" title="${t('cro_open_site')}" onclick="event.stopPropagation()">${extIco}</a>`:''}</button>`).join('')
-    +`<button class="newcol" data-newcol>${t('cro_newcol')}</button>`;
+  // Les colleccions propies porten una ✕ (les de serie, no: son contingut d'autor)
+  const delIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>';
+  const nView=viewQids().length;
+  $('#collections').innerHTML=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}<span class="cname">${esc(c.name)}</span><span class="cnt">${c.wds.length}</span>${c._mine?`<span class="colx" role="button" tabindex="0" data-colx="${c.id}" title="${t('cro_coll_del')}">${delIco}</span>`:''}${c.url?`<a class="extlink" href="${c.url}" target="_blank" rel="noopener" title="${t('cro_open_site')}" onclick="event.stopPropagation()">${extIco}</a>`:''}</button>`).join('')
+    // el mateix lloc de sempre, pero ara diu que desara i es desactiva si no hi ha res
+    +(newCollOpen
+      ? `<input class="newcolin" id="newcolin" type="text" maxlength="60" placeholder="${t('cro_coll_name_ph')}" value="${esc(newCollDraft)}">`
+      : `<button class="newcol" data-newcol ${nView?'':'disabled'}>${nView?t('cro_coll_save',{n:nView}):t('cro_coll_save_empty')}</button>`);
   const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>L(a.name).localeCompare(L(b.name),LANG));   // always alphabetical, en l'idioma actiu
   $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}" title="${t('cro_center')}">${esc(L(p.name))}</button>${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}">⚠</button><button class="x" data-remove="${p.id}" title="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
 }
@@ -1880,8 +1925,20 @@ barmenu.addEventListener('click',e=>{
   closeBarMenu();
 });
 $('#collections').addEventListener('click',e=>{
-  if(e.target.closest('[data-newcol]')){WIP();return;}
+  const x=e.target.closest('[data-colx]');
+  if(x){e.stopPropagation();deleteColl(x.getAttribute('data-colx'));return;}   // la ✕ va DINS del boto de toggle
+  if(e.target.closest('[data-newcol]')){openNewColl();return;}
+  if(e.target.closest('#newcolin'))return;                                     // clicar el camp no ha de tancar res
   const b=e.target.closest('[data-col]');if(b)toggleCollection(b.getAttribute('data-col'));
+});
+// El camp de nom es reconstrueix a cada render, aixi que el que s'escriu es guarda a part
+$('#collections').addEventListener('input',e=>{
+  if(e.target.id==='newcolin')newCollDraft=e.target.value;
+});
+$('#collections').addEventListener('keydown',e=>{
+  if(e.target.id!=='newcolin')return;
+  if(e.key==='Enter'){const v=e.target.value;newCollOpen=false;newCollDraft='';createColl(v);}
+  else if(e.key==='Escape'){closeNewColl();}
 });
 // A collection is a list of Q-ids: resolve each against the local DB first, fetch the rest from
 // Wikidata (byIds already drops anything we hold locally), then frame the view around the result —
@@ -1918,6 +1975,71 @@ function refreshStale(qids){
     if(changed){recomputePresent();render();scheduleSave();}
   }).catch(()=>{});
 }
+// ===== Colleccions propies =====
+// Les de serie viuen a COLLECTIONS (contingut d'autor, no s'esborren). Les que fa l'usuari es
+// desen a part i s'afegeixen a la MATEIXA llista amb `_mine:true`, aixi tota la resta del codi
+// —render, toggle, TTL de refresc— les tracta igual sense saber d'on venen.
+const MYCOLL_LS='historiabasica.mycolls';
+let newCollOpen=false, newCollDraft='';
+
+function loadMyColls(){
+  let arr=[];
+  try{ arr=JSON.parse(localStorage.getItem(MYCOLL_LS)||'[]'); }catch(ex){}
+  if(!Array.isArray(arr))return;
+  arr.forEach(c=>{
+    if(!c||typeof c.name!=='string'||!Array.isArray(c.wds))return;
+    if(COLLECTIONS.some(x=>x.id===c.id))return;                       // no trepitgem les de serie
+    const wds=c.wds.filter(q=>typeof q==='string'&&/^Q\d+$/.test(q));
+    if(wds.length)COLLECTIONS.push({id:c.id,name:c.name,wds,_mine:true});
+  });
+}
+function saveMyColls(){
+  try{ localStorage.setItem(MYCOLL_LS,JSON.stringify(
+    COLLECTIONS.filter(c=>c._mine).map(c=>({id:c.id,name:c.name,wds:c.wds})))); }catch(ex){}
+}
+
+// Els Q-ids de qui tens ara a la vista. Una colleccio guarda Q-ids i prou, com les de serie:
+// aixi es pot compartir i tornar a resoldre contra Wikidata. ⚠️ Qui no te QID (el «bernat» de
+// la BD) no hi pot anar: no hi ha manera de tornar-lo a trobar.
+function viewQids(){
+  return PEOPLE.filter(p=>state.present.has(p.id)&&/^Q\d+$/.test(p.wd||'')).map(p=>p.wd);
+}
+
+function createColl(nom){
+  const wds=viewQids();
+  if(!wds.length)return;
+  let i=1,id;do{id='my'+(i++);}while(COLLECTIONS.some(c=>c.id===id));
+  const name=(nom||'').trim().slice(0,60)||t('cro_coll_untitled');
+  pushUndo('undo_coll_new',{name});
+  COLLECTIONS.push({id,name,wds,_mine:true});
+  state.collections.add(id);            // queda activa: la seva gent ja es a la vista
+  saveMyColls();scheduleSave();render();
+  showToast(t('cro_coll_saved',{name,n:wds.length}));
+}
+
+function deleteColl(cid){
+  const i=COLLECTIONS.findIndex(c=>c.id===cid&&c._mine);
+  if(i<0)return;                        // les de serie no s'esborren
+  const c=COLLECTIONS[i];
+  pushUndo('undo_coll_del',{name:c.name});
+  // si estava activa, la seva gent ha de marxar de la vista, igual que en desactivar-la
+  if(state.collections.has(cid)){
+    state.collections.delete(cid);
+    const stillWanted=new Set([...state.collections].flatMap(id=>(COLLECTIONS.find(x=>x.id===id)||{wds:[]}).wds));
+    c.wds.forEach(q=>{
+      if(stillWanted.has(q))return;
+      const p=PEOPLE.find(x=>x.wd===q);
+      if(p&&!SEED_PINNED.includes(p.id))state.pinned.delete(p.id);
+    });
+  }
+  COLLECTIONS.splice(i,1);
+  saveMyColls();recomputePresent();closeDetailIfGone();clearFitLatch();scheduleSave();render();
+}
+
+function openNewColl(){ newCollOpen=true;newCollDraft='';render();
+  const el=$('#newcolin'); if(el){el.focus();} }
+function closeNewColl(){ newCollOpen=false;newCollDraft='';render(); }
+
 async function toggleCollection(cid){
   const c=COLLECTIONS.find(x=>x.id===cid);if(!c)return;
   pushUndo(state.collections.has(cid)?'cro_act_coll_off':'cro_act_coll_on',{name:c.name});
