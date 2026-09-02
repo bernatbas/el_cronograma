@@ -29,6 +29,13 @@ async function goPersonMode(page, qid = 'Q868') {
   await page.goto(`/index.html?person=${qid}`);
 }
 
+// Mòbil o no: es pregunta el MATEIX que pregunta l'app (`pointer:coarse`), no l'amplada.
+// El landscape del CI fa 851px, prou ample per confondre qualsevol llindar de píxels, però
+// és tàctil i per tant no hi ha barra lateral.
+async function isCoarse(page) {
+  return page.evaluate(() => window.matchMedia('(pointer:coarse)').matches);
+}
+
 // ── Helpers de viewport estret ───────────────────────────────────────────────
 // Els tres calen perquè al mòbil l'app arrenca en un estat DIFERENT del desktop. No són
 // "workarounds": repliquen el que ha de fer un usuari real abans d'arribar al control.
@@ -55,15 +62,22 @@ async function openSidebar(page) {
   await expect(page.locator('.body')).not.toHaveClass(/collapsed/);
 }
 
-// Al mòbil la sidebar és a més un ACORDIÓ: només una secció oberta a la vegada, i per
-// defecte ho és «A la vista» (l'última). Així que obrir la sidebar NO n'hi ha prou —
-// `#collections` es queda a `display:none` fins que s'obre la seva secció.
+// Obre el popup de configuració del mòbil (el botó flotant de baix a la dreta). Cal treure
+// abans l'avís de girar, que en portrait se superposa al canvas i intercepta el clic.
+async function openCfgPopup(page) {
+  await dismissRotateHint(page);
+  await page.locator('#cfgBtn').click();
+  await expect(page.locator('#cfgwrap')).toBeVisible();
+}
+
+// Deixa `#collections` a la vista, pel camí que toqui a cada entorn: al mòbil les seccions
+// viuen dins del popup i cal triar-ne la pestanya; amb ratolí n'hi ha prou d'obrir la barra.
 async function openCollectionsSection(page) {
-  await openSidebar(page);
-  const sec = page.locator('.sidebar section:has(#collections)');
-  if (await page.locator('.sidebar.accordion').count()
-      && await sec.evaluate(el => !el.classList.contains('open'))) {
-    await sec.locator('h3').click();
+  if (await isCoarse(page)) {
+    await openCfgPopup(page);
+    await page.locator('#cfgtabs .cfgtab').nth(1).click();   // 0 Marcs · 1 Col·leccions · 2 A la vista
+  } else {
+    await openSidebar(page);
   }
   await expect(page.locator('[data-col="filosofs"]')).toBeVisible();
 }
@@ -109,9 +123,18 @@ test.describe('Càrrega bàsica', () => {
     await page.goto(INDEX);
     await expect(page.locator('#scroll')).toBeAttached();
     await expect(page.locator('.topbar')).toBeVisible();
-    await expect(page.locator('.sidebar')).toBeVisible();
     await expect(page.locator('#q')).toBeVisible();
-    await expect(page.locator('#sidebarToggle')).toBeVisible();
+    // Des del canvi #141 el control de marcs/colleccions/gent és diferent a cada entorn:
+    // amb ratolí, la barra lateral i el seu tirador; en tàctil, el botó flotant i el popup.
+    if (await isCoarse(page)) {
+      await expect(page.locator('#cfgBtn')).toBeVisible();
+      await expect(page.locator('.sidebar')).toBeHidden();
+      await expect(page.locator('#cfgwrap')).toBeHidden();   // arrenca tancat
+    } else {
+      await expect(page.locator('.sidebar')).toBeVisible();
+      await expect(page.locator('#sidebarToggle')).toBeVisible();
+      await expect(page.locator('#cfgBtn')).toBeHidden();
+    }
   });
 });
 
@@ -142,13 +165,14 @@ test.describe('Topbar', () => {
 
 // ─── Sidebar ────────────────────────────────────────────────────────────────
 
-test.describe('Sidebar', () => {
-  // L'estat inicial NO és el mateix a tot arreu: des del canvi #47 arrenca plegada per sota
-  // de 900px. El test ho comprova segons el viewport, en lloc d'exigir-la oberta sempre
-  // (que és el que contradeia el canvi #47 i feia petar portrait i landscape).
-  test('arrenca plegada sota 900px i oberta per sobre', async ({ page }) => {
+// La barra lateral ÉS del desktop des del canvi #141: en tàctil s'amaga i els seus controls
+// passen al popup. Aquests tres tests es salten en tàctil en lloc d'exigir-hi una barra que
+// ja no hi ha d'haver (és el que feia petar portrait i landscape).
+test.describe('Sidebar (amb ratolí)', () => {
+  test('arrenca oberta amb ratolí i plegada en pantalla estreta', async ({ page }) => {
     await freshIndex(page);
-    await expect(page.locator('.sidebar')).toBeVisible();   // plegada deixa una tira de 14px
+    test.skip(await isCoarse(page), 'En tàctil no hi ha barra lateral: veure «Configuració (tàctil)»');
+    await expect(page.locator('.sidebar')).toBeVisible();
     if (page.viewportSize().width < 900) {
       await expect(page.locator('.body')).toHaveClass(/collapsed/);
     } else {
@@ -158,7 +182,8 @@ test.describe('Sidebar', () => {
 
   test('el tirador col·lapsa la sidebar i eixampla el canvas', async ({ page }) => {
     await freshIndex(page);
-    await openSidebar(page);   // punt de partida conegut: al mòbil arrenca plegada
+    test.skip(await isCoarse(page), 'En tàctil no hi ha barra lateral');
+    await openSidebar(page);
     const wBefore = await page.locator('#scroll').evaluate(el => el.clientWidth);
     await page.locator('#sidebarToggle').click();
     await page.waitForTimeout(300); // animació CSS 0.18s
@@ -169,6 +194,7 @@ test.describe('Sidebar', () => {
 
   test('tornar a clicar obre la sidebar i encongeix el canvas', async ({ page }) => {
     await freshIndex(page);
+    test.skip(await isCoarse(page), 'En tàctil no hi ha barra lateral');
     await openSidebar(page);
     await page.locator('#sidebarToggle').click();
     await page.waitForTimeout(300);
@@ -178,6 +204,69 @@ test.describe('Sidebar', () => {
     const wOpen = await page.locator('#scroll').evaluate(el => el.clientWidth);
     await expect(page.locator('.body')).not.toHaveClass(/collapsed/);
     expect(wOpen).toBeLessThan(wCollapsed);
+  });
+});
+
+// ─── Configuració (tàctil) ──────────────────────────────────────────────────
+// El substitut de la barra lateral al mòbil: botó flotant + popup de tres pestanyes.
+
+test.describe('Configuració (tàctil)', () => {
+  test('arrenca tancada i el botó flotant l\'obre', async ({ page }) => {
+    await freshIndex(page);
+    test.skip(!(await isCoarse(page)), 'Amb ratolí hi ha la barra lateral');
+    await expect(page.locator('#cfgwrap')).toBeHidden();
+    await openCfgPopup(page);
+    // les tres seccions han de ser DINS del popup, no a la barra
+    const dins = await page.evaluate(() =>
+      ['regions', 'collections', 'onview']
+        .every(id => document.getElementById('cfgbody').contains(document.getElementById(id))));
+    expect(dins).toBe(true);
+  });
+
+  test('les pestanyes canvien de secció, una a la vegada', async ({ page }) => {
+    await freshIndex(page);
+    test.skip(!(await isCoarse(page)), 'Amb ratolí hi ha la barra lateral');
+    await openCfgPopup(page);
+    const ids = ['regions', 'collections', 'onview'];
+    for (let i = 0; i < 3; i++) {
+      await page.locator('#cfgtabs .cfgtab').nth(i).click();
+      await expect(page.locator('#' + ids[i])).toBeVisible();
+      for (const altre of ids.filter((_, k) => k !== i)) {
+        await expect(page.locator('#' + altre)).toBeHidden();
+      }
+    }
+  });
+
+  test('l\'alçada del popup no depèn de la pestanya', async ({ page }) => {
+    await freshIndex(page);
+    test.skip(!(await isCoarse(page)), 'Amb ratolí hi ha la barra lateral');
+    await openCfgPopup(page);
+    const altures = [];
+    for (let i = 0; i < 3; i++) {
+      await page.locator('#cfgtabs .cfgtab').nth(i).click();
+      altures.push(await page.locator('.cfg').evaluate(el => Math.round(el.getBoundingClientRect().height)));
+    }
+    expect(new Set(altures).size, `alçades: ${altures.join(', ')}`).toBe(1);
+  });
+
+  test('la ✕ i el vel el tanquen', async ({ page }) => {
+    await freshIndex(page);
+    test.skip(!(await isCoarse(page)), 'Amb ratolí hi ha la barra lateral');
+    await openCfgPopup(page);
+    await page.locator('#cfgClose').click();
+    await expect(page.locator('#cfgwrap')).toBeHidden();
+    await openCfgPopup(page);
+    await page.locator('#cfgscrim').click({ position: { x: 5, y: 5 } });
+    await expect(page.locator('#cfgwrap')).toBeHidden();
+  });
+
+  test('el botó flotant no tapa els anys de l\'eix', async ({ page }) => {
+    await freshIndex(page);
+    test.skip(!(await isCoarse(page)), 'Amb ratolí hi ha la barra lateral');
+    await dismissRotateHint(page);
+    const fab = await page.locator('#cfgBtn').boundingBox();
+    const eix = await page.locator('.axis').boundingBox();
+    expect(fab.y + fab.height, 'el botó ha de quedar per damunt de l\'eix').toBeLessThanOrEqual(eix.y + 1);
   });
 });
 
