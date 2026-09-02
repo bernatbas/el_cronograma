@@ -246,6 +246,9 @@
             padding:8px 10px;font-size:13px;font-family:inherit;color:var(--text);
             box-shadow:0 0 0 3px var(--blueSoft);}
   .newcolin:focus{outline:none;}
+  .newcolbox{display:flex;flex-direction:column;gap:6px;}
+  .newcolinc{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);cursor:pointer;padding:0 2px;}
+  .newcolinc input{width:15px;height:15px;accent-color:var(--blue);flex:0 0 auto;}
   /* La ✕ nomes surt a les colleccions propies. Va dins del boto de toggle, d'aqui el
      stopPropagation del handler. */
   .colx{flex:0 0 auto;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;
@@ -754,14 +757,14 @@ const I18N={
     cro_onview:'A la vista',
     cro_events:'Esdeveniments',
     cro_newcol:'+ Nova col·lecció',
-    // El botó de desar diu QUANTS en desarà: «+ Nova col·lecció» no explicava d'on sortiria
-    // el contingut, i el que fa és desar la gent que ja tens a la vista.
-    cro_coll_save: v => '+ Desa ' + (v.n===1 ? 'el que tens' : 'els '+v.n) + ' de la vista',
-    cro_coll_save_empty:'Cerca algú per desar una col·lecció',
+    // Crear una col·lecció NO depèn de tenir ningú a la vista: pots començar-la buida. Incloure
+    // els que ja hi tens és una casella opcional, i només surt quan n'hi ha algun.
+    cro_coll_include: v => 'Inclou ' + (v.n===1 ? 'el de la vista' : 'els '+v.n+' de la vista'),
     cro_coll_name_ph:'Nom de la col·lecció',
     cro_coll_del:'Esborra aquesta col·lecció',
     cro_coll_untitled:'Sense nom',
     cro_coll_saved: v => '«'+v.name+'» desada amb '+v.n+(v.n===1?' personatge':' personatges'),
+    cro_coll_saved_empty: v => '«'+v.name+'» creada, encara buida',
     cro_open_site:'Obre el lloc web',
     cro_center:"Centra'l a la vista",
     cro_remove:'Treu',
@@ -1497,10 +1500,13 @@ function renderSidebar(){
   const delIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>';
   const nView=viewQids().length;
   $('#collections').innerHTML=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}<span class="cname">${esc(c.name)}</span><span class="cnt">${c.wds.length}</span>${c._mine?`<span class="colx" role="button" tabindex="0" data-colx="${c.id}" title="${t('cro_coll_del')}">${delIco}</span>`:''}${c.url?`<a class="extlink" href="${c.url}" target="_blank" rel="noopener" title="${t('cro_open_site')}" onclick="event.stopPropagation()">${extIco}</a>`:''}</button>`).join('')
-    // el mateix lloc de sempre, pero ara diu que desara i es desactiva si no hi ha res
+    // Sempre actiu: una colleccio es pot comencar buida. Si hi ha gent a la vista, s'ofereix
+    // d'incloure-la amb una casella —opcio, no cami unic.
     +(newCollOpen
-      ? `<input class="newcolin" id="newcolin" type="text" maxlength="60" placeholder="${t('cro_coll_name_ph')}" value="${esc(newCollDraft)}">`
-      : `<button class="newcol" data-newcol ${nView?'':'disabled'}>${nView?t('cro_coll_save',{n:nView}):t('cro_coll_save_empty')}</button>`);
+      ? `<div class="newcolbox"><input class="newcolin" id="newcolin" type="text" maxlength="60" placeholder="${t('cro_coll_name_ph')}" value="${esc(newCollDraft)}">`
+        + (nView?`<label class="newcolinc"><input type="checkbox" id="newcolinc" ${newCollInc?'checked':''}>${t('cro_coll_include',{n:nView})}</label>`:'')
+        + `</div>`
+      : `<button class="newcol" data-newcol>${t('cro_newcol')}</button>`);
   const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>L(a.name).localeCompare(L(b.name),LANG));   // always alphabetical, en l'idioma actiu
   $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}" title="${t('cro_center')}">${esc(L(p.name))}</button>${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}">⚠</button><button class="x" data-remove="${p.id}" title="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
 }
@@ -1928,16 +1934,19 @@ $('#collections').addEventListener('click',e=>{
   const x=e.target.closest('[data-colx]');
   if(x){e.stopPropagation();deleteColl(x.getAttribute('data-colx'));return;}   // la ✕ va DINS del boto de toggle
   if(e.target.closest('[data-newcol]')){openNewColl();return;}
-  if(e.target.closest('#newcolin'))return;                                     // clicar el camp no ha de tancar res
+  if(e.target.closest('.newcolbox'))return;                                    // el camp i la casella son zona propia
   const b=e.target.closest('[data-col]');if(b)toggleCollection(b.getAttribute('data-col'));
 });
 // El camp de nom es reconstrueix a cada render, aixi que el que s'escriu es guarda a part
 $('#collections').addEventListener('input',e=>{
   if(e.target.id==='newcolin')newCollDraft=e.target.value;
 });
+$('#collections').addEventListener('change',e=>{
+  if(e.target.id==='newcolinc')newCollInc=e.target.checked;   // el render la reconstrueix: cal recordar-ho
+});
 $('#collections').addEventListener('keydown',e=>{
   if(e.target.id!=='newcolin')return;
-  if(e.key==='Enter'){const v=e.target.value;newCollOpen=false;newCollDraft='';createColl(v);}
+  if(e.key==='Enter'){const v=e.target.value,inc=newCollInc;newCollOpen=false;newCollDraft='';newCollInc=false;createColl(v,inc);}
   else if(e.key==='Escape'){closeNewColl();}
 });
 // A collection is a list of Q-ids: resolve each against the local DB first, fetch the rest from
@@ -1980,7 +1989,9 @@ function refreshStale(qids){
 // desen a part i s'afegeixen a la MATEIXA llista amb `_mine:true`, aixi tota la resta del codi
 // —render, toggle, TTL de refresc— les tracta igual sense saber d'on venen.
 const MYCOLL_LS='historiabasica.mycolls';
-let newCollOpen=false, newCollDraft='';
+let newCollOpen=false, newCollDraft='', newCollInc=false;   // newCollInc: incloure els de la vista
+// ⚠️ La casella arrenca DESMARCADA: crear-la buida ha de ser el cami curt, i incloure gent
+// una decisio explicita. Si es vol al contrari, es aquest false.
 
 function loadMyColls(){
   let arr=[];
@@ -2005,16 +2016,16 @@ function viewQids(){
   return PEOPLE.filter(p=>state.present.has(p.id)&&/^Q\d+$/.test(p.wd||'')).map(p=>p.wd);
 }
 
-function createColl(nom){
-  const wds=viewQids();
-  if(!wds.length)return;
+function createColl(nom,incloure){
+  const wds=incloure?viewQids():[];
   let i=1,id;do{id='my'+(i++);}while(COLLECTIONS.some(c=>c.id===id));
   const name=(nom||'').trim().slice(0,60)||t('cro_coll_untitled');
   pushUndo('undo_coll_new',{name});
   COLLECTIONS.push({id,name,wds,_mine:true});
-  state.collections.add(id);            // queda activa: la seva gent ja es a la vista
+  // Nomes s'activa si porta gent: una colleccio buida i «encesa» no vol dir res.
+  if(wds.length)state.collections.add(id);
   saveMyColls();scheduleSave();render();
-  showToast(t('cro_coll_saved',{name,n:wds.length}));
+  showToast(wds.length?t('cro_coll_saved',{name,n:wds.length}):t('cro_coll_saved_empty',{name}));
 }
 
 function deleteColl(cid){
@@ -2036,9 +2047,9 @@ function deleteColl(cid){
   saveMyColls();recomputePresent();closeDetailIfGone();clearFitLatch();scheduleSave();render();
 }
 
-function openNewColl(){ newCollOpen=true;newCollDraft='';render();
+function openNewColl(){ newCollOpen=true;newCollDraft='';newCollInc=false;render();
   const el=$('#newcolin'); if(el){el.focus();} }
-function closeNewColl(){ newCollOpen=false;newCollDraft='';render(); }
+function closeNewColl(){ newCollOpen=false;newCollDraft='';newCollInc=false;render(); }
 
 async function toggleCollection(cid){
   const c=COLLECTIONS.find(x=>x.id===cid);if(!c)return;
