@@ -121,10 +121,6 @@
        que les lupes tot i ser ja una icona */
     .controls .btn{width:34px;min-width:34px;min-height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;}
   }
-  /* El boto de configuracio nomes existeix en tactil: amb ratoli hi ha la barra lateral. */
-  .btn-cfg{display:none;}
-  @media (pointer:coarse){ .controls .btn-cfg{display:inline-flex;} }
-
   /* --- pas 2: plegat: la marca fa de botó i obre el desplegable --- */
   .secnav.navcollapsed{position:relative;gap:0;}
   /* min-height igual que .btn a cada tram: si la marca-botó és més alta que els botons
@@ -515,8 +511,18 @@
        l'ample (el 67% en retrat). En una linia de temps horitzontal aixo es massa car per a
        uns controls que fas servir de tant en tant. */
     .sidebar,.sidebarHandle{display:none!important;}
-    .controls #cfgBtn{display:inline-flex;align-items:center;justify-content:center;padding:3px 8px;min-width:36px;}
   }
+
+  /* Boto flotant que obre la configuracio. Nomes en tactil: amb ratoli hi ha la barra lateral.
+     `bottom` compta l'eix, com la llegenda, per no trepitjar els anys. z-index 12: per sobre de
+     la llegenda (8) i per sota de la fitxa (60), que al mobil puja des de baix i l'ha de tapar. */
+  .cfgfab{display:none;position:absolute;right:16px;bottom:calc(var(--axis-h) + 12px);z-index:12;
+          width:48px;height:48px;border-radius:50%;border:none;padding:0;cursor:pointer;
+          align-items:center;justify-content:center;color:#fff;background:var(--topbar-bg);
+          box-shadow:0 4px 14px rgba(40,44,60,.28);}
+  .cfgfab:active{filter:brightness(1.08);box-shadow:0 2px 8px rgba(40,44,60,.32);}
+  /* La media query va JUST DESPRES de la base: mateixa especificitat, mana l'ordre. */
+  @media (pointer:coarse){ .cfgfab{display:inline-flex;} }
 
   /* ===== Popup de configuracio (nomes s'obre en tactil) ===== */
   /* ⚠️ `hidden` ha de guanyar SEMPRE: el display:flex de sota li passava per davant per
@@ -572,10 +578,6 @@
         <div class="results" id="results"></div>
       </div>
       <div class="controls">
-        <!-- Nomes en tactil (CSS): al mobil la barra lateral no hi cap, i aquest boto obre
-             les mateixes tres seccions en un popup amb pestanyes. Icona de comandaments i no
-             d’engranatge a proposit: no es la configuracio de l’app, es que es veu al canvas. -->
-        <button class="btn btn-cfg" id="cfgBtn" type="button" title="Marcs, col·leccions i personatges a la vista" data-i18n-title="cro_cfg_title" aria-label="Configuració" data-i18n-aria="cro_cfg"><svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h10"/><path d="M17 6h-1.5"/><path d="M3 14h6"/><path d="M17 14h-4"/><circle cx="14.4" cy="6" r="1.9"/><circle cx="10.6" cy="14" r="1.9"/></svg></button>
         <button class="btn btn-undo" id="undo" type="button" disabled title="Desfés" data-i18n-title="cro_undo" aria-label="Desfés" data-i18n-aria="cro_undo"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.2 4.3 3.7 7.8l3.5 3.5"/><path d="M3.7 7.8H11a4 4 0 0 1 0 8H8.6"/></svg></button>
         <button class="btn" id="fitAll" title="Ajusta el zoom per encabir tot el visible; torna a clicar per desfer" data-i18n-title="cro_fit_title"><span class="btn-tx" data-i18n="cro_fit">Vista global</span><svg class="btn-ic" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V3h4"/><path d="M17 7V3h-4"/><path d="M3 13v4h4"/><path d="M17 13v4h-4"/></svg></button>
         <button class="btn" id="reset" title="Restableix" data-i18n-title="cro_reset_title"><span class="btn-tx" data-i18n="cro_reset">Reset</span><svg class="btn-ic" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 7.35A6 6 0 1 0 16 11.15"/><path d="M15.8 4.15v3.4h-3.4"/></svg></button>
@@ -615,6 +617,11 @@
         <div class="axis" id="axis"><div class="inner2" id="axisInner"></div></div>
       </div>
       <div class="legend" id="legend"></div>
+      <!-- Nomes en tactil (CSS): obre els marcs, les colleccions i la gent a la vista.
+           Va a baix a la dreta perque hi arriba el polze, i PER DAMUNT DE L'EIX: aixi no tapa
+           els anys, igual que la llegenda a l'esquerra. Les dues cantonades de baix queden
+           simetriques i la regla del temps es llegeix sencera. -->
+      <button class="cfgfab" id="cfgBtn" type="button" title="Marcs, col·leccions i personatges a la vista" data-i18n-title="cro_cfg_title" aria-label="Configuració" data-i18n-aria="cro_cfg"><svg width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h10"/><path d="M17 6h-1.5"/><path d="M3 14h6"/><path d="M17 14h-4"/><circle cx="14.4" cy="6" r="1.9"/><circle cx="10.6" cy="14" r="1.9"/></svg></button>
       <div class="canvas-loading" id="collOverlay"><div class="cl-box"><div class="cl-spin"></div><div class="cl-txt" data-i18n="cro_loading">Carregant…</div></div></div>
     </main>
     <aside class="detail" id="detail"></aside>
