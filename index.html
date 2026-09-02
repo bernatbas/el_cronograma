@@ -519,6 +519,11 @@
   }
 
   /* ===== Popup de configuracio (nomes s'obre en tactil) ===== */
+  /* ⚠️ `hidden` ha de guanyar SEMPRE: el display:flex de sota li passava per davant per
+     especificitat i el popup sortia obert (i buit) tan bon punt carregava la pagina. Mateix
+     error que ja havia caigut al dashboard: si poses display a una classe amb `hidden`, cal
+     desfer-ho explicitament. */
+  [hidden]{display:none!important;}
   .cfgwrap{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:14px;}
   /* Vel CLAR a proposit: el popup no ocupa tota la pantalla i el vel deixa veure el canvas, aixi
      en activar una colleccio s'intueix com hi entra o en surt la gent. */
