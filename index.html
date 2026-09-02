@@ -121,6 +121,10 @@
        que les lupes tot i ser ja una icona */
     .controls .btn{width:34px;min-width:34px;min-height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;}
   }
+  /* El boto de configuracio nomes existeix en tactil: amb ratoli hi ha la barra lateral. */
+  .btn-cfg{display:none;}
+  @media (pointer:coarse){ .controls .btn-cfg{display:inline-flex;} }
+
   /* --- pas 2: plegat: la marca fa de botó i obre el desplegable --- */
   .secnav.navcollapsed{position:relative;gap:0;}
   /* min-height igual que .btn a cada tram: si la marca-botó és més alta que els botons
@@ -201,19 +205,6 @@
   .sidebar section>div:hover::-webkit-scrollbar-thumb{background:#B0ADA7;}
   .sidebar section>div::-webkit-scrollbar-track{background:transparent;}
   .sidebar section:last-child{flex-grow:1;flex-shrink:1000;min-height:80px;}   /* «A la vista» cedeix espai PRIMER: marcs i col·leccions es mantenen senceres fins que aquesta arriba al mínim; si elles també desborden, aleshores fan el seu scroll intern */
-  /* ===== Acordió (NOMÉS mòbil) — el JS afegeix .accordion a .sidebar en pointer:coarse =====
-     Al mòbil no és pràctic que les 3 seccions competeixin per l'alçada: es comporten com un
-     acordió d'una sola secció oberta, que ocupa tot l'espai amb el seu scroll (+ indicador). El
-     desktop no es toca (les regles .accordion van DESPRÉS i guanyen per ordre en cas d'empat). */
-  .sidebar.accordion{gap:0;}
-  .sidebar.accordion section{flex:0 0 auto;min-height:0;border-top:1px solid var(--border);}
-  .sidebar.accordion section:first-child{border-top:none;}
-  .sidebar.accordion section:not(.open)>div{display:none!important;}   /* !important: #collections porta display:flex per id i, sense això, guanyaria per especificitat i no es plegaria */
-  .sidebar.accordion section.open{flex:0 1 auto;min-height:0;}   /* la secció oberta pren la seva alçada NATURAL (les capçaleres següents queden just a sota); només si el contingut no cap, s'encongeix i el seu cos fa scroll intern */
-  .sidebar.accordion h3{margin:0;padding:13px 2px;display:flex;align-items:center;gap:8px;cursor:pointer;-webkit-user-select:none;user-select:none;color:var(--text2);flex:0 0 auto;}
-  .sidebar.accordion section.open h3{color:var(--text);}
-  .sidebar.accordion h3 .acc-chev{margin-left:auto;font-size:10px;color:var(--text2);transition:transform .18s ease;}
-  .sidebar.accordion section.open h3 .acc-chev{transform:rotate(90deg);}
   .filter{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:14px;}
   .filter input{width:16px;height:16px;accent-color:var(--blue);}
   .swatch{width:12px;height:12px;border-radius:3px;flex:0 0 auto;}
@@ -517,7 +508,40 @@
     .detail .actions{margin-top:14px;padding-top:12px;}
     /* Llegenda: que no ocupi massa amplada en pantalla petita */
     .legend{max-width:52vw;}
+
+    /* ===== Configuracio al mobil: fora la barra lateral, dins el popup =====
+       Mesurat a 568x320 amb l'acordio: de 260px d'alcada, 128 eren capceleres (49%) i nomes
+       107 quedaven per al contingut —tres files justes—, i la columna es menjava el 33% de
+       l'ample (el 67% en retrat). En una linia de temps horitzontal aixo es massa car per a
+       uns controls que fas servir de tant en tant. */
+    .sidebar,.sidebarHandle{display:none!important;}
+    .controls #cfgBtn{display:inline-flex;align-items:center;justify-content:center;padding:3px 8px;min-width:36px;}
   }
+
+  /* ===== Popup de configuracio (nomes s'obre en tactil) ===== */
+  .cfgwrap{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:14px;}
+  /* Vel CLAR a proposit: el popup no ocupa tota la pantalla i el vel deixa veure el canvas, aixi
+     en activar una colleccio s'intueix com hi entra o en surt la gent. */
+  .cfgscrim{position:absolute;inset:0;background:rgba(44,44,43,.26);}
+  .cfg{position:relative;display:flex;flex-direction:column;width:min(420px,94vw);
+       max-height:min(88dvh,470px);background:var(--canvas);border-radius:14px;
+       border:1px solid var(--border);box-shadow:0 18px 46px rgba(40,44,60,.32);overflow:hidden;}
+  .cfgx{width:36px;min-height:36px;border:1px solid var(--border-strong);background:var(--canvas);
+        color:var(--text2);font-size:15px;line-height:1;cursor:pointer;border-radius:var(--r-card);padding:0;}
+  .cfgx:active{background:var(--surface);}
+  /* Les tres pestanyes reparteixen l'espai i la ✕ es queda amb el seu ample */
+  .cfgtabs{display:grid;grid-template-columns:repeat(3,1fr) auto;gap:5px;padding:8px;background:var(--soft);border-bottom:1px solid var(--border);}
+  .cfgtab{min-height:36px;border:1px solid var(--border-strong);background:var(--canvas);color:var(--text2);
+          border-radius:var(--r-card);font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;padding:0 4px;
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cfgtab.on{background:var(--topbar-bg);border-color:var(--topbar-bg);color:#fff;}
+  .cfgx{order:9;}
+  .cfgbody{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 12px calc(12px + env(safe-area-inset-bottom));}
+  /* Les seccions mogudes: nomes la de la pestanya activa, i sense h3 (el titol ja es la pestanya). */
+  .cfgbody section{display:none;}
+  .cfgbody section.on{display:block;}
+  .cfgbody section>h3{display:none;}
+  .cfgbody section>div{overflow:visible;max-height:none;}   /* el scroll el fa .cfgbody, no cada seccio */
 </style>
 </head>
 <body>
@@ -543,6 +567,10 @@
         <div class="results" id="results"></div>
       </div>
       <div class="controls">
+        <!-- Nomes en tactil (CSS): al mobil la barra lateral no hi cap, i aquest boto obre
+             les mateixes tres seccions en un popup amb pestanyes. Icona de comandaments i no
+             d’engranatge a proposit: no es la configuracio de l’app, es que es veu al canvas. -->
+        <button class="btn btn-cfg" id="cfgBtn" type="button" title="Marcs, col·leccions i personatges a la vista" data-i18n-title="cro_cfg_title" aria-label="Configuració" data-i18n-aria="cro_cfg"><svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h10"/><path d="M17 6h-1.5"/><path d="M3 14h6"/><path d="M17 14h-4"/><circle cx="14.4" cy="6" r="1.9"/><circle cx="10.6" cy="14" r="1.9"/></svg></button>
         <button class="btn btn-undo" id="undo" type="button" disabled title="Desfés" data-i18n-title="cro_undo" aria-label="Desfés" data-i18n-aria="cro_undo"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.2 4.3 3.7 7.8l3.5 3.5"/><path d="M3.7 7.8H11a4 4 0 0 1 0 8H8.6"/></svg></button>
         <button class="btn" id="fitAll" title="Ajusta el zoom per encabir tot el visible; torna a clicar per desfer" data-i18n-title="cro_fit_title"><span class="btn-tx" data-i18n="cro_fit">Vista global</span><svg class="btn-ic" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V3h4"/><path d="M17 7V3h-4"/><path d="M3 13v4h4"/><path d="M17 13v4h-4"/></svg></button>
         <button class="btn" id="reset" title="Restableix" data-i18n-title="cro_reset_title"><span class="btn-tx" data-i18n="cro_reset">Reset</span><svg class="btn-ic" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 7.35A6 6 0 1 0 16 11.15"/><path d="M15.8 4.15v3.4h-3.4"/></svg></button>
@@ -585,6 +613,20 @@
       <div class="canvas-loading" id="collOverlay"><div class="cl-box"><div class="cl-spin"></div><div class="cl-txt" data-i18n="cro_loading">Carregant…</div></div></div>
     </main>
     <aside class="detail" id="detail"></aside>
+  </div>
+  <!-- Configuracio del mobil: les MATEIXES tres seccions de la barra lateral, mogudes aqui pel
+       JS. No es cap copia: son els mateixos nodes, amb els mateixos IDs (#regions, #collections,
+       #onview), aixi el render() i els listeners no se n’assabenten. -->
+  <div class="cfgwrap" id="cfgwrap" hidden>
+    <div class="cfgscrim" id="cfgscrim"></div>
+    <div class="cfg" role="dialog" aria-label="Configuració" data-i18n-aria="cro_cfg">
+      <!-- Sense capcalera propia: les pestanyes ja diuen que hi ha a dins, i un titol
+           «Configuracio» costava 40px dels 282 disponibles en landscape petit. -->
+      <div class="cfgtabs" id="cfgtabs">
+        <button class="cfgx" id="cfgClose" type="button" aria-label="Tanca">✕</button>
+      </div>
+      <div class="cfgbody" id="cfgbody"></div>
+    </div>
   </div>
   <footer class="footer">
     <span>© 2026 HISTÒRIA BASica</span>
@@ -657,7 +699,10 @@ const I18N={
     cro_reset:'Reset',
     cro_reset_title:'Restableix',
     // -- barra lateral --
+    cro_cfg:'Configuració',
+    cro_cfg_title:'Marcs, col·leccions i personatges a la vista',
     cro_marcs:'Marcs històrics',
+    cro_marcs_short:'Marcs',   // pestanya del popup del mòbil: «Marcs històrics» no hi cap a 360px
     cro_collections:'Col·leccions',
     cro_onview:'A la vista',
     cro_events:'Esdeveniments',
@@ -2456,7 +2501,12 @@ q.placeholder=t('cro_search_ph');
 
 // La transició es desactiva per a aquesta primera aplicació: si no, bootDefault() mesura a
 // mitja animació de 0,18s i torna a llegir una amplada que encara no és la definitiva.
-{const _sbPref=localStorage.getItem(SIDEBAR_LS);const _sbCollapse=_sbPref?_sbPref==='collapsed':window.innerWidth<900;
+// ⚠️ El getItem va dins d'un try: en contextos on el localStorage llanca (finestres privades
+// restringides, data: URLs, cookies de tercers bloquejades) una lectura nua ATURAVA TOT L'SCRIPT
+// aqui mateix, i tot el que ve despres —mode ?person=, popup de configuracio, boot— no arrencava.
+// Pantalla en blanc sense error obvi. La resta del fitxer ja les protegia; aquesta se n'havia escapat.
+{let _sbPref=null;try{_sbPref=localStorage.getItem(SIDEBAR_LS);}catch(ex){}
+ const _sbCollapse=_sbPref?_sbPref==='collapsed':window.innerWidth<900;
  if(_sbCollapse){const _sb=$('.sidebar');const _tr=_sb.style.transition;_sb.style.transition='none';
    $('.body').classList.add('collapsed');$('#sidebarToggle').textContent='›';$('#sidebarToggle').title=t('cro_sidebar_show');
    _sb.getBoundingClientRect();_sb.style.transition=_tr;}}
@@ -2485,7 +2535,8 @@ window.addEventListener('load',scheduleSettle);
 // Rotate hint: es mostra UN SOL COP per usuari (dismiss persistit a localStorage).
 const ROTATE_LS='historiabasica.rotateDismissed';
 const portraitWall=document.getElementById('portraitWall');
-let rotateDismissed=!!(localStorage.getItem(ROTATE_LS));
+// Mateix cas que el SIDEBAR_LS de mes amunt: una lectura nua aturava tot l'script aqui.
+let rotateDismissed=false;try{rotateDismissed=!!localStorage.getItem(ROTATE_LS);}catch(ex){}
 function checkPortrait(){
   const isTouch=window.matchMedia('(pointer:coarse)').matches;
   const isPortrait=window.innerWidth<window.innerHeight;
@@ -2496,26 +2547,58 @@ window.addEventListener('resize',checkPortrait);
 checkPortrait();
 
 // ===== Acordió de la barra lateral (NOMÉS mòbil) =====
-// En pointer:coarse, les 3 seccions es comporten com un acordió: només una oberta a la vegada,
-// que ocupa tota l'alçada amb el seu scroll. Tornar a clicar la capçalera oberta les plega totes
-// (vista de només títols). Al desktop no s'activa (queda com sempre).
-const ACC_MQ=window.matchMedia('(pointer:coarse)');
-function openAccSection(sec){
-  const secs=[...document.querySelectorAll('.sidebar section')];
-  const wasOpen=sec.classList.contains('open');
-  secs.forEach(s=>s.classList.remove('open'));
-  if(!wasOpen)sec.classList.add('open');
+// ===== Configuració al mòbil =====
+// En pointer:coarse la barra lateral no s'ensenya: les MATEIXES tres seccions es MOUEN a un popup
+// amb pestanyes (botó de la topbar). No és cap còpia —són els mateixos nodes, amb els mateixos
+// IDs—, així que render() i tots els listeners segueixen funcionant sense saber-ho.
+//
+// Substitueix l'acordió, que era un pedaç per a una columna massa curta: a 568x320, de 260px
+// d'alçada, 128 eren capçaleres i només 107 quedaven per al contingut. Amb el popup, el canvas
+// es queda el 100% de l'ample i el cos té ~250px per a UNA sola secció.
+const CFG_MQ=window.matchMedia('(pointer:coarse)');
+const CFG_LS='historiabasica.cfgtab';
+const CFG_KEYS=['cro_marcs_short','cro_collections','cro_onview'];   // etiquetes curtes: han de cabre en 1/3 d'un mòbil
+const CFG_SECS=[...document.querySelectorAll('.sidebar section')];
+function showCfgTab(i){
+  CFG_SECS.forEach((sec,k)=>sec.classList.toggle('on',k===i));
+  [...$('#cfgtabs').querySelectorAll('.cfgtab')].forEach((b,k)=>b.classList.toggle('on',k===i));
+  try{localStorage.setItem(CFG_LS,String(i));}catch(ex){}
 }
-function setupAccordion(){
-  const sb=$('.sidebar');const secs=[...document.querySelectorAll('.sidebar section')];
-  if(ACC_MQ.matches){
-    sb.classList.add('accordion');
-    secs.forEach(s=>{const h=s.querySelector('h3');if(h&&!h.dataset.acc){h.dataset.acc='1';const c=document.createElement('span');c.className='acc-chev';c.textContent='\u25b8';h.appendChild(c);h.addEventListener('click',()=>openAccSection(s));}});
-    if(!sb.querySelector('section.open'))openAccSection(secs[secs.length-1]);   // per defecte: «A la vista» oberta
-  }else{sb.classList.remove('accordion');secs.forEach(s=>s.classList.remove('open'));}
+function buildCfgTabs(){
+  const tabs=$('#cfgtabs');
+  if(tabs.querySelector('.cfgtab'))return;   // la ✕ ja hi és de sèrie: comptar children no serviria
+  CFG_SECS.forEach((sec,i)=>{
+    const b=document.createElement('button');
+    b.type='button';b.className='cfgtab';
+    b.dataset.i18n=CFG_KEYS[i];        // que un futur canvi d'idioma l'agafi sol
+    b.textContent=t(CFG_KEYS[i]);
+    b.addEventListener('click',()=>showCfgTab(i));
+    tabs.appendChild(b);   // l'ordre visual el posa el CSS (.cfgx{order:9})
+  });
 }
-setupAccordion();
-if(ACC_MQ.addEventListener)ACC_MQ.addEventListener('change',setupAccordion);
+function openCfg(){ $('#cfgwrap').hidden=false; }
+function closeCfg(){ $('#cfgwrap').hidden=true; }
+function setupCfg(){
+  if(CFG_MQ.matches){
+    buildCfgTabs();
+    const body=$('#cfgbody');
+    CFG_SECS.forEach(sec=>{if(sec.parentNode!==body)body.appendChild(sec);});
+    let i=1;                            // per defecte, Col·leccions: és el que més es toca
+    try{const v=parseInt(localStorage.getItem(CFG_LS),10);if(v>=0&&v<CFG_SECS.length)i=v;}catch(ex){}
+    showCfgTab(i);
+  }else{
+    closeCfg();
+    const sb=$('.sidebar');
+    CFG_SECS.forEach(sec=>{if(sec.parentNode!==sb)sb.appendChild(sec);sec.classList.remove('on');});
+  }
+}
+$('#cfgBtn').addEventListener('click',openCfg);
+$('#cfgClose').addEventListener('click',closeCfg);
+$('#cfgscrim').addEventListener('click',closeCfg);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#cfgwrap').hidden)closeCfg();});
+setupCfg();
+if(CFG_MQ.addEventListener)CFG_MQ.addEventListener('change',setupCfg);
+
 // ===== BLOC COMPARTIT (index.html / joc.html): compressió de la topbar =====
 // Escala: 1) tot sencer · 2) es plega el menú (la marca obre un desplegable) · 3) botons d'acció
 // a icones (CSS) · 4) la marca passa a «HB» · 5) últim recurs, el cercador baixa del seu mínim.
