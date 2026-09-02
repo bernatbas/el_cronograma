@@ -254,6 +254,21 @@
   .colx{flex:0 0 auto;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;
         border-radius:5px;color:var(--text2);opacity:.55;cursor:pointer;}
   .colx svg{width:11px;height:11px;}
+  /* Fitxa de la colleccio: el nom es un camp, no un titol, perque es pot editar allà mateix.
+     Manté la mida del <h2> de les altres fitxes perquè no salti en canviar de tipus de fitxa. */
+  .collname{width:100%;font:600 20px/1.25 inherit;color:var(--text);border:1px solid transparent;
+            background:none;border-radius:var(--r-card);padding:3px 6px;margin:0 0 2px -6px;font-family:inherit;}
+  .collname:hover{border-color:var(--border);}
+  .collname:focus{outline:none;border-color:var(--blue);background:var(--canvas);box-shadow:0 0 0 3px var(--blueSoft);}
+  .collmembers{margin:12px 0 4px;border-top:1px solid var(--border);}
+  .collrow{display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--border);font-size:14px;}
+  .collnm{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .collnm.unknown{color:var(--text2);font-family:var(--mono,ui-monospace,Menlo,monospace);font-size:12.5px;}
+  .collrm{flex:0 0 auto;border:none;background:none;color:var(--text2);font-size:17px;line-height:1;
+          cursor:pointer;padding:2px 6px;border-radius:6px;}
+  .collrm:hover{background:var(--surface);color:var(--text);}
+  .collmembers .empty{padding:12px 2px;color:var(--text2);font-size:13px;line-height:1.45;border-bottom:none;}
+  @media (pointer:coarse){ .collrow{padding:9px 0;} .collrm{padding:6px 10px;font-size:19px;} }
   .colx:hover{opacity:1;color:var(--bad,#B3492F);background:var(--surface);}
   @media (pointer:coarse){ .colx{width:26px;height:26px;opacity:.7;} .colx svg{width:12px;height:12px;} }
   .onview .empty{color:var(--text2);font-size:13px;font-style:italic;}
@@ -738,6 +753,8 @@ const I18N={
     cro_act_coll_on: v => 'activar «'+v.name+'»',
     undo_coll_new: v => 'desar «'+v.name+'»',
     undo_coll_del: v => 'esborrar «'+v.name+'»',
+    undo_coll_rename: v => 'reanomenar «'+v.name+'»',
+    undo_coll_rm: v => 'treure de «'+v.name+'»',
     cro_act_coll_off: v => 'desactivar «'+v.name+'»',
     cro_act_add: v => 'afegir '+v.name,
     cro_act_remove: v => 'treure '+v.name,
@@ -763,6 +780,12 @@ const I18N={
     cro_coll_name_ph:'Nom de la col·lecció',
     cro_coll_del:'Esborra aquesta col·lecció',
     cro_coll_untitled:'Sense nom',
+    cro_coll_opts:'Opcions de la col·lecció',
+    cro_coll_n: v => v.n===1 ? 'Col·lecció · 1 personatge' : 'Col·lecció · '+v.n+' personatges',
+    cro_coll_empty_members:'Encara no hi ha ningú. Afegeix-hi gent des de la seva fitxa o des de «A la vista».',
+    cro_coll_rm_member:'Treu-lo de la col·lecció',
+    cro_coll_del_btn:'Esborra la col·lecció',
+    cro_coll_renamed: v => 'ara es diu «'+v.name+'»',
     cro_coll_saved: v => '«'+v.name+'» desada amb '+v.n+(v.n===1?' personatge':' personatges'),
     cro_coll_saved_empty: v => '«'+v.name+'» creada, encara buida',
     cro_open_site:'Obre el lloc web',
@@ -1075,7 +1098,7 @@ const FUTURE_FADE=72;          // px the living bars (and the era band) fade out
 const deathOf=p=>p.death==null?NOW_YEAR:p.death;
 const isAlive=p=>p.death==null;
 
-const state={present:new Set(),pinned:new Set(SEED_PINNED),collections:new Set(),marcs:new Set(DEFAULT_MARCS),showEvents:true,focus:null,selected:null,selectedEvent:null,expandedClusters:new Set()};   // focus = l'ORIGINAL (de qui es demana context): es manté al carril de dalt
+const state={present:new Set(),pinned:new Set(SEED_PINNED),collections:new Set(),marcs:new Set(DEFAULT_MARCS),showEvents:true,focus:null,selected:null,selectedEvent:null,selectedColl:null,expandedClusters:new Set()};   // focus = l'ORIGINAL (de qui es demana context): es manté al carril de dalt
 
 // ============================================================
 // [3] DOM REFS & SMALL HELPERS (coords, colours, formatting)
@@ -1138,7 +1161,7 @@ function undoSnap(){
           // ⚠️ Les DEFINICIONS de les colleccions propies tambe hi han d'anar. Sense aixo,
           // desfer un esborrat tornava l'id a state.collections pero no la colleccio a
           // COLLECTIONS: quedava un id actiu apuntant a res (comprovat, no es teoric).
-          mine:COLLECTIONS.filter(c=>c._mine).map(c=>({id:c.id,name:c.name,wds:[...c.wds]}))};
+          mine:COLLECTIONS.filter(c=>c._mine).map(c=>({id:c.id,name:c.name,wds:[...c.wds],vis:c.vis}))};
 }
 // labelKey/vars es resolen al MOSTRAR el títol, no aquí: així el text del botó
 // segueix l'idioma actiu encara que l'accio s'hagi fet abans de canviar-lo.
@@ -1163,7 +1186,7 @@ function doUndo(){
   // Restaura les colleccions propies tal com eren: les de serie no es toquen mai.
   if(e.snap.mine){
     for(let i=COLLECTIONS.length-1;i>=0;i--)if(COLLECTIONS[i]._mine)COLLECTIONS.splice(i,1);
-    e.snap.mine.forEach(c=>COLLECTIONS.push({id:c.id,name:c.name,wds:[...c.wds],_mine:true}));
+    e.snap.mine.forEach(c=>COLLECTIONS.push({id:c.id,name:c.name,wds:[...c.wds],vis:c.vis||'private',_mine:true}));
     saveMyColls();
   }
   recomputePresent();
@@ -1185,7 +1208,7 @@ function canvasBlind(){return 0;}
 function showToast(msg){const bl=canvasBlind();toastEl.style.left='calc(50% + '+(bl/2)+'px)';toastEl.textContent=msg;toastEl.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('on'),2200);}
 const WIP=()=>showToast(t('toast_wip'));
 function hideDetail(){$('#detail').classList.remove('open');detailBackdrop.classList.remove('open');}
-$('#detailBackdrop').addEventListener('click',()=>{hideDetail();state.selected=null;state.selectedEvent=null;render();});
+$('#detailBackdrop').addEventListener('click',()=>{hideDetail();state.selected=null;state.selectedEvent=null;state.selectedColl=null;render();});
 // Bottom-sheet a mòbil: llisca cap avall (des de dalt del full) per tancar
 const detailEl=$('#detail');
 let dSwipe=null;
@@ -1496,10 +1519,11 @@ function renderSidebar(){
   $('#regions').innerHTML=`<label class="filter"><input type="checkbox" data-events ${state.showEvents?'checked':''}><span class="swatch" style="background:var(--eventc)"></span>${t('cro_events')}</label>`+MARCS.map(m=>`<label class="filter"><input type="checkbox" data-marc="${m.id}" ${state.marcs.has(m.id)?'checked':''}><span class="swatch" style="background:${m.color}"></span>${L(m.name)}</label>`).join('');
   const colIco='<svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 4.5h9M2 8h9M2 11.5h6"/><circle cx="12.5" cy="11" r="2.2"/></svg>';
   const extIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3H3a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1v-3"/><path d="M10 2h4v4M14 2L8 8"/></svg>';
-  // Les colleccions propies porten una ✕ (les de serie, no: son contingut d'autor)
-  const delIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>';
+  // Les colleccions propies porten un ⋮ que obre la seva fitxa (reanomenar, veure i treure
+  // gent, esborrar). Les de serie no en porten: s'editen al dashboard.
+  const optIco='<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="8" cy="13" r="1.4"/></svg>';
   const nView=viewQids().length;
-  $('#collections').innerHTML=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}<span class="cname">${esc(c.name)}</span><span class="cnt">${c.wds.length}</span>${c._mine?`<span class="colx" role="button" tabindex="0" data-colx="${c.id}" title="${t('cro_coll_del')}">${delIco}</span>`:''}${c.url?`<a class="extlink" href="${c.url}" target="_blank" rel="noopener" title="${t('cro_open_site')}" onclick="event.stopPropagation()">${extIco}</a>`:''}</button>`).join('')
+  $('#collections').innerHTML=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}<span class="cname">${esc(c.name)}</span><span class="cnt">${c.wds.length}</span>${c._mine?`<span class="colx" role="button" tabindex="0" data-collopt="${c.id}" title="${t('cro_coll_opts')}">${optIco}</span>`:''}${c.url?`<a class="extlink" href="${c.url}" target="_blank" rel="noopener" title="${t('cro_open_site')}" onclick="event.stopPropagation()">${extIco}</a>`:''}</button>`).join('')
     // Sempre actiu: una colleccio es pot comencar buida. Si hi ha gent a la vista, s'ofereix
     // d'incloure-la amb una casella —opcio, no cami unic.
     +(newCollOpen
@@ -1546,6 +1570,75 @@ function openDetail(p){
     else{if(typeof gtag!=='undefined')gtag('event','mostra_context',{personatge:L(p.name)});showContext(p.id);}
   });
   render();
+}
+
+// ===== Fitxa d'una colleccio propia =====
+// Reaprofita el panell de detall, que ja servia persones i esdeveniments: al desktop es el
+// panell lateral, al mobil puja des de baix. Es la «pagina de la playlist»: nom editable, qui
+// hi ha (amb ✕ a cada un), l'enllac i esborrar. Nomes per a les propies —les de serie
+// s'editen al dashboard.
+function openCollDetail(cid){
+  const c=COLLECTIONS.find(x=>x.id===cid&&x._mine);
+  if(!c){hideDetail();state.selectedColl=null;return;}
+  state.selected=null;state.selectedEvent=null;state.selectedColl=cid;
+  const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
+  const files=c.wds.map(q=>{
+    const p=PEOPLE.find(x=>x.wd===q);
+    // Si la colleccio no s'ha activat mai, el personatge encara no es a PEOPLE: es mostra el
+    // QID en lloc d'inventar-se un nom.
+    const nom=p?esc(L(p.name)):q;
+    const color=p?swatchBg(p):'var(--border-strong)';
+    return `<div class="collrow"><span class="swatch" style="background:${color}"></span>`
+      + `<span class="collnm${p?'':' unknown'}">${nom}</span>`
+      + `<button class="collrm" data-q="${q}" title="${t('cro_coll_rm_member')}">×</button></div>`;
+  }).join('');
+  d.innerHTML=`<button class="close" id="closeDetail" aria-label="${t('close')}">×</button>
+    <input class="collname" id="collname" type="text" maxlength="60" value="${esc(c.name)}" aria-label="${t('cro_coll_name_ph')}">
+    <div class="dhead"><span class="life">${t('cro_coll_n',{n:c.wds.length})}</span></div>
+    <div class="collmembers">${files||`<div class="empty">${t('cro_coll_empty_members')}</div>`}</div>
+    <div class="actions">
+      ${c.url?`<button class="dbtn" data-act="link">${linkLabel(c.url)} ↗</button>`:''}
+      <button class="dbtn danger" data-act="del">${t('cro_coll_del_btn')}</button>
+    </div>`;
+  $('#closeDetail').onclick=()=>{hideDetail();state.selectedColl=null;render();};
+  // El nom es confirma al sortir del camp o amb Enter, no a cada lletra: si no, el desfes
+  // s'ompliria d'un pas per pulsacio.
+  const inp=$('#collname');
+  inp.onchange=()=>renameColl(cid,inp.value);
+  inp.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();inp.blur();}
+                     else if(ev.key==='Escape'){inp.value=c.name;inp.blur();}};
+  d.querySelectorAll('.collrm').forEach(b=>b.onclick=()=>removeFromColl(cid,b.getAttribute('data-q')));
+  d.querySelectorAll('.dbtn').forEach(b=>b.onclick=()=>{
+    if(b.getAttribute('data-act')==='del'){hideDetail();state.selectedColl=null;deleteColl(cid);}
+    else if(c.url)window.open(c.url,'_blank','noopener,noreferrer');
+  });
+  render();
+}
+
+function renameColl(cid,nom){
+  const c=COLLECTIONS.find(x=>x.id===cid&&x._mine);if(!c)return;
+  const name=(nom||'').trim().slice(0,60);
+  if(!name||name===c.name){openCollDetail(cid);return;}   // buit o igual: es deixa com estava
+  pushUndo('undo_coll_rename',{name:c.name});
+  c.name=name;saveMyColls();scheduleSave();openCollDetail(cid);
+  showToast(t('cro_coll_renamed',{name}));
+}
+
+function removeFromColl(cid,qid){
+  const c=COLLECTIONS.find(x=>x.id===cid&&x._mine);if(!c)return;
+  const i=c.wds.indexOf(qid);if(i<0)return;
+  pushUndo('undo_coll_rm',{name:c.name});
+  c.wds.splice(i,1);
+  // Si la colleccio esta activa i ninguna altra el vol, el personatge marxa de la vista:
+  // mateixa regla que en desactivar una colleccio.
+  if(state.collections.has(cid)){
+    const stillWanted=new Set([...state.collections].flatMap(id=>(COLLECTIONS.find(x=>x.id===id)||{wds:[]}).wds));
+    if(!stillWanted.has(qid)){
+      const p=PEOPLE.find(x=>x.wd===qid);
+      if(p&&!SEED_PINNED.includes(p.id))state.pinned.delete(p.id);
+    }
+  }
+  saveMyColls();recomputePresent();clearFitLatch();scheduleSave();openCollDetail(cid);
 }
 
 function openEvent(ev){
@@ -1931,8 +2024,8 @@ barmenu.addEventListener('click',e=>{
   closeBarMenu();
 });
 $('#collections').addEventListener('click',e=>{
-  const x=e.target.closest('[data-colx]');
-  if(x){e.stopPropagation();deleteColl(x.getAttribute('data-colx'));return;}   // la ✕ va DINS del boto de toggle
+  const x=e.target.closest('[data-collopt]');
+  if(x){e.stopPropagation();openCollDetail(x.getAttribute('data-collopt'));return;}   // el ⋮ va DINS del boto de toggle
   if(e.target.closest('[data-newcol]')){openNewColl();return;}
   if(e.target.closest('.newcolbox'))return;                                    // el camp i la casella son zona propia
   const b=e.target.closest('[data-col]');if(b)toggleCollection(b.getAttribute('data-col'));
@@ -2001,12 +2094,12 @@ function loadMyColls(){
     if(!c||typeof c.name!=='string'||!Array.isArray(c.wds))return;
     if(COLLECTIONS.some(x=>x.id===c.id))return;                       // no trepitgem les de serie
     const wds=c.wds.filter(q=>typeof q==='string'&&/^Q\d+$/.test(q));
-    if(wds.length)COLLECTIONS.push({id:c.id,name:c.name,wds,_mine:true});
+    COLLECTIONS.push({id:c.id,name:c.name,wds,vis:c.vis==='public'?'public':'private',_mine:true});   // ara tambe n'accepta de buides
   });
 }
 function saveMyColls(){
   try{ localStorage.setItem(MYCOLL_LS,JSON.stringify(
-    COLLECTIONS.filter(c=>c._mine).map(c=>({id:c.id,name:c.name,wds:c.wds})))); }catch(ex){}
+    COLLECTIONS.filter(c=>c._mine).map(c=>({id:c.id,name:c.name,wds:c.wds,vis:c.vis||'private'})))); }catch(ex){}
 }
 
 // Els Q-ids de qui tens ara a la vista. Una colleccio guarda Q-ids i prou, com les de serie:
@@ -2021,7 +2114,9 @@ function createColl(nom,incloure){
   let i=1,id;do{id='my'+(i++);}while(COLLECTIONS.some(c=>c.id===id));
   const name=(nom||'').trim().slice(0,60)||t('cro_coll_untitled');
   pushUndo('undo_coll_new',{name});
-  COLLECTIONS.push({id,name,wds,_mine:true});
+  // `vis` es guarda des d'ara encara que no hi hagi cap interruptor: el dia que hi hagi
+  // servidor, les colleccions ja desades no necessitaran migracio.
+  COLLECTIONS.push({id,name,wds,vis:'private',_mine:true});
   // Nomes s'activa si porta gent: una colleccio buida i «encesa» no vol dir res.
   if(wds.length)state.collections.add(id);
   saveMyColls();scheduleSave();render();
