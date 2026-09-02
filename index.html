@@ -381,6 +381,17 @@
           color:var(--text3,var(--text2));border-bottom:1px solid var(--border);}
   .barmenu .bmtick{display:inline-block;width:14px;color:var(--topbar-bg);font-weight:700;}
   .barmenu button.bmnew{border-top:1px solid var(--border);color:var(--text2);}
+  .barmenu{max-height:min(70dvh,420px);overflow-y:auto;}
+  /* «Col·lecciona» desplega la llista a DINS del menu: es veu que hi ha nivells i no perds de
+     vista d'on has sortit. */
+  .barmenu .bmexp{display:flex;align-items:center;gap:8px;}
+  .barmenu .bmchev{margin-left:auto;color:var(--text2);font-size:14px;transition:transform .16s ease;}
+  .barmenu .bmexp.on{background:var(--soft);font-weight:600;}
+  .barmenu .bmexp.on .bmchev{transform:rotate(90deg);}
+  .bmsublist{background:var(--soft);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+  .barmenu .bmsub{padding-left:24px;}
+  .bmsublist .bmsub:hover{background:var(--surface);}
+  .bmsublist .bmnew{border-top:1px dashed var(--border-strong);}
   /* El + de cada fila d'«A la vista» */
   .onview .item .addc{flex:0 0 auto;border:none;background:none;color:var(--text2);font-size:17px;
         line-height:1;padding:2px 5px;border-radius:6px;cursor:pointer;font-family:inherit;}
@@ -1784,18 +1795,37 @@ function personQid(pid){
   const p=PEOPLE.find(x=>x.id===pid);
   return (p&&/^Q\d+$/.test(p.wd||''))?p.wd:null;
 }
+// La llista de colleccions propies per a un personatge, amb ✓ a les que ja el tenen.
+// La comparteixen el menu propi (des del + i des de la fitxa) i el desplegable del ⋮.
+function collListHTML(q){
+  return myColls().map(c=>`<button class="bmsub" data-act="addto" data-cid="${c.id}" data-q="${q}">`
+      +`<span class="bmtick">${c.wds.includes(q)?'✓':''}</span>${esc(c.name)}</button>`).join('')
+    +`<button class="bmsub bmnew" data-act="addnew" data-q="${q}">${t('cro_coll_addnew')}</button>`;
+}
+// Des del ⋮ el submenu es DESPLEGA a dins, no substitueix el menu: substituir-lo et deixava una
+// llista flotant sense context ni manera de tornar enrere.
+function expandAddInMenu(pid,itemEl){
+  const q=personQid(pid);
+  if(!q){showToast(t('cro_coll_noqid'));return;}
+  const obert=barmenu.querySelector('.bmsublist');
+  if(obert){obert.remove();itemEl.classList.remove('on');return;}
+  const box=document.createElement('div');
+  box.className='bmsublist';
+  box.innerHTML=collListHTML(q);
+  itemEl.after(box);
+  itemEl.classList.add('on');
+  // Si en desplegar-se surt per sota de la pantalla, el menu puja el que calgui.
+  const r=barmenu.getBoundingClientRect();
+  if(r.bottom>window.innerHeight-8)
+    barmenu.style.top=Math.max(8,window.innerHeight-8-r.height)+'px';
+}
 function openAddToColl(pid,anchorEl){
   const q=personQid(pid);
   if(!q){showToast(t('cro_coll_noqid'));closeBarMenu();return;}   // sense QID no es pot tornar a resoldre
-  const mine=myColls();
-  // ⚠️ El rectangle es llegeix ABANS de reescriure l'innerHTML: quan l'ancoratge es un boto de
-  // dins d'aquest mateix menu (el cas del ⋮), reescriure'l el desconnecta i el seu rect passa a
-  // ser tot zeros —el menu sortia a dalt a l'esquerra de la pantalla.
+  // ⚠️ El rectangle es llegeix ABANS de reescriure l'innerHTML: si l'ancoratge fos un node
+  // d'aquest mateix menu, reescriure'l el desconnectaria i el seu rect passaria a ser zeros.
   const r=anchorEl.getBoundingClientRect();
-  barmenu.innerHTML=`<div class="bmhead">${t('cro_coll_addto')}</div>`
-    +mine.map(c=>`<button data-act="addto" data-cid="${c.id}" data-q="${q}">`
-      +`<span class="bmtick">${c.wds.includes(q)?'✓':''}</span>${esc(c.name)}</button>`).join('')
-    +`<button class="bmnew" data-act="addnew" data-q="${q}">${t('cro_coll_addnew')}</button>`;
+  barmenu.innerHTML=`<div class="bmhead">${t('cro_coll_addto')}</div>`+collListHTML(q);
   barmenu.style.left=Math.min(r.left,window.innerWidth-190)+'px';
   barmenu.style.top=Math.min(r.bottom+4,window.innerHeight-40)+'px';
   barmenu.classList.add('open');
@@ -2176,17 +2206,25 @@ function openBarMenu(id,anchorEl){
   const rm=SEED_PINNED.includes(id)?'':`<button class="danger" data-act="remove" data-id="${id}">${t('cro_delete')}</button>`;
   // "Veure detall" first: zoomed far out a bar can shrink to just its ⋮ button, leaving no pill left
   // to click, so the menu has to offer the same thing clicking the bar would.
-  barmenu.innerHTML=`<button data-act="detail" data-id="${id}">${t('cro_detail')}</button><button data-act="context" data-id="${id}">${t('cro_context')}</button><button data-act="addmenu" data-id="${id}">${t('cro_coll_addto')}</button><button data-act="report" data-id="${id}">${t('cro_report')}</button>${rm}`;
+  barmenu.innerHTML=`<button data-act="detail" data-id="${id}">${t('cro_detail')}</button><button data-act="context" data-id="${id}">${t('cro_context')}</button><button data-act="addmenu" data-id="${id}" class="bmexp">${t('cro_coll_addto')}<span class="bmchev">›</span></button><button data-act="report" data-id="${id}">${t('cro_report')}</button>${rm}`;
   const r=anchorEl.getBoundingClientRect();
   barmenu.style.left=Math.min(r.left,window.innerWidth-170)+'px';
   barmenu.style.top=(r.bottom+4)+'px';
   barmenu.classList.add('open');
+  // ⚠️ Nomes es limitava l'eix horitzontal: obrint el ⋮ d'una barra de la part baixa, el menu
+  // sortia per sota de la pantalla i les ultimes opcions no s'hi arribaven. Ara, si no hi cap
+  // a sota de l'ancoratge, es pinta per damunt (i si tampoc, s'arramba al marge).
+  const m=barmenu.getBoundingClientRect();
+  if(m.bottom>window.innerHeight-8){
+    const sobre=r.top-4-m.height;
+    barmenu.style.top=(sobre>=8?sobre:Math.max(8,window.innerHeight-8-m.height))+'px';
+  }
 }
 function closeBarMenu(){barmenu.classList.remove('open');}
 barmenu.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
   const id=b.getAttribute('data-id'),act=b.getAttribute('data-act');
-  if(act==='addmenu'){e.stopPropagation();openAddToColl(id,b);return;}   // reobre el menu; sense stopPropagation es tancaria de seguida
+  if(act==='addmenu'){e.stopPropagation();expandAddInMenu(id,b);return;}   // desplega a dins; sense stopPropagation el menu es tancaria de seguida
   if(act==='addto'){
     const cid=b.getAttribute('data-cid'),q=b.getAttribute('data-q');
     const c=COLLECTIONS.find(x=>x.id===cid);
