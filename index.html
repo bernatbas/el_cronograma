@@ -362,6 +362,16 @@
   .barmenu button{display:block;width:100%;text-align:left;border:none;background:none;padding:9px 14px;font-size:13px;cursor:pointer;color:var(--text);white-space:nowrap;}
   .barmenu button:hover{background:var(--soft);}
   .barmenu button.danger{color:#C0392B;}
+  /* Capcalera del menu quan fa d'«Afegeix a…»: diu de que va la llista sense semblar una opcio */
+  .bmhead{padding:8px 14px 6px;font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+          color:var(--text3,var(--text2));border-bottom:1px solid var(--border);}
+  .barmenu .bmtick{display:inline-block;width:14px;color:var(--topbar-bg);font-weight:700;}
+  .barmenu button.bmnew{border-top:1px solid var(--border);color:var(--text2);}
+  /* El + de cada fila d'«A la vista» */
+  .onview .item .addc{flex:0 0 auto;border:none;background:none;color:var(--text2);font-size:17px;
+        line-height:1;padding:2px 5px;border-radius:6px;cursor:pointer;font-family:inherit;}
+  .onview .item .addc:hover{background:var(--surface);color:var(--text);}
+  @media (pointer:coarse){ .onview .item .addc{padding:5px 8px;font-size:19px;} }
   /* Hover tooltip on a person bar. Not a native `title`: that waits ~1s and, zoomed out, the pill is
      too small to hold a readable label — the name and dates have to be reachable without clicking. */
   /* ===== Toast (feedback curt per accions encara no implementades) ===== */
@@ -755,6 +765,7 @@ const I18N={
     undo_coll_del: v => 'esborrar «'+v.name+'»',
     undo_coll_rename: v => 'reanomenar «'+v.name+'»',
     undo_coll_rm: v => 'treure de «'+v.name+'»',
+    undo_coll_add: v => 'afegir a «'+v.name+'»',
     cro_act_coll_off: v => 'desactivar «'+v.name+'»',
     cro_act_add: v => 'afegir '+v.name,
     cro_act_remove: v => 'treure '+v.name,
@@ -786,6 +797,11 @@ const I18N={
     cro_coll_rm_member:'Treu-lo de la col·lecció',
     cro_coll_del_btn:'Esborra la col·lecció',
     cro_coll_renamed: v => 'ara es diu «'+v.name+'»',
+    cro_coll_addto:'Afegeix a…',
+    cro_coll_addnew:'+ Col·lecció nova',
+    cro_coll_noqid:'Aquest personatge no té Q-id de Wikidata: no es pot desar en una col·lecció.',
+    cro_coll_added: v => 'afegit a «'+v.name+'»',
+    cro_coll_removed: v => 'tret de «'+v.name+'»',
     cro_coll_saved: v => '«'+v.name+'» desada amb '+v.n+(v.n===1?' personatge':' personatges'),
     cro_coll_saved_empty: v => '«'+v.name+'» creada, encara buida',
     cro_open_site:'Obre el lloc web',
@@ -1532,7 +1548,7 @@ function renderSidebar(){
         + `</div>`
       : `<button class="newcol" data-newcol>${t('cro_newcol')}</button>`);
   const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>L(a.name).localeCompare(L(b.name),LANG));   // always alphabetical, en l'idioma actiu
-  $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}" title="${t('cro_center')}">${esc(L(p.name))}</button>${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}">⚠</button><button class="x" data-remove="${p.id}" title="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
+  $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}" title="${t('cro_center')}">${esc(L(p.name))}</button>${p.wd?`<button class="addc" data-addc="${p.id}" title="${t('cro_coll_addto')}" aria-label="${t('cro_coll_addto')}">+</button>`:''}${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}">⚠</button><button class="x" data-remove="${p.id}" title="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
 }
 
 // ============================================================
@@ -1559,12 +1575,14 @@ function openDetail(p){
     <div class="desc">${esc(L(p.desc))}</div>
     <div class="actions">
       <button class="dbtn" data-act="context">${t('cro_context')}</button>
+      ${personQid(p.id)?`<button class="dbtn" data-act="addto">${t('cro_coll_addto')}</button>`:''}
       ${p.wiki?`<button class="dbtn" data-act="wiki">${linkLabel(p.wiki)} ↗</button>`:''}
       ${SEED_PINNED.includes(p.id)?'':`<button class="dbtn danger" data-act="remove">${t('cro_delete')}</button>`}
     </div>`;
   $('#closeDetail').onclick=()=>{hideDetail();state.selected=null;render();};
   d.querySelectorAll('.dbtn').forEach(btn=>btn.onclick=()=>{
     const act=btn.getAttribute('data-act');
+    if(act==='addto'){openAddToColl(p.id,btn);return;}
     if(act==='remove')removePerson(p.id);
     else if(act==='wiki')window.open(p.wiki,'_blank','noopener,noreferrer');
     else{if(typeof gtag!=='undefined')gtag('event','mostra_context',{personatge:L(p.name)});showContext(p.id);}
@@ -1624,21 +1642,63 @@ function renameColl(cid,nom){
   showToast(t('cro_coll_renamed',{name}));
 }
 
-function removeFromColl(cid,qid){
-  const c=COLLECTIONS.find(x=>x.id===cid&&x._mine);if(!c)return;
-  const i=c.wds.indexOf(qid);if(i<0)return;
-  pushUndo('undo_coll_rm',{name:c.name});
-  c.wds.splice(i,1);
-  // Si la colleccio esta activa i ninguna altra el vol, el personatge marxa de la vista:
-  // mateixa regla que en desactivar una colleccio.
-  if(state.collections.has(cid)){
-    const stillWanted=new Set([...state.collections].flatMap(id=>(COLLECTIONS.find(x=>x.id===id)||{wds:[]}).wds));
-    if(!stillWanted.has(qid)){
-      const p=PEOPLE.find(x=>x.wd===qid);
-      if(p&&!SEED_PINNED.includes(p.id))state.pinned.delete(p.id);
+// Afegir i treure passen tots dos per aqui, cridat des de la fitxa i des dels menus.
+// Retorna si ha canviat res, perque qui crida pugui decidir si avisa.
+function setMember(cid,qid,on){
+  const c=COLLECTIONS.find(x=>x.id===cid&&x._mine);if(!c)return false;
+  const i=c.wds.indexOf(qid);
+  if(on){
+    if(i>=0)return false;
+    pushUndo('undo_coll_add',{name:c.name});
+    c.wds.push(qid);
+  }else{
+    if(i<0)return false;
+    pushUndo('undo_coll_rm',{name:c.name});
+    c.wds.splice(i,1);
+    // Si la colleccio esta activa i ninguna altra el vol, el personatge marxa de la vista:
+    // mateixa regla que en desactivar una colleccio.
+    if(state.collections.has(cid)){
+      const stillWanted=new Set([...state.collections].flatMap(id=>(COLLECTIONS.find(x=>x.id===id)||{wds:[]}).wds));
+      if(!stillWanted.has(qid)){
+        const p=PEOPLE.find(x=>x.wd===qid);
+        if(p&&!SEED_PINNED.includes(p.id))state.pinned.delete(p.id);
+      }
     }
   }
-  saveMyColls();recomputePresent();clearFitLatch();scheduleSave();openCollDetail(cid);
+  saveMyColls();recomputePresent();clearFitLatch();scheduleSave();
+  return true;
+}
+function removeFromColl(cid,qid){ if(setMember(cid,qid,false))openCollDetail(cid); }
+
+// ===== «Afegeix a…» =====
+// Nomes surten les colleccions PROPIES: les de serie son contingut d'autor i s'editen al
+// dashboard. Reaprofita el menu flotant de les barres, que ja es generic.
+const myColls=()=>COLLECTIONS.filter(c=>c._mine);
+function personQid(pid){
+  const p=PEOPLE.find(x=>x.id===pid);
+  return (p&&/^Q\d+$/.test(p.wd||''))?p.wd:null;
+}
+function openAddToColl(pid,anchorEl){
+  const q=personQid(pid);
+  if(!q){showToast(t('cro_coll_noqid'));closeBarMenu();return;}   // sense QID no es pot tornar a resoldre
+  const mine=myColls();
+  barmenu.innerHTML=`<div class="bmhead">${t('cro_coll_addto')}</div>`
+    +mine.map(c=>`<button data-act="addto" data-cid="${c.id}" data-q="${q}">`
+      +`<span class="bmtick">${c.wds.includes(q)?'✓':''}</span>${esc(c.name)}</button>`).join('')
+    +`<button class="bmnew" data-act="addnew" data-q="${q}">${t('cro_coll_addnew')}</button>`;
+  const r=anchorEl.getBoundingClientRect();
+  barmenu.style.left=Math.min(r.left,window.innerWidth-190)+'px';
+  barmenu.style.top=Math.min(r.bottom+4,window.innerHeight-40)+'px';
+  barmenu.classList.add('open');
+}
+// Una colleccio nova des d'aqui neix amb aquest personatge i obre la seva fitxa, que ja es
+// on es posa el nom: aixi no cal un segon camp de text enmig d'un menu.
+function newCollWith(q){
+  let i=1,id;do{id='my'+(i++);}while(COLLECTIONS.some(c=>c.id===id));
+  pushUndo('undo_coll_new',{name:t('cro_coll_untitled')});
+  COLLECTIONS.push({id,name:t('cro_coll_untitled'),wds:[q],vis:'private',_mine:true});
+  saveMyColls();scheduleSave();closeBarMenu();openCollDetail(id);
+  const el=$('#collname');if(el){el.focus();el.select();}
 }
 
 function openEvent(ev){
@@ -1830,6 +1890,8 @@ $('#onview').addEventListener('mouseleave',hideBartip);
 $('#onview').addEventListener('click',e=>{
   const g=e.target.closest('[data-goto]');
   if(g){revealPerson(g.getAttribute('data-goto'));return;}   // clicking a name pans it to the centre
+  const ac=e.target.closest('[data-addc]');
+  if(ac){e.stopPropagation();openAddToColl(ac.getAttribute('data-addc'),ac);return;}
   if(e.target.closest('[data-report]')){WIP();return;}
   const b=e.target.closest('[data-remove]');if(!b)return;
   removePerson(b.getAttribute('data-remove'));
@@ -2007,7 +2069,7 @@ function openBarMenu(id,anchorEl){
   const rm=SEED_PINNED.includes(id)?'':`<button class="danger" data-act="remove" data-id="${id}">${t('cro_delete')}</button>`;
   // "Veure detall" first: zoomed far out a bar can shrink to just its ⋮ button, leaving no pill left
   // to click, so the menu has to offer the same thing clicking the bar would.
-  barmenu.innerHTML=`<button data-act="detail" data-id="${id}">${t('cro_detail')}</button><button data-act="context" data-id="${id}">${t('cro_context')}</button><button data-act="report" data-id="${id}">${t('cro_report')}</button>${rm}`;
+  barmenu.innerHTML=`<button data-act="detail" data-id="${id}">${t('cro_detail')}</button><button data-act="context" data-id="${id}">${t('cro_context')}</button><button data-act="addmenu" data-id="${id}">${t('cro_coll_addto')}</button><button data-act="report" data-id="${id}">${t('cro_report')}</button>${rm}`;
   const r=anchorEl.getBoundingClientRect();
   barmenu.style.left=Math.min(r.left,window.innerWidth-170)+'px';
   barmenu.style.top=(r.bottom+4)+'px';
@@ -2017,6 +2079,15 @@ function closeBarMenu(){barmenu.classList.remove('open');}
 barmenu.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
   const id=b.getAttribute('data-id'),act=b.getAttribute('data-act');
+  if(act==='addmenu'){openAddToColl(id,b);return;}            // reobre el menu amb les colleccions
+  if(act==='addto'){
+    const cid=b.getAttribute('data-cid'),q=b.getAttribute('data-q');
+    const c=COLLECTIONS.find(x=>x.id===cid);
+    const teniaJa=c&&c.wds.includes(q);
+    if(setMember(cid,q,!teniaJa))showToast(t(teniaJa?'cro_coll_removed':'cro_coll_added',{name:c.name}));
+    closeBarMenu();render();return;
+  }
+  if(act==='addnew'){newCollWith(b.getAttribute('data-q'));return;}
   if(act==='remove')removePerson(id);
   else if(act==='detail'){const p=PEOPLE.find(x=>x.id===id);if(p)openDetail(p);}
   else if(act==='report')WIP();
