@@ -1,6 +1,6 @@
 /* =============================================================================
  * data.js — SNAPSHOT PROVISIONAL de la base de dades del cronograma.
- * Generat automàticament des d'index.html el 2026-08-31.
+ * Generat automàticament des d'index.html el 2026-09-03.
  *
  * ⚠️  PROVISIONAL: això és una CÒPIA de les dades que ara viuen a index.html,
  *     feta per facilitar el testeig local (file://). Quan existeixi la DB externa,
@@ -846,6 +846,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Rams%C3%A8s_II",
       "desc": "Tercer faraó de la dinastia XIX d’Egipte"
+    },
+    {
+      "id": "atila",
+      "wd": "Q36724",
+      "name": "Àtila",
+      "birth": 406,
+      "death": 453,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/%C3%80tila",
+      "desc": "Governant de l’Imperi Hunnic del 434 al 453"
     }
   ],
   "EVENTS": [
