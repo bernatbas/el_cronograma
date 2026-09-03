@@ -911,6 +911,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Crist%C3%B2for_Colom",
       "desc": "Navegant i explorador genovès"
+    },
+    {
+      "id": "martiluter",
+      "wd": "Q9554",
+      "name": "Martí Luter",
+      "birth": 1483,
+      "death": 1546,
+      "cats": [
+        "religion"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Mart%C3%AD_Luter",
+      "desc": "Sacerdot, teòleg i escriptor alemany"
     }
   ],
   "EVENTS": [
