@@ -978,6 +978,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Alexander_Fleming",
       "desc": "Metge i microbiòleg escocès"
+    },
+    {
+      "id": "louispasteur",
+      "wd": "Q529",
+      "name": "Louis Pasteur",
+      "birth": 1822,
+      "death": 1895,
+      "cats": [
+        "science"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Louis_Pasteur",
+      "desc": "Microbiòleg i químic francès"
     }
   ],
   "EVENTS": [
