@@ -1057,6 +1057,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Winston_Churchill",
       "desc": "61è i 63è Primer ministre del Regne Unit"
+    },
+    {
+      "id": "adolfhitler",
+      "wd": "Q352",
+      "name": "Adolf Hitler",
+      "birth": 1889,
+      "death": 1945,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Adolf_Hitler",
+      "desc": "Dictador d’Alemanya de 1933 a 1945"
     }
   ],
   "EVENTS": [
