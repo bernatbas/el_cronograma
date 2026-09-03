@@ -965,6 +965,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Adam_Smith",
       "desc": "Economista i filòsof escocès"
+    },
+    {
+      "id": "alexanderfleming",
+      "wd": "Q37064",
+      "name": "Alexander Fleming",
+      "birth": 1881,
+      "death": 1955,
+      "cats": [
+        "science"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Alexander_Fleming",
+      "desc": "Metge i microbiòleg escocès"
     }
   ],
   "EVENTS": [
