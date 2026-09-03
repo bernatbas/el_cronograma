@@ -1044,6 +1044,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Nikola_Tesla",
       "desc": "Enginyer i inventor serbo-estatunidenc"
+    },
+    {
+      "id": "winstonchurchill",
+      "wd": "Q8016",
+      "name": "Winston Churchill",
+      "birth": 1874,
+      "death": 1965,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Winston_Churchill",
+      "desc": "61è i 63è Primer ministre del Regne Unit"
     }
   ],
   "EVENTS": [
