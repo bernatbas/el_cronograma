@@ -1110,6 +1110,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Simone_de_Beauvoir",
       "desc": "Filòsofa, teòrica social i activista francesa"
+    },
+    {
+      "id": "charleschaplin",
+      "wd": "Q882",
+      "name": "Charles Chaplin",
+      "birth": 1889,
+      "death": 1977,
+      "cats": [
+        "cinema"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Charles_Chaplin",
+      "desc": "Actor i cineasta anglès"
     }
   ],
   "EVENTS": [
