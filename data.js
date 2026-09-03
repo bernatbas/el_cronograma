@@ -991,6 +991,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Louis_Pasteur",
       "desc": "Microbiòleg i químic francès"
+    },
+    {
+      "id": "fiodordostoievski",
+      "wd": "Q991",
+      "name": "Fiódor Dostoievski",
+      "birth": 1821,
+      "death": 1881,
+      "cats": [
+        "literature"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Fi%C3%B3dor_Dostoievski",
+      "desc": "Novel·lista rus"
     }
   ],
   "EVENTS": [
