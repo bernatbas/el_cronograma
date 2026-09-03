@@ -1401,11 +1401,21 @@ function render(){
   // _row. So zooming only ADDS names — no flicker (a name never toggles on/off at a fixed zoom) and no
   // up/down swap. A searched/selected event is FORCED to show at any zoom (explicit intent beats the gate).
   const FADE_PX=22, DOT_GAP=7;   // finestra de fade més curta = aparició més brusca en fer zoom
+  // Un event sense nom es pinta com a punt, però NO des del primer moment: només quan el zoom
+  // ja arriba a la meitat del que li cal per guanyar el nom. Amb 32 events, sense aquesta porta
+  // la vista per defecte tenia 11 noms i 21 punts —el canvas quedava clapejat de boles mig
+  // esvaïdes—; amb la porta en queden 3, i les que hi són volen dir «amplia una mica més i
+  // això tindrà nom». Pujar el valor cap a 1 les fa desaparèixer del tot.
+  const DOT_PPY_RATIO=0.5;
   evPlaced.forEach(o=>{o.labeled=(o.ev.id===state.selectedEvent)||pxPerYear>=o.ev._revealPPY;o.row=o.ev._row;});
   // Importance order (stable) drives the dot de-dup so dense stretches don't smear into a solid bar of dots.
   const byImp=[...evPlaced].sort((a,b)=>b.ev._m-a.ev._m||a.left-b.left);
   const dotX=byImp.filter(o=>o.labeled).map(o=>o.left);
-  byImp.forEach(o=>{if(o.labeled){o.showDot=true;return;}if(dotX.some(dx=>Math.abs(dx-o.left)<DOT_GAP)){o.showDot=false;}else{o.showDot=true;dotX.push(o.left);}});
+  byImp.forEach(o=>{
+    if(o.labeled){o.showDot=true;return;}
+    if(pxPerYear<o.ev._revealPPY*DOT_PPY_RATIO){o.showDot=false;return;}   // encara massa lluny del seu zoom
+    if(dotX.some(dx=>Math.abs(dx-o.left)<DOT_GAP)){o.showDot=false;}else{o.showDot=true;dotX.push(o.left);}
+  });
   // Organic fade: a name that only just cleared its row-neighbours comes in dim and brightens with zoom.
   const rowLbl=[[],[]];
   evPlaced.forEach(o=>{if(o.labeled)rowLbl[o.row].push(o);});
