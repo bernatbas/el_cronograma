@@ -1188,12 +1188,36 @@ window.HB_DATA = {
       "desc": "Mahoma emigra de la Meca a Medina; inici del calendari islàmic i d’una expansió que transformarà el Mediterrani i l’Orient Pròxim."
     },
     {
+      "id": "cartamagna",
+      "name": "Carta Magna",
+      "year": 1215,
+      "wiki": "https://ca.wikipedia.org/wiki/Carta_Magna",
+      "sitelinks": 97,
+      "desc": "Els barons anglesos obliguen el rei Joan a acceptar per escrit que el seu poder té límits; el primer document d’aquesta mena a Europa."
+    },
+    {
       "id": "pestaNegra",
       "name": "Pesta Negra",
       "year": 1347,
       "wiki": "https://ca.wikipedia.org/wiki/Pesta_negra",
       "sitelinks": 127,
       "desc": "Epidèmia de pesta bubònica que mata entre un terç i la meitat de la població europea, accelerant la fi del feudalisme medieval."
+    },
+    {
+      "id": "impremta",
+      "name": "Invenció de la impremta",
+      "year": 1440,
+      "wiki": "https://ca.wikipedia.org/wiki/Impremta",
+      "sitelinks": 79,
+      "desc": "Gutenberg combina tipus mòbils, tinta grassa i premsa: un llibre deixa de ser un objecte únic i el coneixement es pot copiar barat."
+    },
+    {
+      "id": "constantinoble",
+      "name": "Caiguda de Constantinoble",
+      "year": 1453,
+      "wiki": "https://ca.wikipedia.org/wiki/Caiguda_de_Constantinoble",
+      "sitelinks": 79,
+      "desc": "Els otomans prenen la capital de l’Imperi Romà d’Orient. S’acaba l’últim tros de Roma, 1.480 anys després de la seva fundació."
     },
     {
       "id": "descamerica",
@@ -1220,12 +1244,28 @@ window.HB_DATA = {
       "desc": "L’aparició de la màquina de vapor a Anglaterra transforma l’economia, la societat i el paisatge urbà del món."
     },
     {
+      "id": "independenciaeua",
+      "name": "Declaració d’Independència dels EUA",
+      "year": 1776,
+      "wiki": "https://ca.wikipedia.org/wiki/Declaraci%C3%B3_d%27Independ%C3%A8ncia_dels_Estats_Units_d%27Am%C3%A8rica",
+      "sitelinks": 94,
+      "desc": "Tretze colònies es declaren independents de la Gran Bretanya i funden la primera república moderna, tretze anys abans de la Revolució Francesa."
+    },
+    {
       "id": "revfr",
       "name": "Revolució Francesa",
       "year": 1789,
       "wiki": "https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Francesa",
       "sitelinks": 193,
       "desc": "Procés revolucionari que va enderrocar l’Antic Règim a França i va escampar per Europa els ideals de llibertat, igualtat i fraternitat."
+    },
+    {
+      "id": "relativitat",
+      "name": "Teoria de la relativitat",
+      "year": 1905,
+      "wiki": "https://ca.wikipedia.org/wiki/Teoria_de_la_relativitat",
+      "sitelinks": 120,
+      "desc": "Einstein publica la relativitat especial: el temps i l’espai deixen de ser absoluts i passen a dependre de qui els mesura."
     },
     {
       "id": "wwi",
@@ -1236,6 +1276,30 @@ window.HB_DATA = {
       "desc": "Esclat del primer conflicte a escala global, que va redibuixar el mapa polític i social del segle XX."
     },
     {
+      "id": "revoluciorussa",
+      "name": "Revolució Russa",
+      "year": 1917,
+      "wiki": "https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Russa",
+      "sitelinks": 117,
+      "desc": "Cau el tsarisme i els bolxevics prenen el poder: neix el primer estat comunista i amb ell mig segle de món partit en dos."
+    },
+    {
+      "id": "penicilina",
+      "name": "Descoberta de la penicil·lina",
+      "year": 1928,
+      "wiki": "https://ca.wikipedia.org/wiki/Penicil%C2%B7lina",
+      "sitelinks": 114,
+      "desc": "Fleming veu que un fong ha matat els bacteris d’un cultiu oblidat. És el primer antibiòtic: abans, una infecció petita et podia matar."
+    },
+    {
+      "id": "guerracivil",
+      "name": "Inici de la Guerra Civil espanyola",
+      "year": 1936,
+      "wiki": "https://ca.wikipedia.org/wiki/Guerra_Civil_espanyola",
+      "sitelinks": 119,
+      "desc": "Un cop d’estat fracassa a mitges i parteix el país en dos. Tres anys de guerra i quaranta de dictadura."
+    },
+    {
       "id": "wwii",
       "name": "Inici de la Segona Guerra Mundial",
       "year": 1939,
@@ -1244,12 +1308,84 @@ window.HB_DATA = {
       "desc": "El conflicte més devastador de la història, amb 70-85 milions de víctimes. Acabà amb la creació de l’ONU i l’ordre bipolar de la Guerra Freda."
     },
     {
+      "id": "hiroshima",
+      "name": "Bombardejos d’Hiroshima i Nagasaki",
+      "year": 1945,
+      "wiki": "https://ca.wikipedia.org/wiki/Bombardejos_at%C3%B2mics_d%27Hiroshima_i_Nagasaki",
+      "sitelinks": 93,
+      "desc": "Els Estats Units llancen dues bombes atòmiques sobre el Japó. Única vegada que s’han fet servir armes nuclears en una guerra."
+    },
+    {
+      "id": "dretshumans",
+      "name": "Declaració Universal dels Drets Humans",
+      "year": 1948,
+      "wiki": "https://ca.wikipedia.org/wiki/Declaraci%C3%B3_Universal_dels_Drets_Humans",
+      "sitelinks": 178,
+      "desc": "Tres anys després de la guerra, l’ONU escriu què es deu a qualsevol persona pel simple fet de ser-ho."
+    },
+    {
+      "id": "adn",
+      "name": "Descoberta de l’estructura de l’ADN",
+      "year": 1953,
+      "wiki": "https://ca.wikipedia.org/wiki/%C3%80cid_desoxiribonucleic",
+      "sitelinks": 175,
+      "desc": "Watson i Crick descriuen la doble hèlix, amb les dades de Rosalind Franklin. Darwin havia explicat l’evolució; això n’explica el mecanisme."
+    },
+    {
+      "id": "apollo11",
+      "name": "Apollo 11",
+      "year": 1969,
+      "wiki": "https://ca.wikipedia.org/wiki/Apollo_11",
+      "sitelinks": 106,
+      "desc": "Armstrong i Aldrin caminen per la Lluna. Sis-cents milions de persones ho miren en directe."
+    },
+    {
+      "id": "constitucio78",
+      "name": "Constitució espanyola de 1978",
+      "year": 1978,
+      "wiki": "https://ca.wikipedia.org/wiki/Constituci%C3%B3_espanyola_de_1978",
+      "sitelinks": 39,
+      "desc": "Tanca la dictadura i estableix el marc polític en què viu el país des d’aleshores."
+    },
+    {
       "id": "murberlin",
       "name": "Caiguda del Mur de Berlín",
       "year": 1989,
       "wiki": "https://ca.wikipedia.org/wiki/Caiguda_del_mur_de_Berl%C3%ADn",
       "sitelinks": 38,
       "desc": "El novembre de 1989 cau el símbol de la Guerra Freda, obrint camí a la reunificació alemanya i la dissolució del bloc soviètic."
+    },
+    {
+      "id": "fiurss",
+      "name": "Dissolució de la Unió Soviètica",
+      "year": 1991,
+      "wiki": "https://ca.wikipedia.org/wiki/Dissoluci%C3%B3_de_la_Uni%C3%B3_Sovi%C3%A8tica",
+      "sitelinks": 85,
+      "desc": "L’URSS s’acaba i la Guerra Freda amb ella. El món deixa de tenir dos centres."
+    },
+    {
+      "id": "www",
+      "name": "Naixement de la World Wide Web",
+      "year": 1991,
+      "wiki": "https://ca.wikipedia.org/wiki/World_Wide_Web",
+      "sitelinks": 154,
+      "desc": "Tim Berners-Lee obre el primer web al públic. El canvi més gran en la difusió del saber des de la impremta."
+    },
+    {
+      "id": "s11",
+      "name": "Atemptats de l’11 de setembre",
+      "year": 2001,
+      "wiki": "https://ca.wikipedia.org/wiki/Atemptats_de_l%2711_de_setembre_de_2001",
+      "sitelinks": 149,
+      "desc": "Dos avions tomben les torres de Nova York. Marca l’inici polític del segle XXI."
+    },
+    {
+      "id": "covid",
+      "name": "Inici de la pandèmia de COVID-19",
+      "year": 2020,
+      "wiki": "https://ca.wikipedia.org/wiki/Pand%C3%A8mia_de_COVID-19",
+      "sitelinks": 170,
+      "desc": "Un coronavirus atura mig món durant mesos. El primer esdeveniment global viscut en directe per tothom."
     },
     {
       "id": "delt",
