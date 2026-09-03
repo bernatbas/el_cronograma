@@ -924,6 +924,20 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Mart%C3%AD_Luter",
       "desc": "Sacerdot, teòleg i escriptor alemany"
+    },
+    {
+      "id": "renedescartes",
+      "wd": "Q9191",
+      "name": "René Descartes",
+      "birth": 1596,
+      "death": 1650,
+      "cats": [
+        "philosophy",
+        "science"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Ren%C3%A9_Descartes",
+      "desc": "Polímata francès"
     }
   ],
   "EVENTS": [
