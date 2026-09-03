@@ -872,6 +872,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/El_Cid",
       "desc": "Cavaller castellà del segle XI"
+    },
+    {
+      "id": "moctezumaii",
+      "wd": "Q141791",
+      "name": "Moctezuma II",
+      "birth": 1466,
+      "death": 1520,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Moctezuma_II",
+      "desc": "Emperador de l’Imperi Asteca de 1502 o 1503 a 1520"
     }
   ],
   "EVENTS": [
