@@ -1096,6 +1096,20 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Alan_Turing",
       "desc": "Pioner de la informàtica anglès"
+    },
+    {
+      "id": "simonedebeauvoir",
+      "wd": "Q7197",
+      "name": "Simone de Beauvoir",
+      "birth": 1908,
+      "death": 1986,
+      "cats": [
+        "philosophy",
+        "literature"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Simone_de_Beauvoir",
+      "desc": "Filòsofa, teòrica social i activista francesa"
     }
   ],
   "EVENTS": [
