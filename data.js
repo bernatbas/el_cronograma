@@ -1017,6 +1017,20 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Friedrich_Wilhelm_Nietzsche",
       "desc": "Filòsof alemany"
+    },
+    {
+      "id": "sigmundfreud",
+      "wd": "Q9215",
+      "name": "Sigmund Freud",
+      "birth": 1856,
+      "death": 1939,
+      "cats": [
+        "science",
+        "philosophy"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Sigmund_Freud",
+      "desc": "Neuròleg austríac i fundador de la psicoanàlisi"
     }
   ],
   "EVENTS": [
