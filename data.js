@@ -986,7 +986,7 @@ window.HB_DATA = {
     },
     {
       "id": "wwii",
-      "name": "Segona Guerra Mundial",
+      "name": "Inici de la Segona Guerra Mundial",
       "year": 1939,
       "wiki": "https://ca.wikipedia.org/wiki/Segona_Guerra_Mundial",
       "sitelinks": 292,
