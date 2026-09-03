@@ -1123,6 +1123,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Charles_Chaplin",
       "desc": "Actor i cineasta anglès"
+    },
+    {
+      "id": "johancruyff",
+      "wd": "Q17163",
+      "name": "Johan Cruyff",
+      "birth": 1947,
+      "death": 2016,
+      "cats": [
+        "sport"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Johan_Cruyff",
+      "desc": "Jugador i entrenador de futbol neerlandès"
     }
   ],
   "EVENTS": [
