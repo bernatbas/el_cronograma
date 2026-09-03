@@ -1070,6 +1070,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Adolf_Hitler",
       "desc": "Dictador d’Alemanya de 1933 a 1945"
+    },
+    {
+      "id": "maozedong",
+      "wd": "Q5816",
+      "name": "Mao Zedong",
+      "birth": 1893,
+      "death": 1976,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Mao_Zedong",
+      "desc": "Líder de la Xina de 1949 a 1976"
     }
   ],
   "EVENTS": [
