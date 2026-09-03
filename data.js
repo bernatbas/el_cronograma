@@ -885,6 +885,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Moctezuma_II",
       "desc": "Emperador de l’Imperi Asteca de 1502 o 1503 a 1520"
+    },
+    {
+      "id": "homer",
+      "wd": "Q6691",
+      "name": "Homer",
+      "birth": -750,
+      "death": -650,
+      "cats": [
+        "literature"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Homer",
+      "desc": "Poeta de l’Antiga Grècia"
     }
   ],
   "EVENTS": [
