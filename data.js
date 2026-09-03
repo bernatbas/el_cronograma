@@ -898,6 +898,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Homer",
       "desc": "Poeta de l’Antiga Grècia"
+    },
+    {
+      "id": "cristoforcolom",
+      "wd": "Q7322",
+      "name": "Cristòfor Colom",
+      "birth": 1451,
+      "death": 1506,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Crist%C3%B2for_Colom",
+      "desc": "Navegant i explorador genovès"
     }
   ],
   "EVENTS": [
