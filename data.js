@@ -1004,6 +1004,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Fi%C3%B3dor_Dostoievski",
       "desc": "Novel·lista rus"
+    },
+    {
+      "id": "friedrichwilhelmnietzs",
+      "wd": "Q9358",
+      "name": "Friedrich Wilhelm Nietzsche",
+      "birth": 1844,
+      "death": 1900,
+      "cats": [
+        "philosophy"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Friedrich_Wilhelm_Nietzsche",
+      "desc": "Filòsof alemany"
     }
   ],
   "EVENTS": [
