@@ -1031,6 +1031,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Sigmund_Freud",
       "desc": "Neuròleg austríac i fundador de la psicoanàlisi"
+    },
+    {
+      "id": "nikolatesla",
+      "wd": "Q9036",
+      "name": "Nikola Tesla",
+      "birth": 1856,
+      "death": 1943,
+      "cats": [
+        "science"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Nikola_Tesla",
+      "desc": "Enginyer i inventor serbo-estatunidenc"
     }
   ],
   "EVENTS": [
