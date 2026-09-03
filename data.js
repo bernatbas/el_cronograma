@@ -1083,6 +1083,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Mao_Zedong",
       "desc": "Líder de la Xina de 1949 a 1976"
+    },
+    {
+      "id": "alanturing",
+      "wd": "Q7251",
+      "name": "Alan Turing",
+      "birth": 1912,
+      "death": 1954,
+      "cats": [
+        "science"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Alan_Turing",
+      "desc": "Pioner de la informàtica anglès"
     }
   ],
   "EVENTS": [
