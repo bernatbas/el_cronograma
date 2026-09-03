@@ -859,6 +859,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/%C3%80tila",
       "desc": "Governant de l’Imperi Hunnic del 434 al 453"
+    },
+    {
+      "id": "elcid",
+      "wd": "Q43958",
+      "name": "El Cid",
+      "birth": 1048,
+      "death": 1099,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/El_Cid",
+      "desc": "Cavaller castellà del segle XI"
     }
   ],
   "EVENTS": [
