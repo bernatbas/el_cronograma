@@ -951,6 +951,20 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Immanuel_Kant",
       "desc": "Filòsof prussià"
+    },
+    {
+      "id": "adamsmith",
+      "wd": "Q9381",
+      "name": "Adam Smith",
+      "birth": 1723,
+      "death": 1790,
+      "cats": [
+        "philosophy",
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Adam_Smith",
+      "desc": "Economista i filòsof escocès"
     }
   ],
   "EVENTS": [
