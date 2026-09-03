@@ -938,6 +938,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Ren%C3%A9_Descartes",
       "desc": "Polímata francès"
+    },
+    {
+      "id": "immanuelkant",
+      "wd": "Q9312",
+      "name": "Immanuel Kant",
+      "birth": 1724,
+      "death": 1804,
+      "cats": [
+        "philosophy"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Immanuel_Kant",
+      "desc": "Filòsof prussià"
     }
   ],
   "EVENTS": [
