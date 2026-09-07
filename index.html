@@ -869,6 +869,68 @@ const COLLECTIONS=[
     'Q34670', // Albert Camus  1913–1960
     'Q9364'   // Jean-Paul Sartre 1905–1980
   ]},
+  {id:'nobel',name:'Il·lustres premis Nobel',url:'https://www.nobelprize.org/prizes/lists/all-nobel-prizes/',wds:[
+    // Els 8 amb més presència a les Viquipèdies de cada categoria (el mateix senyal de
+    // rellevància que fa servir el motor de zoom dels events), més el senyor Nobel obrint
+    // la fila. Equilibrat a propòsit: per pur nombre de sitelinks sortien 22 de Literatura
+    // i CAP de Medicina ni d’Economia.
+    // — qui va crear el premi —
+    'Q23810',    // Alfred Nobel               1833–1896 
+    // — Física —
+    'Q35149',    // Wilhelm Röntgen            1845–1923 
+    'Q9021',     // Max Planck                 1858–1947 
+    'Q7186',     // Marie Curie                1867–1934  (local) +Química
+    'Q937',      // Albert Einstein            1879–1955  (local)
+    'Q7085',     // Niels Bohr                 1885–1962 
+    'Q9130',     // Erwin Schrödinger          1887–1961 
+    'Q8753',     // Enrico Fermi               1901–1954 
+    'Q39246',    // Richard Feynman            1918–1988 
+    // — Química —
+    'Q102822',   // J. H. van ’t Hoff           1852–1911 
+    'Q80956',    // Svante August Arrhenius    1859–1927 
+    'Q57075',    // Fritz Haber                1868–1934 
+    'Q9123',     // Ernest Rutherford          1871–1937 
+    'Q57065',    // Otto Hahn                  1879–1968 
+    'Q7504',     // Irène Joliot-Curie         1897–1956 
+    'Q48983',    // Linus Carl Pauling         1901–1994  +Pau
+    'Q7487',     // Dorothy Crowfoot Hodgkin   1910–1994 
+    // — Medicina —
+    'Q37193',    // Robert Koch                1843–1910 
+    'Q42985',    // Ivan Petróvitx Pàvlov      1849–1936 
+    'Q102034',   // Ronald Ross                1857–1932 
+    'Q37064',    // Alexander Fleming          1881–1955  (local)
+    'Q78496',    // Konrad Lorenz              1903–1989 
+    'Q185007',   // Rita Levi-Montalcini       1909–2012 
+    'Q123280',   // Francis Crick              1916–2004 
+    'Q83333',    // James Dewey Watson         1928–2025 
+    // — Literatura —
+    'Q19185',    // George Bernard Shaw        1856–1950 
+    'Q7241',     // Rabindranath Tagore        1861–1941 
+    'Q34743',    // Rudyard Kipling            1865–1936 
+    'Q8016',     // Winston Churchill          1874–1965  (local)
+    'Q23434',    // Ernest Miller Hemingway    1899–1961 
+    'Q9364',     // Jean-Paul Sartre           1905–1980 
+    'Q34670',    // Albert Camus               1913–1960 
+    'Q5878',     // Gabriel García Márquez     1927–2014 
+    // — Pau —
+    'Q34296',    // Woodrow Wilson             1856–1924 
+    'Q33866',    // Theodore Roosevelt         1858–1919 
+    'Q30547',    // Teresa de Calcuta          1910–1997 
+    'Q8023',     // Nelson Mandela             1918–2013  (local)
+    'Q23685',    // James Earl Carter          1924–2024 
+    'Q8027',     // Martin Luther King         1929–1968 
+    'Q30487',    // Mikhaïl Gorbatxov          1931–2022 
+    'Q76',       // Barack Obama               1961–avui 
+    // — Economia (Banc de Suècia) —
+    'Q1325',     // Friedrich August von Hayek 1899–1992 
+    'Q47426',    // Milton Friedman            1912–2006 
+    'Q102454',   // Paul Samuelson             1915–2009 
+    'Q128736',   // John Forbes Nash           1928–2015 
+    'Q132489',   // Amartya Sen                1933–avui 
+    'Q153761',   // Elinor Ostrom              1933–2012 
+    'Q18430',    // Joseph Eugene Stiglitz     1943–avui 
+    'Q131112'    // Paul Krugman               1953–avui 
+  ]},
   {id:'maricashistoria',name:'Grandes Maricas de la Historia',url:'https://grandesmaricasdelahistoria.es/',wds:[
     'Q1762',  // Heliogàbal          203–222
     'Q762',   // Leonardo da Vinci   1452–1519
@@ -1222,8 +1284,12 @@ const guessCats=desc=>{if(!desc)return[];const d=desc.toLowerCase(),a=[];
   if(/filòsof|filósofo|philosopher/.test(d))a.push('philosophy');
   if(/compositor|composer|músic|music|cantant|cantante|singer|cantautor|songwriter|guitarr|pianist|violinist|violoncel|trompetist|trumpet|saxofon|saxophon|percussion|drummer|rapper|raper|jazz|òpera|soprano|orquestra|orchestra/.test(d))a.push('music');   // només hi havia compositor: ni músic, ni cantant, ni cap instrumentista
   if(/escriptor|escritor|writer|poeta|poet|dramaturgo|dramaturg|novel·lista|novelist/.test(d))a.push('literature');
-  if(/físic|physicist|matemàtic|mathematician|astrònom|astronomer|científic|scientist|naturalista|naturalist/.test(d))a.push('science');
-  if(/polític|político|politician|politique|rei|king|emperador|emperor|dictador|dictator|militar|military|president|independentista|ministre|minister/.test(d))a.push('politics');
+  // Hi havia nomes fisica, matematiques, astronomia i «cientific/naturalista»: ni quimica ni
+  // res de biomedicina. Amb la col·leccio dels Nobel es va veure de cop —23 de 49 sortien
+  // sense categoria, i entre ells sis quimics i set metges/biolegs. Mateix forat que el cas
+  // Verdi: arreglat al dash.py i encara viu aqui.
+  if(/físic|physicist|matemàtic|mathematician|astrònom|astronomer|científic|scientist|naturalista|naturalist|químic|chemist|bioquímic|biochemist|metge|metgessa|physician|fisiòleg|physiologist|biòleg|biòloga|biologist|zoòleg|zoologist|bacteriòleg|bacteriologist|neuròleg|neurologist|neurocientífic|neuroscientist|genetista|geneticist|farmacòleg|pharmacologist|immunòleg|immunologist|geòleg|geologist|enginyer|engineer|informàtic|computer scientist/.test(d))a.push('science');
+  if(/polític|político|politician|politique|rei|king|emperador|emperor|dictador|dictator|militar|military|president|independentista|ministre|minister|activista|activist|estadista|statesman|diplomàtic|diplomat|líder|leader|canceller|chancellor|secretari general|secretary-general|politòleg|political scientist/.test(d))a.push('politics');
   if(/pintor|painter|escultor|sculptor/.test(d))a.push('painting');
   // ⚠️ Aqui «actor» SOL sí que val, i al mapa de P106 (dash.py) NO: son dos senyals diferents.
   // A P106 en Shakespeare porta l’ocupacio «actor» (Q33999) i li encolomaria cinema; la seva
@@ -1231,7 +1297,7 @@ const guessCats=desc=>{if(!desc)return[];const d=desc.toLowerCase(),a=[];
   // tambe aqui deixava fora tothom descrit nomes com a «actor»: en Tom Cruise sortia sense
   // categoria. El teatre s’aparta amb el guard de sota, no amagant la paraula.
   if(/cineasta|director[a]? de cinema|film director|filmmaker|guionista|screenwriter|actor|actriu|film producer|productor[a]? de cinema|director[a]? de fotografia|cinematographer|cinema/.test(d) && !/teatre|teatral/.test(d))a.push('cinema');
-  if(/profeta|prophet|religiós|religious|sant|saint/.test(d))a.push('religion');
+  if(/profeta|prophet|religiós|religious|religiosa|sant|saint|monja|nun|monjo|monk|bisbe|bishop|papa |pope|rabí|rabbi|imam|teòleg|theologian|missioner|missionary/.test(d))a.push('religion');
   if(/futbolista|jugador de futbol|footballer|football player|tennista|tenista|tennis player|jugador de tennis|basquetbol|bàsquet|baloncestista|basketball|boxejador|boxeador|boxer|atleta|athlete|track and field|velocista|sprinter|gimnasta|gymnast|nedador|nadador|swimmer|ciclista|cyclist|golfista|golfer|automobilista|racing driver|motorcycle racer/.test(d)
      ||/(pilot|piloto)[^,;.]{0,18}(autom|motocicl)/.test(d))a.push('sport');   // "pilot" sol cauria sobre aviadors, així que exigim context de motor
   return [...new Set(a)].slice(0,2);};   // 0–2 per persona: una descripció tipus "filòsof, escriptor i naturalista" dispararia tres regles
