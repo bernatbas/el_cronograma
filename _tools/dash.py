@@ -1422,7 +1422,40 @@ class Handler(BaseHTTPRequestHandler):
     def _json(self, code, payload):
         self._send(code, json.dumps(payload, ensure_ascii=False), "application/json; charset=utf-8")
 
+    # Les ordres que MUTEN coses (push, add a la BD, clavar un dia, esborrar del
+    # backlog, aturar) nomes poden venir del dashboard mateix. Sense aixo, qualsevol
+    # pagina oberta al navegador podia enviar-les a localhost:7777: el navegador no
+    # la deixa LLEGIR la resposta, pero l'ordre ja s'havia executat, i un git push
+    # no necessita resposta. I els noms de les ordres son publics —el dash.py es al
+    # repo. Comprovat: una peticio amb Origin d'un altre lloc entrava i s'executava.
+    #
+    # Origin: en una peticio POST entre orígens el navegador SEMPRE l'envia, aixi que
+    # si hi es i no es dels nostres, fora. Si no hi ha ni Origin ni Referer no ve d'un
+    # navegador (curl, un script local): es deixa passar, que si no trencariem l'us
+    # manual per terminal sense guanyar res.
+    #
+    # Host: tanca el DNS rebinding (un domini de l'atacant que resol a 127.0.0.1).
+    # Alla la peticio arriba amb Host del seu domini, no amb un de loopback.
+    ALLOWED_HOSTS = ("127.0.0.1", "localhost", "[::1]", "::1")
+
+    def _same_origin(self):
+        host = (self.headers.get("Host") or "").rsplit(":", 1)[0].strip()
+        if host not in self.ALLOWED_HOSTS:
+            return False, "Host no permes: %r" % host
+        origin = (self.headers.get("Origin") or "").strip()
+        ok = tuple("http://%s:%d" % (h, PORT) for h in self.ALLOWED_HOSTS)
+        if origin:
+            return (origin in ok), "Origin no permes: %r" % origin
+        ref = (self.headers.get("Referer") or "").strip()
+        if ref:
+            return any(ref.startswith(o + "/") or ref == o for o in ok), "Referer no permes: %r" % ref
+        return True, ""   # ni Origin ni Referer: no ve d'un navegador
+
     def do_POST(self):
+        ok, why = self._same_origin()
+        if not ok:
+            self._json(403, {"ok": False, "msg": "Peticio rebutjada (%s)" % why})
+            return
         path = self.path.split("?", 1)[0]
         length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(length) if length > 0 else b""
