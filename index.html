@@ -804,7 +804,13 @@ function t(key,vars){
 }
 function setLang(code){ if(I18N_SUPPORTED.indexOf(code)<0) return; LANG=code; try{ localStorage.setItem(LANG_KEY,code); document.documentElement.lang=code; }catch(_){} }
 // Prioritat d'idiomes per a Wikidata segons l'idioma actiu (p.ex. 'en' => 'en|ca|es').
-function wdLangs(){ const base=['ca','es','en']; return [LANG].concat(base.filter(function(l){return l!==LANG;})).join('|'); }
+// 'mul' al final: Wikidata va migrar els noms en alfabet llati a UNA etiqueta multilingue
+// i va esborrar les per idioma. «Albert Einstein» s'escriu igual en ca/es/en/de/fr, aixi
+// que ara nomes viu a 'mul' i Q937 tornava sense etiqueta. Va al final, de fallback pur:
+// nomes s'agafa quan cap dels idiomes reals no hi es, aixi no canvia res del que ja anava.
+// Cal demanar-lo I llegir-lo: sense 'mul' aqui, wbgetentities no el retorna, i el
+// SERVICE wikibase:label de la SPARQL (que surt de wdFields) tampoc no hi cau.
+function wdLangs(){ const base=['ca','es','en','mul']; return [LANG].concat(base.filter(function(l){return l!==LANG;})).join('|'); }
 // Aplica els textos estatics marcats amb data-i18n / data-i18n-title / data-i18n-aria.
 function applyI18nStatic(scope){
   const s=scope||document;
@@ -2337,7 +2343,7 @@ function personBar(estat,nom,descripcio,imgUrl,source,personId){
 }
 
 const pYear=t=>{const m=/^([+-])0*(\d+)-/.exec(String(t||''));if(!m)return null;const y=parseInt(m[2],10);return m[1]==='-'?-y:y;};
-const pLbl=o=>o?((o.ca||o.es||o.en||{}).value||null):null;
+const pLbl=o=>o?((o.ca||o.es||o.en||o.mul||{}).value||null):null;   // o.mul: veure wdLangs()
 
 function personFromEntity(e){
   const cl=e.claims||{};

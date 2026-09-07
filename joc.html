@@ -809,7 +809,10 @@
   }
   function setLang(code){ if(I18N_SUPPORTED.indexOf(code)<0) return; LANG=code; try{ localStorage.setItem(LANG_KEY,code); document.documentElement.lang=code; }catch(_){} }
   // Prioritat d'idiomes per a Wikidata segons l'idioma actiu (p.ex. 'en' => 'en|ca|es').
-  function wdLangs(){ const base=['ca','es','en']; return [LANG].concat(base.filter(function(l){return l!==LANG;})).join('|'); }
+  // 'mul' al final: Wikidata va migrar els noms en alfabet llati a UNA etiqueta multilingue
+  // i va esborrar les per idioma. Sense aixo, isValid() descartava l'Einstein, la Marie
+  // Curie i el Mozart —creia que no tenien nom— i no podien ser personatge del dia.
+  function wdLangs(){ const base=['ca','es','en','mul']; return [LANG].concat(base.filter(function(l){return l!==LANG;})).join('|'); }
   // Aplica els textos estatics marcats amb data-i18n / data-i18n-title / data-i18n-aria.
   function applyI18nStatic(scope){
     const s=scope||document;
@@ -1182,7 +1185,7 @@
     function yearFrom(e,prop){ const c=e.claims&&e.claims[prop]; if(!c||!c.length) return null; const dv=c[0].mainsnak&&c[0].mainsnak.datavalue&&c[0].mainsnak.datavalue.value; const t=dv&&dv.time; if(!t) return null; const m=t.match(/^([+-])0*(\d+)-/); if(!m) return null; const y=parseInt(m[2],10); return m[1]==='-'?-y:y; }
     function imgUrl(e){ const c=e.claims&&e.claims.P18; if(!c||!c.length) return null; const dv=c[0].mainsnak&&c[0].mainsnak.datavalue; if(!dv) return null; return COMMONS+encodeURIComponent(String(dv.value).replace(/ /g,'_'))+'?width=500'; }
     function itemQids(e,prop,max){ const c=e.claims&&e.claims[prop]; if(!c) return []; const out=[]; for(let i=0;i<c.length;i++){ const v=c[i].mainsnak&&c[i].mainsnak.datavalue&&c[i].mainsnak.datavalue.value; if(v&&v.id){ out.push(v.id); if(out.length>=max) break; } } return out; }
-    function lbl(o){ return o?((o.ca||o.es||o.en||{}).value||null):null; }
+    function lbl(o){ return o?((o.ca||o.es||o.en||o.mul||{}).value||null):null; }   // o.mul: veure wdLangs()
     // trusted=true per als homenatges de PD_PINNED: la tria l'ha fet una persona, no la llavor, i
     // el filtre de sitelinks (ca I es I en) tombaria justament les perles locals que volem destacar.
     // El que NO es relaxa mai: humà, any de naixement i etiqueta — sense això la fitxa no es pot pintar.
