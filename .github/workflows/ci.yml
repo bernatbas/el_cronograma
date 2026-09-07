@@ -42,12 +42,83 @@ jobs:
           print(f"✓ Cap U+FFFD, UTF-8 vàlid — {checked} fitxers")
           EOF
 
+      # Aquest check estava TRENCAT i sempre passava en verd: el sed buscava
+      # "===== Bloc compartit", i els marcadors reals son "===== BLOC COMPARTIT"
+      # (majuscules) i "===== Botons de seccio". No lligava amb cap dels dos, aixi
+      # que extreia 0 linies dels dos fitxers i feia el diff de dues cadenes buides.
+      # Per aixo una divergencia real del bloc JS va passar mesos desapercebuda.
+      # Ara: es busquen els marcadors de veritat, es comproven ELS DOS blocs (CSS i
+      # JS) i els 11 tokens compartits del :root, i es PETA si un marcador no hi es
+      # — que no trobar el bloc no pot tornar a comptar com a "identics".
       - name: Bloc compartit byte-idèntic (index ↔ joc)
         run: |
-          diff \
-            <(sed -n '/===== Bloc compartit/,/fi del bloc compartit =====/p' index.html) \
-            <(sed -n '/===== Bloc compartit/,/fi del bloc compartit =====/p' joc.html) \
-          && echo "OK: blocs idèntics"
+          python3 - <<'EOF'
+          import sys
+
+          FILES = ('index.html', 'joc.html')
+          BLOCKS = (
+              ('CSS (botons de seccio)', '/* ===== Botons de secció', '/* ===== fi del bloc compartit ===== */'),
+              ('JS (compressio topbar)', '// ===== BLOC COMPARTIT',   '// ===== fi del bloc compartit ====='),
+          )
+
+          src = {f: open(f, encoding='utf-8').read() for f in FILES}
+          fail = []
+
+          def extract(text, path, ini, fi):
+              i = text.find(ini)
+              if i < 0:
+                  return None, 'no hi ha el marcador d\'inici %r' % ini
+              j = text.find(fi, i)
+              if j < 0:
+                  return None, 'no hi ha el marcador de fi %r' % fi
+              return text[i:j + len(fi)], None
+
+          for label, ini, fi in BLOCKS:
+              got = {}
+              for f in FILES:
+                  blk, err = extract(src[f], f, ini, fi)
+                  if err:
+                      fail.append('%s a %s: %s' % (label, f, err))
+                  else:
+                      got[f] = blk
+              if len(got) == 2:
+                  a, b = got['index.html'], got['joc.html']
+                  if a != b:
+                      import difflib
+                      fail.append('%s divergeix (index %d bytes, joc %d bytes):\n%s' % (
+                          label, len(a), len(b),
+                          '\n'.join(list(difflib.unified_diff(
+                              a.split('\n'), b.split('\n'),
+                              'index.html', 'joc.html', lineterm='', n=1))[:40])))
+                  else:
+                      print('OK: %s identic (%d bytes)' % (label, len(a)))
+
+          # Tokens compartits del :root: duplicats als dos fitxers a ma, i divergeixen
+          # sense avisar (CLAUDE.md). Es comproven nomes els que surten als DOS.
+          import re
+          def toks(text):
+              m = re.search(r':root\{(.*?)\}', text, re.S)
+              if not m:
+                  return None
+              return dict((k, v.strip()) for k, v in re.findall(r'(--[\w-]+)\s*:\s*([^;]+);', m.group(1)))
+
+          ta, tb = toks(src['index.html']), toks(src['joc.html'])
+          if ta is None or tb is None:
+              fail.append('no trobo el bloc :root a %s' % ('index.html' if ta is None else 'joc.html'))
+          else:
+              shared = sorted(set(ta) & set(tb))
+              if not shared:
+                  fail.append(':root sense cap token compartit — el regex ja no lliga?')
+              bad = [(k, ta[k], tb[k]) for k in shared if ta[k] != tb[k]]
+              for k, x, y in bad:
+                  fail.append('token %s despariat: index=%s / joc=%s' % (k, x, y))
+              if not bad:
+                  print('OK: %d tokens :root compartits, tots iguals' % len(shared))
+
+          if fail:
+              sys.exit('ERROR bloc compartit:\n- ' + '\n- '.join(fail))
+          print('OK: blocs compartits i tokens sincronitzats')
+          EOF
 
       - name: Sintaxi JS — claus equilibrades
         run: |
