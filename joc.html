@@ -872,7 +872,9 @@
     const id=it.key.split(':')[1];
     const p=(HB_DATA.PEOPLE||[]).find(x=>x.id===id);
     if(!p||!p.wd) return null;
-    return {qid:p.wd,name:p.name,birth:p.birth,death:p.death||null,img:null,desc:p.desc||''};
+    // death!=null i no ||null: a l'index.html death:null vol dir VIU, i un any 0 (o qualsevol
+    // falsy) el convertiria en immortal. Avui la BD no en te cap, pero el || no hi pinta res.
+    return {qid:p.wd,name:p.name,birth:p.birth,death:(p.death!=null?p.death:null),img:null,desc:p.desc||''};
   }
   // Retorna {kind:'event',id,name,year} per a un ítem del pool de tipus 'event', o null si és una persona.
   function eventFromItem(it){
@@ -1561,12 +1563,6 @@
       else { done(); }
     }
 
-    function renderLocked(correct){
-      const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
-      root.innerHTML='<div class="gameover"><div class="gamehead"><h2>🕰️ '+t('t_ordena')+'</h2></div><h2 class="rtitle '+(correct?'perfect':'')+'">'+(correct?t('ord_locked_win'):t('ord_locked_lose'))+'</h2><div class="stats"><div class="stat"><div class="v">🔥 '+days+'</div><div class="k">'+t('streak_days',{n:days})+'</div></div></div><div class="locknote">'+t('locknote_played')+'</div><div class="countdown">'+t('new_challenge_in')+' <b id="ocd">--:--:--</b></div></div>';
-      startCd();
-    }
-
     function buildAndRender(){
       if(!dataOk()){ root.innerHTML='<div class="err">Ens hem quedat sense història! N\'estem fabricant de nova. Torna demà 🛠️</div>'; return; }
       const rng=mulberry32(seedFromStr('ord:'+todayStr()));
@@ -1741,10 +1737,6 @@
     }
     function saveState(){ writeLS(STATE_KEY,state); }
 
-    // Missatges de resultat
-    function resultMsg(errors,mode){
-      return t('mem_result',{errors:errors,mode:mode});
-    }
 
     // Renderitza la graella
     function renderGrid(ms){
@@ -2059,7 +2051,6 @@
       return n>=17?' yr-xxs':(n>=15?' yr-xs':(n>=13?' yr-sm':''));
     }
     function card(b, reveal, flash, ysz){
-      const isEv=b.type==='event';
       const yr=reveal?yearsLabel(b):'<span class="q">?</span>';
       const cls='itemcard con'+(flash?(' '+flash):'');
       return '<div class="'+cls+'"><div class="nm">'+b.name+'</div><div class="yr'+(reveal?' reveal':'')+(ysz||'')+'">'+yr+'</div></div>';
@@ -2267,10 +2258,6 @@
     });
   }
 
-  function renderGame(g){
-    back.hidden=false;
-    app.innerHTML=`<div class="placeholder"><div class="ic">${g.ic}</div><h2>${t(g.titleKey)}</h2><p class="d">${t(g.descKey)}</p><span class="badge">${t('badge_soon')}</span></div>`;
-  }
 
   function router(){
     stopHubCd();
