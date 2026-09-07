@@ -848,6 +848,25 @@ const NOW_YEAR=new Date().getFullYear();
 // COL·LECCIONS: playlists de persones. Guarden **Q-ids, no persones** — la mateixa referència
 // resol a una entrada de PEOPLE si la tenim en local, i es baixa de Wikidata si no, així una
 // col·lecció pot incloure qualsevol (aquí Descartes, Camus i Sartre no són a la DB local).
+// ── Sostres d'una col·lecció ──────────────────────────────────────────────────
+// Dos límits diferents, i el que mana és el primer:
+//
+// COLL_MAX (60) — límit d'USABILITAT. Els carrils s'apilen en vertical, i quants en
+//   surten depèn de com estigui repartida la gent, no només de quanta n'hi hagi:
+//   mesurat, 100 persones repartides per 160 anys fan 45 carrils, però els 49 Nobel
+//   —que es solapen gairebé tots— ja en fan 39. El pitjor cas és «tothom coincideix»,
+//   i allà carrils ≈ persones. Amb 60 això són ~60 carrils ≈ 2.160px ≈ 3 pantalles de
+//   scroll vertical, que és el màxim que encara es deixa llegir d'una passada.
+//
+// WD_IDS_MAX (350) — límit TÈCNIC de byIds(), que envia TOTS els Q-ids en UNA sola
+//   consulta SPARQL. Wikidata la talla per llargada d'URL: mesurat, 400 ids van bé
+//   (6.281 chars), 600 donen 414 URI Too Long (9.180 chars) i 989 donen 503. 350 deixa
+//   marge per si els ids són llargs. Si algun dia cal passar d'aquí, la solució NO és
+//   apujar el número sinó partir la petició en trossos dins de byIds().
+//
+// Passar-se de COLL_MAX no trenca res: el guard de sota talla la llista i ho diu per
+// consola. El CI, en canvi, hi peta a propòsit, perquè no arribi mai a producció.
+const COLL_MAX=60, WD_IDS_MAX=350;
 const COLLECTIONS=[
   {id:'filosofs',name:'Els meus filòsofs',wds:[
     'Q913',   // Sòcrates      (local)
@@ -946,6 +965,23 @@ const COLLECTIONS=[
     'Q7251'   // Alan Turing         1912–1954
   ]}
 ];
+
+// Xarxa de seguretat per a l'edicio a ma: una col·leccio que passi de COLL_MAX es talla
+// (no es trenca la vista) i es diu per consola. El check del CI hi peta, aixi que en
+// condicions normals aixo no s'executa mai.
+COLLECTIONS.forEach(c=>{
+  if(!Array.isArray(c.wds))
+    {console.error('[HB] La col·leccio «'+c.id+'» no te llista de Q-ids');c.wds=[];return;}
+  const dup=c.wds.length-new Set(c.wds).size;
+  if(dup)console.warn('[HB] La col·leccio «'+c.id+'» te '+dup+' Q-id(s) repetits');
+  const mal=c.wds.filter(q=>!/^Q\d+$/.test(q));
+  if(mal.length)console.error('[HB] Q-ids amb format incorrecte a «'+c.id+'»: '+mal.join(', '));
+  if(c.wds.length>COLL_MAX){
+    console.error('[HB] La col·leccio «'+c.id+'» te '+c.wds.length+' persones i el sostre es '
+      +COLL_MAX+': es queden les '+COLL_MAX+' primeres. Parteix-la en col·leccions mes petites.');
+    c.wds=c.wds.slice(0,COLL_MAX);
+  }
+});
 
 // ERES: the always-on backbone — the macro-eras that act as the "ruler" of the timeline.
 // Not a toggleable marc; rendered as a pale wash spanning the whole eras canvas.
@@ -1750,6 +1786,14 @@ function wdFetch(url,opts){
 // resolve a list of Q-ids to {name,dates,article} via a fast VALUES query (optionally keep only humans)
 function byIds(ids,humansOnly,keepKnown){
   if(!ids.length)return Promise.resolve([]);
+  // Tots els ids van en UNA consulta, i Wikidata la talla per llargada d'URL (414 URI Too
+  // Long a partir d'uns 9KB). Amb WD_IDS_MAX no hi arribem mai; si algu passa una llista
+  // mes llarga val mes perdre'n la cua —i dir-ho— que rebre un 414 i quedar-se sense res.
+  if(ids.length>WD_IDS_MAX){
+    console.error('[HB] byIds() ha rebut '+ids.length+' Q-ids i el maxim per consulta es '
+      +WD_IDS_MAX+': es demanen nomes els '+WD_IDS_MAX+' primers. Cal partir la peticio.');
+    ids=ids.slice(0,WD_IDS_MAX);
+  }
   const query=`SELECT ?item ?itemLabel ?itemDescription ?birth ?death ?article WHERE { VALUES ?item { ${ids.map(q=>'wd:'+q).join(' ')} } ${humansOnly?'?item wdt:P31 wd:Q5.':''} ${wdFields()} }`;
   return wdFetch(WDQ+encodeURIComponent(query),{headers:{Accept:'application/sparql-results+json'}}).then(data=>{
     const byq={};wdParse(data,keepKnown).forEach(x=>byq[x.qid]=x);

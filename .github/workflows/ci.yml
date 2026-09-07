@@ -120,6 +120,68 @@ jobs:
           print('OK: blocs compartits i tokens sincronitzats')
           EOF
 
+      # El guard de l'index.html talla les col·leccions massa grosses i ho diu per consola,
+      # pero aixo ja es en viu. Aqui hi petem, que es el moment bo: una col·leccio de 500
+      # persones ni carregaria (byIds fa UNA consulta SPARQL i Wikidata dona 414 a partir
+      # d'uns 600 Q-ids) ni es podria llegir (carrils ~ persones en el pitjor cas, i 60
+      # carrils ja son 3 pantalles de scroll vertical). El sostre viu a l'index.html com a
+      # COLL_MAX i es llegeix d'alla: un sol lloc per canviar-lo.
+      - name: Col·leccions dins del sostre
+        run: |
+          python3 - <<'EOF'
+          import re, sys
+
+          src = open('index.html', encoding='utf-8').read()
+
+          m = re.search(r'const\s+COLL_MAX\s*=\s*(\d+)\s*,\s*WD_IDS_MAX\s*=\s*(\d+)', src)
+          if not m:
+              sys.exit("ERROR: no trobo COLL_MAX/WD_IDS_MAX a l'index.html "
+                       "(s'han renombrat? el check els llegeix d'alla)")
+          COLL_MAX, WD_IDS_MAX = int(m.group(1)), int(m.group(2))
+          if COLL_MAX > WD_IDS_MAX:
+              sys.exit("ERROR: COLL_MAX (%d) no pot passar de WD_IDS_MAX (%d)" % (COLL_MAX, WD_IDS_MAX))
+
+          i = src.find('const COLLECTIONS=[')
+          if i < 0:
+              sys.exit("ERROR: no trobo COLLECTIONS a l'index.html")
+          depth, end = 0, None
+          for k in range(i + len('const COLLECTIONS='), len(src)):
+              if src[k] == '[':
+                  depth += 1
+              elif src[k] == ']':
+                  depth -= 1
+                  if depth == 0:
+                      end = k
+                      break
+          if end is None:
+              sys.exit("ERROR: el bloc COLLECTIONS no tanca")
+          blk = src[i:end + 1]
+
+          starts = [x.start() for x in re.finditer(r"\{id:'", blk)] + [len(blk)]
+          fail, seen = [], set()
+          for n in range(len(starts) - 1):
+              seg = blk[starts[n]:starts[n + 1]]
+              cid = re.search(r"\{id:'([^']+)'", seg).group(1)
+              qids = re.findall(r"'(Q\d+)'", seg)
+              if cid in seen:
+                  fail.append("id de col·leccio repetit: '%s'" % cid)
+              seen.add(cid)
+              if not qids:
+                  fail.append("'%s' no te cap Q-id" % cid)
+              dup = len(qids) - len(set(qids))
+              if dup:
+                  fail.append("'%s' te %d Q-id(s) repetits" % (cid, dup))
+              if len(qids) > COLL_MAX:
+                  fail.append("'%s' te %d persones i el sostre es %d "
+                              "(parteix-la, o apuja COLL_MAX a l'index.html si saps que fas)"
+                              % (cid, len(qids), COLL_MAX))
+              print("  %-18s %3d persones" % (cid, len(qids)))
+
+          if fail:
+              sys.exit("ERROR col·leccions:\n- " + "\n- ".join(fail))
+          print("OK: %d col·leccions, cap passa de COLL_MAX=%d" % (len(seen), COLL_MAX))
+          EOF
+
       - name: Sintaxi JS — claus equilibrades
         run: |
           python3 - <<'EOF'
