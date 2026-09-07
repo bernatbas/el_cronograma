@@ -721,6 +721,7 @@ const I18N={
     cro_act_coll_off: v => 'desactivar «'+v.name+'»',
     cro_act_add: v => 'afegir '+v.name,
     cro_act_remove: v => 'treure '+v.name,
+    cro_act_remove_items: v => 'treure '+v.n+' elements',
     cro_act_marc: v => 'canviar «'+v.name+'»',
     cro_act_events:'canviar els esdeveniments',
     cro_act_reset:'Reset',
@@ -1844,7 +1845,11 @@ function panToPerson(id){
   const p=PEOPLE.find(x=>x.id===id);
   if(!p||p._startX==null)return;
   const cx=p._startX+p._pillW/2;            // horizontal centre of the bar
-  const cy=barsTop()+p._lane*34+13;         // vertical centre (rowH 34, bar 26 → +13)
+  // ROW_H i BAR_H, NO 34 i 13: applyMetrics() els baixa a 25 i 20 quan la pantalla es
+  // baixa (max-height:560px — el mobil en horitzontal), i amb els numeros clavats el
+  // scroll requeia lane*9+13-BAR_H/2 px per sota. Mesurat amb la BD sencera: 165px al
+  // carril 18, mes de mitja pantalla — el personatge que demanaves centrar quedava fora.
+  const cy=barsTop()+p._lane*ROW_H+BAR_H/2;
   scroll.scrollTo({left:cx-scroll.clientWidth/2,top:cy-scroll.clientHeight/2,behavior:'smooth'});
 }
 // Flash a bar so it's easy to spot among others.
@@ -1873,9 +1878,13 @@ function focusEvent(id){
 }
 
 // Remove a person from the canvas (same as the × in "A la vista"). Seed-pinned people can't be removed.
-function removePerson(id){
+// opts.batch: NO fa pushUndo ni render, i els deixa a qui crida. Es per treure diverses
+// persones d'un sol gest (la ✕ del jocBar): un clic ha de ser UNA passa de «Desfés» i un
+// sol repintat, no una passa i un repintat per nom.
+function removePerson(id,opts){
   if(SEED_PINNED.includes(id))return;
-  pushUndo('cro_act_remove',{name:L((PEOPLE.find(p=>p.id===id)||{}).name)});
+  const batch=!!(opts&&opts.batch);
+  if(!batch)pushUndo('cro_act_remove',{name:L((PEOPLE.find(p=>p.id===id)||{}).name)});
   state.pinned.delete(id);
   clearFitLatch();
   if(state.focus===id)state.focus=null;   // si treus l'original, ja no hi ha focus fixat a dalt
@@ -1887,7 +1896,7 @@ function removePerson(id){
     const _wd=(PEOPLE.find(x=>x.id===id)||{}).wd;
     if(PERSON_QID&&(_wd===PERSON_QID||id==='wd_'+PERSON_QID))history.replaceState(null,'',location.pathname);
     pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;}
-  scheduleSave();render();
+  scheduleSave();if(!batch)render();
 }
 // "Show context": add every SEED-DB person whose life overlaps, or is within 20 years of, this person.
 // DETERMINISTA: recorre només la BD original (salta els `_session` baixats de Wikidata/localStorage),
@@ -2429,11 +2438,14 @@ function jocBar(items,source){
   back.title=t('cro_pb_remove_items');
   back.setAttribute('aria-label',t('cro_pb_remove_items'));
   back.addEventListener('click',function(){
+    // Una sola foto per tot el clic, i un sol render al final: amb removePerson() normal
+    // cada nom empenyia la seva passa i calien 5 «Desfés» per desfer un clic (mesurat).
+    pushUndo('cro_act_remove_items',{n:items.length});
     items.forEach(function(item){
-      if(item.kind==='person'){removePerson(item.id);}
+      if(item.kind==='person'){removePerson(item.id,{batch:true});}
       else if(item.kind==='event'&&state.selectedEvent===item.ev.id){state.selectedEvent=null;}
     });
-    if(items.some(function(item){return item.kind==='event';})) render();
+    render();
     pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;
   });
   pbar.appendChild(back);
