@@ -346,17 +346,26 @@ def _js_str(s):
 
 
 def person_literal(d):
-    cats = ",".join("'%s'" % c for c in (d.get("cats") or []))
+    """Literal d'una persona per a [1] DATA.
+
+    TOT el que va dins d'una cometa simple passa per _js_str(): un ' cru s'escapa
+    de la string i injecta codi a l'array (CLAUDE.md, «Apostrofs a les strings de
+    DATA»). El name i el desc ja hi passaven; el qid, el gender i el wiki no, i
+    les dues xarxes de db_add_person no ho veien (el recompte d'objectes seguia
+    quadrant i no hi havia cap U+FFFD). L'id, el qid i les cats arriben ja
+    validats per db_add_person; se'ls hi passa igualment, que no costa res.
+    """
+    cats = ",".join("'%s'" % _js_str(c) for c in (d.get("cats") or []))
     death = d.get("death")
     parts = [
-        "id:'%s'" % d["id"],
-        ("wd:'%s'" % d["qid"]) if d.get("qid") else None,
+        "id:'%s'" % _js_str(d["id"]),
+        ("wd:'%s'" % _js_str(d["qid"])) if d.get("qid") else None,
         "name:'%s'" % _js_str(d.get("name")),
         "birth:%d" % int(d["birth"]),
         "death:%s" % ("null" if death in (None, "") else int(death)),
         "cats:[%s]" % cats,
-        ("gender:'%s'" % d["gender"]) if d.get("gender") else None,
-        ("wiki:'%s'" % d["wiki"]) if d.get("wiki") else None,
+        ("gender:'%s'" % _js_str(d["gender"])) if d.get("gender") else None,
+        ("wiki:'%s'" % _js_str(d["wiki"])) if d.get("wiki") else None,
         ("desc:'%s'" % _js_str(d["desc"])) if d.get("desc") else None,
     ]
     return "  {" + ",".join(x for x in parts if x) + "},"
@@ -383,12 +392,18 @@ def db_add_person(d):
     pid = (d.get("id") or "").strip()
     if not re.fullmatch(r"[a-z0-9]+", pid or ""):
         return False, "L'id ha de ser lletres minuscules i xifres"
+    # El QID i les categories tenen format tancat: es validen aqui i no s'arreglen
+    # despres. Aixi person_literal no ha de confiar en el cos de la peticio.
+    qid = (d.get("qid") or "").strip()
+    if qid and not re.fullmatch(r"Q\d+", qid):
+        return False, "El QID ha de ser Q seguit de xifres"
+    cats = [c for c in (d.get("cats") or []) if re.fullmatch(r"[a-z]+", str(c))]
 
     ids_taken, qids_taken = existing_people()
     if pid in ids_taken:
         return False, "L'id '%s' ja existeix" % pid
-    if d.get("qid") and d["qid"] in qids_taken:
-        return False, "%s ja es a PEOPLE" % d["qid"]
+    if qid and qid in qids_taken:
+        return False, "%s ja es a PEOPLE" % qid
 
     src0 = read("index.html")
     m = re.search(r"const\s+PEOPLE\s*=\s*\[", src0)
@@ -397,7 +412,8 @@ def db_add_person(d):
     before, close = count_objects(src0, m.end())
 
     rec = dict(d)
-    rec.update({"id": pid, "birth": birth, "death": death, "name": name})
+    rec.update({"id": pid, "qid": qid, "cats": cats,
+                "birth": birth, "death": death, "name": name})
     head = src0[:close].rstrip()
     if not head.endswith(","):
         head += ","
