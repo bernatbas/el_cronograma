@@ -1176,10 +1176,10 @@ function doUndo(){
 
 let toastTimer=null;
 let _settleT;   // ha d'anar aquí dalt: personBar() crida scheduleSettle() durant el boot de ?person=, molt abans de [12]
-// Amplada del canvas tapada per la barra lateral (0 si està minimitzada). Serveix per centrar
-// overlays/toasts respecte el canvas VISIBLE i no respecte la pantalla sencera.
-function canvasBlind(){return 0;}
-function showToast(msg){const bl=canvasBlind();toastEl.style.left='calc(50% + '+(bl/2)+'px)';toastEl.textContent=msg;toastEl.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('on'),2200);}
+// El toast es centra NOMES pel CSS (.toast{left:50%;transform:translateX(-50%)}). Abans hi
+// havia un canvasBlind() per descomptar l'amplada de la barra lateral, pero des que la barra
+// va passar a estar en flux (canvi #41) ja no en tapa gens: retornava 0 sempre.
+function showToast(msg){toastEl.textContent=msg;toastEl.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('on'),2200);}
 const WIP=()=>showToast(t('toast_wip'));
 function hideDetail(){$('#detail').classList.remove('open');detailBackdrop.classList.remove('open');}
 $('#detailBackdrop').addEventListener('click',()=>{hideDetail();state.selected=null;state.selectedEvent=null;render();});
@@ -1583,7 +1583,10 @@ const wdCache=new Map();   // cau de resultats de cerca per terme normalitzat (n
 const dropKnown=arr=>{const inDB=new Set(PEOPLE.map(p=>p.wd).filter(Boolean));return arr.filter(w=>!inDB.has(w.qid));};   // del cau, treu qui ja tinguem/afegit
 
 const localRow=p=>{const added=state.present.has(p.id);return `<div class="row ${added?'disabled':''}" data-add="${p.id}"><span class="swatch" style="background:${swatchBg(p)}"></span>${esc(L(p.name))}<span class="yr">${added?t('cro_already_added'):p.birth+'\u2013'+(p.death==null?'':p.death)}</span></div>`;};
-const wdRow=w=>`<div class="row" data-wd="${w.qid}"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${w.name}<span class="yr">${w.birth}${w.death!=null?'\u2013'+w.death:'\u2013'}</span></div>`;
+// Igual que localRow/#onview/la fitxa: el nom ve de Wikidata (public i editable) i va a
+// innerHTML, aixi que passa per esc(). Era l'unica fila que no ho feia. birth/death son
+// numeros (parseInt a wdYear), no cal.
+const wdRow=w=>`<div class="row" data-wd="${esc(w.qid)}"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${esc(w.name)}<span class="yr">${w.birth}${w.death!=null?'\u2013'+w.death:'\u2013'}</span></div>`;
 const evSearchRow=ev=>`<div class="row evrow" data-evsearch="${ev.id}"><span class="swatch" style="background:var(--eventc)"></span>${L(ev.name)}<span class="yr">${fmtY(ev.year)}</span></div>`;
 function renderDropdown(){
   const term=deaccent(q.value.trim());
