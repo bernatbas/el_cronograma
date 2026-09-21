@@ -1192,7 +1192,12 @@
     function isValid(e,trusted){
       if(!e || e.missing!==undefined) return false;
       if(!hasItem(e,'P31','Q5')) return false;                          // ha de ser humà
-      if(!(e.claims&&e.claims.P569&&e.claims.P569.length)) return false; // ha de tenir naixement
+      // No n'hi ha prou que la declaracio EXISTEIXI: si a Wikidata el P569 preferit es «valor
+      // desconegut», la claim hi es pero no porta datavalue i yearFrom() en treu null. Aleshores
+      // el personatge del dia sortia sense any, i el traspas al cronograma no el pintava
+      // (visiblePeople() vol un numero). Cal l'ANY, no la claim. (Mateix cas que el «null–» del
+      // desplegable de l'index: veure wdParse alla.)
+      if(yearFrom(e,'P569')===null) return false;                       // ha de tenir naixement UTIL
       if(!lbl(e.labels)) return false;                                  // etiqueta en ca/es/en
       if(trusted) return true;
       const s=e.sitelinks||{};                                          // entrada a Viquipèdia en ca I es I en (AND dels tres)

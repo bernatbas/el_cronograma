@@ -1125,6 +1125,19 @@ window.HB_DATA = {
       "desc": "Actor i cineasta anglès"
     },
     {
+      "id": "buda",
+      "wd": "Q9441",
+      "name": "Buda",
+      "birth": -563,
+      "death": -483,
+      "cats": [
+        "religion"
+      ],
+      "gender": "M",
+      "wiki": "https://ca.wikipedia.org/wiki/Buda_Gautama",
+      "desc": "Príncep de Kapilavastu que renuncià a la seva posició i fundà el budisme; les seves dates són tradicionals i discutides."
+    },
+    {
       "id": "mahavira",
       "wd": "Q9422",
       "name": "Mahavira",

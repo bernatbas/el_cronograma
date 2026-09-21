@@ -1060,9 +1060,9 @@ const COLLECTIONS=[
     //    per separat el jainisme, el taoisme, el confucianisme i el budisme. Karl Jaspers en
     //    va dir «era axial». En un llibre son quatre capitols separats per geografia; aqui es
     //    UNA COLUMNA, i la columna es el fet.
-    //    ⚠️ Els anys son els que torna la SPARQL (rang preferit), no els tradicionals que
-    //    trobaras a mitja bibliografia: el Buda surt a -501 i no a -563, i Laozi a -580 i no
-    //    a -604. Si algun dia canvies aquest comentari, mira ABANS que diu el canvas.
+    //    ⚠️ Els anys no son sempre els tradicionals de la bibliografia, sino els del rang
+    //    PREFERIT de Wikidata, que es el que segueix la SPARQL: Laozi surt a -580 i no a -604.
+    //    Si toques aquest comentari, mira ABANS que diu el canvas.
     // 2) EL REPARTIMENT. Despres el ritme no s’atura: Jesus, Mani, Mahoma, Nanak, la
     //    Reforma, i una pluja al segle XIX-XX (Smith, Bahá’u’lláh, Eddy, Russell, Hubbard).
     //    Fundar religions no es cosa «dels antics»: passa a cada epoca.
@@ -1071,6 +1071,10 @@ const COLLECTIONS=[
     // desapareixerien EN SILENCI si no s’hi para compte (detall a CLAUDE.md):
     //   · Mahavira: el seu P31 a Wikidata es «tirthankara» i «esser huma possiblement
     //     fictici», no Q5, i byIds(humansOnly=true) el filtra. Per aixo es a PEOPLE en local.
+    //   · El Buda tambe es a PEOPLE en local, pero per un altre motiu: a Wikidata el P569 i el
+    //     P570 PREFERITS son tots dos -0500 —es com hi modelen «segle V aC»— i per la SPARQL
+    //     naixia i moria el mateix any: una barra de 8px, el minim que pinta render(). En local
+    //     hi va amb les dates tradicionals (-563/-483), que a Wikidata hi son amb rang normal.
     //   · Zaratustra: te P569 = -628 amb rang NORMAL, pero la declaracio PREFERIDA es «sense
     //     valor» —les seves dates son disputades de debo— i wdt:P569 segueix el rang preferit,
     //     aixi que la SPARQL no torna data i wdParse el descarta. Fora: no vull sostenir el
@@ -1354,6 +1358,7 @@ const PEOPLE=[
   {id:'alanturing',wd:'Q7251',name:'Alan Turing',birth:1912,death:1954,cats:['science'],wiki:'https://ca.wikipedia.org/wiki/Alan_Turing',desc:'Pioner de la informàtica anglès'},
   {id:'simonedebeauvoir',wd:'Q7197',name:'Simone de Beauvoir',birth:1908,death:1986,cats:['philosophy','literature'],wiki:'https://ca.wikipedia.org/wiki/Simone_de_Beauvoir',desc:'Filòsofa, teòrica social i activista francesa'},
   {id:'charleschaplin',wd:'Q882',name:'Charles Chaplin',birth:1889,death:1977,cats:['cinema'],wiki:'https://ca.wikipedia.org/wiki/Charles_Chaplin',desc:'Actor i cineasta anglès'},
+  {id:'buda',wd:'Q9441',name:'Buda',birth:-563,death:-483,cats:['religion'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Buda_Gautama',desc:'Príncep de Kapilavastu que renuncià a la seva posició i fundà el budisme; les seves dates són tradicionals i discutides.'},
   {id:'mahavira',wd:'Q9422',name:'Mahavira',birth:-599,death:-527,cats:['religion'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Mahavira',desc:'Mestre jainista, l’últim dels vint-i-quatre tirthankares; contemporani del Buda i del Confuci.'},
   {id:'johancruyff',wd:'Q17163',name:'Johan Cruyff',birth:1947,death:2016,cats:['sport'],wiki:'https://ca.wikipedia.org/wiki/Johan_Cruyff',desc:'Jugador i entrenador de futbol neerlandès'},
 ];
@@ -1955,9 +1960,20 @@ function wdParse(data,keepKnown){
   const binds=(data&&data.results&&data.results.bindings)||[], seen=new Set(), inDB=new Set(PEOPLE.map(p=>p.wd).filter(Boolean)), out=[];
   for(const b of binds){
     const qid=b.item.value.split('/').pop();
-    if(seen.has(qid)||(!keepKnown&&inDB.has(qid))||!b.birth)continue;   // dedup vs DB (excepte en refresc de dades que ja tenim); need a birth year to place it
+    if(seen.has(qid)||(!keepKnown&&inDB.has(qid)))continue;
+    // ⚠️ No n'hi ha prou de mirar si ?birth existeix. Quan a Wikidata la declaracio PREFERIDA
+    // de P569 es «valor desconegut», la SPARQL no deixa el camp buit: hi lliga un NODE EN BLANC
+    // (una URI .well-known/genid/...). Es truthy, aixi que passava el guard, i despres wdYear()
+    // en treia null: al desplegable hi sortia «null–» i la fila, en clicar-la, no feia res
+    // (addWikidataPerson surt amb birth==null). Passa amb Zaratustra, les dates del qual son
+    // disputades de debo. Per tant es parseja PRIMER i es descarta si no en surt un any.
+    const by=b.birth?wdYear(b.birth.value):null;
+    if(by==null)continue;
     seen.add(qid);
-    out.push({qid,name:(b.itemLabel&&b.itemLabel.value)||qid,desc:(b.itemDescription&&b.itemDescription.value)||'',birth:wdYear(b.birth.value),death:b.death?wdYear(b.death.value):null,article:(b.article&&b.article.value)||('https://www.wikidata.org/wiki/'+qid)});
+    // La mort pot venir pel mateix cami; si no es parseja queda null, que al nostre model vol
+    // dir VIU. Es assumible perque son casos rars, pero si algun dia cal distingir «viu» de
+    // «data desconeguda» el model de PEOPLE ha de canviar, no aixo.
+    out.push({qid,name:(b.itemLabel&&b.itemLabel.value)||qid,desc:(b.itemDescription&&b.itemDescription.value)||'',birth:by,death:b.death?wdYear(b.death.value):null,article:(b.article&&b.article.value)||('https://www.wikidata.org/wiki/'+qid)});
   }
   return out;
 }
