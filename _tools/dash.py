@@ -172,28 +172,37 @@ def _qid_from_name(name):
 
 
 def _wd_year(claims, pid):
-    """(any, precisio, quantes_dates_diferents) de P569/P570.
+    """(any, precisio, quantes_dates_diferents, separacio_en_anys) de P569/P570.
     Prefereix el rank 'preferred'. Alguns antics tenen 5 dates de fonts
     diferents, i cal poder avisar-ne.
     ⚠️ wbgetentities NO desplaça les dates aC: -0384 son 384 aC i prou. El -1
     nomes cal per a SPARQL (veure els avisos del CLAUDE.md)."""
-    best, anys = None, set()
-    for c in claims.get(pid, []):
-        if c.get("rank") == "deprecated":
-            continue
+    # ⚠️ Dues passades, i no una. Abans hi havia un `break` en trobar la preferida, i aixo
+    # deixava de comptar les declaracions posteriors: si la preferida anava primera, `anys`
+    # en tenia una sola i el recompte deia que no hi havia conflicte quan si que n'hi havia
+    # (Newton, amb 1642 i 1643 pel canvi de calendari, sortia com si fos una data neta).
+    # El recompte alimenta l'avis del dashboard I el flag `disputada`, que al seu torn decideix
+    # si els jocs poden preguntar per aquesta persona: subestimar-lo no es cosmetic.
+    vius = [c for c in claims.get(pid, []) if c.get("rank") != "deprecated"]
+    vals = []
+    for c in vius:
         v = ((c.get("mainsnak") or {}).get("datavalue") or {}).get("value")
-        if not v or not v.get("time"):
-            continue
+        if v and v.get("time"):
+            vals.append((c.get("rank"), v))
+    anys = set()
+    for _, v in vals:
         t0 = v["time"]
         try:
             anys.add(int(t0[1:5]) * (-1 if t0[0] == "-" else 1))
         except Exception:
             pass
-        if c.get("rank") == "preferred":
+    best = None
+    for rank, v in vals:
+        if rank == "preferred":
             best = v
             break
-        if best is None:
-            best = v
+    if best is None and vals:
+        best = vals[0][1]
     if not best:
         return None, None, 0
     t = best["time"]
@@ -201,7 +210,7 @@ def _wd_year(claims, pid):
         year = int(t[1:5]) * (-1 if t[0] == "-" else 1)
     except Exception:
         return None, None, 0
-    return year, best.get("precision"), len(anys)
+    return year, best.get("precision"), len(anys), (max(anys) - min(anys)) if anys else 0
 
 
 def _slug_id(name, taken):
@@ -286,8 +295,8 @@ def resolve_person(q, allow_existing=False):
     if not desc:
         warnings.append({"field": "ddesc", "msg": "Sense descripcio en catala a Wikidata: escriu-la tu"})
 
-    birth, bp, bn = _wd_year(claims, "P569")
-    death, dp, dn = _wd_year(claims, "P570")
+    birth, bp, bn, bsp = _wd_year(claims, "P569")
+    death, dp, dn, dsp = _wd_year(claims, "P570")
     if birth is None:
         warnings.append({"field": "dbirth", "msg": "Wikidata no en dona cap any de naixement. Es obligatori: posa'l tu."})
     elif bp is not None and bp < 9:
@@ -295,9 +304,9 @@ def resolve_person(q, allow_existing=False):
     if death is not None and dp is not None and dp < 9:
         warnings.append({"field": "ddeath", "msg": "La data nomes te precisio de %s, no d'any exacte. Comprova-la." % PREC.get(dp, dp)})
     if bn > 1:
-        warnings.append({"field": "dbirth", "msg": "Wikidata en dona %d de diferents, de fonts que no es posen d'acord. He agafat la preferida (%s), pero es una estimacio." % (bn, birth)})
+        warnings.append({"field": "dbirth", "msg": "Wikidata en dona %d de diferents (%d anys de separacio). He agafat la preferida (%s)." % (bn, bsp, birth)})
     if dn > 1:
-        warnings.append({"field": "ddeath", "msg": "Wikidata en dona %d de diferents, de fonts que no es posen d'acord. He agafat la preferida (%s), pero es una estimacio." % (dn, death)})
+        warnings.append({"field": "ddeath", "msg": "Wikidata en dona %d de diferents (%d anys de separacio). He agafat la preferida (%s)." % (dn, dsp, death)})
 
     # Mana l'ordre de P106, no el de CAT_BY_P106. Wikidata posa «escriptor»
     # (Q36180) a tothom qui hagi escrit res, i amb l'ordre de la nostra llista
@@ -339,14 +348,25 @@ def resolve_person(q, allow_existing=False):
     # i la nota, i els jocs cronologics eviten emparellar-lo amb algu massa a prop.
     # Es genera SOL a proposit: si depengues de recordar-se'n, el camp quedaria a mitges i el
     # guard dels jocs seria fals.
-    bits = []
-    if birth is not None and bp is not None and bp < 9:
-        bits.append("Wikidata nomes en dona %s, no l'any exacte" % PREC.get(bp, bp))
-    elif death is not None and dp is not None and dp < 9:
-        bits.append("la data de mort nomes te precisio de %s" % PREC.get(dp, dp))
-    if bn > 1 or dn > 1:
-        bits.append("hi ha %d dates diferents de fonts que no s'hi posen d'acord" % max(bn, dn))
-    approx = ("Any aproximat: " + "; ".join(bits) + ".") if bits else ""
+    # Nomes un CODI, no una frase: el text viu al diccionari de l'index (cro_date_*), que es
+    # crom d'UI i s'ha de poder traduir. Tres valors possibles i prou; l'index no en pinta cap
+    # altre. Dues regles independents:
+    #   precisio pitjor que l'any  -> aproximada
+    #   mes d'una data a Wikidata  -> disputada
+    inexacta = (birth is not None and bp is not None and bp < 9) or \
+               (death is not None and dp is not None and dp < 9)
+    # «Disputada» vol dir que les fonts DISCREPEN, no que n'hi hagi mes d'una. Mesurat sobre
+    # les 91 persones de la BD: 19 tenen mes d'una data de naixement, pero 9 d'aquestes nomes
+    # se separen 1 o 2 anys —el canvi de calendari julia/gregoria (Newton 1642/1643), o un
+    # arrodoniment (Colom, Aristotil, Confuci)— i aixo no es cap disputa. Per sobre dels 2 anys
+    # el salt es net: Jesus 5, Carlemany 6, Plutarc 10, Laozi 33, Safo 40, Atila 105, Buda 123.
+    # Importa perque el flag tanca 60 anys de parelles als jocs: marcar-hi Newton seria soroll.
+    DISPUTA_MIN = 2
+    disputada = bsp > DISPUTA_MIN or dsp > DISPUTA_MIN
+    approx = ("aprox_disputada" if (inexacta and disputada)
+              else "aprox" if inexacta
+              else "disputada" if disputada
+              else "")
 
     return {"ok": True, "qid": qid, "id": _slug_id(name or qid, ids_taken),
             "name": name, "desc": desc, "birth": birth, "death": death,
@@ -427,7 +447,9 @@ def db_add_person(d):
         return False, "No trobo PEOPLE a l'index.html"
     before, close = count_objects(src0, m.end())
 
-    approx = (d.get("approx") or "").strip()[:240]
+    approx = (d.get("approx") or "").strip()
+    if approx not in ("", "aprox", "disputada", "aprox_disputada"):
+        return False, "Codi d'incertesa desconegut: %r" % approx
 
     rec = dict(d)
     rec.update({"id": pid, "qid": qid, "cats": cats, "approx": approx,
