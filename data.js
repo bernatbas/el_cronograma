@@ -1,6 +1,6 @@
 /* =============================================================================
  * data.js — SNAPSHOT PROVISIONAL de la base de dades del cronograma.
- * Generat automàticament des d'index.html el 2026-09-03.
+ * Generat automàticament des d'index.html el 2026-09-21.
  *
  * ⚠️  PROVISIONAL: això és una CÒPIA de les dades que ara viuen a index.html,
  *     feta per facilitar el testeig local (file://). Quan existeixi la DB externa,
@@ -1123,6 +1123,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Charles_Chaplin",
       "desc": "Actor i cineasta anglès"
+    },
+    {
+      "id": "mahavira",
+      "wd": "Q9422",
+      "name": "Mahavira",
+      "birth": -599,
+      "death": -527,
+      "cats": [
+        "religion"
+      ],
+      "gender": "M",
+      "wiki": "https://ca.wikipedia.org/wiki/Mahavira",
+      "desc": "Mestre jainista, l’últim dels vint-i-quatre tirthankares; contemporani del Buda i del Confuci."
     },
     {
       "id": "johancruyff",

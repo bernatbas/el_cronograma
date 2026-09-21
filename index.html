@@ -950,29 +950,22 @@ const COLLECTIONS=[
     'Q18430',    // Joseph Eugene Stiglitz     1943–avui 
     'Q131112'    // Paul Krugman               1953–avui 
   ]},
-  {id:'club27',name:'El club dels 27',wds:[
-    // Vuit persones que van morir totes amb 27 anys. En una taula aixo es una columna
-    // avorrida; aqui son vuit barres que fan el MATEIX de llarg, i es veu d'un cop d'ull.
-    // Ull: el cronograma treballa amb ANYS, no dates, aixi que qui va morir abans del seu
-    // aniversari surt amb 28 de resta (Hendrix, Morrison, Basquiat, Winehouse). Tots
-    // van morir amb 27; la barra fa 27 o 28 d’ample.
-    'Q192133',   // Robert Johnson              1911–1938     27 anys
-    'Q204943',   // Brian Jones                 1942–1969     27 anys
-    'Q5928',     // Jimi Hendrix                1942–1970     27 anys
-    'Q1514',     // Janis Joplin                1943–1970     27 anys
-    'Q44301',    // Jim Morrison                1943–1971     27 anys
-    'Q155407',   // Jean-Michel Basquiat        1960–1988     27 anys
-    'Q8446',     // Kurt Cobain                 1967–1994     27 anys
-    'Q15897'     // Amy Winehouse               1983–2011     27 anys
-  ]},
+
   {id:'videscurtes',name:'Vides curtes',wds:[
-    // Tothom que va morir abans dels 40, de Tutankamon a l’Amy Winehouse: 3.300 anys de
+    // Tothom que va morir abans dels 40, de Tutankamon a en Kurt Cobain: 3.300 anys de
     // barres curtes. La col·leccio no s’explica amb paraules, s’explica amb la FORMA —
     // un reguitzell de monyons entre barres llargues. Hi surten blocs sencers: els pintors
     // (Masaccio 27, Giorgione 32, Rafael 37, Caravaggio 39, Van Gogh 37, Seurat 32,
-    // Toulouse-Lautrec 37, Modigliani 36, Schiele 28, Basquiat 28), els poetes romantics
-    // seguits (Novalis 29, Keats 26, Shelley 30, Byron 36, Puixkin 38), les germanes
-    // Bronte i dos matematics que fan mal (Galois 21, Abel 27).
+    // Toulouse-Lautrec 37, Modigliani 36, Schiele 28), els poetes romantics seguits
+    // (Novalis 29, Keats 26, Shelley 30, Byron 36, Puixkin 38), les germanes Bronte i dos
+    // matematics que fan mal (Galois 21, Abel 27).
+    //
+    // ⚠️ Podada del PRESENT a proposit. La primera versio tenia 36 de 55 nascuts despres de
+    // 1800 i s’havia convertit en una llista de cares conegudes del segle XX: fora James
+    // Dean, Marilyn Monroe, Diana, Heath Ledger, Bruce Lee, Senna, Eva Peron i els del club
+    // dels 27 menys els tres que pesen de veritat (Hendrix, Marley, Cobain). Ara son 19
+    // abans de 1800 i 22 despres. El que ha d’ensenyar la col·leccio es que morir jove ha
+    // passat SEMPRE, i aixo no es veu si tres quartes parts son del segle XX.
     // Riemann i Malcolm X surten a 40 per resta d’anys pero van morir amb 39.
     'Q12154',    // Tutankamon                  -1343–-1324   19 anys
     'Q8409',     // Alexandre el Gran           -356–-323    (local)  33 anys
@@ -1007,30 +1000,16 @@ const COLLECTIONS=[
     'Q83163',    // Srinivasa Ramanujan         1887–1920     33 anys
     'Q44032',    // Egon Schiele                1890–1918     28 anys
     'Q41408',    // Federico García Lorca       1898–1936     38 anys
-    'Q192133',   // Robert Johnson              1911–1938     27 anys
-    'Q40933',    // Eva Perón                   1919–1952     33 anys
     'Q7474',     // Rosalind Franklin           1920–1958     38 anys
     'Q43303',    // Malcolm X                   1925–1965     40 anys
-    'Q4616',     // Marilyn Monroe              1926–1962     36 anys
     'Q5809',     // Che Guevara                 1928–1967     39 anys
     'Q4583',     // Anne Frank                  1929–1945    (local)  16 anys
-    'Q83359',    // James Dean                  1931–1955     24 anys
     'Q133054',   // Sylvia Plath                1932–1963     31 anys
-    'Q5977',     // Buddy Holly                 1936–1959     23 anys
-    'Q16397',    // Bruce Lee                   1940–1973     33 anys
-    'Q204943',   // Brian Jones                 1942–1969     27 anys
     'Q5928',     // Jimi Hendrix                1942–1970     28 anys
-    'Q1514',     // Janis Joplin                1943–1970     27 anys
-    'Q44301',    // Jim Morrison                1943–1971     28 anys
     'Q409',      // Bob Marley                  1945–1981     36 anys
-    'Q10490',    // Ayrton Senna                1960–1994     34 anys
-    'Q155407',   // Jean-Michel Basquiat        1960–1988     28 anys
-    'Q9685',     // Diana de Gal·les            1961–1997     36 anys
-    'Q8446',     // Kurt Cobain                 1967–1994     27 anys
-    'Q40572',    // Heath Ledger                1979–2008     29 anys
-    'Q15897'     // Amy Winehouse               1983–2011     28 anys
+    'Q8446'      // Kurt Cobain                 1967–1994     27 anys
   ]},
-    {id:'calbs',name:'Calbs il·lustres',wds:[
+  {id:'calbs',name:'Calbs il·lustres',wds:[
     // Curada A MA i a ull: Wikidata te la calvicie anotada (P1884) a QUATRE persones en
     // total, aixi que aqui no hi ha cap consulta al darrere ni cap check que la validi.
     //
@@ -1072,6 +1051,88 @@ const COLLECTIONS=[
     'Q7407',     // Andre Agassi                1970–avui   
     'Q164038',   // Josep Guardiola i Sala      1971–avui   
     'Q1835'      // Zinédine Zidane             1972–avui   
+  ]},
+  {id:'religions',name:'Fundadors de religions',wds:[
+    // El contingut d’aquesta col·leccio NO es qui hi ha, es QUAN. Dues coses alhora:
+    //
+    // 1) EL NUS. Mahavira (-599), Laozi (-580), Confuci (-551) i el Buda (-501) neixen dins
+    //    del mateix segle, a la Xina i a l’India, sense saber els uns dels altres. S’inventen
+    //    per separat el jainisme, el taoisme, el confucianisme i el budisme. Karl Jaspers en
+    //    va dir «era axial». En un llibre son quatre capitols separats per geografia; aqui es
+    //    UNA COLUMNA, i la columna es el fet.
+    //    ⚠️ Els anys son els que torna la SPARQL (rang preferit), no els tradicionals que
+    //    trobaras a mitja bibliografia: el Buda surt a -501 i no a -563, i Laozi a -580 i no
+    //    a -604. Si algun dia canvies aquest comentari, mira ABANS que diu el canvas.
+    // 2) EL REPARTIMENT. Despres el ritme no s’atura: Jesus, Mani, Mahoma, Nanak, la
+    //    Reforma, i una pluja al segle XIX-XX (Smith, Bahá’u’lláh, Eddy, Russell, Hubbard).
+    //    Fundar religions no es cosa «dels antics»: passa a cada epoca.
+    //
+    // ⚠️ Tres que hi haurien de ser i no hi son, cada una per un motiu diferent — i les TRES
+    // desapareixerien EN SILENCI si no s’hi para compte (detall a CLAUDE.md):
+    //   · Mahavira: el seu P31 a Wikidata es «tirthankara» i «esser huma possiblement
+    //     fictici», no Q5, i byIds(humansOnly=true) el filtra. Per aixo es a PEOPLE en local.
+    //   · Zaratustra: te P569 = -628 amb rang NORMAL, pero la declaracio PREFERIDA es «sense
+    //     valor» —les seves dates son disputades de debo— i wdt:P569 segueix el rang preferit,
+    //     aixi que la SPARQL no torna data i wdParse el descarta. Fora: no vull sostenir el
+    //     nus axial amb una data que la font declina afirmar.
+    //   · Christine de Pizan: directament no te any de naixement a Wikidata.
+    'Q9333',     // Laozi                       -604–-500             taoisme
+    'Q9422',     // Mahavira                    -599–-527    (local)  jainisme
+    'Q9441',     // Buda                        -563–-483             budisme
+    'Q4604',     // Confuci                     -551–-479    (local)  confucianisme
+    'Q302',      // Jesucrist                   -4–30        (local)  cristianisme
+    'Q203922',   // Mani                        216–274               maniqueisme
+    'Q9458',     // Mahoma                      571–632      (local)  islam
+    'Q83322',    // Guru Nanak                  1469–1539             sikhisme
+    'Q9554',     // Martí Luter                 1483–1546    (local)  protestantisme
+    'Q37577',    // Joan Calví                  1509–1564             calvinisme
+    'Q47102',    // Joseph Smith                1805–1844             mormonisme
+    'Q101054',   // Bahá’u’lláh                 1817–1892             fe bahà’í
+    'Q235069',   // Mary Baker Eddy             1821–1910             Ciència Cristiana
+    'Q313456',   // Charles Taze Russell        1852–1916             testimonis de Jehovà
+    'Q216896'    // L. Ron Hubbard              1911–1986             cienciologia
+  ]},
+  {id:'dones',name:'Dones a la història',wds:[
+    // Aqui el contingut tampoc es qui hi ha: es la DENSITAT, i sobretot el que falta.
+    // Compta les barres per tram i miralestes d’esquerra a dreta —3 abans de Crist, 2 fins
+    // l’any 1000, 4 fins al 1500, 6 fins al 1800 i 16 despres— i tens la forma de la
+    // col·leccio: un degoteig que s’espesseix. Aixo NO vol dir que hi hagues menys dones
+    // abans; vol dir que se’n va registrar menys. La col·leccio ensenya l’estat de l’ARXIU,
+    // no el de la humanitat, i aquesta diferencia es tot el que hi ha per aprendre-hi.
+    //
+    // Per aixo NO s’ha d’«equilibrar» afegint-ne d’antigues fins que quedi pla: seria
+    // maquillar justament el que la fa valer la pena.
+    'Q129234',   // Hatxepsut                   -1507–-1458         
+    'Q17892',    // Safo de Lesbos              -650–-550           
+    'Q635',      // Cleopatra                   -69–-30      (local)
+    'Q184634',   // Boudica                     30–61               
+    'Q11903',    // Hipàcia                     360–415             
+    'Q70991',    // Hildegarda de Bingen        1098–1179           
+    'Q178525',   // Elionor d’Aquitània         1124–1204           
+    'Q7226',     // Joana d’Arc                 1412–1431    (local)
+    'Q45859',    // Isabel I de Castella        1451–1504    (local)
+    'Q131552',   // Caterina de Mèdici          1519–1589    (local)
+    'Q7207',     // Elisabet I d’Anglaterra     1533–1603           
+    'Q212657',   // Artemisia Gentileschi       1593–1653           
+    'Q183074',   // Sor Juana Inés              1648–1695           
+    'Q101638',   // Mary Wollstonecraft         1759–1797    (local)
+    'Q36322',    // Jane Austen                 1775–1817    (local)
+    'Q7259',     // Ada Lovelace                1815–1852    (local)
+    'Q80137',    // Emily Brontë                1818–1848           
+    'Q44520',    // Anne Brontë                 1820–1849           
+    'Q37103',    // Florence Nightingale        1820–1910           
+    'Q211519',   // Emmeline Pankhurst          1858–1928           
+    'Q7186',     // Marie Curie                 1867–1934    (local)
+    'Q7231',     // Rosa Luxemburg              1871–1919    (local)
+    'Q40909',    // Virginia Woolf              1882–1941    (local)
+    'Q60025',    // Hannah Arendt               1906–1975           
+    'Q5588',     // Frida Kahlo                 1907–1954    (local)
+    'Q7197',     // Simone de Beauvoir          1908–1986    (local)
+    'Q41921',    // Rosa Parks                  1913–2005           
+    'Q7474',     // Rosalind Franklin           1920–1958           
+    'Q4583',     // Anne Frank                  1929–1945    (local)
+    'Q133054',   // Sylvia Plath                1932–1963           
+    'Q1744'      // Madonna                     1958–avui    (local)
   ]},
   {id:'maricashistoria',name:'Grandes Maricas de la Historia',url:'https://grandesmaricasdelahistoria.es/',wds:[
     'Q1762',  // Heliogàbal          203–222
@@ -1293,6 +1354,7 @@ const PEOPLE=[
   {id:'alanturing',wd:'Q7251',name:'Alan Turing',birth:1912,death:1954,cats:['science'],wiki:'https://ca.wikipedia.org/wiki/Alan_Turing',desc:'Pioner de la informàtica anglès'},
   {id:'simonedebeauvoir',wd:'Q7197',name:'Simone de Beauvoir',birth:1908,death:1986,cats:['philosophy','literature'],wiki:'https://ca.wikipedia.org/wiki/Simone_de_Beauvoir',desc:'Filòsofa, teòrica social i activista francesa'},
   {id:'charleschaplin',wd:'Q882',name:'Charles Chaplin',birth:1889,death:1977,cats:['cinema'],wiki:'https://ca.wikipedia.org/wiki/Charles_Chaplin',desc:'Actor i cineasta anglès'},
+  {id:'mahavira',wd:'Q9422',name:'Mahavira',birth:-599,death:-527,cats:['religion'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Mahavira',desc:'Mestre jainista, l’últim dels vint-i-quatre tirthankares; contemporani del Buda i del Confuci.'},
   {id:'johancruyff',wd:'Q17163',name:'Johan Cruyff',birth:1947,death:2016,cats:['sport'],wiki:'https://ca.wikipedia.org/wiki/Johan_Cruyff',desc:'Jugador i entrenador de futbol neerlandès'},
 ];
 
