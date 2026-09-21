@@ -160,6 +160,13 @@
   .results .row.loading{color:var(--text2);font-style:italic;cursor:default;}
   .results .row .yr{color:var(--text2);font-size:12px;margin-left:auto;}
   .results .row.disabled{opacity:.5;cursor:default;}
+  /* Persona que existeix a Wikidata pero sense dates: es mostra per no mentir («cap persona
+     trobada» era fals), pero no es pot afegir. L'opacitat de .disabled ja diu que no s'hi pot
+     tocar; la ↗ ha de quedar viva i per aixo recupera opacitat propia. */
+  .results .row.nodate .yr{font-style:italic;}
+  .results .row.nodate .extlink{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-left:8px;border-radius:3px;text-decoration:none;color:inherit;opacity:.9;pointer-events:auto;cursor:pointer;}
+  .results .row.nodate .extlink:hover{background:var(--surface);}
+  .results .row.nodate .extlink svg{width:12px;height:12px;}
   .results .row.loading::before{content:"";width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--text2);border-radius:50%;display:inline-block;margin-right:8px;vertical-align:-2px;animation:wdspin .7s linear infinite;}
   @keyframes wdspin{to{transform:rotate(360deg);}}
   .canvas-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:40;background:rgba(255,255,255,.35);opacity:0;visibility:hidden;transition:opacity .15s,visibility 0s .15s;pointer-events:none;}
@@ -373,6 +380,12 @@
   .detail .dbtn:hover{background:var(--soft);}
   .detail .dbtn.danger{color:#C0392B;border-color:#E7B7B0;}
   .detail .dbtn.danger:hover{background:#FBEDEB;}
+
+  /* Nota d'incertesa a la fitxa. Surt NOMES si la persona porta camp `approx`, i el que diu
+     es per que no ens en refiem (precisio de segle, fonts en conflicte...). La linia de vida
+     porta un ~ al davant. Es informacio historica, no un avis d'error: per aixo va en to
+     tranquil i no en vermell. */
+  .detail .approx{margin:8px 0 0;padding:8px 11px;background:var(--soft);border-left:3px solid var(--border-strong);border-radius:0 var(--r-card) var(--r-card) 0;font-size:12.5px;line-height:1.45;color:var(--text2);}
 
   /* ===== Footer (barra fina al peu de l'app) =====
      flex:0 0 auto dins de .app → li menja alçada a .body, que ja és flex:1 1 auto amb min-height:0.
@@ -763,6 +776,9 @@ const I18N={
     cro_already_added:'ja afegit',
     cro_wd_fail:"⚠ No s'ha pogut connectar a Wikidata",
     cro_wd_none:'Cap persona trobada a Wikidata',
+    cro_wd_nodate:'sense dates',
+    cro_wd_nodate_why:'No se sap quan va viure: a Wikidata les seves dates consten com a desconegudes, així que no es pot situar a la línia de temps.',
+    cro_wd_nodate_cta:'Si en tens informació, pots completar-ho a Wikidata',
     cro_no_match:'Cap coincidència',
     cro_coll_fail: v => v.name+" · no s'ha pogut connectar a Wikidata",
     cro_coll_lost: v => v.name+' · '+v.n+" no s'han pogut carregar",
@@ -1274,14 +1290,14 @@ EVENTS.forEach(ev=>{ev._m=metricOf(ev);});
 })();
 const PEOPLE=[
   {id:'socrates',wd:'Q913',name:'Sòcrates',birth:-470,death:-399,cats:['philosophy'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Sòcrates',desc:'Filòsof atenès que no deixà escrits propis, considerat el pare de la filosofia occidental i del mètode socràtic.'},
-  {id:'plato',wd:'Q859',name:'Plató',birth:-428,death:-348,cats:['philosophy'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Plató',desc:'Filòsof atenès, deixeble de Sòcrates i fundador de l\u0027Acadèmia, autor de La República.'},
+  {id:'plato',wd:'Q859',name:'Plató',birth:-428,death:-348,cats:['philosophy'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Plató',desc:'Filòsof atenès, deixeble de Sòcrates i fundador de l\u0027Acadèmia, autor de La República.',approx:'Any aproximat: Wikidata només en dona la dècada.'},
   {id:'diogenes',wd:'Q59180',name:'Diògenes',birth:-412,death:-323,cats:['philosophy'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Diògenes_de_Sinope',desc:'Filòsof cínic grec, conegut per la seva vida austera i les seves crítiques mordaces a les convencions socials.'},
   {id:'aristotil',wd:'Q868',name:'Aristòtil',birth:-384,death:-322,cats:['philosophy','science'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Aristòtil',desc:'Filòsof i científic grec, deixeble de Plató i tutor d\u0027Alexandre Magne, sistematitzà gran part del saber antic.'},
   {id:'alexandre',wd:'Q8409',name:'Alexandre el Gran',birth:-356,death:-323,cats:['politics'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Alexandre_el_Gran',desc:'Rei de Macedònia, conquerí un dels imperis més vastos de l\u0027antiguitat abans dels 33 anys.'},
   {id:'epicur',wd:'Q43216',name:'Epicur',birth:-341,death:-270,cats:['philosophy'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Epicur',desc:'Filòsof grec, fundador de l\u0027epicureisme, defensor d\u0027una vida senzilla orientada a la recerca del plaer moderat.'},
   {id:'cesar',wd:'Q1048',name:'Juli Cèsar',birth:-100,death:-44,cats:['politics'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Juli_Cèsar',desc:'General i dictador romà, la seva figura marca la transició de la República a l\u0027Imperi Romà.'},
   {id:'cleopatra',wd:'Q635',name:'Cleopatra',birth:-69,death:-30,cats:['politics'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Cleòpatra',desc:'Última reina ptolemaica d\u0027Egipte, coneguda per les seves aliances amb Juli Cèsar i Marc Antoni.'},
-  {id:'jesucrist',wd:'Q302',name:'Jesucrist',birth:-4,death:30,cats:['religion'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Jesús_de_Natzaret',desc:'Predicador i mestre jueu del segle I, figura central del cristianisme i un dels personatges més influents de la civilització occidental.'},
+  {id:'jesucrist',wd:'Q302',name:'Jesucrist',birth:-4,death:30,cats:['religion'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Jesús_de_Natzaret',desc:'Predicador i mestre jueu del segle I, figura central del cristianisme i un dels personatges més influents de la civilització occidental.',approx:'Any estimat: Wikidata en dona tres de diferents i cap amb precisió d’any.'},
   {id:'gengiskhan',wd:'Q720',name:'Gengis Khan',birth:1162,death:1227,cats:['politics'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Gengis_Khan',desc:'Fundador i primer gran khan de l\u0027Imperi Mongol, el més extens de la història en superfície contínua.'},
   {id:'gutenberg',wd:'Q8958',name:'Johannes Gutenberg',birth:1400,death:1468,cats:['science'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Johannes_Gutenberg',desc:'Impressor alemany, inventor de la impremta de tipus mòbils, revolucionà la difusió del coneixement a Europa.'},
   {id:'joanadarc',wd:'Q7226',name:'Joana d\u0027Arc',birth:1412,death:1431,cats:['politics'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Joana_d\u0027Arc',desc:'Pagesa francesa que liderà l\u0027exèrcit reial durant la Guerra dels Cent Anys, cremada per heretgia i després canonitzada.'},
@@ -1330,17 +1346,17 @@ const PEOPLE=[
   {id:'ricardcordelleo',wd:'Q42305',name:'Ricard Cor de Lleó',birth:1157,death:1199,cats:['literature'],wiki:'https://ca.wikipedia.org/wiki/Ricard_Cor_de_Lle%C3%B3',desc:'Rei d’Anglaterra de 1189 a 1199'},
   {id:'isabelidecastella',wd:'Q45859',name:'Isabel I de Castella',birth:1451,death:1504,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/Isabel_I_de_Castella',desc:'Reina de Castella i Lleó de 1474 a 1504'},
   {id:'annefrank',wd:'Q4583',name:'Anne Frank',birth:1929,death:1945,cats:['literature'],wiki:'https://ca.wikipedia.org/wiki/Anne_Frank',desc:'Diarista nascuda a Alemanya i víctima de l’Holocaust'},
-  {id:'plutarcdequeronea',wd:'Q41523',name:'Plutarc de Queronea',birth:40,death:120,cats:['philosophy'],wiki:'https://ca.wikipedia.org/wiki/Plutarc_de_Queronea',desc:'Historiador grec'},
+  {id:'plutarcdequeronea',wd:'Q41523',name:'Plutarc de Queronea',birth:40,death:120,cats:['philosophy'],wiki:'https://ca.wikipedia.org/wiki/Plutarc_de_Queronea',desc:'Historiador grec',approx:'Any aproximat: Wikidata només en dona la dècada.'},
   {id:'marcaureli',wd:'Q1430',name:'Marc Aureli',birth:121,death:180,cats:['philosophy'],wiki:'https://ca.wikipedia.org/wiki/Marc_Aureli',desc:'Filòsof estoic, emperador romà del 161 al 180'},
   {id:'virginiawoolf',wd:'Q40909',name:'Virginia Woolf',birth:1882,death:1941,cats:['literature'],wiki:'https://ca.wikipedia.org/wiki/Virginia_Woolf',desc:'Escriptora modernista anglesa'},
   {id:'franzkafka',wd:'Q905',name:'Franz Kafka',birth:1883,death:1924,cats:['literature'],wiki:'https://ca.wikipedia.org/wiki/Franz_Kafka',desc:'Escriptor austríac i txec'},
   {id:'mahoma',wd:'Q9458',name:'Mahoma',birth:571,death:632,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/Mahoma',desc:'Fundador de l’islam'},
   {id:'carlemany',wd:'Q3044',name:'Carlemany',birth:748,death:814,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/Carlemany',desc:'Emperador carolingi del 800 al 814'},
   {id:'ramsesii',wd:'Q1523',name:'Ramsès II',birth:-1303,death:-1213,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/Rams%C3%A8s_II',desc:'Tercer faraó de la dinastia XIX d’Egipte'},
-  {id:'atila',wd:'Q36724',name:'Àtila',birth:406,death:453,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/%C3%80tila',desc:'Governant de l’Imperi Hunnic del 434 al 453'},
+  {id:'atila',wd:'Q36724',name:'Àtila',birth:406,death:453,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/%C3%80tila',desc:'Governant de l’Imperi Hunnic del 434 al 453',approx:'Any molt incert: Wikidata només en dona el mil·lenni. Aquí hi ha la data que fa servir la major part de la bibliografia.'},
   {id:'elcid',wd:'Q43958',name:'El Cid',birth:1048,death:1099,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/El_Cid',desc:'Cavaller castellà del segle XI'},
   {id:'moctezumaii',wd:'Q141791',name:'Moctezuma II',birth:1466,death:1520,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/Moctezuma_II',desc:'Emperador de l’Imperi Asteca de 1502 o 1503 a 1520'},
-  {id:'homer',wd:'Q6691',name:'Homer',birth:-750,death:-650,cats:['literature'],wiki:'https://ca.wikipedia.org/wiki/Homer',desc:'Poeta de l’Antiga Grècia'},
+  {id:'homer',wd:'Q6691',name:'Homer',birth:-750,death:-650,cats:['literature'],wiki:'https://ca.wikipedia.org/wiki/Homer',desc:'Poeta de l’Antiga Grècia',approx:'Figura semillegendària: Wikidata només en dona el segle i les fonts no s’hi posen d’acord.'},
   {id:'cristoforcolom',wd:'Q7322',name:'Cristòfor Colom',birth:1451,death:1506,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/Crist%C3%B2for_Colom',desc:'Navegant i explorador genovès'},
   {id:'martiluter',wd:'Q9554',name:'Martí Luter',birth:1483,death:1546,cats:['religion'],wiki:'https://ca.wikipedia.org/wiki/Mart%C3%AD_Luter',desc:'Sacerdot, teòleg i escriptor alemany'},
   {id:'renedescartes',wd:'Q9191',name:'René Descartes',birth:1596,death:1650,cats:['philosophy','science'],wiki:'https://ca.wikipedia.org/wiki/Ren%C3%A9_Descartes',desc:'Polímata francès'},
@@ -1358,8 +1374,11 @@ const PEOPLE=[
   {id:'alanturing',wd:'Q7251',name:'Alan Turing',birth:1912,death:1954,cats:['science'],wiki:'https://ca.wikipedia.org/wiki/Alan_Turing',desc:'Pioner de la informàtica anglès'},
   {id:'simonedebeauvoir',wd:'Q7197',name:'Simone de Beauvoir',birth:1908,death:1986,cats:['philosophy','literature'],wiki:'https://ca.wikipedia.org/wiki/Simone_de_Beauvoir',desc:'Filòsofa, teòrica social i activista francesa'},
   {id:'charleschaplin',wd:'Q882',name:'Charles Chaplin',birth:1889,death:1977,cats:['cinema'],wiki:'https://ca.wikipedia.org/wiki/Charles_Chaplin',desc:'Actor i cineasta anglès'},
-  {id:'buda',wd:'Q9441',name:'Buda',birth:-563,death:-483,cats:['religion'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Buda_Gautama',desc:'Príncep de Kapilavastu que renuncià a la seva posició i fundà el budisme; les seves dates són tradicionals i discutides.'},
-  {id:'mahavira',wd:'Q9422',name:'Mahavira',birth:-599,death:-527,cats:['religion'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Mahavira',desc:'Mestre jainista, l’últim dels vint-i-quatre tirthankares; contemporani del Buda i del Confuci.'},
+  {id:'safo',wd:'Q17892',name:'Safo de Lesbos',birth:-630,death:-570,cats:['literature'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Safo_de_Lesbos',desc:'Poeta grega de l’illa de Lesbos, la veu lírica més admirada de l’antiguitat; només se’n conserven fragments.',approx:'Dates tradicionals. A Wikidata hi ha vuit propostes diferents i cap amb precisió d’any.'},
+  {id:'laozi',wd:'Q9333',name:'Laozi',birth:-604,death:-531,cats:['philosophy'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Laozi',desc:'Pensador xinès a qui s’atribueix el Dao De Jing i la fundació del taoisme; potser un personatge compost.',approx:'Figura semillegendària: dates tradicionals, i Wikidata només en dona el segle.'},
+  {id:'seneca',wd:'Q2054',name:'Sèneca',birth:-4,death:65,cats:['philosophy','literature'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Luci_Anneu_S%C3%A8neca',desc:'Filòsof estoic i tutor de Neró, que acabà ordenant-li el suïcidi; les seves cartes són el manual estoic més llegit.',approx:'Any de naixement aproximat: Wikidata només en dona la dècada.'},
+  {id:'buda',wd:'Q9441',name:'Buda',birth:-563,death:-483,cats:['religion'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Buda_Gautama',desc:'Príncep de Kapilavastu que renuncià a la seva posició i fundà el budisme; les seves dates són tradicionals i discutides.',approx:'Dates tradicionals i discutides. A Wikidata hi consten tres propostes diferents, cap amb precisió d’any.'},
+  {id:'mahavira',wd:'Q9422',name:'Mahavira',birth:-599,death:-527,cats:['religion'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Mahavira',desc:'Mestre jainista, l’últim dels vint-i-quatre tirthankares; contemporani del Buda i del Confuci.',approx:'Dates tradicionals del jainisme, discutides.'},
   {id:'johancruyff',wd:'Q17163',name:'Johan Cruyff',birth:1947,death:2016,cats:['sport'],wiki:'https://ca.wikipedia.org/wiki/Johan_Cruyff',desc:'Jugador i entrenador de futbol neerlandès'},
 ];
 
@@ -1828,7 +1847,8 @@ function openDetail(p){
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   d.innerHTML=`<button class="close" id="closeDetail" aria-label="${t('close')}">×</button>
     <h2>${esc(L(p.name))}</h2>
-    <div class="dhead"><span class="life">${fmtY(p.birth)} – ${isAlive(p)?t('cro_present'):fmtY(p.death)}</span>${hasCat(p)?p.cats.map(a=>`<span class="chip"><span class="swatch" style="background:${CAT_COLORS[a]}"></span>${t('cat_'+a)}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${t('cat_none')}</span>`}<span class="chip era">${eraLabel(p.birth)}</span></div>
+    <div class="dhead"><span class="life">${p.approx?'~':''}${fmtY(p.birth)} – ${isAlive(p)?t('cro_present'):fmtY(p.death)}</span>${hasCat(p)?p.cats.map(a=>`<span class="chip"><span class="swatch" style="background:${CAT_COLORS[a]}"></span>${t('cat_'+a)}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${t('cat_none')}</span>`}<span class="chip era">${eraLabel(p.birth)}</span></div>
+    ${p.approx?`<div class="approx">${esc(L(p.approx))}</div>`:''}
     <div class="desc">${esc(L(p.desc))}</div>
     <div class="actions">
       <button class="dbtn" data-act="context">${t('cro_context')}</button>
@@ -1885,7 +1905,14 @@ const localRow=p=>{const added=state.present.has(p.id);return `<div class="row $
 // Igual que localRow/#onview/la fitxa: el nom ve de Wikidata (public i editable) i va a
 // innerHTML, aixi que passa per esc(). Era l'unica fila que no ho feia. birth/death son
 // numeros (parseInt a wdYear), no cal.
-const wdRow=w=>`<div class="row" data-wd="${esc(w.qid)}"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${esc(w.name)}<span class="yr">${w.birth}${w.death!=null?'\u2013'+w.death:'\u2013'}</span></div>`;
+// Dues formes: la normal i la de qui existeix pero no te dates. Aquesta darrera va
+// DESACTIVADA (no es pot afegir a una linia de temps algu de qui no saps quan va viure)
+// pero es mostra igualment, amb el motiu i un enllac per completar-ho a Wikidata. Amagar-lo
+// era pitjor: la cerca deia «cap persona trobada» quan la persona hi era.
+const wdExtIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3H3a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1v-3"/><path d="M10 2h4v4M14 2L8 8"/></svg>';
+const wdRow=w=>w.nodate
+  ? `<div class="row disabled nodate" title="${esc(t('cro_wd_nodate_why'))}"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${esc(w.name)}<span class="yr">${t('cro_wd_nodate')}</span><a class="extlink" href="${esc(w.article)}" target="_blank" rel="noopener" title="${esc(t('cro_wd_nodate_cta'))}" onclick="event.stopPropagation()">${wdExtIco}</a></div>`
+  : `<div class="row" data-wd="${esc(w.qid)}"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${esc(w.name)}<span class="yr">${w.birth}${w.death!=null?'\u2013'+w.death:'\u2013'}</span></div>`;
 const evSearchRow=ev=>`<div class="row evrow" data-evsearch="${ev.id}"><span class="swatch" style="background:var(--eventc)"></span>${L(ev.name)}<span class="yr">${fmtY(ev.year)}</span></div>`;
 function renderDropdown(){
   const term=deaccent(q.value.trim());
@@ -1920,7 +1947,7 @@ function runSearch(){
   renderDropdown();
 }
 // keyboard navigation over both local and Wikidata rows
-const searchRows=()=>[...results.querySelectorAll('.row[data-add]:not(.disabled),.row[data-evsearch],.row[data-wd]')];
+const searchRows=()=>[...results.querySelectorAll('.row[data-add]:not(.disabled),.row[data-evsearch],.row[data-wd]:not(.disabled)')];
 function highlightSearch(i){
   const rows=searchRows();
   results.querySelectorAll('.row.active').forEach(r=>r.classList.remove('active'));
@@ -1968,8 +1995,12 @@ function wdParse(data,keepKnown){
     // (addWikidataPerson surt amb birth==null). Passa amb Zaratustra, les dates del qual son
     // disputades de debo. Per tant es parseja PRIMER i es descarta si no en surt un any.
     const by=b.birth?wdYear(b.birth.value):null;
-    if(by==null)continue;
     seen.add(qid);
+    // Sense any no es pot posar a la linia, pero SI que existeix: es marca i el desplegable
+    // el mostra desactivat amb el motiu. Descartar-lo aqui feia que la cerca digues «cap
+    // persona trobada», que es fals. Els altres consumidors (toggleCollection, refreshStale)
+    // ja salten els birth==null pel seu compte, aixi que no se'ls cola ningu sense any.
+    if(by==null){out.push({qid,name:(b.itemLabel&&b.itemLabel.value)||qid,desc:(b.itemDescription&&b.itemDescription.value)||'',birth:null,death:null,nodate:true,article:'https://www.wikidata.org/wiki/'+qid});continue;}
     // La mort pot venir pel mateix cami; si no es parseja queda null, que al nostre model vol
     // dir VIU. Es assumible perque son casos rars, pero si algun dia cal distingir «viu» de
     // «data desconeguda» el model de PEOPLE ha de canviar, no aixo.

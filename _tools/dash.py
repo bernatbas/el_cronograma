@@ -333,9 +333,24 @@ def resolve_person(q, allow_existing=False):
     if qid in qids_taken and not allow_existing:
         return {"ok": False, "msg": "%s ja es a PEOPLE" % qid}
 
+    # Nota d'incertesa per al camp `approx` de PEOPLE. Es construeix dels MATEIXOS fets que
+    # ja alimenten els avisos de dalt, pero mentre que l'avis es per a qui afegeix la persona
+    # (i desapareix), aixo queda desat i ho veu qui fa servir l'eina: la fitxa ensenya «~406»
+    # i la nota, i els jocs cronologics eviten emparellar-lo amb algu massa a prop.
+    # Es genera SOL a proposit: si depengues de recordar-se'n, el camp quedaria a mitges i el
+    # guard dels jocs seria fals.
+    bits = []
+    if birth is not None and bp is not None and bp < 9:
+        bits.append("Wikidata nomes en dona %s, no l'any exacte" % PREC.get(bp, bp))
+    elif death is not None and dp is not None and dp < 9:
+        bits.append("la data de mort nomes te precisio de %s" % PREC.get(dp, dp))
+    if bn > 1 or dn > 1:
+        bits.append("hi ha %d dates diferents de fonts que no s'hi posen d'acord" % max(bn, dn))
+    approx = ("Any aproximat: " + "; ".join(bits) + ".") if bits else ""
+
     return {"ok": True, "qid": qid, "id": _slug_id(name or qid, ids_taken),
             "name": name, "desc": desc, "birth": birth, "death": death,
-            "cats": cats, "gender": gender, "wiki": wiki_url,
+            "cats": cats, "gender": gender, "wiki": wiki_url, "approx": approx,
             "sitelinks": len(ent.get("sitelinks") or {}), "warnings": warnings}
 
 
@@ -367,6 +382,7 @@ def person_literal(d):
         ("gender:'%s'" % _js_str(d["gender"])) if d.get("gender") else None,
         ("wiki:'%s'" % _js_str(d["wiki"])) if d.get("wiki") else None,
         ("desc:'%s'" % _js_str(d["desc"])) if d.get("desc") else None,
+        ("approx:'%s'" % _js_str(d["approx"])) if d.get("approx") else None,
     ]
     return "  {" + ",".join(x for x in parts if x) + "},"
 
@@ -411,8 +427,10 @@ def db_add_person(d):
         return False, "No trobo PEOPLE a l'index.html"
     before, close = count_objects(src0, m.end())
 
+    approx = (d.get("approx") or "").strip()[:240]
+
     rec = dict(d)
-    rec.update({"id": pid, "qid": qid, "cats": cats,
+    rec.update({"id": pid, "qid": qid, "cats": cats, "approx": approx,
                 "birth": birth, "death": death, "name": name})
     head = src0[:close].rstrip()
     if not head.endswith(","):
@@ -546,6 +564,13 @@ def _extract_people_events(html):
             'wiki':   get_str(obj, 'wiki') or '',
             'desc':   get_str(obj, 'desc') or '',
         }
+        # Opcional: nota d'incertesa de les dates. Nomes la porten unes poques persones
+        # (antigues, amb precisio de segle o amb fonts en conflicte). Si no s'hi copies,
+        # data.js deixaria de ser un snapshot fidel i el camp es perdria el dia que les
+        # dades es serveixin des de fora.
+        approx = get_str(obj, 'approx')
+        if approx:
+            entry['approx'] = approx
         if entry['id'] and entry['name'] is not None:
             people.append(entry)
 

@@ -855,8 +855,13 @@ function showError(msg){
 
 /* Buidar el cercador buida tambe els camps: si no acabes afegint ningu, no has
    de treure-ho tot a ma. */
+// Nota d'incertesa de les dates: la calcula el servidor al resolve i viatja fins al commit.
+// Va aqui dalt i no al costat de dbCommit() perque dbResolve() la fa servir abans (TDZ).
+let DAPPROX = "";
+
 function clearFields(){
   DF.forEach(function(f){ el(f).value=""; });
+  DAPPROX = "";
   clearWarns();
   renderPreview();
 }
@@ -875,6 +880,10 @@ async function resolveQ(){
     el("dbirth").value=(d.birth==null)?"":d.birth;
     el("ddeath").value=(d.death==null)?"":d.death;
     el("dwiki").value=d.wiki||""; el("ddesc").value=d.desc||"";
+    // La nota d'incertesa la calcula el servidor a partir de la precisio de Wikidata. No es
+    // editable: va amagada i viatja del resolve al commit. Si s'edita l'any a ma, la nota
+    // segueix valent — una data aproximada no deixa de ser-ho perque en triis una de millor.
+    DAPPROX = d.approx || "";
     el("dcat").value=(d.cats&&d.cats[0])||"";
     renderPreview();
     showWarns(d.warnings);
@@ -891,7 +900,7 @@ async function dbCommit(){
       headers:{"Content-Type":"application/json"}, body:JSON.stringify({
         id:dval("did"), qid:dval("dqid"), name:dval("dnom"),
         birth:dval("dbirth"), death:dval("ddeath"),
-        cats:cat?[cat]:[], wiki:dval("dwiki"), desc:dval("ddesc")})});
+        cats:cat?[cat]:[], wiki:dval("dwiki"), desc:dval("ddesc"), approx:DAPPROX})});
     const d = await r.json();
     if(!d.ok){ showError(d.msg); btn.textContent="Afegeix a la BD i committeja"; renderPreview(); return; }
     btn.textContent="✓ "+d.msg; clearFields(); el("dq").value="";

@@ -863,10 +863,31 @@
       if(typeof e.year==='number') pool.push({key:'ev:'+e.id,kind:'event',name:e.name,year:e.year});
     });
     (HB_DATA.PEOPLE||[]).forEach(p=>{
-      if(typeof p.birth==='number') pool.push({key:'pe:'+p.id+':b',kind:'person',anchor:'naix',name:p.name,year:p.birth});
-      if(typeof p.death==='number') pool.push({key:'pe:'+p.id+':d',kind:'person',anchor:'mort',name:p.name,year:p.death});
+      const ap=!!p.approx;   // data que no ens crèiem del tot: veure APX_GAP
+      if(typeof p.birth==='number') pool.push({key:'pe:'+p.id+':b',kind:'person',anchor:'naix',name:p.name,year:p.birth,approx:ap});
+      if(typeof p.death==='number') pool.push({key:'pe:'+p.id+':d',kind:'person',anchor:'mort',name:p.name,year:p.death,approx:ap});
     });
     return pool;
+  }
+
+  // ── Marge de seguretat quan una data no és fiable ──────────────────────────────
+  // Els tres jocs cronològics busquen EXPRESSAMENT les parelles més properes, perquè són
+  // les difícils. Però hi ha ~10 persones amb el camp `approx` (antigues, amb precisió de
+  // segle o mil·lenni, o amb fonts que no s'hi posen d'acord), i allà una parella propera
+  // no és difícil: és una moneda a l'aire amb una resposta «correcta» inventada.
+  // Mesurat abans del guard, simulant 365 dies d'«Ordena la línia»: 29% de dies portaven
+  // algun ítem aproximat i un 3% tenien una parella realment dubtosa — Sèneca 65 contra
+  // Neró 68 (3 anys), Alexandre −356 contra Plató −348 (8 anys). Al pool hi ha fins i tot
+  // un empat: Jesucrist i Sèneca, tots dos nascuts el −4 i tots dos estimacions.
+  // 60 anys cobreix la incertesa d'una data amb precisió de segle (±50).
+  // No es treuen del pool: seguirien sortint, però mai emparellats amb algú tan a prop que
+  // la resposta depengui de quina font hagi triat Wikidata. Treure'ls castigaria
+  // l'antiguitat, que és on l'eina té més valor.
+  const APX_GAP=60;
+  function incertMassaAprop(a,b){
+    if(!a||!b) return false;
+    if(!a.approx && !b.approx) return false;
+    return Math.abs(a.year-b.year)<APX_GAP;
   }
 
   // Retorna {qid,name,birth,death,img,desc} per a un ítem del pool de tipus 'person', o null si és un event.
@@ -932,7 +953,9 @@
 
     // Següent candidat de la baralla FINITA (sense rebarreig). Salta empats d'any (determinista).
     function nextCandidate(){
-      while(idx<deck.length){ const c=deck[idx++]; if(c.year!==current.year) return c; }
+      // Salta empats d'any (determinista) i, si algun dels dos porta data aproximada,
+      // també els que cauen dins d'APX_GAP: allà «abans o després» no té resposta.
+      while(idx<deck.length){ const c=deck[idx++]; if(c.year!==current.year && !incertMassaAprop(current,c)) return c; }
       return null; // baralla esgotada => ronda perfecta
     }
 
@@ -1413,10 +1436,12 @@
     function pickFive(rng){
       const pool=dailyPool(rng).filter(x=>typeof x.year==='number');
       if(pool.length<5) return null;
-      const usedK=new Set(), usedY=new Set();
-      const take=t=>{ usedK.add(t.key); usedY.add(t.year); return t; };
+      const usedK=new Set(), usedY=new Set(), presos=[];
+      const take=t=>{ usedK.add(t.key); usedY.add(t.year); presos.push(t); return t; };
       const anchor=take(pool[Math.floor(rng()*pool.length)]);
-      const scored=()=>pool.filter(x=>!usedK.has(x.key)&&!usedY.has(x.year)).map(x=>({x,g:gap(anchor,x)})).filter(o=>o.g>1e-9);
+      // El filtre mira contra TOTS els ja presos, no només l'àncora: els cinc s'ordenen
+      // entre ells, així que qualsevol parella de la llista ha de ser resoluble.
+      const scored=()=>pool.filter(x=>!usedK.has(x.key)&&!usedY.has(x.year)&&!presos.some(t=>incertMassaAprop(t,x))).map(x=>({x,g:gap(anchor,x)})).filter(o=>o.g>1e-9);
       function pickBand(filterFn, fallbackSort){
         const list=scored();
         let band=seededShuffle(list.filter(filterFn),rng);
@@ -1429,7 +1454,7 @@
       const mid=pickBand(o=>o.g>=O.gMidMin&&o.g<=O.gMidMax,(a,b)=>Math.abs(a.g-midC)-Math.abs(b.g-midC)); if(mid) take(mid);
       const easy=pickBand(o=>o.g>=O.gEasyMin,(a,b)=>b.g-a.g); if(easy) take(easy);
       const five=[anchor,hard1,hard2,mid,easy].filter(Boolean);
-      for(const x of pool){ if(five.length>=5) break; if(!usedK.has(x.key)&&!usedY.has(x.year)){ take(x); five.push(x); } }
+      for(const x of pool){ if(five.length>=5) break; if(!usedK.has(x.key)&&!usedY.has(x.year)&&!presos.some(t=>incertMassaAprop(t,x))){ take(x); five.push(x); } }
       return five.length===5?five:null;
     }
 
@@ -1974,7 +1999,7 @@
       (HB_DATA.PEOPLE||[]).forEach(function(p){
         if(typeof p.birth!=='number') return;
         const alive=(typeof p.death!=='number');
-        out.push({uid:'pe:'+p.id, type:'person', id:p.id, name:p.name, by:p.birth, dy:alive?NOW:p.death, alive:alive,
+        out.push({uid:'pe:'+p.id, type:'person', id:p.id, name:p.name, by:p.birth, dy:alive?NOW:p.death, alive:alive, approx:!!p.approx,
           crono:(p.wd?{qid:p.wd,name:p.name,birth:p.birth,death:(typeof p.death==='number'?p.death:null),img:null,desc:p.desc||''}:null)});
       });
       (HB_DATA.EVENTS||[]).forEach(function(e){
@@ -1986,17 +2011,31 @@
     }
 
     // Classifica una parella: 'yes' (coincideixen), 'no' (+gap d'anys), o 'excl' (vora ambigua / event-event).
+    // Si algun dels dos porta data aproximada, el marge per dir «es van creuar» o «no» ha de
+    // ser MES GRAN que un any: amb una precisio de segle, un solapament de 20 anys pot no
+    // existir. S'excloen les parelles dins d'APX_GAP, exactament com ja s'excloien les que es
+    // toquen just en un any. Aquest joc necessita mes marge que els altres dos perque la
+    // pregunta depen de DUES dates per persona, no d'una.
+    function incertAmbigu(a,b,marge){
+      if(!a.approx && !b.approx) return false;
+      return Math.abs(marge)<APX_GAP;
+    }
     function classify(a,b){
       if(a.type==='event' && b.type==='event') return {status:'excl'};
       if(a.type==='person' && b.type==='person'){
         const ov=Math.min(a.dy,b.dy)-Math.max(a.by,b.by);
-        if(ov>=1) return {status:'yes'};
         if(ov===0) return {status:'excl'};   // es toquen just en un any: no ho podem considerar
+        if(incertAmbigu(a,b,ov)) return {status:'excl'};
+        if(ov>=1) return {status:'yes'};
         return {status:'no', gap:-ov};
       }
       const P=(a.type==='person')?a:b, E=(a.type==='event')?a:b, Y=E.by;
-      if(Y>P.by && Y<P.dy) return {status:'yes'};
       if(Y===P.by || Y===P.dy) return {status:'excl'};
+      if(P.approx){
+        const marge=Math.min(Math.abs(Y-P.by),Math.abs(Y-P.dy));
+        if(marge<APX_GAP) return {status:'excl'};
+      }
+      if(Y>P.by && Y<P.dy) return {status:'yes'};
       return {status:'no', gap:(Y<P.by)?(P.by-Y):(Y-P.dy)};
     }
     // Any representatiu d'una entitat: mig de la vida (persona) o l'any (esdeveniment). Els vius usen l'any actual (viu).

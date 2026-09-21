@@ -35,7 +35,8 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Plató",
-      "desc": "Filòsof atenès, deixeble de Sòcrates i fundador de l'Acadèmia, autor de La República."
+      "desc": "Filòsof atenès, deixeble de Sòcrates i fundador de l'Acadèmia, autor de La República.",
+      "approx": "Any aproximat: Wikidata només en dona la dècada."
     },
     {
       "id": "diogenes",
@@ -127,7 +128,8 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Jesús_de_Natzaret",
-      "desc": "Predicador i mestre jueu del segle I, figura central del cristianisme i un dels personatges més influents de la civilització occidental."
+      "desc": "Predicador i mestre jueu del segle I, figura central del cristianisme i un dels personatges més influents de la civilització occidental.",
+      "approx": "Any estimat: Wikidata en dona tres de diferents i cap amb precisió d’any."
     },
     {
       "id": "gengiskhan",
@@ -767,7 +769,8 @@ window.HB_DATA = {
       ],
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Plutarc_de_Queronea",
-      "desc": "Historiador grec"
+      "desc": "Historiador grec",
+      "approx": "Any aproximat: Wikidata només en dona la dècada."
     },
     {
       "id": "marcaureli",
@@ -858,7 +861,8 @@ window.HB_DATA = {
       ],
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/%C3%80tila",
-      "desc": "Governant de l’Imperi Hunnic del 434 al 453"
+      "desc": "Governant de l’Imperi Hunnic del 434 al 453",
+      "approx": "Any molt incert: Wikidata només en dona el mil·lenni. Aquí hi ha la data que fa servir la major part de la bibliografia."
     },
     {
       "id": "elcid",
@@ -897,7 +901,8 @@ window.HB_DATA = {
       ],
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Homer",
-      "desc": "Poeta de l’Antiga Grècia"
+      "desc": "Poeta de l’Antiga Grècia",
+      "approx": "Figura semillegendària: Wikidata només en dona el segle i les fonts no s’hi posen d’acord."
     },
     {
       "id": "cristoforcolom",
@@ -1125,6 +1130,49 @@ window.HB_DATA = {
       "desc": "Actor i cineasta anglès"
     },
     {
+      "id": "safo",
+      "wd": "Q17892",
+      "name": "Safo de Lesbos",
+      "birth": -630,
+      "death": -570,
+      "cats": [
+        "literature"
+      ],
+      "gender": "F",
+      "wiki": "https://ca.wikipedia.org/wiki/Safo_de_Lesbos",
+      "desc": "Poeta grega de l’illa de Lesbos, la veu lírica més admirada de l’antiguitat; només se’n conserven fragments.",
+      "approx": "Dates tradicionals. A Wikidata hi ha vuit propostes diferents i cap amb precisió d’any."
+    },
+    {
+      "id": "laozi",
+      "wd": "Q9333",
+      "name": "Laozi",
+      "birth": -604,
+      "death": -531,
+      "cats": [
+        "philosophy"
+      ],
+      "gender": "M",
+      "wiki": "https://ca.wikipedia.org/wiki/Laozi",
+      "desc": "Pensador xinès a qui s’atribueix el Dao De Jing i la fundació del taoisme; potser un personatge compost.",
+      "approx": "Figura semillegendària: dates tradicionals, i Wikidata només en dona el segle."
+    },
+    {
+      "id": "seneca",
+      "wd": "Q2054",
+      "name": "Sèneca",
+      "birth": -4,
+      "death": 65,
+      "cats": [
+        "philosophy",
+        "literature"
+      ],
+      "gender": "M",
+      "wiki": "https://ca.wikipedia.org/wiki/Luci_Anneu_S%C3%A8neca",
+      "desc": "Filòsof estoic i tutor de Neró, que acabà ordenant-li el suïcidi; les seves cartes són el manual estoic més llegit.",
+      "approx": "Any de naixement aproximat: Wikidata només en dona la dècada."
+    },
+    {
       "id": "buda",
       "wd": "Q9441",
       "name": "Buda",
@@ -1135,7 +1183,8 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Buda_Gautama",
-      "desc": "Príncep de Kapilavastu que renuncià a la seva posició i fundà el budisme; les seves dates són tradicionals i discutides."
+      "desc": "Príncep de Kapilavastu que renuncià a la seva posició i fundà el budisme; les seves dates són tradicionals i discutides.",
+      "approx": "Dates tradicionals i discutides. A Wikidata hi consten tres propostes diferents, cap amb precisió d’any."
     },
     {
       "id": "mahavira",
@@ -1148,7 +1197,8 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Mahavira",
-      "desc": "Mestre jainista, l’últim dels vint-i-quatre tirthankares; contemporani del Buda i del Confuci."
+      "desc": "Mestre jainista, l’últim dels vint-i-quatre tirthankares; contemporani del Buda i del Confuci.",
+      "approx": "Dates tradicionals del jainisme, discutides."
     },
     {
       "id": "johancruyff",
