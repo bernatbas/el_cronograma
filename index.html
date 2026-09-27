@@ -167,6 +167,22 @@
   .results .row.nodate .extlink{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-left:8px;border-radius:3px;text-decoration:none;color:inherit;opacity:.9;pointer-events:auto;cursor:pointer;}
   .results .row.nodate .extlink:hover{background:var(--surface);}
   .results .row.nodate .extlink svg{width:12px;height:12px;}
+  /* El nom ha de poder ENCONGIR-SE. Es un node de text solt a les altres files, pero aqui la
+     fila porta tres coses (nom + «sense dates» + ↗) i en un movil de 375px no hi caben: la
+     ↗ marxava fora de la caixa i sortia scroll horitzontal. Amb min-width:0 i ellipsis, qui
+     cedeix es el nom, que es el que pot. */
+  .results .row.nodate .who{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .results .row.nodate .yr{flex:0 0 auto;white-space:nowrap;margin-left:8px;}
+  /* Mateixa diana que la ↗ de les col·leccions: 18px no es pot tocar amb el dit. */
+  @media (pointer:coarse){
+    .results .row.nodate .extlink{width:34px;height:34px;margin:-8px -4px -8px 2px;}
+    .results .row.nodate .extlink svg{width:14px;height:14px;}
+  }
+  /* En vertical estret el cercador baixa a ~150px (per sota del seu minim de 180) i la fila
+     no hi cap: el nom es menjava fins a desapareixer. Alla cau l'etiqueta, que es la peca
+     prescindible — la ↗ i el title ja diuen que passa, i el nom es el que has de llegir.
+     El llindar es el mateix que el de la marca «HB» de la topbar. */
+  @media (max-width:430px){ .results .row.nodate .yr{display:none;} }
   .results .row.loading::before{content:"";width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--text2);border-radius:50%;display:inline-block;margin-right:8px;vertical-align:-2px;animation:wdspin .7s linear infinite;}
   @keyframes wdspin{to{transform:rotate(360deg);}}
   .canvas-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:40;background:rgba(255,255,255,.35);opacity:0;visibility:hidden;transition:opacity .15s,visibility 0s .15s;pointer-events:none;}
@@ -239,8 +255,21 @@
   .colitem .cname{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}   /* nom en una sola línia; si no cap, punts suspensius */
   .colitem .cnt{margin-left:auto;font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums;}
   .colitem .extlink{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;opacity:.35;border-radius:3px;text-decoration:none;color:inherit;transition:opacity .15s;}
+  /* ⚠️ El <svg> de dins NECESSITA mida propia. La classe .extlink va a l'<a>, no al svg, i un
+     svg amb viewBox pero sense width/height s'estira fins a omplir el contenidor: quedava de
+     18x18 dins d'una caixa de 18x18, o sigui la fletxa tocant les quatre vores. La icona de la
+     col·leccio no ho patia perque alla la classe (.ico) va al svg mateix. */
+  .colitem .extlink svg{width:13px;height:13px;}
   .colitem .extlink:hover{opacity:.85;background:rgba(0,0,0,.06);}
   .colitem.on .extlink{opacity:.6;}
+  /* En tactil la ↗ era inservible: 18x18 de diana quan la recomanacio son 44, i opacitat .35
+     sense cap hover que la pugi. Els marges negatius fan la diana gran SENSE apujar la fila
+     (34 - 8 - 8 = els 18 que ocupava). */
+  @media (pointer:coarse){
+    .colitem .extlink{width:34px;height:34px;margin:-8px -8px -8px 0;opacity:.75;}
+    .colitem .extlink svg{width:15px;height:15px;}
+    .colitem.on .extlink{opacity:.85;}
+  }
   .colitem.on{background:linear-gradient(135deg,#F7E5E0,#EFD4CC);border-color:var(--topbar-bg);box-shadow:inset 3px 0 0 var(--topbar-bg),0 1px 3px rgba(40,44,60,.13);font-weight:600;}
   .colitem.on .ico{opacity:.8;}
   .newcol{width:100%;border:1px dashed var(--border-strong);background:none;border-radius:var(--r-card);padding:8px 10px;font-size:13px;color:var(--text2);cursor:pointer;font-family:inherit;}
@@ -2199,7 +2228,7 @@ const localRow=p=>{const added=state.present.has(p.id);return `<div class="row $
 // era pitjor: la cerca deia «cap persona trobada» quan la persona hi era.
 const wdExtIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3H3a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1v-3"/><path d="M10 2h4v4M14 2L8 8"/></svg>';
 const wdRow=w=>w.nodate
-  ? `<div class="row disabled nodate" title="${esc(t('cro_wd_nodate_why'))}"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${esc(w.name)}<span class="yr">${t('cro_wd_nodate')}</span><a class="extlink" href="${esc(w.article)}" target="_blank" rel="noopener" title="${esc(t('cro_wd_nodate_cta'))}" onclick="event.stopPropagation()">${wdExtIco}</a></div>`
+  ? `<div class="row disabled nodate" title="${esc(t('cro_wd_nodate_why'))}"><span class="swatch" style="background:${NOCAT_COLOR}"></span><span class="who">${esc(w.name)}</span><span class="yr">${t('cro_wd_nodate')}</span><a class="extlink" href="${esc(w.article)}" target="_blank" rel="noopener" title="${esc(t('cro_wd_nodate_cta'))}" onclick="event.stopPropagation()">${wdExtIco}</a></div>`
   : `<div class="row" data-wd="${esc(w.qid)}"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${esc(w.name)}<span class="yr">${w.birth}${w.death!=null?'\u2013'+w.death:'\u2013'}</span></div>`;
 const evSearchRow=ev=>`<div class="row evrow" data-evsearch="${ev.id}"><span class="swatch" style="background:var(--eventc)"></span>${L(ev.name)}<span class="yr">${fmtY(ev.year)}</span></div>`;
 function renderDropdown(){
