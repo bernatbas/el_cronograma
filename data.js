@@ -1,6 +1,6 @@
 /* =============================================================================
  * data.js — SNAPSHOT PROVISIONAL de la base de dades del cronograma.
- * Generat automàticament des d'index.html el 2026-08-31.
+ * Generat automàticament des d'index.html el 2026-09-27.
  *
  * ⚠️  PROVISIONAL: això és una CÒPIA de les dades que ara viuen a index.html,
  *     feta per facilitar el testeig local (file://). Quan existeixi la DB externa,
@@ -846,6 +846,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Rams%C3%A8s_II",
       "desc": "Tercer faraó de la dinastia XIX d’Egipte"
+    },
+    {
+      "id": "erasmederotterdam",
+      "wd": "Q43499",
+      "name": "Erasme de Rotterdam",
+      "birth": 1466,
+      "death": 1536,
+      "cats": [
+        "philosophy"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Erasme_de_Rotterdam",
+      "desc": "Humanista i teòleg neerlandès"
     }
   ],
   "EVENTS": [
