@@ -71,3 +71,5 @@ Desena categoria, paraigua per a tot el que ara cau a «sense categoria» perqu�
 
 ## Col·leccions: favorits i cercador (model Spotify complet)
 Ara la barra lateral llista TOTES les col·leccions que existeixen, i això no escala: a Spotify una cosa són les playlists que existeixen i una altra les que tens a la teva biblioteca. Cal separar-ho: (1) un concepte de FAVORIT per a col·leccions —les teves i les d altri—, (2) que el menú lateral i el popup del mòbil només mostrin les que tens a favorits, (3) un cercador per trobar-ne d altres i afegir-les a favorits. Depèn de tenir el directori públic (i per tant servidor) per a les d altri, però el mecanisme de favorits i el cercador es poden fer abans, contra les pròpies i les de sèrie. Nota: el camp vis ja es desa a cada col·lecció des del #149, així que la part de public/privat no necessitarà migració.
+
+## Posar un nom comercial al projecte, comprar el domini i publicar
