@@ -707,3 +707,51 @@ càrrega: car, fràgil i contrari a la idea de pàgina estàtica sense servidor.
 el lloc és `gen_personatges.py` — precalcular un índex `mes-dia → [QIDs]` i servir-lo com ja es
 serveix la llista. Mentrestant, el calendari a mà cobreix el cas real, que és compartir un detall
 quan toca.
+
+## El Memory agrupa els personatges, i es queda així (2026-09-27)
+
+El 09/09/2026 el Memory va sortir amb cinc noms gairebé iguals: Émile Jean-Fontaine, Emile
+Jourdan, Émile Maggi, Émile Michelet i Éric Dupond-Moretti. Feia tota la pinta que s'hagués
+trencat el generador d'atzar. **No s'havia trencat**, i el comportament **es deixa tal com
+està**: en Bernat el prefereix així.
+
+⚠️ **Per tant això NO és un bug i no s'ha d'«arreglar».** El codi ho sembla, i qui hi passi
+veurà «agafa 30 entrades seguides» i voldrà tocar-ho. És una decisió presa.
+
+**Com funciona.** `ensurePool()` tira **un sol** número a l'atzar (sembrat amb `mem:<data>`)
+per triar on comença, i després agafa **30 entrades consecutives** de `HB_PERSONATGES`:
+
+```js
+let batchStart=Math.floor(rng()*list.length);
+for(let i=0;i<BATCH;i++) ids.push('Q'+list[(batchStart+i)%list.length]);
+```
+
+Com que la llista va **ordenada per QID** i a Wikidata els QIDs veïns són entitats creades
+alhora, cada dia et toca un tros d'una mateixa remesa.
+
+**Què se'n va mesurar** (365 dies simulats amb la llavor de debò, i noms consultats a Wikidata):
+
+| | |
+|---|---|
+| Recorregut de QIDs de la finestra, mediana | **719** |
+| Dies amb finestra de menys de 1.000 QIDs | **54,5%** |
+| Dies de mostra amb un nom de pila repetit | **1 de 16 (~2 al mes)** |
+
+El punt que costa de veure: **caure en un tros atapeït no vol dir que s'assemblin**. El dia més
+atapeït de tot l'any (21/09, QIDs literalment consecutius Q57423–Q57435) dona John Jacob Astor,
+Manuel Serifo Nhamadjo, Hans Knappertsbusch, Heiner Müller i Michel Suleiman — variadíssim. Es
+nota **només** quan la remesa es va importar per ordre alfabètic, i els dos casos trobats són
+tots dos francesos (Q1,68M i Q3,59M).
+
+**Per què es deixa:** l'agrupament diari és un tret simpàtic —un dia per nom, un altre per país,
+un altre per professió— i no fa el joc ni més fàcil ni més difícil, que el Memory va de fotos.
+Si algun dia es vol treure, n'hi ha prou de triar les 30 posicions amb el mateix `rng()` en
+comptes de `+i`: mateixes peticions, mateix determinisme per dia.
+
+**Dues coses que SÍ que van quedar obertes, i es van deixar a posta per petites:**
+
+- Si després de 180 candidats no en surten 5 amb foto, s'agafa `cached.pool` **sigui de quin dia
+  sigui**: jugaries amb la gent d'un altre dia. Molt rar.
+- `wdLbl` no mirava `mul` i es menjava en silenci ~1,1% dels candidats (mesurat sobre 90).
+  **Aquest sí que es va arreglar** el 27/09/2026: era una paraula, i el que molestava de debò
+  era tenir dos lectors d'etiquetes que no es posaven d'acord dins del mateix fitxer.

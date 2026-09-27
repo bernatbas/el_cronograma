@@ -1673,7 +1673,7 @@
     }
     function imgUrl(e){ const c=e.claims&&e.claims.P18; if(!c||!c.length) return null; const dv=c[0].mainsnak&&c[0].mainsnak.datavalue; if(!dv) return null; return COMMONS+encodeURIComponent(String(dv.value).replace(/ /g,'_'))+'?width=400'; }
     function wikiUrl(e){ const sl=e.sitelinks&&(e.sitelinks.cawiki||e.sitelinks.eswiki||e.sitelinks.enwiki); if(!sl) return null; return 'https://'+((e.sitelinks.cawiki&&'ca')||(e.sitelinks.eswiki&&'es')||'en')+'.wikipedia.org/wiki/'+encodeURIComponent(sl.title.replace(/ /g,'_')); }
-    function wdLbl(o){ return o?((o.ca||o.es||o.en||{}).value||null):null; }
+    function wdLbl(o){ return o?((o.ca||o.es||o.en||o.mul||{}).value||null):null; }   // o.mul: veure wdLangs(), igual que lbl() del Personatge del dia
     function wdYear(claims,prop){ const cl=claims&&claims[prop]; if(!cl||!cl.length) return null; const dv=cl[0].mainsnak&&cl[0].mainsnak.datavalue; if(!dv||!dv.value||!dv.value.time) return null; const m=/^([+-])0*(\d+)-/.exec(dv.value.time); if(!m) return null; const y=parseInt(m[2],10); return m[1]==='-'?-y:y; }
 
     // Precarrega les fotos del pool. Si alguna no es pot descarregar, reintenta 1 cop; si tampoc, retorna false.
