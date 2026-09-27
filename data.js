@@ -861,7 +861,8 @@ window.HB_DATA = {
       ],
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Erasme_de_Rotterdam",
-      "desc": "Humanista i teòleg neerlandès"
+      "desc": "Humanista i teòleg neerlandès",
+      "approx": "disputada"
     },
     {
       "id": "paracels",
