@@ -1947,7 +1947,13 @@ function renderLegend(){
 // Sidebar lists (rebuilt on every render so counts / checked states stay in sync).
 function renderSidebar(){
   $('#regions').innerHTML=`<label class="filter"><input type="checkbox" data-events ${state.showEvents?'checked':''}><span class="swatch" style="background:var(--eventc)"></span>${t('cro_events')}</label>`+MARCS.map(m=>`<label class="filter"><input type="checkbox" data-marc="${m.id}" ${state.marcs.has(m.id)?'checked':''}><span class="swatch" style="background:${m.color}"></span>${L(m.name)}</label>`).join('');
-  const colIco='<svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 4.5h9M2 8h9M2 11.5h6"/><circle cx="12.5" cy="11" r="2.2"/></svg>';
+  // ⚠️ NO hi posis linies apilades. La icona d'abans eren tres ratlles horitzontals i un
+  // cercle (una «playlist»), pero tres ratlles apilades son el gest universal d'«agafa'm»:
+  // en Bernat va dir que semblava que les col·leccions s'havien de poder arrossegar per
+  // reordenar-les, i no es aixi. En aquest mateix projecte el joc «Ordena la linia» fa servir
+  // ⠿ com a nansa de debo, o sigui que la confusio era interna. Ara son capes superposades:
+  // diuen «un munt de coses» sense prometre cap gest.
+  const colIco='<svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.8 14.4 5 8 8.2 1.6 5z"/><path d="m1.6 8.4 6.4 3.2 6.4-3.2"/><path d="m1.6 11.6 6.4 3.2 6.4-3.2"/></svg>';
   const extIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3H3a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1v-3"/><path d="M10 2h4v4M14 2L8 8"/></svg>';
   // Les colleccions propies porten un ⋮ que obre la seva fitxa (reanomenar, veure i treure
   // gent, esborrar). Les de serie no en porten: s'editen al dashboard.
