@@ -499,6 +499,26 @@ test.describe('Col·leccions pròpies', () => {
     expect(await mevesDesades(page)).toHaveLength(0);
   });
 
+  // Hauria d'atrapat el bug del teclat del mobil (27/09/2026): el camp del nom es tornava a
+  // crear a cada render(), i al mobil obrir el teclat canvia el viewport → resize →
+  // scheduleSettle() → render() → innerHTML nou → l'element enfocat mor i el teclat es
+  // tanca. Des del portatil no es veia: nomes es notava amb un teclat de debo pel mig.
+  // El resize es dispara a ma perque cap dels tres viewports del CI en te, de teclat.
+  test('el camp del nom aguanta el focus si el viewport canvia', async ({ page }) => {
+    await freshIndex(page);
+    await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await openCollectionsSection(page);
+    await page.locator('[data-newcol]').click();
+    await expect(page.locator('#newcolin')).toBeFocused();
+
+    await page.locator('#newcolin').pressSequentially('A mig escriure');
+    await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+    await page.waitForTimeout(400);   // scheduleSettle: ara, al frame seguent i als 180ms
+
+    await expect(page.locator('#newcolin')).toBeFocused();
+    await expect(page.locator('#newcolin')).toHaveValue('A mig escriure');
+  });
+
   test('activar-la pinta les seves barres', async ({ page }) => {
     await freshIndex(page);
     await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));

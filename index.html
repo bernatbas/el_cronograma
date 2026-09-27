@@ -1958,15 +1958,21 @@ function renderSidebar(){
   // Les colleccions propies porten un ⋮ que obre la seva fitxa (reanomenar, veure i treure
   // gent, esborrar). Les de serie no en porten: s'editen al dashboard.
   const optIco='<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="8" cy="13" r="1.4"/></svg>';
-  const nView=viewQids().length;
-  $('#collections').innerHTML=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}<span class="cname">${esc(c.name)}</span><span class="cnt">${c.wds.length}</span>${c._mine?`<span class="colx" role="button" tabindex="0" data-collopt="${c.id}" title="${t('cro_coll_opts')}">${optIco}</span>`:''}${c.url?`<a class="extlink" href="${c.url}" target="_blank" rel="noopener" title="${t('cro_open_site')}" onclick="event.stopPropagation()">${extIco}</a>`:''}</button>`).join('')
-    // Sempre actiu: una colleccio es pot comencar buida. Si hi ha gent a la vista, s'ofereix
-    // d'incloure-la amb una casella —opcio, no cami unic.
-    +(newCollOpen
-      ? `<div class="newcolbox"><input class="newcolin" id="newcolin" type="text" maxlength="60" placeholder="${t('cro_coll_name_ph')}" value="${esc(newCollDraft)}">`
-        + (nView?`<label class="newcolinc"><input type="checkbox" id="newcolinc" ${newCollInc?'checked':''}>${t('cro_coll_include',{n:nView})}</label>`:'')
-        + `</div>`
-      : `<button class="newcol" data-newcol>${t('cro_newcol')}</button>`);
+  // ⚠️ El camp del nom NO es pot tornar a crear a cada render. Al mobil, obrir el teclat
+  // canvia el viewport, el resize dispara scheduleSettle() → render(), i un innerHTML nou
+  // destrueix l’element enfocat: el teclat es tancava de seguida i no s’hi podia escriure.
+  // Mesurat: amb UN SOL resize, activeElement passava de «newcolin» a BODY i el node era un
+  // altre. Per aixo, si la caixa ja hi es, aqui nomes es refan els BOTONS i no es toca.
+  const _cont=$('#collections');
+  const _viu=newCollOpen?_cont.querySelector('.newcolbox'):null;
+  const _botons=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}<span class="cname">${esc(c.name)}</span><span class="cnt">${c.wds.length}</span>${c._mine?`<span class="colx" role="button" tabindex="0" data-collopt="${c.id}" title="${t('cro_coll_opts')}">${optIco}</span>`:''}${c.url?`<a class="extlink" href="${c.url}" target="_blank" rel="noopener" title="${t('cro_open_site')}" onclick="event.stopPropagation()">${extIco}</a>`:''}</button>`).join('')
+  if(_viu){
+    _cont.querySelectorAll('.colitem, .newcol').forEach(n=>n.remove());
+    _viu.insertAdjacentHTML('beforebegin',_botons);
+    syncNewCollLabel(_viu);
+  }else{
+    _cont.innerHTML=_botons+(newCollOpen?newCollBoxHTML():newCollBtnHTML());
+  }
   const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>L(a.name).localeCompare(L(b.name),LANG));   // always alphabetical, en l'idioma actiu
   $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}" title="${t('cro_center')}">${esc(L(p.name))}</button>${p.wd?`<button class="addc" data-addc="${p.id}" title="${t('cro_coll_addto')}" aria-label="${t('cro_coll_addto')}">+</button>`:''}${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}">⚠</button><button class="x" data-remove="${p.id}" title="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
 }
@@ -2761,8 +2767,43 @@ function deleteColl(cid){
   saveMyColls();recomputePresent();closeDetailIfGone();clearFitLatch();scheduleSave();render();
 }
 
-function openNewColl(){ newCollOpen=true;newCollDraft='';newCollInc=false;render();
-  const el=$('#newcolin'); if(el){el.focus();} }
+// La caixa del nom i el boto que la substitueix. Separats perque els fan servir tant el
+// render com openNewColl(), i han de sortir exactament iguals pels dos camins.
+function newCollBoxHTML(){
+  const n=viewQids().length;
+  return `<div class="newcolbox" data-nview="${n}"><input class="newcolin" id="newcolin" type="text" maxlength="60" placeholder="${t('cro_coll_name_ph')}" value="${esc(newCollDraft)}">`
+    + newCollIncHTML(n) + `</div>`;
+}
+// Sempre actiu: una colleccio es pot comencar buida. Si hi ha gent a la vista, s'ofereix
+// d'incloure-la amb una casella —opcio, no cami unic.
+function newCollIncHTML(n){
+  return n?`<label class="newcolinc"><input type="checkbox" id="newcolinc" ${newCollInc?'checked':''}>${t('cro_coll_include',{n})}</label>`:'';
+}
+function newCollBtnHTML(){ return `<button class="newcol" data-newcol>${t('cro_newcol')}</button>`; }
+
+// Si el nombre de gent a la vista canvia mentre s'escriu el nom (una colleccio que acaba de
+// carregar, per exemple), es refa NOMES l'etiqueta de la casella. L'input no es toca mai:
+// tornar-lo a crear li pren el focus i, al mobil, tanca el teclat.
+function syncNewCollLabel(box){
+  const n=viewQids().length;
+  if(+box.dataset.nview===n)return;
+  box.dataset.nview=n;
+  const vella=box.querySelector('.newcolinc');
+  if(vella)vella.remove();
+  box.insertAdjacentHTML('beforeend',newCollIncHTML(n));
+}
+
+// NO es fa un render() sencer: entre el toc i el focus() hi ha d'haver la MINIMA feina
+// possible. render() refa el canvas sencer, i al mobil una tasca llarga pot deixar el
+// focus() fora de la finestra del gest — i llavors iOS no obre el teclat. Aqui nomes es
+// canvia el boto per la caixa.
+function openNewColl(){
+  newCollOpen=true;newCollDraft='';newCollInc=false;
+  const cont=$('#collections'), btn=cont.querySelector('.newcol');
+  if(btn){btn.insertAdjacentHTML('beforebegin',newCollBoxHTML());btn.remove();}
+  else if(!cont.querySelector('.newcolbox'))cont.insertAdjacentHTML('beforeend',newCollBoxHTML());
+  const el=$('#newcolin'); if(el){el.focus();}
+}
 function closeNewColl(){ newCollOpen=false;newCollDraft='';newCollInc=false;render(); }
 
 async function toggleCollection(cid){
