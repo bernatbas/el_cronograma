@@ -35,7 +35,8 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Plató",
-      "desc": "Filòsof atenès, deixeble de Sòcrates i fundador de l'Acadèmia, autor de La República."
+      "desc": "Filòsof atenès, deixeble de Sòcrates i fundador de l'Acadèmia, autor de La República.",
+      "approx": "aprox"
     },
     {
       "id": "diogenes",
@@ -127,7 +128,8 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Jesús_de_Natzaret",
-      "desc": "Predicador i mestre jueu del segle I, figura central del cristianisme i un dels personatges més influents de la civilització occidental."
+      "desc": "Predicador i mestre jueu del segle I, figura central del cristianisme i un dels personatges més influents de la civilització occidental.",
+      "approx": "aprox_disputada"
     },
     {
       "id": "gengiskhan",
@@ -767,7 +769,8 @@ window.HB_DATA = {
       ],
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Plutarc_de_Queronea",
-      "desc": "Historiador grec"
+      "desc": "Historiador grec",
+      "approx": "aprox_disputada"
     },
     {
       "id": "marcaureli",
@@ -872,6 +875,369 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Paracels",
       "desc": "Metge, filòsof, teòleg i alquimista suís"
+    },
+    {
+      "id": "atila",
+      "wd": "Q36724",
+      "name": "Àtila",
+      "birth": 406,
+      "death": 453,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/%C3%80tila",
+      "desc": "Governant de l’Imperi Hunnic del 434 al 453",
+      "approx": "aprox_disputada"
+    },
+    {
+      "id": "elcid",
+      "wd": "Q43958",
+      "name": "El Cid",
+      "birth": 1048,
+      "death": 1099,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/El_Cid",
+      "desc": "Cavaller castellà del segle XI"
+    },
+    {
+      "id": "moctezumaii",
+      "wd": "Q141791",
+      "name": "Moctezuma II",
+      "birth": 1466,
+      "death": 1520,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Moctezuma_II",
+      "desc": "Emperador de l’Imperi Asteca de 1502 o 1503 a 1520"
+    },
+    {
+      "id": "homer",
+      "wd": "Q6691",
+      "name": "Homer",
+      "birth": -750,
+      "death": -650,
+      "cats": [
+        "literature"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Homer",
+      "desc": "Poeta de l’Antiga Grècia",
+      "approx": "aprox"
+    },
+    {
+      "id": "cristoforcolom",
+      "wd": "Q7322",
+      "name": "Cristòfor Colom",
+      "birth": 1451,
+      "death": 1506,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Crist%C3%B2for_Colom",
+      "desc": "Navegant i explorador genovès"
+    },
+    {
+      "id": "martiluter",
+      "wd": "Q9554",
+      "name": "Martí Luter",
+      "birth": 1483,
+      "death": 1546,
+      "cats": [
+        "religion"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Mart%C3%AD_Luter",
+      "desc": "Sacerdot, teòleg i escriptor alemany"
+    },
+    {
+      "id": "renedescartes",
+      "wd": "Q9191",
+      "name": "René Descartes",
+      "birth": 1596,
+      "death": 1650,
+      "cats": [
+        "philosophy",
+        "science"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Ren%C3%A9_Descartes",
+      "desc": "Polímata francès"
+    },
+    {
+      "id": "immanuelkant",
+      "wd": "Q9312",
+      "name": "Immanuel Kant",
+      "birth": 1724,
+      "death": 1804,
+      "cats": [
+        "philosophy"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Immanuel_Kant",
+      "desc": "Filòsof prussià"
+    },
+    {
+      "id": "adamsmith",
+      "wd": "Q9381",
+      "name": "Adam Smith",
+      "birth": 1723,
+      "death": 1790,
+      "cats": [
+        "philosophy",
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Adam_Smith",
+      "desc": "Economista i filòsof escocès"
+    },
+    {
+      "id": "alexanderfleming",
+      "wd": "Q37064",
+      "name": "Alexander Fleming",
+      "birth": 1881,
+      "death": 1955,
+      "cats": [
+        "science"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Alexander_Fleming",
+      "desc": "Metge i microbiòleg escocès"
+    },
+    {
+      "id": "louispasteur",
+      "wd": "Q529",
+      "name": "Louis Pasteur",
+      "birth": 1822,
+      "death": 1895,
+      "cats": [
+        "science"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Louis_Pasteur",
+      "desc": "Microbiòleg i químic francès"
+    },
+    {
+      "id": "fiodordostoievski",
+      "wd": "Q991",
+      "name": "Fiódor Dostoievski",
+      "birth": 1821,
+      "death": 1881,
+      "cats": [
+        "literature"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Fi%C3%B3dor_Dostoievski",
+      "desc": "Novel·lista rus"
+    },
+    {
+      "id": "friedrichwilhelmnietzs",
+      "wd": "Q9358",
+      "name": "Friedrich Wilhelm Nietzsche",
+      "birth": 1844,
+      "death": 1900,
+      "cats": [
+        "philosophy"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Friedrich_Wilhelm_Nietzsche",
+      "desc": "Filòsof alemany"
+    },
+    {
+      "id": "sigmundfreud",
+      "wd": "Q9215",
+      "name": "Sigmund Freud",
+      "birth": 1856,
+      "death": 1939,
+      "cats": [
+        "science",
+        "philosophy"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Sigmund_Freud",
+      "desc": "Neuròleg austríac i fundador de la psicoanàlisi"
+    },
+    {
+      "id": "nikolatesla",
+      "wd": "Q9036",
+      "name": "Nikola Tesla",
+      "birth": 1856,
+      "death": 1943,
+      "cats": [
+        "science"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Nikola_Tesla",
+      "desc": "Enginyer i inventor serbo-estatunidenc"
+    },
+    {
+      "id": "winstonchurchill",
+      "wd": "Q8016",
+      "name": "Winston Churchill",
+      "birth": 1874,
+      "death": 1965,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Winston_Churchill",
+      "desc": "61è i 63è Primer ministre del Regne Unit"
+    },
+    {
+      "id": "adolfhitler",
+      "wd": "Q352",
+      "name": "Adolf Hitler",
+      "birth": 1889,
+      "death": 1945,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Adolf_Hitler",
+      "desc": "Dictador d’Alemanya de 1933 a 1945"
+    },
+    {
+      "id": "maozedong",
+      "wd": "Q5816",
+      "name": "Mao Zedong",
+      "birth": 1893,
+      "death": 1976,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Mao_Zedong",
+      "desc": "Líder de la Xina de 1949 a 1976"
+    },
+    {
+      "id": "alanturing",
+      "wd": "Q7251",
+      "name": "Alan Turing",
+      "birth": 1912,
+      "death": 1954,
+      "cats": [
+        "science"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Alan_Turing",
+      "desc": "Pioner de la informàtica anglès"
+    },
+    {
+      "id": "simonedebeauvoir",
+      "wd": "Q7197",
+      "name": "Simone de Beauvoir",
+      "birth": 1908,
+      "death": 1986,
+      "cats": [
+        "philosophy",
+        "literature"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Simone_de_Beauvoir",
+      "desc": "Filòsofa, teòrica social i activista francesa"
+    },
+    {
+      "id": "charleschaplin",
+      "wd": "Q882",
+      "name": "Charles Chaplin",
+      "birth": 1889,
+      "death": 1977,
+      "cats": [
+        "cinema"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Charles_Chaplin",
+      "desc": "Actor i cineasta anglès"
+    },
+    {
+      "id": "safo",
+      "wd": "Q17892",
+      "name": "Safo de Lesbos",
+      "birth": -630,
+      "death": -570,
+      "cats": [
+        "literature"
+      ],
+      "gender": "F",
+      "wiki": "https://ca.wikipedia.org/wiki/Safo_de_Lesbos",
+      "desc": "Poeta grega de l’illa de Lesbos, la veu lírica més admirada de l’antiguitat; només se’n conserven fragments.",
+      "approx": "aprox_disputada"
+    },
+    {
+      "id": "laozi",
+      "wd": "Q9333",
+      "name": "Laozi",
+      "birth": -604,
+      "death": -531,
+      "cats": [
+        "philosophy"
+      ],
+      "gender": "M",
+      "wiki": "https://ca.wikipedia.org/wiki/Laozi",
+      "desc": "Pensador xinès a qui s’atribueix el Dao De Jing i la fundació del taoisme; potser un personatge compost.",
+      "approx": "aprox_disputada"
+    },
+    {
+      "id": "seneca",
+      "wd": "Q2054",
+      "name": "Sèneca",
+      "birth": -4,
+      "death": 65,
+      "cats": [
+        "philosophy",
+        "literature"
+      ],
+      "gender": "M",
+      "wiki": "https://ca.wikipedia.org/wiki/Luci_Anneu_S%C3%A8neca",
+      "desc": "Filòsof estoic i tutor de Neró, que acabà ordenant-li el suïcidi; les seves cartes són el manual estoic més llegit.",
+      "approx": "aprox"
+    },
+    {
+      "id": "buda",
+      "wd": "Q9441",
+      "name": "Buda",
+      "birth": -563,
+      "death": -483,
+      "cats": [
+        "religion"
+      ],
+      "gender": "M",
+      "wiki": "https://ca.wikipedia.org/wiki/Buda_Gautama",
+      "desc": "Príncep de Kapilavastu que renuncià a la seva posició i fundà el budisme; les seves dates són tradicionals i discutides.",
+      "approx": "aprox_disputada"
+    },
+    {
+      "id": "mahavira",
+      "wd": "Q9422",
+      "name": "Mahavira",
+      "birth": -599,
+      "death": -527,
+      "cats": [
+        "religion"
+      ],
+      "gender": "M",
+      "wiki": "https://ca.wikipedia.org/wiki/Mahavira",
+      "desc": "Mestre jainista, l’últim dels vint-i-quatre tirthankares; contemporani del Buda i del Confuci.",
+      "approx": "disputada"
+    },
+    {
+      "id": "johancruyff",
+      "wd": "Q17163",
+      "name": "Johan Cruyff",
+      "birth": 1947,
+      "death": 2016,
+      "cats": [
+        "sport"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Johan_Cruyff",
+      "desc": "Jugador i entrenador de futbol neerlandès"
     }
   ],
   "EVENTS": [
@@ -924,12 +1290,36 @@ window.HB_DATA = {
       "desc": "Mahoma emigra de la Meca a Medina; inici del calendari islàmic i d’una expansió que transformarà el Mediterrani i l’Orient Pròxim."
     },
     {
+      "id": "cartamagna",
+      "name": "Carta Magna",
+      "year": 1215,
+      "wiki": "https://ca.wikipedia.org/wiki/Carta_Magna",
+      "sitelinks": 97,
+      "desc": "Els barons anglesos obliguen el rei Joan a acceptar per escrit que el seu poder té límits; el primer document d’aquesta mena a Europa."
+    },
+    {
       "id": "pestaNegra",
       "name": "Pesta Negra",
       "year": 1347,
       "wiki": "https://ca.wikipedia.org/wiki/Pesta_negra",
       "sitelinks": 127,
       "desc": "Epidèmia de pesta bubònica que mata entre un terç i la meitat de la població europea, accelerant la fi del feudalisme medieval."
+    },
+    {
+      "id": "impremta",
+      "name": "Invenció de la impremta",
+      "year": 1440,
+      "wiki": "https://ca.wikipedia.org/wiki/Impremta",
+      "sitelinks": 79,
+      "desc": "Gutenberg combina tipus mòbils, tinta grassa i premsa: un llibre deixa de ser un objecte únic i el coneixement es pot copiar barat."
+    },
+    {
+      "id": "constantinoble",
+      "name": "Caiguda de Constantinoble",
+      "year": 1453,
+      "wiki": "https://ca.wikipedia.org/wiki/Caiguda_de_Constantinoble",
+      "sitelinks": 79,
+      "desc": "Els otomans prenen la capital de l’Imperi Romà d’Orient. S’acaba l’últim tros de Roma, 1.480 anys després de la seva fundació."
     },
     {
       "id": "descamerica",
@@ -956,12 +1346,28 @@ window.HB_DATA = {
       "desc": "L’aparició de la màquina de vapor a Anglaterra transforma l’economia, la societat i el paisatge urbà del món."
     },
     {
+      "id": "independenciaeua",
+      "name": "Declaració d’Independència dels EUA",
+      "year": 1776,
+      "wiki": "https://ca.wikipedia.org/wiki/Declaraci%C3%B3_d%27Independ%C3%A8ncia_dels_Estats_Units_d%27Am%C3%A8rica",
+      "sitelinks": 94,
+      "desc": "Tretze colònies es declaren independents de la Gran Bretanya i funden la primera república moderna, tretze anys abans de la Revolució Francesa."
+    },
+    {
       "id": "revfr",
       "name": "Revolució Francesa",
       "year": 1789,
       "wiki": "https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Francesa",
       "sitelinks": 193,
       "desc": "Procés revolucionari que va enderrocar l’Antic Règim a França i va escampar per Europa els ideals de llibertat, igualtat i fraternitat."
+    },
+    {
+      "id": "relativitat",
+      "name": "Teoria de la relativitat",
+      "year": 1905,
+      "wiki": "https://ca.wikipedia.org/wiki/Teoria_de_la_relativitat",
+      "sitelinks": 120,
+      "desc": "Einstein publica la relativitat especial: el temps i l’espai deixen de ser absoluts i passen a dependre de qui els mesura."
     },
     {
       "id": "wwi",
@@ -972,12 +1378,76 @@ window.HB_DATA = {
       "desc": "Esclat del primer conflicte a escala global, que va redibuixar el mapa polític i social del segle XX."
     },
     {
+      "id": "revoluciorussa",
+      "name": "Revolució Russa",
+      "year": 1917,
+      "wiki": "https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Russa",
+      "sitelinks": 117,
+      "desc": "Cau el tsarisme i els bolxevics prenen el poder: neix el primer estat comunista i amb ell mig segle de món partit en dos."
+    },
+    {
+      "id": "penicilina",
+      "name": "Descoberta de la penicil·lina",
+      "year": 1928,
+      "wiki": "https://ca.wikipedia.org/wiki/Penicil%C2%B7lina",
+      "sitelinks": 114,
+      "desc": "Fleming veu que un fong ha matat els bacteris d’un cultiu oblidat. És el primer antibiòtic: abans, una infecció petita et podia matar."
+    },
+    {
+      "id": "guerracivil",
+      "name": "Inici de la Guerra Civil espanyola",
+      "year": 1936,
+      "wiki": "https://ca.wikipedia.org/wiki/Guerra_Civil_espanyola",
+      "sitelinks": 119,
+      "desc": "Un cop d’estat fracassa a mitges i parteix el país en dos. Tres anys de guerra i quaranta de dictadura."
+    },
+    {
       "id": "wwii",
-      "name": "Segona Guerra Mundial",
+      "name": "Inici de la Segona Guerra Mundial",
       "year": 1939,
       "wiki": "https://ca.wikipedia.org/wiki/Segona_Guerra_Mundial",
       "sitelinks": 292,
       "desc": "El conflicte més devastador de la història, amb 70-85 milions de víctimes. Acabà amb la creació de l’ONU i l’ordre bipolar de la Guerra Freda."
+    },
+    {
+      "id": "hiroshima",
+      "name": "Bombardejos d’Hiroshima i Nagasaki",
+      "year": 1945,
+      "wiki": "https://ca.wikipedia.org/wiki/Bombardejos_at%C3%B2mics_d%27Hiroshima_i_Nagasaki",
+      "sitelinks": 93,
+      "desc": "Els Estats Units llancen dues bombes atòmiques sobre el Japó. Única vegada que s’han fet servir armes nuclears en una guerra."
+    },
+    {
+      "id": "dretshumans",
+      "name": "Declaració Universal dels Drets Humans",
+      "year": 1948,
+      "wiki": "https://ca.wikipedia.org/wiki/Declaraci%C3%B3_Universal_dels_Drets_Humans",
+      "sitelinks": 178,
+      "desc": "Tres anys després de la guerra, l’ONU escriu què es deu a qualsevol persona pel simple fet de ser-ho."
+    },
+    {
+      "id": "adn",
+      "name": "Descoberta de l’estructura de l’ADN",
+      "year": 1953,
+      "wiki": "https://ca.wikipedia.org/wiki/%C3%80cid_desoxiribonucleic",
+      "sitelinks": 175,
+      "desc": "Watson i Crick descriuen la doble hèlix, amb les dades de Rosalind Franklin. Darwin havia explicat l’evolució; això n’explica el mecanisme."
+    },
+    {
+      "id": "apollo11",
+      "name": "Apollo 11",
+      "year": 1969,
+      "wiki": "https://ca.wikipedia.org/wiki/Apollo_11",
+      "sitelinks": 106,
+      "desc": "Armstrong i Aldrin caminen per la Lluna. Sis-cents milions de persones ho miren en directe."
+    },
+    {
+      "id": "constitucio78",
+      "name": "Constitució espanyola de 1978",
+      "year": 1978,
+      "wiki": "https://ca.wikipedia.org/wiki/Constituci%C3%B3_espanyola_de_1978",
+      "sitelinks": 39,
+      "desc": "Tanca la dictadura i estableix el marc polític en què viu el país des d’aleshores."
     },
     {
       "id": "murberlin",
@@ -986,6 +1456,38 @@ window.HB_DATA = {
       "wiki": "https://ca.wikipedia.org/wiki/Caiguda_del_mur_de_Berl%C3%ADn",
       "sitelinks": 38,
       "desc": "El novembre de 1989 cau el símbol de la Guerra Freda, obrint camí a la reunificació alemanya i la dissolució del bloc soviètic."
+    },
+    {
+      "id": "fiurss",
+      "name": "Dissolució de la Unió Soviètica",
+      "year": 1991,
+      "wiki": "https://ca.wikipedia.org/wiki/Dissoluci%C3%B3_de_la_Uni%C3%B3_Sovi%C3%A8tica",
+      "sitelinks": 85,
+      "desc": "L’URSS s’acaba i la Guerra Freda amb ella. El món deixa de tenir dos centres."
+    },
+    {
+      "id": "www",
+      "name": "Naixement de la World Wide Web",
+      "year": 1991,
+      "wiki": "https://ca.wikipedia.org/wiki/World_Wide_Web",
+      "sitelinks": 154,
+      "desc": "Tim Berners-Lee obre el primer web al públic. El canvi més gran en la difusió del saber des de la impremta."
+    },
+    {
+      "id": "s11",
+      "name": "Atemptats de l’11 de setembre",
+      "year": 2001,
+      "wiki": "https://ca.wikipedia.org/wiki/Atemptats_de_l%2711_de_setembre_de_2001",
+      "sitelinks": 149,
+      "desc": "Dos avions tomben les torres de Nova York. Marca l’inici polític del segle XXI."
+    },
+    {
+      "id": "covid",
+      "name": "Inici de la pandèmia de COVID-19",
+      "year": 2020,
+      "wiki": "https://ca.wikipedia.org/wiki/Pand%C3%A8mia_de_COVID-19",
+      "sitelinks": 170,
+      "desc": "Un coronavirus atura mig món durant mesos. El primer esdeveniment global viscut en directe per tothom."
     },
     {
       "id": "delt",

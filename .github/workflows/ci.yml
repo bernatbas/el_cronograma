@@ -42,12 +42,145 @@ jobs:
           print(f"✓ Cap U+FFFD, UTF-8 vàlid — {checked} fitxers")
           EOF
 
+      # Aquest check estava TRENCAT i sempre passava en verd: el sed buscava
+      # "===== Bloc compartit", i els marcadors reals son "===== BLOC COMPARTIT"
+      # (majuscules) i "===== Botons de seccio". No lligava amb cap dels dos, aixi
+      # que extreia 0 linies dels dos fitxers i feia el diff de dues cadenes buides.
+      # Per aixo una divergencia real del bloc JS va passar mesos desapercebuda.
+      # Ara: es busquen els marcadors de veritat, es comproven ELS DOS blocs (CSS i
+      # JS) i els 11 tokens compartits del :root, i es PETA si un marcador no hi es
+      # — que no trobar el bloc no pot tornar a comptar com a "identics".
       - name: Bloc compartit byte-idèntic (index ↔ joc)
         run: |
-          diff \
-            <(sed -n '/===== Bloc compartit/,/fi del bloc compartit =====/p' index.html) \
-            <(sed -n '/===== Bloc compartit/,/fi del bloc compartit =====/p' joc.html) \
-          && echo "OK: blocs idèntics"
+          python3 - <<'EOF'
+          import sys
+
+          FILES = ('index.html', 'joc.html')
+          BLOCKS = (
+              ('CSS (botons de seccio)', '/* ===== Botons de secció', '/* ===== fi del bloc compartit ===== */'),
+              ('JS (compressio topbar)', '// ===== BLOC COMPARTIT',   '// ===== fi del bloc compartit ====='),
+          )
+
+          src = {f: open(f, encoding='utf-8').read() for f in FILES}
+          fail = []
+
+          def extract(text, path, ini, fi):
+              i = text.find(ini)
+              if i < 0:
+                  return None, 'no hi ha el marcador d\'inici %r' % ini
+              j = text.find(fi, i)
+              if j < 0:
+                  return None, 'no hi ha el marcador de fi %r' % fi
+              return text[i:j + len(fi)], None
+
+          for label, ini, fi in BLOCKS:
+              got = {}
+              for f in FILES:
+                  blk, err = extract(src[f], f, ini, fi)
+                  if err:
+                      fail.append('%s a %s: %s' % (label, f, err))
+                  else:
+                      got[f] = blk
+              if len(got) == 2:
+                  a, b = got['index.html'], got['joc.html']
+                  if a != b:
+                      import difflib
+                      fail.append('%s divergeix (index %d bytes, joc %d bytes):\n%s' % (
+                          label, len(a), len(b),
+                          '\n'.join(list(difflib.unified_diff(
+                              a.split('\n'), b.split('\n'),
+                              'index.html', 'joc.html', lineterm='', n=1))[:40])))
+                  else:
+                      print('OK: %s identic (%d bytes)' % (label, len(a)))
+
+          # Tokens compartits del :root: duplicats als dos fitxers a ma, i divergeixen
+          # sense avisar (CLAUDE.md). Es comproven nomes els que surten als DOS.
+          import re
+          def toks(text):
+              m = re.search(r':root\{(.*?)\}', text, re.S)
+              if not m:
+                  return None
+              return dict((k, v.strip()) for k, v in re.findall(r'(--[\w-]+)\s*:\s*([^;]+);', m.group(1)))
+
+          ta, tb = toks(src['index.html']), toks(src['joc.html'])
+          if ta is None or tb is None:
+              fail.append('no trobo el bloc :root a %s' % ('index.html' if ta is None else 'joc.html'))
+          else:
+              shared = sorted(set(ta) & set(tb))
+              if not shared:
+                  fail.append(':root sense cap token compartit — el regex ja no lliga?')
+              bad = [(k, ta[k], tb[k]) for k in shared if ta[k] != tb[k]]
+              for k, x, y in bad:
+                  fail.append('token %s despariat: index=%s / joc=%s' % (k, x, y))
+              if not bad:
+                  print('OK: %d tokens :root compartits, tots iguals' % len(shared))
+
+          if fail:
+              sys.exit('ERROR bloc compartit:\n- ' + '\n- '.join(fail))
+          print('OK: blocs compartits i tokens sincronitzats')
+          EOF
+
+      # El guard de l'index.html talla les col·leccions massa grosses i ho diu per consola,
+      # pero aixo ja es en viu. Aqui hi petem, que es el moment bo: una col·leccio de 500
+      # persones ni carregaria (byIds fa UNA consulta SPARQL i Wikidata dona 414 a partir
+      # d'uns 600 Q-ids) ni es podria llegir (carrils ~ persones en el pitjor cas, i 60
+      # carrils ja son 3 pantalles de scroll vertical). El sostre viu a l'index.html com a
+      # COLL_MAX i es llegeix d'alla: un sol lloc per canviar-lo.
+      - name: Col·leccions dins del sostre
+        run: |
+          python3 - <<'EOF'
+          import re, sys
+
+          src = open('index.html', encoding='utf-8').read()
+
+          m = re.search(r'const\s+COLL_MAX\s*=\s*(\d+)\s*,\s*WD_IDS_MAX\s*=\s*(\d+)', src)
+          if not m:
+              sys.exit("ERROR: no trobo COLL_MAX/WD_IDS_MAX a l'index.html "
+                       "(s'han renombrat? el check els llegeix d'alla)")
+          COLL_MAX, WD_IDS_MAX = int(m.group(1)), int(m.group(2))
+          if COLL_MAX > WD_IDS_MAX:
+              sys.exit("ERROR: COLL_MAX (%d) no pot passar de WD_IDS_MAX (%d)" % (COLL_MAX, WD_IDS_MAX))
+
+          i = src.find('const COLLECTIONS=[')
+          if i < 0:
+              sys.exit("ERROR: no trobo COLLECTIONS a l'index.html")
+          depth, end = 0, None
+          for k in range(i + len('const COLLECTIONS='), len(src)):
+              if src[k] == '[':
+                  depth += 1
+              elif src[k] == ']':
+                  depth -= 1
+                  if depth == 0:
+                      end = k
+                      break
+          if end is None:
+              sys.exit("ERROR: el bloc COLLECTIONS no tanca")
+          blk = src[i:end + 1]
+
+          starts = [x.start() for x in re.finditer(r"\{id:'", blk)] + [len(blk)]
+          fail, seen = [], set()
+          for n in range(len(starts) - 1):
+              seg = blk[starts[n]:starts[n + 1]]
+              cid = re.search(r"\{id:'([^']+)'", seg).group(1)
+              qids = re.findall(r"'(Q\d+)'", seg)
+              if cid in seen:
+                  fail.append("id de col·leccio repetit: '%s'" % cid)
+              seen.add(cid)
+              if not qids:
+                  fail.append("'%s' no te cap Q-id" % cid)
+              dup = len(qids) - len(set(qids))
+              if dup:
+                  fail.append("'%s' te %d Q-id(s) repetits" % (cid, dup))
+              if len(qids) > COLL_MAX:
+                  fail.append("'%s' te %d persones i el sostre es %d "
+                              "(parteix-la, o apuja COLL_MAX a l'index.html si saps que fas)"
+                              % (cid, len(qids), COLL_MAX))
+              print("  %-18s %3d persones" % (cid, len(qids)))
+
+          if fail:
+              sys.exit("ERROR col·leccions:\n- " + "\n- ".join(fail))
+          print("OK: %d col·leccions, cap passa de COLL_MAX=%d" % (len(seen), COLL_MAX))
+          EOF
 
       - name: Sintaxi JS — claus equilibrades
         run: |

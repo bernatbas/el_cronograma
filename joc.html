@@ -809,7 +809,10 @@
   }
   function setLang(code){ if(I18N_SUPPORTED.indexOf(code)<0) return; LANG=code; try{ localStorage.setItem(LANG_KEY,code); document.documentElement.lang=code; }catch(_){} }
   // Prioritat d'idiomes per a Wikidata segons l'idioma actiu (p.ex. 'en' => 'en|ca|es').
-  function wdLangs(){ const base=['ca','es','en']; return [LANG].concat(base.filter(function(l){return l!==LANG;})).join('|'); }
+  // 'mul' al final: Wikidata va migrar els noms en alfabet llati a UNA etiqueta multilingue
+  // i va esborrar les per idioma. Sense aixo, isValid() descartava l'Einstein, la Marie
+  // Curie i el Mozart —creia que no tenien nom— i no podien ser personatge del dia.
+  function wdLangs(){ const base=['ca','es','en','mul']; return [LANG].concat(base.filter(function(l){return l!==LANG;})).join('|'); }
   // Aplica els textos estatics marcats amb data-i18n / data-i18n-title / data-i18n-aria.
   function applyI18nStatic(scope){
     const s=scope||document;
@@ -860,10 +863,31 @@
       if(typeof e.year==='number') pool.push({key:'ev:'+e.id,kind:'event',name:e.name,year:e.year});
     });
     (HB_DATA.PEOPLE||[]).forEach(p=>{
-      if(typeof p.birth==='number') pool.push({key:'pe:'+p.id+':b',kind:'person',anchor:'naix',name:p.name,year:p.birth});
-      if(typeof p.death==='number') pool.push({key:'pe:'+p.id+':d',kind:'person',anchor:'mort',name:p.name,year:p.death});
+      const ap=!!p.approx;   // data que no ens crèiem del tot: veure APX_GAP
+      if(typeof p.birth==='number') pool.push({key:'pe:'+p.id+':b',kind:'person',anchor:'naix',name:p.name,year:p.birth,approx:ap});
+      if(typeof p.death==='number') pool.push({key:'pe:'+p.id+':d',kind:'person',anchor:'mort',name:p.name,year:p.death,approx:ap});
     });
     return pool;
+  }
+
+  // ── Marge de seguretat quan una data no és fiable ──────────────────────────────
+  // Els tres jocs cronològics busquen EXPRESSAMENT les parelles més properes, perquè són
+  // les difícils. Però hi ha ~10 persones amb el camp `approx` (antigues, amb precisió de
+  // segle o mil·lenni, o amb fonts que no s'hi posen d'acord), i allà una parella propera
+  // no és difícil: és una moneda a l'aire amb una resposta «correcta» inventada.
+  // Mesurat abans del guard, simulant 365 dies d'«Ordena la línia»: 29% de dies portaven
+  // algun ítem aproximat i un 3% tenien una parella realment dubtosa — Sèneca 65 contra
+  // Neró 68 (3 anys), Alexandre −356 contra Plató −348 (8 anys). Al pool hi ha fins i tot
+  // un empat: Jesucrist i Sèneca, tots dos nascuts el −4 i tots dos estimacions.
+  // 60 anys cobreix la incertesa d'una data amb precisió de segle (±50).
+  // No es treuen del pool: seguirien sortint, però mai emparellats amb algú tan a prop que
+  // la resposta depengui de quina font hagi triat Wikidata. Treure'ls castigaria
+  // l'antiguitat, que és on l'eina té més valor.
+  const APX_GAP=60;
+  function incertMassaAprop(a,b){
+    if(!a||!b) return false;
+    if(!a.approx && !b.approx) return false;
+    return Math.abs(a.year-b.year)<APX_GAP;
   }
 
   // Retorna {qid,name,birth,death,img,desc} per a un ítem del pool de tipus 'person', o null si és un event.
@@ -872,7 +896,9 @@
     const id=it.key.split(':')[1];
     const p=(HB_DATA.PEOPLE||[]).find(x=>x.id===id);
     if(!p||!p.wd) return null;
-    return {qid:p.wd,name:p.name,birth:p.birth,death:p.death||null,img:null,desc:p.desc||''};
+    // death!=null i no ||null: a l'index.html death:null vol dir VIU, i un any 0 (o qualsevol
+    // falsy) el convertiria en immortal. Avui la BD no en te cap, pero el || no hi pinta res.
+    return {qid:p.wd,name:p.name,birth:p.birth,death:(p.death!=null?p.death:null),img:null,desc:p.desc||''};
   }
   // Retorna {kind:'event',id,name,year} per a un ítem del pool de tipus 'event', o null si és una persona.
   function eventFromItem(it){
@@ -927,7 +953,9 @@
 
     // Següent candidat de la baralla FINITA (sense rebarreig). Salta empats d'any (determinista).
     function nextCandidate(){
-      while(idx<deck.length){ const c=deck[idx++]; if(c.year!==current.year) return c; }
+      // Salta empats d'any (determinista) i, si algun dels dos porta data aproximada,
+      // també els que cauen dins d'APX_GAP: allà «abans o després» no té resposta.
+      while(idx<deck.length){ const c=deck[idx++]; if(c.year!==current.year && !incertMassaAprop(current,c)) return c; }
       return null; // baralla esgotada => ronda perfecta
     }
 
@@ -1180,14 +1208,19 @@
     function yearFrom(e,prop){ const c=e.claims&&e.claims[prop]; if(!c||!c.length) return null; const dv=c[0].mainsnak&&c[0].mainsnak.datavalue&&c[0].mainsnak.datavalue.value; const t=dv&&dv.time; if(!t) return null; const m=t.match(/^([+-])0*(\d+)-/); if(!m) return null; const y=parseInt(m[2],10); return m[1]==='-'?-y:y; }
     function imgUrl(e){ const c=e.claims&&e.claims.P18; if(!c||!c.length) return null; const dv=c[0].mainsnak&&c[0].mainsnak.datavalue; if(!dv) return null; return COMMONS+encodeURIComponent(String(dv.value).replace(/ /g,'_'))+'?width=500'; }
     function itemQids(e,prop,max){ const c=e.claims&&e.claims[prop]; if(!c) return []; const out=[]; for(let i=0;i<c.length;i++){ const v=c[i].mainsnak&&c[i].mainsnak.datavalue&&c[i].mainsnak.datavalue.value; if(v&&v.id){ out.push(v.id); if(out.length>=max) break; } } return out; }
-    function lbl(o){ return o?((o.ca||o.es||o.en||{}).value||null):null; }
+    function lbl(o){ return o?((o.ca||o.es||o.en||o.mul||{}).value||null):null; }   // o.mul: veure wdLangs()
     // trusted=true per als homenatges de PD_PINNED: la tria l'ha fet una persona, no la llavor, i
     // el filtre de sitelinks (ca I es I en) tombaria justament les perles locals que volem destacar.
     // El que NO es relaxa mai: humà, any de naixement i etiqueta — sense això la fitxa no es pot pintar.
     function isValid(e,trusted){
       if(!e || e.missing!==undefined) return false;
       if(!hasItem(e,'P31','Q5')) return false;                          // ha de ser humà
-      if(!(e.claims&&e.claims.P569&&e.claims.P569.length)) return false; // ha de tenir naixement
+      // No n'hi ha prou que la declaracio EXISTEIXI: si a Wikidata el P569 preferit es «valor
+      // desconegut», la claim hi es pero no porta datavalue i yearFrom() en treu null. Aleshores
+      // el personatge del dia sortia sense any, i el traspas al cronograma no el pintava
+      // (visiblePeople() vol un numero). Cal l'ANY, no la claim. (Mateix cas que el «null–» del
+      // desplegable de l'index: veure wdParse alla.)
+      if(yearFrom(e,'P569')===null) return false;                       // ha de tenir naixement UTIL
       if(!lbl(e.labels)) return false;                                  // etiqueta en ca/es/en
       if(trusted) return true;
       const s=e.sitelinks||{};                                          // entrada a Viquipèdia en ca I es I en (AND dels tres)
@@ -1403,10 +1436,12 @@
     function pickFive(rng){
       const pool=dailyPool(rng).filter(x=>typeof x.year==='number');
       if(pool.length<5) return null;
-      const usedK=new Set(), usedY=new Set();
-      const take=t=>{ usedK.add(t.key); usedY.add(t.year); return t; };
+      const usedK=new Set(), usedY=new Set(), presos=[];
+      const take=t=>{ usedK.add(t.key); usedY.add(t.year); presos.push(t); return t; };
       const anchor=take(pool[Math.floor(rng()*pool.length)]);
-      const scored=()=>pool.filter(x=>!usedK.has(x.key)&&!usedY.has(x.year)).map(x=>({x,g:gap(anchor,x)})).filter(o=>o.g>1e-9);
+      // El filtre mira contra TOTS els ja presos, no només l'àncora: els cinc s'ordenen
+      // entre ells, així que qualsevol parella de la llista ha de ser resoluble.
+      const scored=()=>pool.filter(x=>!usedK.has(x.key)&&!usedY.has(x.year)&&!presos.some(t=>incertMassaAprop(t,x))).map(x=>({x,g:gap(anchor,x)})).filter(o=>o.g>1e-9);
       function pickBand(filterFn, fallbackSort){
         const list=scored();
         let band=seededShuffle(list.filter(filterFn),rng);
@@ -1419,7 +1454,7 @@
       const mid=pickBand(o=>o.g>=O.gMidMin&&o.g<=O.gMidMax,(a,b)=>Math.abs(a.g-midC)-Math.abs(b.g-midC)); if(mid) take(mid);
       const easy=pickBand(o=>o.g>=O.gEasyMin,(a,b)=>b.g-a.g); if(easy) take(easy);
       const five=[anchor,hard1,hard2,mid,easy].filter(Boolean);
-      for(const x of pool){ if(five.length>=5) break; if(!usedK.has(x.key)&&!usedY.has(x.year)){ take(x); five.push(x); } }
+      for(const x of pool){ if(five.length>=5) break; if(!usedK.has(x.key)&&!usedY.has(x.year)&&!presos.some(t=>incertMassaAprop(t,x))){ take(x); five.push(x); } }
       return five.length===5?five:null;
     }
 
@@ -1559,12 +1594,6 @@
       const done=()=>{ if(btn){ const o=btn.textContent; btn.textContent=t('copied'); setTimeout(()=>{ btn.textContent=o; },1800); } };
       if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(done); }
       else { done(); }
-    }
-
-    function renderLocked(correct){
-      const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
-      root.innerHTML='<div class="gameover"><div class="gamehead"><h2>🕰️ '+t('t_ordena')+'</h2></div><h2 class="rtitle '+(correct?'perfect':'')+'">'+(correct?t('ord_locked_win'):t('ord_locked_lose'))+'</h2><div class="stats"><div class="stat"><div class="v">🔥 '+days+'</div><div class="k">'+t('streak_days',{n:days})+'</div></div></div><div class="locknote">'+t('locknote_played')+'</div><div class="countdown">'+t('new_challenge_in')+' <b id="ocd">--:--:--</b></div></div>';
-      startCd();
     }
 
     function buildAndRender(){
@@ -1741,10 +1770,6 @@
     }
     function saveState(){ writeLS(STATE_KEY,state); }
 
-    // Missatges de resultat
-    function resultMsg(errors,mode){
-      return t('mem_result',{errors:errors,mode:mode});
-    }
 
     // Renderitza la graella
     function renderGrid(ms){
@@ -1974,7 +1999,7 @@
       (HB_DATA.PEOPLE||[]).forEach(function(p){
         if(typeof p.birth!=='number') return;
         const alive=(typeof p.death!=='number');
-        out.push({uid:'pe:'+p.id, type:'person', id:p.id, name:p.name, by:p.birth, dy:alive?NOW:p.death, alive:alive,
+        out.push({uid:'pe:'+p.id, type:'person', id:p.id, name:p.name, by:p.birth, dy:alive?NOW:p.death, alive:alive, approx:!!p.approx,
           crono:(p.wd?{qid:p.wd,name:p.name,birth:p.birth,death:(typeof p.death==='number'?p.death:null),img:null,desc:p.desc||''}:null)});
       });
       (HB_DATA.EVENTS||[]).forEach(function(e){
@@ -1986,17 +2011,31 @@
     }
 
     // Classifica una parella: 'yes' (coincideixen), 'no' (+gap d'anys), o 'excl' (vora ambigua / event-event).
+    // Si algun dels dos porta data aproximada, el marge per dir «es van creuar» o «no» ha de
+    // ser MES GRAN que un any: amb una precisio de segle, un solapament de 20 anys pot no
+    // existir. S'excloen les parelles dins d'APX_GAP, exactament com ja s'excloien les que es
+    // toquen just en un any. Aquest joc necessita mes marge que els altres dos perque la
+    // pregunta depen de DUES dates per persona, no d'una.
+    function incertAmbigu(a,b,marge){
+      if(!a.approx && !b.approx) return false;
+      return Math.abs(marge)<APX_GAP;
+    }
     function classify(a,b){
       if(a.type==='event' && b.type==='event') return {status:'excl'};
       if(a.type==='person' && b.type==='person'){
         const ov=Math.min(a.dy,b.dy)-Math.max(a.by,b.by);
-        if(ov>=1) return {status:'yes'};
         if(ov===0) return {status:'excl'};   // es toquen just en un any: no ho podem considerar
+        if(incertAmbigu(a,b,ov)) return {status:'excl'};
+        if(ov>=1) return {status:'yes'};
         return {status:'no', gap:-ov};
       }
       const P=(a.type==='person')?a:b, E=(a.type==='event')?a:b, Y=E.by;
-      if(Y>P.by && Y<P.dy) return {status:'yes'};
       if(Y===P.by || Y===P.dy) return {status:'excl'};
+      if(P.approx){
+        const marge=Math.min(Math.abs(Y-P.by),Math.abs(Y-P.dy));
+        if(marge<APX_GAP) return {status:'excl'};
+      }
+      if(Y>P.by && Y<P.dy) return {status:'yes'};
       return {status:'no', gap:(Y<P.by)?(P.by-Y):(Y-P.dy)};
     }
     // Any representatiu d'una entitat: mig de la vida (persona) o l'any (esdeveniment). Els vius usen l'any actual (viu).
@@ -2059,7 +2098,6 @@
       return n>=17?' yr-xxs':(n>=15?' yr-xs':(n>=13?' yr-sm':''));
     }
     function card(b, reveal, flash, ysz){
-      const isEv=b.type==='event';
       const yr=reveal?yearsLabel(b):'<span class="q">?</span>';
       const cls='itemcard con'+(flash?(' '+flash):'');
       return '<div class="'+cls+'"><div class="nm">'+b.name+'</div><div class="yr'+(reveal?' reveal':'')+(ysz||'')+'">'+yr+'</div></div>';
@@ -2267,10 +2305,6 @@
     });
   }
 
-  function renderGame(g){
-    back.hidden=false;
-    app.innerHTML=`<div class="placeholder"><div class="ic">${g.ic}</div><h2>${t(g.titleKey)}</h2><p class="d">${t(g.descKey)}</p><span class="badge">${t('badge_soon')}</span></div>`;
-  }
 
   function router(){
     stopHubCd();
@@ -2343,6 +2377,7 @@
   let t;
   function reavalua(){fitSecnav();requestAnimationFrame(fitSecnav);clearTimeout(t);t=setTimeout(fitSecnav,300);}
   reavalua();
+  // resize dispara amb dimensions antigues en iOS quan es gira — esperem un frame + 300ms per llegir les dimensions reals
   window.addEventListener('resize',()=>{requestAnimationFrame(reavalua);});
   if(screen&&screen.orientation)screen.orientation.addEventListener('change',()=>setTimeout(reavalua,350));   // en girar el mòbil screen.orientation.change dona temps al viewport d'assentar-se abans de mesurar
   const MQ=window.matchMedia('(pointer:coarse)');

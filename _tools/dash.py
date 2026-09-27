@@ -172,28 +172,37 @@ def _qid_from_name(name):
 
 
 def _wd_year(claims, pid):
-    """(any, precisio, quantes_dates_diferents) de P569/P570.
+    """(any, precisio, quantes_dates_diferents, separacio_en_anys) de P569/P570.
     Prefereix el rank 'preferred'. Alguns antics tenen 5 dates de fonts
     diferents, i cal poder avisar-ne.
     ⚠️ wbgetentities NO desplaça les dates aC: -0384 son 384 aC i prou. El -1
     nomes cal per a SPARQL (veure els avisos del CLAUDE.md)."""
-    best, anys = None, set()
-    for c in claims.get(pid, []):
-        if c.get("rank") == "deprecated":
-            continue
+    # ⚠️ Dues passades, i no una. Abans hi havia un `break` en trobar la preferida, i aixo
+    # deixava de comptar les declaracions posteriors: si la preferida anava primera, `anys`
+    # en tenia una sola i el recompte deia que no hi havia conflicte quan si que n'hi havia
+    # (Newton, amb 1642 i 1643 pel canvi de calendari, sortia com si fos una data neta).
+    # El recompte alimenta l'avis del dashboard I el flag `disputada`, que al seu torn decideix
+    # si els jocs poden preguntar per aquesta persona: subestimar-lo no es cosmetic.
+    vius = [c for c in claims.get(pid, []) if c.get("rank") != "deprecated"]
+    vals = []
+    for c in vius:
         v = ((c.get("mainsnak") or {}).get("datavalue") or {}).get("value")
-        if not v or not v.get("time"):
-            continue
+        if v and v.get("time"):
+            vals.append((c.get("rank"), v))
+    anys = set()
+    for _, v in vals:
         t0 = v["time"]
         try:
             anys.add(int(t0[1:5]) * (-1 if t0[0] == "-" else 1))
         except Exception:
             pass
-        if c.get("rank") == "preferred":
+    best = None
+    for rank, v in vals:
+        if rank == "preferred":
             best = v
             break
-        if best is None:
-            best = v
+    if best is None and vals:
+        best = vals[0][1]
     if not best:
         return None, None, 0
     t = best["time"]
@@ -201,7 +210,7 @@ def _wd_year(claims, pid):
         year = int(t[1:5]) * (-1 if t[0] == "-" else 1)
     except Exception:
         return None, None, 0
-    return year, best.get("precision"), len(anys)
+    return year, best.get("precision"), len(anys), (max(anys) - min(anys)) if anys else 0
 
 
 def _slug_id(name, taken):
@@ -286,8 +295,8 @@ def resolve_person(q, allow_existing=False):
     if not desc:
         warnings.append({"field": "ddesc", "msg": "Sense descripcio en catala a Wikidata: escriu-la tu"})
 
-    birth, bp, bn = _wd_year(claims, "P569")
-    death, dp, dn = _wd_year(claims, "P570")
+    birth, bp, bn, bsp = _wd_year(claims, "P569")
+    death, dp, dn, dsp = _wd_year(claims, "P570")
     if birth is None:
         warnings.append({"field": "dbirth", "msg": "Wikidata no en dona cap any de naixement. Es obligatori: posa'l tu."})
     elif bp is not None and bp < 9:
@@ -295,9 +304,9 @@ def resolve_person(q, allow_existing=False):
     if death is not None and dp is not None and dp < 9:
         warnings.append({"field": "ddeath", "msg": "La data nomes te precisio de %s, no d'any exacte. Comprova-la." % PREC.get(dp, dp)})
     if bn > 1:
-        warnings.append({"field": "dbirth", "msg": "Wikidata en dona %d de diferents, de fonts que no es posen d'acord. He agafat la preferida (%s), pero es una estimacio." % (bn, birth)})
+        warnings.append({"field": "dbirth", "msg": "Wikidata en dona %d de diferents (%d anys de separacio). He agafat la preferida (%s)." % (bn, bsp, birth)})
     if dn > 1:
-        warnings.append({"field": "ddeath", "msg": "Wikidata en dona %d de diferents, de fonts que no es posen d'acord. He agafat la preferida (%s), pero es una estimacio." % (dn, death)})
+        warnings.append({"field": "ddeath", "msg": "Wikidata en dona %d de diferents (%d anys de separacio). He agafat la preferida (%s)." % (dn, dsp, death)})
 
     # Mana l'ordre de P106, no el de CAT_BY_P106. Wikidata posa «escriptor»
     # (Q36180) a tothom qui hagi escrit res, i amb l'ordre de la nostra llista
@@ -333,9 +342,35 @@ def resolve_person(q, allow_existing=False):
     if qid in qids_taken and not allow_existing:
         return {"ok": False, "msg": "%s ja es a PEOPLE" % qid}
 
+    # Nota d'incertesa per al camp `approx` de PEOPLE. Es construeix dels MATEIXOS fets que
+    # ja alimenten els avisos de dalt, pero mentre que l'avis es per a qui afegeix la persona
+    # (i desapareix), aixo queda desat i ho veu qui fa servir l'eina: la fitxa ensenya «~406»
+    # i la nota, i els jocs cronologics eviten emparellar-lo amb algu massa a prop.
+    # Es genera SOL a proposit: si depengues de recordar-se'n, el camp quedaria a mitges i el
+    # guard dels jocs seria fals.
+    # Nomes un CODI, no una frase: el text viu al diccionari de l'index (cro_date_*), que es
+    # crom d'UI i s'ha de poder traduir. Tres valors possibles i prou; l'index no en pinta cap
+    # altre. Dues regles independents:
+    #   precisio pitjor que l'any  -> aproximada
+    #   mes d'una data a Wikidata  -> disputada
+    inexacta = (birth is not None and bp is not None and bp < 9) or \
+               (death is not None and dp is not None and dp < 9)
+    # «Disputada» vol dir que les fonts DISCREPEN, no que n'hi hagi mes d'una. Mesurat sobre
+    # les 91 persones de la BD: 19 tenen mes d'una data de naixement, pero 9 d'aquestes nomes
+    # se separen 1 o 2 anys —el canvi de calendari julia/gregoria (Newton 1642/1643), o un
+    # arrodoniment (Colom, Aristotil, Confuci)— i aixo no es cap disputa. Per sobre dels 2 anys
+    # el salt es net: Jesus 5, Carlemany 6, Plutarc 10, Laozi 33, Safo 40, Atila 105, Buda 123.
+    # Importa perque el flag tanca 60 anys de parelles als jocs: marcar-hi Newton seria soroll.
+    DISPUTA_MIN = 2
+    disputada = bsp > DISPUTA_MIN or dsp > DISPUTA_MIN
+    approx = ("aprox_disputada" if (inexacta and disputada)
+              else "aprox" if inexacta
+              else "disputada" if disputada
+              else "")
+
     return {"ok": True, "qid": qid, "id": _slug_id(name or qid, ids_taken),
             "name": name, "desc": desc, "birth": birth, "death": death,
-            "cats": cats, "gender": gender, "wiki": wiki_url,
+            "cats": cats, "gender": gender, "wiki": wiki_url, "approx": approx,
             "sitelinks": len(ent.get("sitelinks") or {}), "warnings": warnings}
 
 
@@ -346,18 +381,28 @@ def _js_str(s):
 
 
 def person_literal(d):
-    cats = ",".join("'%s'" % c for c in (d.get("cats") or []))
+    """Literal d'una persona per a [1] DATA.
+
+    TOT el que va dins d'una cometa simple passa per _js_str(): un ' cru s'escapa
+    de la string i injecta codi a l'array (CLAUDE.md, «Apostrofs a les strings de
+    DATA»). El name i el desc ja hi passaven; el qid, el gender i el wiki no, i
+    les dues xarxes de db_add_person no ho veien (el recompte d'objectes seguia
+    quadrant i no hi havia cap U+FFFD). L'id, el qid i les cats arriben ja
+    validats per db_add_person; se'ls hi passa igualment, que no costa res.
+    """
+    cats = ",".join("'%s'" % _js_str(c) for c in (d.get("cats") or []))
     death = d.get("death")
     parts = [
-        "id:'%s'" % d["id"],
-        ("wd:'%s'" % d["qid"]) if d.get("qid") else None,
+        "id:'%s'" % _js_str(d["id"]),
+        ("wd:'%s'" % _js_str(d["qid"])) if d.get("qid") else None,
         "name:'%s'" % _js_str(d.get("name")),
         "birth:%d" % int(d["birth"]),
         "death:%s" % ("null" if death in (None, "") else int(death)),
         "cats:[%s]" % cats,
-        ("gender:'%s'" % d["gender"]) if d.get("gender") else None,
-        ("wiki:'%s'" % d["wiki"]) if d.get("wiki") else None,
+        ("gender:'%s'" % _js_str(d["gender"])) if d.get("gender") else None,
+        ("wiki:'%s'" % _js_str(d["wiki"])) if d.get("wiki") else None,
         ("desc:'%s'" % _js_str(d["desc"])) if d.get("desc") else None,
+        ("approx:'%s'" % _js_str(d["approx"])) if d.get("approx") else None,
     ]
     return "  {" + ",".join(x for x in parts if x) + "},"
 
@@ -383,12 +428,18 @@ def db_add_person(d):
     pid = (d.get("id") or "").strip()
     if not re.fullmatch(r"[a-z0-9]+", pid or ""):
         return False, "L'id ha de ser lletres minuscules i xifres"
+    # El QID i les categories tenen format tancat: es validen aqui i no s'arreglen
+    # despres. Aixi person_literal no ha de confiar en el cos de la peticio.
+    qid = (d.get("qid") or "").strip()
+    if qid and not re.fullmatch(r"Q\d+", qid):
+        return False, "El QID ha de ser Q seguit de xifres"
+    cats = [c for c in (d.get("cats") or []) if re.fullmatch(r"[a-z]+", str(c))]
 
     ids_taken, qids_taken = existing_people()
     if pid in ids_taken:
         return False, "L'id '%s' ja existeix" % pid
-    if d.get("qid") and d["qid"] in qids_taken:
-        return False, "%s ja es a PEOPLE" % d["qid"]
+    if qid and qid in qids_taken:
+        return False, "%s ja es a PEOPLE" % qid
 
     src0 = read("index.html")
     m = re.search(r"const\s+PEOPLE\s*=\s*\[", src0)
@@ -396,8 +447,13 @@ def db_add_person(d):
         return False, "No trobo PEOPLE a l'index.html"
     before, close = count_objects(src0, m.end())
 
+    approx = (d.get("approx") or "").strip()
+    if approx not in ("", "aprox", "disputada", "aprox_disputada"):
+        return False, "Codi d'incertesa desconegut: %r" % approx
+
     rec = dict(d)
-    rec.update({"id": pid, "birth": birth, "death": death, "name": name})
+    rec.update({"id": pid, "qid": qid, "cats": cats, "approx": approx,
+                "birth": birth, "death": death, "name": name})
     head = src0[:close].rstrip()
     if not head.endswith(","):
         head += ","
@@ -530,6 +586,13 @@ def _extract_people_events(html):
             'wiki':   get_str(obj, 'wiki') or '',
             'desc':   get_str(obj, 'desc') or '',
         }
+        # Opcional: nota d'incertesa de les dates. Nomes la porten unes poques persones
+        # (antigues, amb precisio de segle o amb fonts en conflicte). Si no s'hi copies,
+        # data.js deixaria de ser un snapshot fidel i el camp es perdria el dia que les
+        # dades es serveixin des de fora.
+        approx = get_str(obj, 'approx')
+        if approx:
+            entry['approx'] = approx
         if entry['id'] and entry['name'] is not None:
             people.append(entry)
 
@@ -1406,7 +1469,40 @@ class Handler(BaseHTTPRequestHandler):
     def _json(self, code, payload):
         self._send(code, json.dumps(payload, ensure_ascii=False), "application/json; charset=utf-8")
 
+    # Les ordres que MUTEN coses (push, add a la BD, clavar un dia, esborrar del
+    # backlog, aturar) nomes poden venir del dashboard mateix. Sense aixo, qualsevol
+    # pagina oberta al navegador podia enviar-les a localhost:7777: el navegador no
+    # la deixa LLEGIR la resposta, pero l'ordre ja s'havia executat, i un git push
+    # no necessita resposta. I els noms de les ordres son publics —el dash.py es al
+    # repo. Comprovat: una peticio amb Origin d'un altre lloc entrava i s'executava.
+    #
+    # Origin: en una peticio POST entre orígens el navegador SEMPRE l'envia, aixi que
+    # si hi es i no es dels nostres, fora. Si no hi ha ni Origin ni Referer no ve d'un
+    # navegador (curl, un script local): es deixa passar, que si no trencariem l'us
+    # manual per terminal sense guanyar res.
+    #
+    # Host: tanca el DNS rebinding (un domini de l'atacant que resol a 127.0.0.1).
+    # Alla la peticio arriba amb Host del seu domini, no amb un de loopback.
+    ALLOWED_HOSTS = ("127.0.0.1", "localhost", "[::1]", "::1")
+
+    def _same_origin(self):
+        host = (self.headers.get("Host") or "").rsplit(":", 1)[0].strip()
+        if host not in self.ALLOWED_HOSTS:
+            return False, "Host no permes: %r" % host
+        origin = (self.headers.get("Origin") or "").strip()
+        ok = tuple("http://%s:%d" % (h, PORT) for h in self.ALLOWED_HOSTS)
+        if origin:
+            return (origin in ok), "Origin no permes: %r" % origin
+        ref = (self.headers.get("Referer") or "").strip()
+        if ref:
+            return any(ref.startswith(o + "/") or ref == o for o in ok), "Referer no permes: %r" % ref
+        return True, ""   # ni Origin ni Referer: no ve d'un navegador
+
     def do_POST(self):
+        ok, why = self._same_origin()
+        if not ok:
+            self._json(403, {"ok": False, "msg": "Peticio rebutjada (%s)" % why})
+            return
         path = self.path.split("?", 1)[0]
         length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(length) if length > 0 else b""

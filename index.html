@@ -160,6 +160,13 @@
   .results .row.loading{color:var(--text2);font-style:italic;cursor:default;}
   .results .row .yr{color:var(--text2);font-size:12px;margin-left:auto;}
   .results .row.disabled{opacity:.5;cursor:default;}
+  /* Persona que existeix a Wikidata pero sense dates: es mostra per no mentir («cap persona
+     trobada» era fals), pero no es pot afegir. L'opacitat de .disabled ja diu que no s'hi pot
+     tocar; la ↗ ha de quedar viva i per aixo recupera opacitat propia. */
+  .results .row.nodate .yr{font-style:italic;}
+  .results .row.nodate .extlink{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-left:8px;border-radius:3px;text-decoration:none;color:inherit;opacity:.9;pointer-events:auto;cursor:pointer;}
+  .results .row.nodate .extlink:hover{background:var(--surface);}
+  .results .row.nodate .extlink svg{width:12px;height:12px;}
   .results .row.loading::before{content:"";width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--text2);border-radius:50%;display:inline-block;margin-right:8px;vertical-align:-2px;animation:wdspin .7s linear infinite;}
   @keyframes wdspin{to{transform:rotate(360deg);}}
   .canvas-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:40;background:rgba(255,255,255,.35);opacity:0;visibility:hidden;transition:opacity .15s,visibility 0s .15s;pointer-events:none;}
@@ -475,6 +482,12 @@
   .detail .dbtn.quiet:hover{background:var(--surface);color:var(--text);}
   .detail .dbtn.danger{color:#C0392B;border-color:#E7B7B0;}
   .detail .dbtn.danger:hover{background:#FBEDEB;}
+
+  /* Nota d'incertesa a la fitxa. Surt NOMES si la persona porta camp `approx`, i el que diu
+     es per que no ens en refiem (precisio de segle, fonts en conflicte...). La linia de vida
+     porta un ~ al davant. Es informacio historica, no un avis d'error: per aixo va en to
+     tranquil i no en vermell. */
+  .detail .approx{margin:8px 0 0;padding:8px 11px;background:var(--soft);border-left:3px solid var(--border-strong);border-radius:0 var(--r-card) var(--r-card) 0;font-size:12.5px;line-height:1.45;color:var(--text2);}
 
   /* ===== Footer (barra fina al peu de l'app) =====
      flex:0 0 auto dins de .app → li menja alçada a .body, que ja és flex:1 1 auto amb min-height:0.
@@ -832,6 +845,7 @@ const I18N={
     cro_act_coll_off: v => 'desactivar «'+v.name+'»',
     cro_act_add: v => 'afegir '+v.name,
     cro_act_remove: v => 'treure '+v.name,
+    cro_act_remove_items: v => 'treure '+v.n+' elements',
     cro_act_marc: v => 'canviar «'+v.name+'»',
     cro_act_events:'canviar els esdeveniments',
     cro_act_reset:'Reset',
@@ -895,6 +909,12 @@ const I18N={
     cro_already_added:'ja afegit',
     cro_wd_fail:"⚠ No s'ha pogut connectar a Wikidata",
     cro_wd_none:'Cap persona trobada a Wikidata',
+    cro_wd_nodate:'sense dates',
+    cro_date_aprox:'Data aproximada',
+    cro_date_disputada:'Data disputada',
+    cro_date_aprox_disputada:'Data aproximada i disputada',
+    cro_wd_nodate_why:'No se sap quan va viure: a Wikidata les seves dates consten com a desconegudes, així que no es pot situar a la línia de temps.',
+    cro_wd_nodate_cta:'Si en tens informació, pots completar-ho a Wikidata',
     cro_no_match:'Cap coincidència',
     cro_coll_fail: v => v.name+" · no s'ha pogut connectar a Wikidata",
     cro_coll_lost: v => v.name+' · '+v.n+" no s'han pogut carregar",
@@ -936,7 +956,13 @@ function t(key,vars){
 }
 function setLang(code){ if(I18N_SUPPORTED.indexOf(code)<0) return; LANG=code; try{ localStorage.setItem(LANG_KEY,code); document.documentElement.lang=code; }catch(_){} }
 // Prioritat d'idiomes per a Wikidata segons l'idioma actiu (p.ex. 'en' => 'en|ca|es').
-function wdLangs(){ const base=['ca','es','en']; return [LANG].concat(base.filter(function(l){return l!==LANG;})).join('|'); }
+// 'mul' al final: Wikidata va migrar els noms en alfabet llati a UNA etiqueta multilingue
+// i va esborrar les per idioma. «Albert Einstein» s'escriu igual en ca/es/en/de/fr, aixi
+// que ara nomes viu a 'mul' i Q937 tornava sense etiqueta. Va al final, de fallback pur:
+// nomes s'agafa quan cap dels idiomes reals no hi es, aixi no canvia res del que ja anava.
+// Cal demanar-lo I llegir-lo: sense 'mul' aqui, wbgetentities no el retorna, i el
+// SERVICE wikibase:label de la SPARQL (que surt de wdFields) tampoc no hi cau.
+function wdLangs(){ const base=['ca','es','en','mul']; return [LANG].concat(base.filter(function(l){return l!==LANG;})).join('|'); }
 // Aplica els textos estatics marcats amb data-i18n / data-i18n-title / data-i18n-aria.
 function applyI18nStatic(scope){
   const s=scope||document;
@@ -974,6 +1000,25 @@ const NOW_YEAR=new Date().getFullYear();
 // COL·LECCIONS: playlists de persones. Guarden **Q-ids, no persones** — la mateixa referència
 // resol a una entrada de PEOPLE si la tenim en local, i es baixa de Wikidata si no, així una
 // col·lecció pot incloure qualsevol (aquí Descartes, Camus i Sartre no són a la DB local).
+// ── Sostres d'una col·lecció ──────────────────────────────────────────────────
+// Dos límits diferents, i el que mana és el primer:
+//
+// COLL_MAX (60) — límit d'USABILITAT. Els carrils s'apilen en vertical, i quants en
+//   surten depèn de com estigui repartida la gent, no només de quanta n'hi hagi:
+//   mesurat, 100 persones repartides per 160 anys fan 45 carrils, però els 49 Nobel
+//   —que es solapen gairebé tots— ja en fan 39. El pitjor cas és «tothom coincideix»,
+//   i allà carrils ≈ persones. Amb 60 això són ~60 carrils ≈ 2.160px ≈ 3 pantalles de
+//   scroll vertical, que és el màxim que encara es deixa llegir d'una passada.
+//
+// WD_IDS_MAX (350) — límit TÈCNIC de byIds(), que envia TOTS els Q-ids en UNA sola
+//   consulta SPARQL. Wikidata la talla per llargada d'URL: mesurat, 400 ids van bé
+//   (6.281 chars), 600 donen 414 URI Too Long (9.180 chars) i 989 donen 503. 350 deixa
+//   marge per si els ids són llargs. Si algun dia cal passar d'aquí, la solució NO és
+//   apujar el número sinó partir la petició en trossos dins de byIds().
+//
+// Passar-se de COLL_MAX no trenca res: el guard de sota talla la llista i ho diu per
+// consola. El CI, en canvi, hi peta a propòsit, perquè no arribi mai a producció.
+const COLL_MAX=60, WD_IDS_MAX=350;
 const COLLECTIONS=[
   {id:'filosofs',name:'Els meus filòsofs',wds:[
     'Q913',   // Sòcrates      (local)
@@ -995,6 +1040,198 @@ const COLLECTIONS=[
     'Q34670', // Albert Camus  1913–1960
     'Q9364'   // Jean-Paul Sartre 1905–1980
   ]},
+  {id:'nobel',name:'Il·lustres premis Nobel',url:'https://www.nobelprize.org/prizes/lists/all-nobel-prizes/',wds:[
+    // Els 8 amb més presència a les Viquipèdies de cada categoria (el mateix senyal de
+    // rellevància que fa servir el motor de zoom dels events), més el senyor Nobel obrint
+    // la fila. Equilibrat a propòsit: per pur nombre de sitelinks sortien 22 de Literatura
+    // i CAP de Medicina ni d’Economia.
+    // — qui va crear el premi —
+    'Q23810',    // Alfred Nobel               1833–1896 
+    // — Física —
+    'Q35149',    // Wilhelm Röntgen            1845–1923 
+    'Q9021',     // Max Planck                 1858–1947 
+    'Q7186',     // Marie Curie                1867–1934  (local) +Química
+    'Q937',      // Albert Einstein            1879–1955  (local)
+    'Q7085',     // Niels Bohr                 1885–1962 
+    'Q9130',     // Erwin Schrödinger          1887–1961 
+    'Q8753',     // Enrico Fermi               1901–1954 
+    'Q39246',    // Richard Feynman            1918–1988 
+    // — Química —
+    'Q102822',   // J. H. van ’t Hoff           1852–1911 
+    'Q80956',    // Svante August Arrhenius    1859–1927 
+    'Q57075',    // Fritz Haber                1868–1934 
+    'Q9123',     // Ernest Rutherford          1871–1937 
+    'Q57065',    // Otto Hahn                  1879–1968 
+    'Q7504',     // Irène Joliot-Curie         1897–1956 
+    'Q48983',    // Linus Carl Pauling         1901–1994  +Pau
+    'Q7487',     // Dorothy Crowfoot Hodgkin   1910–1994 
+    // — Medicina —
+    'Q37193',    // Robert Koch                1843–1910 
+    'Q42985',    // Ivan Petróvitx Pàvlov      1849–1936 
+    'Q102034',   // Ronald Ross                1857–1932 
+    'Q37064',    // Alexander Fleming          1881–1955  (local)
+    'Q78496',    // Konrad Lorenz              1903–1989 
+    'Q185007',   // Rita Levi-Montalcini       1909–2012 
+    'Q123280',   // Francis Crick              1916–2004 
+    'Q83333',    // James Dewey Watson         1928–2025 
+    // — Literatura —
+    'Q19185',    // George Bernard Shaw        1856–1950 
+    'Q7241',     // Rabindranath Tagore        1861–1941 
+    'Q34743',    // Rudyard Kipling            1865–1936 
+    'Q8016',     // Winston Churchill          1874–1965  (local)
+    'Q23434',    // Ernest Miller Hemingway    1899–1961 
+    'Q9364',     // Jean-Paul Sartre           1905–1980 
+    'Q34670',    // Albert Camus               1913–1960 
+    'Q5878',     // Gabriel García Márquez     1927–2014 
+    // — Pau —
+    'Q34296',    // Woodrow Wilson             1856–1924 
+    'Q33866',    // Theodore Roosevelt         1858–1919 
+    'Q30547',    // Teresa de Calcuta          1910–1997 
+    'Q8023',     // Nelson Mandela             1918–2013  (local)
+    'Q23685',    // James Earl Carter          1924–2024 
+    'Q8027',     // Martin Luther King         1929–1968 
+    'Q30487',    // Mikhaïl Gorbatxov          1931–2022 
+    'Q76',       // Barack Obama               1961–avui 
+    // — Economia (Banc de Suècia) —
+    'Q1325',     // Friedrich August von Hayek 1899–1992 
+    'Q47426',    // Milton Friedman            1912–2006 
+    'Q102454',   // Paul Samuelson             1915–2009 
+    'Q128736',   // John Forbes Nash           1928–2015 
+    'Q132489',   // Amartya Sen                1933–avui 
+    'Q153761',   // Elinor Ostrom              1933–2012 
+    'Q18430',    // Joseph Eugene Stiglitz     1943–avui 
+    'Q131112'    // Paul Krugman               1953–avui 
+  ]},
+
+  {id:'calbs',name:'Calbs il·lustres',wds:[
+    // Curada A MA i a ull: Wikidata te la calvicie anotada (P1884) a QUATRE persones en
+    // total, aixi que aqui no hi ha cap consulta al darrere ni cap check que la validi.
+    //
+    // El criteri no es «surt calb en una foto» sino «quan hi penses, saps que es calb»:
+    // ha de ser part de com te’l imagines. Per aixo en van caure set d’una primera versio:
+    // en Connery el recordes de Bond i alla duia perruqui, en Ronaldo amb el tall del 2002,
+    // en Samuel L. Jackson amb els rinxols del Pulp Fiction; l’Anthony Hopkins te entrades,
+    // no es calb; i en Bunyuel, l’Onassis i en Diaguilev son calbs pero no es aixi com se’ls
+    // recorda —el darrer, directament, no es cultura general.
+    //
+    // ⚠️ Nomes de 1809 enca, i no per mandra: saber si algu era calb demana un retrat
+    // REALISTA, i hi ha dos forats insalvables —del 400 al 1400 l’art no es naturalista (la
+    // tonsura dels monjos es afaitada, no calvicie) i del 1650 al 1800 tothom porta perruca.
+    // Omplir-ho amb romans, que si que estan documentats (Suetoni explica que Domicia va
+    // escriure un llibre sobre cura del cabell), donaria un grumoll antic, 1.400 anys de buit
+    // i un grumoll modern: la mateixa forma lletja pero amb dos pics.
+    'Q1035',     // Charles Robert Darwin       1809–1882    (local)
+    'Q8442',     // Otto von Bismarck           1815–1898   
+    'Q160278',   // John D. Rockefeller         1839–1937   
+    'Q1001',     // Mohandas Gandhi             1869–1948    (local)
+    'Q1394',     // Lenin                       1870–1924   
+    'Q8016',     // Winston Churchill           1874–1965    (local)
+    'Q208537',   // Pau Casals                  1876–1973   
+    'Q5593',     // Pablo Picasso               1881–1973    (local)
+    'Q23559',    // Benito Mussolini            1883–1945   
+    'Q9916',     // Dwight David Eisenhower     1890–1969   
+    'Q35314',    // Nikita Khrusxov             1894–1971   
+    'Q7374',     // Alfred Hitchcock            1899–1980   
+    'Q102813',   // Yul Brynner                 1920–1985   
+    'Q209471',   // Telly Savalas               1922–1994   
+    'Q44272',    // Michel Foucault             1926–1984   
+    'Q30487',    // Mikhaïl Gorbatxov           1931–2022   
+    'Q16296',    // Patrick Stewart             1940–avui   
+    'Q173158',   // Ben Kingsley                1943–avui   
+    'Q26806',    // Danny DeVito                1944–avui   
+    'Q2680',     // Bruce Willis                1955–avui   
+    'Q19837',    // Steve Jobs                  1955–2011   
+    'Q41421',    // Michael Jordan              1963–avui   
+    'Q7407',     // Andre Agassi                1970–avui   
+    'Q164038',   // Josep Guardiola i Sala      1971–avui   
+    'Q1835'      // Zinédine Zidane             1972–avui   
+  ]},
+  {id:'religions',name:'Fundadors de religions',wds:[
+    // El contingut d’aquesta col·leccio NO es qui hi ha, es QUAN. Dues coses alhora:
+    //
+    // 1) EL NUS. Mahavira (-599), Laozi (-580), Confuci (-551) i el Buda (-501) neixen dins
+    //    del mateix segle, a la Xina i a l’India, sense saber els uns dels altres. S’inventen
+    //    per separat el jainisme, el taoisme, el confucianisme i el budisme. Karl Jaspers en
+    //    va dir «era axial». En un llibre son quatre capitols separats per geografia; aqui es
+    //    UNA COLUMNA, i la columna es el fet.
+    //    ⚠️ Els anys no son sempre els tradicionals de la bibliografia, sino els del rang
+    //    PREFERIT de Wikidata, que es el que segueix la SPARQL: Laozi surt a -580 i no a -604.
+    //    Si toques aquest comentari, mira ABANS que diu el canvas.
+    // 2) EL REPARTIMENT. Despres el ritme no s’atura: Jesus, Mani, Mahoma, Nanak, la
+    //    Reforma, i una pluja al segle XIX-XX (Smith, Bahá’u’lláh, Eddy, Russell, Hubbard).
+    //    Fundar religions no es cosa «dels antics»: passa a cada epoca.
+    //
+    // ⚠️ Tres que hi haurien de ser i no hi son, cada una per un motiu diferent — i les TRES
+    // desapareixerien EN SILENCI si no s’hi para compte (detall a CLAUDE.md):
+    //   · Mahavira: el seu P31 a Wikidata es «tirthankara» i «esser huma possiblement
+    //     fictici», no Q5, i byIds(humansOnly=true) el filtra. Per aixo es a PEOPLE en local.
+    //   · El Buda tambe es a PEOPLE en local, pero per un altre motiu: a Wikidata el P569 i el
+    //     P570 PREFERITS son tots dos -0500 —es com hi modelen «segle V aC»— i per la SPARQL
+    //     naixia i moria el mateix any: una barra de 8px, el minim que pinta render(). En local
+    //     hi va amb les dates tradicionals (-563/-483), que a Wikidata hi son amb rang normal.
+    //   · Zaratustra: te P569 = -628 amb rang NORMAL, pero la declaracio PREFERIDA es «sense
+    //     valor» —les seves dates son disputades de debo— i wdt:P569 segueix el rang preferit,
+    //     aixi que la SPARQL no torna data i wdParse el descarta. Fora: no vull sostenir el
+    //     nus axial amb una data que la font declina afirmar.
+    //   · Christine de Pizan: directament no te any de naixement a Wikidata.
+    'Q9333',     // Laozi                       -604–-500             taoisme
+    'Q9422',     // Mahavira                    -599–-527    (local)  jainisme
+    'Q9441',     // Buda                        -563–-483             budisme
+    'Q4604',     // Confuci                     -551–-479    (local)  confucianisme
+    'Q302',      // Jesucrist                   -4–30        (local)  cristianisme
+    'Q203922',   // Mani                        216–274               maniqueisme
+    'Q9458',     // Mahoma                      571–632      (local)  islam
+    'Q83322',    // Guru Nanak                  1469–1539             sikhisme
+    'Q9554',     // Martí Luter                 1483–1546    (local)  protestantisme
+    'Q37577',    // Joan Calví                  1509–1564             calvinisme
+    'Q47102',    // Joseph Smith                1805–1844             mormonisme
+    'Q101054',   // Bahá’u’lláh                 1817–1892             fe bahà’í
+    'Q235069',   // Mary Baker Eddy             1821–1910             Ciència Cristiana
+    'Q313456',   // Charles Taze Russell        1852–1916             testimonis de Jehovà
+    'Q216896'    // L. Ron Hubbard              1911–1986             cienciologia
+  ]},
+  {id:'dones',name:'Dones a la història',wds:[
+    // Aqui el contingut tampoc es qui hi ha: es la DENSITAT, i sobretot el que falta.
+    // Compta les barres per tram i miralestes d’esquerra a dreta —3 abans de Crist, 2 fins
+    // l’any 1000, 4 fins al 1500, 6 fins al 1800 i 16 despres— i tens la forma de la
+    // col·leccio: un degoteig que s’espesseix. Aixo NO vol dir que hi hagues menys dones
+    // abans; vol dir que se’n va registrar menys. La col·leccio ensenya l’estat de l’ARXIU,
+    // no el de la humanitat, i aquesta diferencia es tot el que hi ha per aprendre-hi.
+    //
+    // Per aixo NO s’ha d’«equilibrar» afegint-ne d’antigues fins que quedi pla: seria
+    // maquillar justament el que la fa valer la pena.
+    'Q129234',   // Hatxepsut                   -1507–-1458         
+    'Q17892',    // Safo de Lesbos              -650–-550           
+    'Q635',      // Cleopatra                   -69–-30      (local)
+    'Q184634',   // Boudica                     30–61               
+    'Q11903',    // Hipàcia                     360–415             
+    'Q70991',    // Hildegarda de Bingen        1098–1179           
+    'Q178525',   // Elionor d’Aquitània         1124–1204           
+    'Q7226',     // Joana d’Arc                 1412–1431    (local)
+    'Q45859',    // Isabel I de Castella        1451–1504    (local)
+    'Q131552',   // Caterina de Mèdici          1519–1589    (local)
+    'Q7207',     // Elisabet I d’Anglaterra     1533–1603           
+    'Q212657',   // Artemisia Gentileschi       1593–1653           
+    'Q183074',   // Sor Juana Inés              1648–1695           
+    'Q101638',   // Mary Wollstonecraft         1759–1797    (local)
+    'Q36322',    // Jane Austen                 1775–1817    (local)
+    'Q7259',     // Ada Lovelace                1815–1852    (local)
+    'Q80137',    // Emily Brontë                1818–1848           
+    'Q44520',    // Anne Brontë                 1820–1849           
+    'Q37103',    // Florence Nightingale        1820–1910           
+    'Q211519',   // Emmeline Pankhurst          1858–1928           
+    'Q7186',     // Marie Curie                 1867–1934    (local)
+    'Q7231',     // Rosa Luxemburg              1871–1919    (local)
+    'Q40909',    // Virginia Woolf              1882–1941    (local)
+    'Q60025',    // Hannah Arendt               1906–1975           
+    'Q5588',     // Frida Kahlo                 1907–1954    (local)
+    'Q7197',     // Simone de Beauvoir          1908–1986    (local)
+    'Q41921',    // Rosa Parks                  1913–2005           
+    'Q7474',     // Rosalind Franklin           1920–1958           
+    'Q4583',     // Anne Frank                  1929–1945    (local)
+    'Q133054',   // Sylvia Plath                1932–1963           
+    'Q1744'      // Madonna                     1958–avui    (local)
+  ]},
   {id:'maricashistoria',name:'Grandes Maricas de la Historia',url:'https://grandesmaricasdelahistoria.es/',wds:[
     'Q1762',  // Heliogàbal          203–222
     'Q762',   // Leonardo da Vinci   1452–1519
@@ -1010,6 +1247,23 @@ const COLLECTIONS=[
     'Q7251'   // Alan Turing         1912–1954
   ]}
 ];
+
+// Xarxa de seguretat per a l'edicio a ma: una col·leccio que passi de COLL_MAX es talla
+// (no es trenca la vista) i es diu per consola. El check del CI hi peta, aixi que en
+// condicions normals aixo no s'executa mai.
+COLLECTIONS.forEach(c=>{
+  if(!Array.isArray(c.wds))
+    {console.error('[HB] La col·leccio «'+c.id+'» no te llista de Q-ids');c.wds=[];return;}
+  const dup=c.wds.length-new Set(c.wds).size;
+  if(dup)console.warn('[HB] La col·leccio «'+c.id+'» te '+dup+' Q-id(s) repetits');
+  const mal=c.wds.filter(q=>!/^Q\d+$/.test(q));
+  if(mal.length)console.error('[HB] Q-ids amb format incorrecte a «'+c.id+'»: '+mal.join(', '));
+  if(c.wds.length>COLL_MAX){
+    console.error('[HB] La col·leccio «'+c.id+'» te '+c.wds.length+' persones i el sostre es '
+      +COLL_MAX+': es queden les '+COLL_MAX+' primeres. Parteix-la en col·leccions mes petites.');
+    c.wds=c.wds.slice(0,COLL_MAX);
+  }
+});
 
 // ERES: the always-on backbone — the macro-eras that act as the "ruler" of the timeline.
 // Not a toggleable marc; rendered as a pale wash spanning the whole eras canvas.
@@ -1060,14 +1314,31 @@ const EVENTS=[
   {id:'romaFund',name:'Fundació de Roma',year:-753,wiki:'https://ca.wikipedia.org/wiki/Fundaci%C3%B3_de_Roma',sitelinks:45,desc:'Fundació llegendària de Roma per Ròmul, origen d’una de les civilitzacions més influents de la història occidental.'},
   {id:'caigudaimp',name:'Caiguda de l’Imperi Romà',year:476,wiki:'https://ca.wikipedia.org/wiki/Caiguda_de_l%27Imperi_Rom%C3%A0_d%27Occident',sitelinks:56,desc:'Odoacre deposa l’últim emperador romà d’Occident. Marca l’inici convencional de l’Edat Mitjana.'},
   {id:'hegira',name:'Hègira de Mahoma',year:622,wiki:'https://ca.wikipedia.org/wiki/H%C3%A8gira',sitelinks:93,desc:'Mahoma emigra de la Meca a Medina; inici del calendari islàmic i d’una expansió que transformarà el Mediterrani i l’Orient Pròxim.'},
+  {id:'cartamagna',name:'Carta Magna',year:1215,wiki:'https://ca.wikipedia.org/wiki/Carta_Magna',sitelinks:97,desc:'Els barons anglesos obliguen el rei Joan a acceptar per escrit que el seu poder té límits; el primer document d’aquesta mena a Europa.'},
   {id:'pestaNegra',name:'Pesta Negra',year:1347,wiki:'https://ca.wikipedia.org/wiki/Pesta_negra',sitelinks:127,desc:'Epidèmia de pesta bubònica que mata entre un terç i la meitat de la població europea, accelerant la fi del feudalisme medieval.'},
+  {id:'impremta',name:'Invenció de la impremta',year:1440,wiki:'https://ca.wikipedia.org/wiki/Impremta',sitelinks:79,desc:'Gutenberg combina tipus mòbils, tinta grassa i premsa: un llibre deixa de ser un objecte únic i el coneixement es pot copiar barat.'},
+  {id:'constantinoble',name:'Caiguda de Constantinoble',year:1453,wiki:'https://ca.wikipedia.org/wiki/Caiguda_de_Constantinoble',sitelinks:79,desc:'Els otomans prenen la capital de l’Imperi Romà d’Orient. S’acaba l’últim tros de Roma, 1.480 anys després de la seva fundació.'},
   {id:'descamerica',name:'Descobriment d’Amèrica',year:1492,wiki:'https://ca.wikipedia.org/wiki/Descoberta_d%27Am%C3%A8rica',sitelinks:48,desc:'Cristòfor Colom arriba a les Amèriques el 12 d’octubre, obrint l’era dels grans imperis colonials. Inici convencional de l’Edat Moderna.'},
   {id:'reformaprot',name:'Reforma Protestant',year:1517,wiki:'https://ca.wikipedia.org/wiki/Reforma_protestant',sitelinks:154,desc:'Martí Luter publica les 95 tesis, trencant la unitat del cristianisme occidental i desencadenant guerres religioses arreu d\u0027Europa.'},
   {id:'revolindust',name:'Revolució Industrial',year:1760,wiki:'https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Industrial',sitelinks:161,desc:'L’aparició de la màquina de vapor a Anglaterra transforma l’economia, la societat i el paisatge urbà del món.'},
+  {id:'independenciaeua',name:'Declaració d’Independència dels EUA',year:1776,wiki:'https://ca.wikipedia.org/wiki/Declaraci%C3%B3_d%27Independ%C3%A8ncia_dels_Estats_Units_d%27Am%C3%A8rica',sitelinks:94,desc:'Tretze colònies es declaren independents de la Gran Bretanya i funden la primera república moderna, tretze anys abans de la Revolució Francesa.'},
   {id:'revfr',name:'Revolució Francesa',year:1789,wiki:'https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Francesa',sitelinks:193,desc:'Procés revolucionari que va enderrocar l’Antic Règim a França i va escampar per Europa els ideals de llibertat, igualtat i fraternitat.'},
+  {id:'relativitat',name:'Teoria de la relativitat',year:1905,wiki:'https://ca.wikipedia.org/wiki/Teoria_de_la_relativitat',sitelinks:120,desc:'Einstein publica la relativitat especial: el temps i l’espai deixen de ser absoluts i passen a dependre de qui els mesura.'},
   {id:'wwi',name:'Inici de la Primera Guerra Mundial',year:1914,wiki:'https://ca.wikipedia.org/wiki/Primera_Guerra_Mundial',sitelinks:264,desc:'Esclat del primer conflicte a escala global, que va redibuixar el mapa polític i social del segle XX.'},
-  {id:'wwii',name:'Segona Guerra Mundial',year:1939,wiki:'https://ca.wikipedia.org/wiki/Segona_Guerra_Mundial',sitelinks:292,desc:'El conflicte més devastador de la història, amb 70-85 milions de víctimes. Acabà amb la creació de l’ONU i l’ordre bipolar de la Guerra Freda.'},
+  {id:'revoluciorussa',name:'Revolució Russa',year:1917,wiki:'https://ca.wikipedia.org/wiki/Revoluci%C3%B3_Russa',sitelinks:117,desc:'Cau el tsarisme i els bolxevics prenen el poder: neix el primer estat comunista i amb ell mig segle de món partit en dos.'},
+  {id:'penicilina',name:'Descoberta de la penicil·lina',year:1928,wiki:'https://ca.wikipedia.org/wiki/Penicil%C2%B7lina',sitelinks:114,desc:'Fleming veu que un fong ha matat els bacteris d’un cultiu oblidat. És el primer antibiòtic: abans, una infecció petita et podia matar.'},
+  {id:'guerracivil',name:'Inici de la Guerra Civil espanyola',year:1936,wiki:'https://ca.wikipedia.org/wiki/Guerra_Civil_espanyola',sitelinks:119,desc:'Un cop d’estat fracassa a mitges i parteix el país en dos. Tres anys de guerra i quaranta de dictadura.'},
+  {id:'wwii',name:'Inici de la Segona Guerra Mundial',year:1939,wiki:'https://ca.wikipedia.org/wiki/Segona_Guerra_Mundial',sitelinks:292,desc:'El conflicte més devastador de la història, amb 70-85 milions de víctimes. Acabà amb la creació de l’ONU i l’ordre bipolar de la Guerra Freda.'},
+  {id:'hiroshima',name:'Bombardejos d’Hiroshima i Nagasaki',year:1945,wiki:'https://ca.wikipedia.org/wiki/Bombardejos_at%C3%B2mics_d%27Hiroshima_i_Nagasaki',sitelinks:93,desc:'Els Estats Units llancen dues bombes atòmiques sobre el Japó. Única vegada que s’han fet servir armes nuclears en una guerra.'},
+  {id:'dretshumans',name:'Declaració Universal dels Drets Humans',year:1948,wiki:'https://ca.wikipedia.org/wiki/Declaraci%C3%B3_Universal_dels_Drets_Humans',sitelinks:178,desc:'Tres anys després de la guerra, l’ONU escriu què es deu a qualsevol persona pel simple fet de ser-ho.'},
+  {id:'adn',name:'Descoberta de l’estructura de l’ADN',year:1953,wiki:'https://ca.wikipedia.org/wiki/%C3%80cid_desoxiribonucleic',sitelinks:175,desc:'Watson i Crick descriuen la doble hèlix, amb les dades de Rosalind Franklin. Darwin havia explicat l’evolució; això n’explica el mecanisme.'},
+  {id:'apollo11',name:'Apollo 11',year:1969,wiki:'https://ca.wikipedia.org/wiki/Apollo_11',sitelinks:106,desc:'Armstrong i Aldrin caminen per la Lluna. Sis-cents milions de persones ho miren en directe.'},
+  {id:'constitucio78',name:'Constitució espanyola de 1978',year:1978,wiki:'https://ca.wikipedia.org/wiki/Constituci%C3%B3_espanyola_de_1978',sitelinks:39,desc:'Tanca la dictadura i estableix el marc polític en què viu el país des d’aleshores.'},
   {id:'murberlin',name:'Caiguda del Mur de Berlín',year:1989,wiki:'https://ca.wikipedia.org/wiki/Caiguda_del_mur_de_Berl%C3%ADn',sitelinks:38,desc:'El novembre de 1989 cau el símbol de la Guerra Freda, obrint camí a la reunificació alemanya i la dissolució del bloc soviètic.'},
+  {id:'fiurss',name:'Dissolució de la Unió Soviètica',year:1991,wiki:'https://ca.wikipedia.org/wiki/Dissoluci%C3%B3_de_la_Uni%C3%B3_Sovi%C3%A8tica',sitelinks:85,desc:'L’URSS s’acaba i la Guerra Freda amb ella. El món deixa de tenir dos centres.'},
+  {id:'www',name:'Naixement de la World Wide Web',year:1991,wiki:'https://ca.wikipedia.org/wiki/World_Wide_Web',sitelinks:154,desc:'Tim Berners-Lee obre el primer web al públic. El canvi més gran en la difusió del saber des de la impremta.'},
+  {id:'s11',name:'Atemptats de l’11 de setembre',year:2001,wiki:'https://ca.wikipedia.org/wiki/Atemptats_de_l%2711_de_setembre_de_2001',sitelinks:149,desc:'Dos avions tomben les torres de Nova York. Marca l’inici polític del segle XXI.'},
+  {id:'covid',name:'Inici de la pandèmia de COVID-19',year:2020,wiki:'https://ca.wikipedia.org/wiki/Pand%C3%A8mia_de_COVID-19',sitelinks:170,desc:'Un coronavirus atura mig món durant mesos. El primer esdeveniment global viscut en directe per tothom.'},
   {id:'delt',name:'Fundació de DELT',year:2022,wiki:'https://deltproject.com/',sitelinks:0,imp:8,desc:'Projecte sense ànim de lucre que combina intel·ligència artificial i drons per ajudar organitzacions de conservació de fauna, sobretot la detecció i protecció de tortugues marines davant la caça furtiva.'}
 ];
 // Importance metric is DERIVED from sitelinks/imp and never persisted. Compute it ONCE here at load
@@ -1097,14 +1368,14 @@ EVENTS.forEach(ev=>{ev._m=metricOf(ev);});
 })();
 const PEOPLE=[
   {id:'socrates',wd:'Q913',name:'Sòcrates',birth:-470,death:-399,cats:['philosophy'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Sòcrates',desc:'Filòsof atenès que no deixà escrits propis, considerat el pare de la filosofia occidental i del mètode socràtic.'},
-  {id:'plato',wd:'Q859',name:'Plató',birth:-428,death:-348,cats:['philosophy'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Plató',desc:'Filòsof atenès, deixeble de Sòcrates i fundador de l\u0027Acadèmia, autor de La República.'},
+  {id:'plato',wd:'Q859',name:'Plató',birth:-428,death:-348,cats:['philosophy'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Plató',desc:'Filòsof atenès, deixeble de Sòcrates i fundador de l\u0027Acadèmia, autor de La República.',approx:'aprox'},
   {id:'diogenes',wd:'Q59180',name:'Diògenes',birth:-412,death:-323,cats:['philosophy'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Diògenes_de_Sinope',desc:'Filòsof cínic grec, conegut per la seva vida austera i les seves crítiques mordaces a les convencions socials.'},
   {id:'aristotil',wd:'Q868',name:'Aristòtil',birth:-384,death:-322,cats:['philosophy','science'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Aristòtil',desc:'Filòsof i científic grec, deixeble de Plató i tutor d\u0027Alexandre Magne, sistematitzà gran part del saber antic.'},
   {id:'alexandre',wd:'Q8409',name:'Alexandre el Gran',birth:-356,death:-323,cats:['politics'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Alexandre_el_Gran',desc:'Rei de Macedònia, conquerí un dels imperis més vastos de l\u0027antiguitat abans dels 33 anys.'},
   {id:'epicur',wd:'Q43216',name:'Epicur',birth:-341,death:-270,cats:['philosophy'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Epicur',desc:'Filòsof grec, fundador de l\u0027epicureisme, defensor d\u0027una vida senzilla orientada a la recerca del plaer moderat.'},
   {id:'cesar',wd:'Q1048',name:'Juli Cèsar',birth:-100,death:-44,cats:['politics'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Juli_Cèsar',desc:'General i dictador romà, la seva figura marca la transició de la República a l\u0027Imperi Romà.'},
   {id:'cleopatra',wd:'Q635',name:'Cleopatra',birth:-69,death:-30,cats:['politics'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Cleòpatra',desc:'Última reina ptolemaica d\u0027Egipte, coneguda per les seves aliances amb Juli Cèsar i Marc Antoni.'},
-  {id:'jesucrist',wd:'Q302',name:'Jesucrist',birth:-4,death:30,cats:['religion'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Jesús_de_Natzaret',desc:'Predicador i mestre jueu del segle I, figura central del cristianisme i un dels personatges més influents de la civilització occidental.'},
+  {id:'jesucrist',wd:'Q302',name:'Jesucrist',birth:-4,death:30,cats:['religion'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Jesús_de_Natzaret',desc:'Predicador i mestre jueu del segle I, figura central del cristianisme i un dels personatges més influents de la civilització occidental.',approx:'aprox_disputada'},
   {id:'gengiskhan',wd:'Q720',name:'Gengis Khan',birth:1162,death:1227,cats:['politics'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Gengis_Khan',desc:'Fundador i primer gran khan de l\u0027Imperi Mongol, el més extens de la història en superfície contínua.'},
   {id:'gutenberg',wd:'Q8958',name:'Johannes Gutenberg',birth:1400,death:1468,cats:['science'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Johannes_Gutenberg',desc:'Impressor alemany, inventor de la impremta de tipus mòbils, revolucionà la difusió del coneixement a Europa.'},
   {id:'joanadarc',wd:'Q7226',name:'Joana d\u0027Arc',birth:1412,death:1431,cats:['politics'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Joana_d\u0027Arc',desc:'Pagesa francesa que liderà l\u0027exèrcit reial durant la Guerra dels Cent Anys, cremada per heretgia i després canonitzada.'},
@@ -1153,7 +1424,7 @@ const PEOPLE=[
   {id:'ricardcordelleo',wd:'Q42305',name:'Ricard Cor de Lleó',birth:1157,death:1199,cats:['literature'],wiki:'https://ca.wikipedia.org/wiki/Ricard_Cor_de_Lle%C3%B3',desc:'Rei d’Anglaterra de 1189 a 1199'},
   {id:'isabelidecastella',wd:'Q45859',name:'Isabel I de Castella',birth:1451,death:1504,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/Isabel_I_de_Castella',desc:'Reina de Castella i Lleó de 1474 a 1504'},
   {id:'annefrank',wd:'Q4583',name:'Anne Frank',birth:1929,death:1945,cats:['literature'],wiki:'https://ca.wikipedia.org/wiki/Anne_Frank',desc:'Diarista nascuda a Alemanya i víctima de l’Holocaust'},
-  {id:'plutarcdequeronea',wd:'Q41523',name:'Plutarc de Queronea',birth:40,death:120,cats:['philosophy'],wiki:'https://ca.wikipedia.org/wiki/Plutarc_de_Queronea',desc:'Historiador grec'},
+  {id:'plutarcdequeronea',wd:'Q41523',name:'Plutarc de Queronea',birth:40,death:120,cats:['philosophy'],wiki:'https://ca.wikipedia.org/wiki/Plutarc_de_Queronea',desc:'Historiador grec',approx:'aprox_disputada'},
   {id:'marcaureli',wd:'Q1430',name:'Marc Aureli',birth:121,death:180,cats:['philosophy'],wiki:'https://ca.wikipedia.org/wiki/Marc_Aureli',desc:'Filòsof estoic, emperador romà del 161 al 180'},
   {id:'virginiawoolf',wd:'Q40909',name:'Virginia Woolf',birth:1882,death:1941,cats:['literature'],wiki:'https://ca.wikipedia.org/wiki/Virginia_Woolf',desc:'Escriptora modernista anglesa'},
   {id:'franzkafka',wd:'Q905',name:'Franz Kafka',birth:1883,death:1924,cats:['literature'],wiki:'https://ca.wikipedia.org/wiki/Franz_Kafka',desc:'Escriptor austríac i txec'},
@@ -1162,6 +1433,33 @@ const PEOPLE=[
   {id:'ramsesii',wd:'Q1523',name:'Ramsès II',birth:-1303,death:-1213,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/Rams%C3%A8s_II',desc:'Tercer faraó de la dinastia XIX d’Egipte'},
   {id:'erasmederotterdam',wd:'Q43499',name:'Erasme de Rotterdam',birth:1466,death:1536,cats:['philosophy'],wiki:'https://ca.wikipedia.org/wiki/Erasme_de_Rotterdam',desc:'Humanista i teòleg neerlandès'},
   {id:'paracels',wd:'Q83428',name:'Paracels',birth:1493,death:1541,cats:['science'],wiki:'https://ca.wikipedia.org/wiki/Paracels',desc:'Metge, filòsof, teòleg i alquimista suís'},
+  {id:'atila',wd:'Q36724',name:'Àtila',birth:406,death:453,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/%C3%80tila',desc:'Governant de l’Imperi Hunnic del 434 al 453',approx:'aprox_disputada'},
+  {id:'elcid',wd:'Q43958',name:'El Cid',birth:1048,death:1099,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/El_Cid',desc:'Cavaller castellà del segle XI'},
+  {id:'moctezumaii',wd:'Q141791',name:'Moctezuma II',birth:1466,death:1520,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/Moctezuma_II',desc:'Emperador de l’Imperi Asteca de 1502 o 1503 a 1520'},
+  {id:'homer',wd:'Q6691',name:'Homer',birth:-750,death:-650,cats:['literature'],wiki:'https://ca.wikipedia.org/wiki/Homer',desc:'Poeta de l’Antiga Grècia',approx:'aprox'},
+  {id:'cristoforcolom',wd:'Q7322',name:'Cristòfor Colom',birth:1451,death:1506,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/Crist%C3%B2for_Colom',desc:'Navegant i explorador genovès'},
+  {id:'martiluter',wd:'Q9554',name:'Martí Luter',birth:1483,death:1546,cats:['religion'],wiki:'https://ca.wikipedia.org/wiki/Mart%C3%AD_Luter',desc:'Sacerdot, teòleg i escriptor alemany'},
+  {id:'renedescartes',wd:'Q9191',name:'René Descartes',birth:1596,death:1650,cats:['philosophy','science'],wiki:'https://ca.wikipedia.org/wiki/Ren%C3%A9_Descartes',desc:'Polímata francès'},
+  {id:'immanuelkant',wd:'Q9312',name:'Immanuel Kant',birth:1724,death:1804,cats:['philosophy'],wiki:'https://ca.wikipedia.org/wiki/Immanuel_Kant',desc:'Filòsof prussià'},
+  {id:'adamsmith',wd:'Q9381',name:'Adam Smith',birth:1723,death:1790,cats:['philosophy','politics'],wiki:'https://ca.wikipedia.org/wiki/Adam_Smith',desc:'Economista i filòsof escocès'},
+  {id:'alexanderfleming',wd:'Q37064',name:'Alexander Fleming',birth:1881,death:1955,cats:['science'],wiki:'https://ca.wikipedia.org/wiki/Alexander_Fleming',desc:'Metge i microbiòleg escocès'},
+  {id:'louispasteur',wd:'Q529',name:'Louis Pasteur',birth:1822,death:1895,cats:['science'],wiki:'https://ca.wikipedia.org/wiki/Louis_Pasteur',desc:'Microbiòleg i químic francès'},
+  {id:'fiodordostoievski',wd:'Q991',name:'Fiódor Dostoievski',birth:1821,death:1881,cats:['literature'],wiki:'https://ca.wikipedia.org/wiki/Fi%C3%B3dor_Dostoievski',desc:'Novel·lista rus'},
+  {id:'friedrichwilhelmnietzs',wd:'Q9358',name:'Friedrich Wilhelm Nietzsche',birth:1844,death:1900,cats:['philosophy'],wiki:'https://ca.wikipedia.org/wiki/Friedrich_Wilhelm_Nietzsche',desc:'Filòsof alemany'},
+  {id:'sigmundfreud',wd:'Q9215',name:'Sigmund Freud',birth:1856,death:1939,cats:['science','philosophy'],wiki:'https://ca.wikipedia.org/wiki/Sigmund_Freud',desc:'Neuròleg austríac i fundador de la psicoanàlisi'},
+  {id:'nikolatesla',wd:'Q9036',name:'Nikola Tesla',birth:1856,death:1943,cats:['science'],wiki:'https://ca.wikipedia.org/wiki/Nikola_Tesla',desc:'Enginyer i inventor serbo-estatunidenc'},
+  {id:'winstonchurchill',wd:'Q8016',name:'Winston Churchill',birth:1874,death:1965,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/Winston_Churchill',desc:'61è i 63è Primer ministre del Regne Unit'},
+  {id:'adolfhitler',wd:'Q352',name:'Adolf Hitler',birth:1889,death:1945,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/Adolf_Hitler',desc:'Dictador d’Alemanya de 1933 a 1945'},
+  {id:'maozedong',wd:'Q5816',name:'Mao Zedong',birth:1893,death:1976,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/Mao_Zedong',desc:'Líder de la Xina de 1949 a 1976'},
+  {id:'alanturing',wd:'Q7251',name:'Alan Turing',birth:1912,death:1954,cats:['science'],wiki:'https://ca.wikipedia.org/wiki/Alan_Turing',desc:'Pioner de la informàtica anglès'},
+  {id:'simonedebeauvoir',wd:'Q7197',name:'Simone de Beauvoir',birth:1908,death:1986,cats:['philosophy','literature'],wiki:'https://ca.wikipedia.org/wiki/Simone_de_Beauvoir',desc:'Filòsofa, teòrica social i activista francesa'},
+  {id:'charleschaplin',wd:'Q882',name:'Charles Chaplin',birth:1889,death:1977,cats:['cinema'],wiki:'https://ca.wikipedia.org/wiki/Charles_Chaplin',desc:'Actor i cineasta anglès'},
+  {id:'safo',wd:'Q17892',name:'Safo de Lesbos',birth:-630,death:-570,cats:['literature'],gender:'F',wiki:'https://ca.wikipedia.org/wiki/Safo_de_Lesbos',desc:'Poeta grega de l’illa de Lesbos, la veu lírica més admirada de l’antiguitat; només se’n conserven fragments.',approx:'aprox_disputada'},
+  {id:'laozi',wd:'Q9333',name:'Laozi',birth:-604,death:-531,cats:['philosophy'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Laozi',desc:'Pensador xinès a qui s’atribueix el Dao De Jing i la fundació del taoisme; potser un personatge compost.',approx:'aprox_disputada'},
+  {id:'seneca',wd:'Q2054',name:'Sèneca',birth:-4,death:65,cats:['philosophy','literature'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Luci_Anneu_S%C3%A8neca',desc:'Filòsof estoic i tutor de Neró, que acabà ordenant-li el suïcidi; les seves cartes són el manual estoic més llegit.',approx:'aprox'},
+  {id:'buda',wd:'Q9441',name:'Buda',birth:-563,death:-483,cats:['religion'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Buda_Gautama',desc:'Príncep de Kapilavastu que renuncià a la seva posició i fundà el budisme; les seves dates són tradicionals i discutides.',approx:'aprox_disputada'},
+  {id:'mahavira',wd:'Q9422',name:'Mahavira',birth:-599,death:-527,cats:['religion'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Mahavira',desc:'Mestre jainista, l’últim dels vint-i-quatre tirthankares; contemporani del Buda i del Confuci.',approx:'disputada'},
+  {id:'johancruyff',wd:'Q17163',name:'Johan Cruyff',birth:1947,death:2016,cats:['sport'],wiki:'https://ca.wikipedia.org/wiki/Johan_Cruyff',desc:'Jugador i entrenador de futbol neerlandès'},
 ];
 
 // ============================================================
@@ -1286,10 +1584,10 @@ function doUndo(){
 
 let toastTimer=null;
 let _settleT;   // ha d'anar aquí dalt: personBar() crida scheduleSettle() durant el boot de ?person=, molt abans de [12]
-// Amplada del canvas tapada per la barra lateral (0 si està minimitzada). Serveix per centrar
-// overlays/toasts respecte el canvas VISIBLE i no respecte la pantalla sencera.
-function canvasBlind(){return 0;}
-function showToast(msg){const bl=canvasBlind();toastEl.style.left='calc(50% + '+(bl/2)+'px)';toastEl.textContent=msg;toastEl.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('on'),2200);}
+// El toast es centra NOMES pel CSS (.toast{left:50%;transform:translateX(-50%)}). Abans hi
+// havia un canvasBlind() per descomptar l'amplada de la barra lateral, pero des que la barra
+// va passar a estar en flux (canvi #41) ja no en tapa gens: retornava 0 sempre.
+function showToast(msg){toastEl.textContent=msg;toastEl.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('on'),2200);}
 const WIP=()=>showToast(t('toast_wip'));
 function hideDetail(){$('#detail').classList.remove('open');detailBackdrop.classList.remove('open');}
 $('#detailBackdrop').addEventListener('click',()=>{hideDetail();state.selected=null;state.selectedEvent=null;state.selectedColl=null;render();});
@@ -1307,6 +1605,11 @@ const totalW=()=>(YEAR_MAX-YEAR_MIN)*pxPerYear;    // full canvas width px
 
 const NOCAT_COLOR='#4FB0A6';                        // people with no category at all
 const hasCat=p=>Array.isArray(p.cats)&&p.cats.length>0;
+// Nota d'incertesa: la dada nomes guarda un CODI i el text viu al diccionari — es crom d'UI,
+// no contingut d'autor, i aixi es tradueix sol. Tres valors i prou; qualsevol altre no pinta
+// res (t() d'una clau que no existeix torna '' i deixaria una caixa buida).
+const APPROX_CODIS=['aprox','disputada','aprox_disputada'];
+const approxText=p=>(p&&APPROX_CODIS.indexOf(p.approx)>=0)?t('cro_date_'+p.approx):'';
 const stripeBg=(cols,seg)=>cols.length<2?cols[0]:`repeating-linear-gradient(135deg, ${cols.map((c,i)=>`${c} ${i*seg}px ${(i+1)*seg}px`).join(', ')})`;
 const barBg=p=>hasCat(p)?stripeBg(p.cats.map(a=>CAT_COLORS[a]),14):NOCAT_COLOR;   // two categories → diagonal stripes
 const swatchBg=p=>hasCat(p)?stripeBg(p.cats.map(a=>CAT_COLORS[a]),7):NOCAT_COLOR;
@@ -1325,8 +1628,12 @@ const guessCats=desc=>{if(!desc)return[];const d=desc.toLowerCase(),a=[];
   if(/filòsof|filósofo|philosopher/.test(d))a.push('philosophy');
   if(/compositor|composer|músic|music|cantant|cantante|singer|cantautor|songwriter|guitarr|pianist|violinist|violoncel|trompetist|trumpet|saxofon|saxophon|percussion|drummer|rapper|raper|jazz|òpera|soprano|orquestra|orchestra/.test(d))a.push('music');   // només hi havia compositor: ni músic, ni cantant, ni cap instrumentista
   if(/escriptor|escritor|writer|poeta|poet|dramaturgo|dramaturg|novel·lista|novelist/.test(d))a.push('literature');
-  if(/físic|physicist|matemàtic|mathematician|astrònom|astronomer|científic|scientist|naturalista|naturalist/.test(d))a.push('science');
-  if(/polític|político|politician|politique|rei|king|emperador|emperor|dictador|dictator|militar|military|president|independentista|ministre|minister/.test(d))a.push('politics');
+  // Hi havia nomes fisica, matematiques, astronomia i «cientific/naturalista»: ni quimica ni
+  // res de biomedicina. Amb la col·leccio dels Nobel es va veure de cop —23 de 49 sortien
+  // sense categoria, i entre ells sis quimics i set metges/biolegs. Mateix forat que el cas
+  // Verdi: arreglat al dash.py i encara viu aqui.
+  if(/físic|physicist|matemàtic|mathematician|astrònom|astronomer|científic|scientist|naturalista|naturalist|químic|chemist|bioquímic|biochemist|metge|metgessa|physician|fisiòleg|physiologist|biòleg|biòloga|biologist|zoòleg|zoologist|bacteriòleg|bacteriologist|neuròleg|neurologist|neurocientífic|neuroscientist|genetista|geneticist|farmacòleg|pharmacologist|immunòleg|immunologist|geòleg|geologist|enginyer|engineer|informàtic|computer scientist/.test(d))a.push('science');
+  if(/polític|político|politician|politique|rei|king|emperador|emperor|dictador|dictator|militar|military|president|independentista|ministre|minister|activista|activist|estadista|statesman|diplomàtic|diplomat|líder|leader|canceller|chancellor|secretari general|secretary-general|politòleg|political scientist/.test(d))a.push('politics');
   if(/pintor|painter|escultor|sculptor/.test(d))a.push('painting');
   // ⚠️ Aqui «actor» SOL sí que val, i al mapa de P106 (dash.py) NO: son dos senyals diferents.
   // A P106 en Shakespeare porta l’ocupacio «actor» (Q33999) i li encolomaria cinema; la seva
@@ -1334,7 +1641,7 @@ const guessCats=desc=>{if(!desc)return[];const d=desc.toLowerCase(),a=[];
   // tambe aqui deixava fora tothom descrit nomes com a «actor»: en Tom Cruise sortia sense
   // categoria. El teatre s’aparta amb el guard de sota, no amagant la paraula.
   if(/cineasta|director[a]? de cinema|film director|filmmaker|guionista|screenwriter|actor|actriu|film producer|productor[a]? de cinema|director[a]? de fotografia|cinematographer|cinema/.test(d) && !/teatre|teatral/.test(d))a.push('cinema');
-  if(/profeta|prophet|religiós|religious|sant|saint/.test(d))a.push('religion');
+  if(/profeta|prophet|religiós|religious|religiosa|sant|saint|monja|nun|monjo|monk|bisbe|bishop|papa |pope|rabí|rabbi|imam|teòleg|theologian|missioner|missionary/.test(d))a.push('religion');
   if(/futbolista|jugador de futbol|footballer|football player|tennista|tenista|tennis player|jugador de tennis|basquetbol|bàsquet|baloncestista|basketball|boxejador|boxeador|boxer|atleta|athlete|track and field|velocista|sprinter|gimnasta|gymnast|nedador|nadador|swimmer|ciclista|cyclist|golfista|golfer|automobilista|racing driver|motorcycle racer/.test(d)
      ||/(pilot|piloto)[^,;.]{0,18}(autom|motocicl)/.test(d))a.push('sport');   // "pilot" sol cauria sobre aviadors, així que exigim context de motor
   return [...new Set(a)].slice(0,2);};   // 0–2 per persona: una descripció tipus "filòsof, escriptor i naturalista" dispararia tres regles
@@ -1511,11 +1818,21 @@ function render(){
   // _row. So zooming only ADDS names — no flicker (a name never toggles on/off at a fixed zoom) and no
   // up/down swap. A searched/selected event is FORCED to show at any zoom (explicit intent beats the gate).
   const FADE_PX=22, DOT_GAP=7;   // finestra de fade més curta = aparició més brusca en fer zoom
+  // Un event sense nom es pinta com a punt, però NO des del primer moment: només quan el zoom
+  // ja arriba a la meitat del que li cal per guanyar el nom. Amb 32 events, sense aquesta porta
+  // la vista per defecte tenia 11 noms i 21 punts —el canvas quedava clapejat de boles mig
+  // esvaïdes—; amb la porta en queden 3, i les que hi són volen dir «amplia una mica més i
+  // això tindrà nom». Pujar el valor cap a 1 les fa desaparèixer del tot.
+  const DOT_PPY_RATIO=0.5;
   evPlaced.forEach(o=>{o.labeled=(o.ev.id===state.selectedEvent)||pxPerYear>=o.ev._revealPPY;o.row=o.ev._row;});
   // Importance order (stable) drives the dot de-dup so dense stretches don't smear into a solid bar of dots.
   const byImp=[...evPlaced].sort((a,b)=>b.ev._m-a.ev._m||a.left-b.left);
   const dotX=byImp.filter(o=>o.labeled).map(o=>o.left);
-  byImp.forEach(o=>{if(o.labeled){o.showDot=true;return;}if(dotX.some(dx=>Math.abs(dx-o.left)<DOT_GAP)){o.showDot=false;}else{o.showDot=true;dotX.push(o.left);}});
+  byImp.forEach(o=>{
+    if(o.labeled){o.showDot=true;return;}
+    if(pxPerYear<o.ev._revealPPY*DOT_PPY_RATIO){o.showDot=false;return;}   // encara massa lluny del seu zoom
+    if(dotX.some(dx=>Math.abs(dx-o.left)<DOT_GAP)){o.showDot=false;}else{o.showDot=true;dotX.push(o.left);}
+  });
   // Organic fade: a name that only just cleared its row-neighbours comes in dim and brightens with zoom.
   const rowLbl=[[],[]];
   evPlaced.forEach(o=>{if(o.labeled)rowLbl[o.row].push(o);});
@@ -1639,7 +1956,8 @@ function openDetail(p){
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   d.innerHTML=`<button class="close" id="closeDetail" aria-label="${t('close')}">×</button>
     <h2>${esc(L(p.name))}</h2>
-    <div class="dhead"><span class="life">${fmtY(p.birth)} – ${isAlive(p)?t('cro_present'):fmtY(p.death)}</span>${hasCat(p)?p.cats.map(a=>`<span class="chip"><span class="swatch" style="background:${CAT_COLORS[a]}"></span>${t('cat_'+a)}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${t('cat_none')}</span>`}<span class="chip era">${eraLabel(p.birth)}</span></div>
+    <div class="dhead"><span class="life">${approxText(p)?'~':''}${fmtY(p.birth)} – ${isAlive(p)?t('cro_present'):fmtY(p.death)}</span>${hasCat(p)?p.cats.map(a=>`<span class="chip"><span class="swatch" style="background:${CAT_COLORS[a]}"></span>${t('cat_'+a)}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${t('cat_none')}</span>`}<span class="chip era">${eraLabel(p.birth)}</span></div>
+    ${approxText(p)?`<div class="approx">${esc(approxText(p))}</div>`:''}
     <div class="desc">${esc(L(p.desc))}</div>
     <div class="actions">
       <button class="dbtn" data-act="context">${t('cro_context')}</button>
@@ -1872,7 +2190,17 @@ const wdCache=new Map();   // cau de resultats de cerca per terme normalitzat (n
 const dropKnown=arr=>{const inDB=new Set(PEOPLE.map(p=>p.wd).filter(Boolean));return arr.filter(w=>!inDB.has(w.qid));};   // del cau, treu qui ja tinguem/afegit
 
 const localRow=p=>{const added=state.present.has(p.id);return `<div class="row ${added?'disabled':''}" data-add="${p.id}"><span class="swatch" style="background:${swatchBg(p)}"></span>${esc(L(p.name))}<span class="yr">${added?t('cro_already_added'):p.birth+'\u2013'+(p.death==null?'':p.death)}</span></div>`;};
-const wdRow=w=>`<div class="row" data-wd="${w.qid}"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${w.name}<span class="yr">${w.birth}${w.death!=null?'\u2013'+w.death:'\u2013'}</span></div>`;
+// Igual que localRow/#onview/la fitxa: el nom ve de Wikidata (public i editable) i va a
+// innerHTML, aixi que passa per esc(). Era l'unica fila que no ho feia. birth/death son
+// numeros (parseInt a wdYear), no cal.
+// Dues formes: la normal i la de qui existeix pero no te dates. Aquesta darrera va
+// DESACTIVADA (no es pot afegir a una linia de temps algu de qui no saps quan va viure)
+// pero es mostra igualment, amb el motiu i un enllac per completar-ho a Wikidata. Amagar-lo
+// era pitjor: la cerca deia «cap persona trobada» quan la persona hi era.
+const wdExtIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3H3a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1v-3"/><path d="M10 2h4v4M14 2L8 8"/></svg>';
+const wdRow=w=>w.nodate
+  ? `<div class="row disabled nodate" title="${esc(t('cro_wd_nodate_why'))}"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${esc(w.name)}<span class="yr">${t('cro_wd_nodate')}</span><a class="extlink" href="${esc(w.article)}" target="_blank" rel="noopener" title="${esc(t('cro_wd_nodate_cta'))}" onclick="event.stopPropagation()">${wdExtIco}</a></div>`
+  : `<div class="row" data-wd="${esc(w.qid)}"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${esc(w.name)}<span class="yr">${w.birth}${w.death!=null?'\u2013'+w.death:'\u2013'}</span></div>`;
 const evSearchRow=ev=>`<div class="row evrow" data-evsearch="${ev.id}"><span class="swatch" style="background:var(--eventc)"></span>${L(ev.name)}<span class="yr">${fmtY(ev.year)}</span></div>`;
 function renderDropdown(){
   const term=deaccent(q.value.trim());
@@ -1907,7 +2235,7 @@ function runSearch(){
   renderDropdown();
 }
 // keyboard navigation over both local and Wikidata rows
-const searchRows=()=>[...results.querySelectorAll('.row[data-add]:not(.disabled),.row[data-evsearch],.row[data-wd]')];
+const searchRows=()=>[...results.querySelectorAll('.row[data-add]:not(.disabled),.row[data-evsearch],.row[data-wd]:not(.disabled)')];
 function highlightSearch(i){
   const rows=searchRows();
   results.querySelectorAll('.row.active').forEach(r=>r.classList.remove('active'));
@@ -1947,9 +2275,24 @@ function wdParse(data,keepKnown){
   const binds=(data&&data.results&&data.results.bindings)||[], seen=new Set(), inDB=new Set(PEOPLE.map(p=>p.wd).filter(Boolean)), out=[];
   for(const b of binds){
     const qid=b.item.value.split('/').pop();
-    if(seen.has(qid)||(!keepKnown&&inDB.has(qid))||!b.birth)continue;   // dedup vs DB (excepte en refresc de dades que ja tenim); need a birth year to place it
+    if(seen.has(qid)||(!keepKnown&&inDB.has(qid)))continue;
+    // ⚠️ No n'hi ha prou de mirar si ?birth existeix. Quan a Wikidata la declaracio PREFERIDA
+    // de P569 es «valor desconegut», la SPARQL no deixa el camp buit: hi lliga un NODE EN BLANC
+    // (una URI .well-known/genid/...). Es truthy, aixi que passava el guard, i despres wdYear()
+    // en treia null: al desplegable hi sortia «null–» i la fila, en clicar-la, no feia res
+    // (addWikidataPerson surt amb birth==null). Passa amb Zaratustra, les dates del qual son
+    // disputades de debo. Per tant es parseja PRIMER i es descarta si no en surt un any.
+    const by=b.birth?wdYear(b.birth.value):null;
     seen.add(qid);
-    out.push({qid,name:(b.itemLabel&&b.itemLabel.value)||qid,desc:(b.itemDescription&&b.itemDescription.value)||'',birth:wdYear(b.birth.value),death:b.death?wdYear(b.death.value):null,article:(b.article&&b.article.value)||('https://www.wikidata.org/wiki/'+qid)});
+    // Sense any no es pot posar a la linia, pero SI que existeix: es marca i el desplegable
+    // el mostra desactivat amb el motiu. Descartar-lo aqui feia que la cerca digues «cap
+    // persona trobada», que es fals. Els altres consumidors (toggleCollection, refreshStale)
+    // ja salten els birth==null pel seu compte, aixi que no se'ls cola ningu sense any.
+    if(by==null){out.push({qid,name:(b.itemLabel&&b.itemLabel.value)||qid,desc:(b.itemDescription&&b.itemDescription.value)||'',birth:null,death:null,nodate:true,article:'https://www.wikidata.org/wiki/'+qid});continue;}
+    // La mort pot venir pel mateix cami; si no es parseja queda null, que al nostre model vol
+    // dir VIU. Es assumible perque son casos rars, pero si algun dia cal distingir «viu» de
+    // «data desconeguda» el model de PEOPLE ha de canviar, no aixo.
+    out.push({qid,name:(b.itemLabel&&b.itemLabel.value)||qid,desc:(b.itemDescription&&b.itemDescription.value)||'',birth:by,death:b.death?wdYear(b.death.value):null,article:(b.article&&b.article.value)||('https://www.wikidata.org/wiki/'+qid)});
   }
   return out;
 }
@@ -1963,6 +2306,14 @@ function wdFetch(url,opts){
 // resolve a list of Q-ids to {name,dates,article} via a fast VALUES query (optionally keep only humans)
 function byIds(ids,humansOnly,keepKnown){
   if(!ids.length)return Promise.resolve([]);
+  // Tots els ids van en UNA consulta, i Wikidata la talla per llargada d'URL (414 URI Too
+  // Long a partir d'uns 9KB). Amb WD_IDS_MAX no hi arribem mai; si algu passa una llista
+  // mes llarga val mes perdre'n la cua —i dir-ho— que rebre un 414 i quedar-se sense res.
+  if(ids.length>WD_IDS_MAX){
+    console.error('[HB] byIds() ha rebut '+ids.length+' Q-ids i el maxim per consulta es '
+      +WD_IDS_MAX+': es demanen nomes els '+WD_IDS_MAX+' primers. Cal partir la peticio.');
+    ids=ids.slice(0,WD_IDS_MAX);
+  }
   const query=`SELECT ?item ?itemLabel ?itemDescription ?birth ?death ?article WHERE { VALUES ?item { ${ids.map(q=>'wd:'+q).join(' ')} } ${humansOnly?'?item wdt:P31 wd:Q5.':''} ${wdFields()} }`;
   return wdFetch(WDQ+encodeURIComponent(query),{headers:{Accept:'application/sparql-results+json'}}).then(data=>{
     const byq={};wdParse(data,keepKnown).forEach(x=>byq[x.qid]=x);
@@ -2137,7 +2488,11 @@ function panToPerson(id){
   const p=PEOPLE.find(x=>x.id===id);
   if(!p||p._startX==null)return;
   const cx=p._startX+p._pillW/2;            // horizontal centre of the bar
-  const cy=barsTop()+p._lane*34+13;         // vertical centre (rowH 34, bar 26 → +13)
+  // ROW_H i BAR_H, NO 34 i 13: applyMetrics() els baixa a 25 i 20 quan la pantalla es
+  // baixa (max-height:560px — el mobil en horitzontal), i amb els numeros clavats el
+  // scroll requeia lane*9+13-BAR_H/2 px per sota. Mesurat amb la BD sencera: 165px al
+  // carril 18, mes de mitja pantalla — el personatge que demanaves centrar quedava fora.
+  const cy=barsTop()+p._lane*ROW_H+BAR_H/2;
   scroll.scrollTo({left:cx-scroll.clientWidth/2,top:cy-scroll.clientHeight/2,behavior:'smooth'});
 }
 // Flash a bar so it's easy to spot among others.
@@ -2166,9 +2521,13 @@ function focusEvent(id){
 }
 
 // Remove a person from the canvas (same as the × in "A la vista"). Seed-pinned people can't be removed.
-function removePerson(id){
+// opts.batch: NO fa pushUndo ni render, i els deixa a qui crida. Es per treure diverses
+// persones d'un sol gest (la ✕ del jocBar): un clic ha de ser UNA passa de «Desfés» i un
+// sol repintat, no una passa i un repintat per nom.
+function removePerson(id,opts){
   if(SEED_PINNED.includes(id))return;
-  pushUndo('cro_act_remove',{name:L((PEOPLE.find(p=>p.id===id)||{}).name)});
+  const batch=!!(opts&&opts.batch);
+  if(!batch)pushUndo('cro_act_remove',{name:L((PEOPLE.find(p=>p.id===id)||{}).name)});
   state.pinned.delete(id);
   clearFitLatch();
   if(state.focus===id)state.focus=null;   // si treus l'original, ja no hi ha focus fixat a dalt
@@ -2180,7 +2539,7 @@ function removePerson(id){
     const _wd=(PEOPLE.find(x=>x.id===id)||{}).wd;
     if(PERSON_QID&&(_wd===PERSON_QID||id==='wd_'+PERSON_QID))history.replaceState(null,'',location.pathname);
     pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;}
-  scheduleSave();render();
+  scheduleSave();if(!batch)render();
 }
 // "Show context": add every SEED-DB person whose life overlaps, or is within 20 years of, this person.
 // DETERMINISTA: recorre només la BD original (salta els `_session` baixats de Wikidata/localStorage),
@@ -2722,7 +3081,7 @@ function personBar(estat,nom,descripcio,imgUrl,source,personId){
 }
 
 const pYear=t=>{const m=/^([+-])0*(\d+)-/.exec(String(t||''));if(!m)return null;const y=parseInt(m[2],10);return m[1]==='-'?-y:y;};
-const pLbl=o=>o?((o.ca||o.es||o.en||{}).value||null):null;
+const pLbl=o=>o?((o.ca||o.es||o.en||o.mul||{}).value||null):null;   // o.mul: veure wdLangs()
 
 function personFromEntity(e){
   const cl=e.claims||{};
@@ -2823,11 +3182,14 @@ function jocBar(items,source){
   back.title=t('cro_pb_remove_items');
   back.setAttribute('aria-label',t('cro_pb_remove_items'));
   back.addEventListener('click',function(){
+    // Una sola foto per tot el clic, i un sol render al final: amb removePerson() normal
+    // cada nom empenyia la seva passa i calien 5 «Desfés» per desfer un clic (mesurat).
+    pushUndo('cro_act_remove_items',{n:items.length});
     items.forEach(function(item){
-      if(item.kind==='person'){removePerson(item.id);}
+      if(item.kind==='person'){removePerson(item.id,{batch:true});}
       else if(item.kind==='event'&&state.selectedEvent===item.ev.id){state.selectedEvent=null;}
     });
-    if(items.some(function(item){return item.kind==='event';})) render();
+    render();
     pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;
   });
   pbar.appendChild(back);
