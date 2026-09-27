@@ -4,6 +4,19 @@ on:
   push:
     branches: [main]
 
+# El desplegament a Pages necessita escriure-hi i demanar un token OIDC. La resta de feines
+# nomes llegeixen el codi. Posar-ho a dalt val per a totes.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Nomes un desplegament a la vegada, i SENSE cancel·lar el que ja corre: si es cancel·la a
+# mitges, Pages es pot quedar amb un desplegament penjat.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   structural:
     name: Checks estructurals
@@ -227,3 +240,35 @@ jobs:
           name: playwright-report-${{ matrix.project }}
           path: playwright-report/
           retention-days: 7
+
+  # ⚠️ Fins al 27/09/2026 Pages anava en mode «deploy from a branch», i aixo volia dir que el
+  # web s'actualitzava a CADA push, sense esperar ningu. Comprovat en directe: el
+  # pages-build-deployment acabava ABANS que el CI comences els tests, aixi que un CI vermell
+  # ho haurien sabut d'una cosa que ja feia minuts que era publica.
+  # Ara el desplegament es una feina mes i depen de les altres: si els tests peten, el web es
+  # queda amb l'ultima versio bona. El preu son els ~2 minuts que triga el CI.
+  deploy:
+    name: Publica a GitHub Pages
+    needs: [structural, playwright]
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # ⚠️ Aixo NO hi era abans i cal. El mode antic passava per Jekyll, que ignora les
+      # carpetes que comencen per «_», i per aixo _tools/ donava 404 al web. Desplegant per
+      # Actions no hi ha Jekyll i es publicaria TOT: el dashboard i el dash.py inclosos.
+      # S'hi afegeix tests/ i la configuracio, que tampoc pinten res al web (el
+      # tests/smoke.spec.js si que s'hi servia, i no ha de servir-s'hi).
+      - name: Treu del paquet el que no es el web
+        run: rm -rf _tools tests .github playwright.config.js package.json package-lock.json node_modules
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
