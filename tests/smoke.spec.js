@@ -66,8 +66,19 @@ async function openSidebar(page) {
 // abans l'avís de girar, que en portrait se superposa al canvas i intercepta el clic.
 async function openCfgPopup(page) {
   await dismissRotateHint(page);
+  // Idempotent a proposit: el popup es un modal amb scrim a tota la pantalla, o sigui que si ja
+  // es obert, el #cfgBtn li queda A SOTA i tornar-hi a clicar falla per clic interceptat.
+  if (await page.locator('#cfgwrap').isVisible()) return;
   await page.locator('#cfgBtn').click();
   await expect(page.locator('#cfgwrap')).toBeVisible();
+}
+
+// El popup del mobil tapa la pantalla sencera, topbar inclosa. Qualsevol test que despres hagi
+// de tocar #reset, la cerca o el canvas l'ha de tancar abans. A l'escriptori no fa res.
+async function closeCfgPopup(page) {
+  if (!(await page.locator('#cfgwrap').isVisible())) return;
+  await page.locator('#cfgClose').click();
+  await expect(page.locator('#cfgwrap')).toBeHidden();
 }
 
 // Deixa `#collections` a la vista, pel camí que toqui a cada entorn: al mòbil les seccions
@@ -358,6 +369,152 @@ test.describe('Col·leccions', () => {
     await btn.click();
     await expect(page.locator('#barsLayer .bar')).toHaveCount(0, { timeout: 3000 });
     await expect(btn).not.toHaveClass(/on/);
+  });
+});
+
+// ─── Col·leccions pròpies (les que crea l'usuari) ───────────────────────────
+// Aquesta part no tenia cap test: es va publicar el 27/09/2026 despres de tres setmanes en
+// una branca que el CI no mirava. Els selectors son els de debo, compro­vats al navegador.
+//   panell:  [data-newcol] · #newcolin (Enter desa) · #newcolinc (inclou els de la vista)
+//            [data-col="myN"] · [data-collopt="myN"] (obre la fitxa)
+//   fitxa:   #collname (nom) · .collrm[data-q=QID] (treu un membre) · [data-act="del"]
+//   desades: localStorage['historiabasica.mycolls'] = [{id,name,vis,wds}]
+const MYCOLL = 'historiabasica.mycolls';
+
+async function mevesDesades(page) {
+  return page.evaluate((k) => JSON.parse(localStorage.getItem(k) || '[]'), MYCOLL);
+}
+
+// Obre el formulari i crea una col·leccio. `inclou` marca el checkbox dels de la vista.
+async function creaColleccio(page, nom, inclou = false) {
+  await page.locator('[data-newcol]').click();
+  const inp = page.locator('#newcolin');
+  await expect(inp).toBeVisible();
+  if (inclou) await page.locator('#newcolinc').click();   // clic de debo: .checked=true no dispara el handler
+  await inp.fill(nom);
+  await inp.press('Enter');
+}
+
+test.describe('Col·leccions pròpies', () => {
+  test('se\'n pot crear una encara que la vista sigui buida', async ({ page }) => {
+    await freshIndex(page);
+    await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await openCollectionsSection(page);
+    await expect(page.locator('#barsLayer .bar')).toHaveCount(0);   // vista buida a proposit
+    await creaColleccio(page, 'Buida de prova');
+
+    const btn = page.locator('[data-col^="my"]');
+    await expect(btn).toHaveCount(1);
+    await expect(btn.locator('.cname')).toHaveText('Buida de prova');
+    await expect(btn.locator('.cnt')).toHaveText('0');
+    expect(await mevesDesades(page)).toHaveLength(1);
+  });
+
+  test('sense nom no se\'n desa cap', async ({ page }) => {
+    await freshIndex(page);
+    await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await openCollectionsSection(page);
+    await creaColleccio(page, '   ');   // nomes espais
+
+    await expect(page.locator('[data-col^="my"]')).toHaveCount(0);
+    expect(await mevesDesades(page)).toHaveLength(0);
+  });
+
+  test('«inclou els de la vista» hi posa els que hi ha', async ({ page }) => {
+    await freshIndex(page);
+    await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await addFirstPerson(page);
+    await expect(page.locator('#barsLayer .bar')).toHaveCount(1);
+    await openCollectionsSection(page);
+    await creaColleccio(page, 'Amb la vista', true);
+
+    await expect(page.locator('[data-col^="my"] .cnt')).toHaveText('1');
+    const desades = await mevesDesades(page);
+    expect(desades[0].wds).toHaveLength(1);
+  });
+
+  test('sobreviu a una recàrrega', async ({ page }) => {
+    await freshIndex(page);
+    await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await openCollectionsSection(page);
+    await creaColleccio(page, 'Persistent');
+    await expect(page.locator('[data-col^="my"]')).toHaveCount(1);
+
+    await page.reload();
+    await openCollectionsSection(page);
+    await expect(page.locator('[data-col^="my"] .cname')).toHaveText('Persistent');
+  });
+
+  test('canviar-li el nom des de la fitxa es desa', async ({ page }) => {
+    await freshIndex(page);
+    await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await openCollectionsSection(page);
+    await creaColleccio(page, 'Nom vell');
+    await page.locator('[data-collopt^="my"]').click();
+
+    // Es teclega de debo en comptes de fer fill(): el nom d'una colleccio que JA existeix no es
+    // desa a cada lletra sino amb el `change` en sortir del camp (Enter fa blur). El `change`
+    // nomes salta si el camp esta marcat com a brut, cosa que assignar-li el valor no fa.
+    const camp = page.locator('#collname');
+    await expect(camp).toBeVisible();
+    await camp.selectText();
+    await camp.pressSequentially('Nom nou');
+    await camp.press('Enter');
+    await page.locator('#closeDetail').click();
+    await openCollectionsSection(page);   // al mobil, obrir la fitxa ha tancat el popup
+
+    await expect(page.locator('[data-col^="my"] .cname')).toHaveText('Nom nou');
+    const desades = await mevesDesades(page);
+    expect(desades[0].name).toBe('Nom nou');
+  });
+
+  test('treure un membre des de la fitxa baixa el compte', async ({ page }) => {
+    await freshIndex(page);
+    await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await addFirstPerson(page);
+    await openCollectionsSection(page);
+    await creaColleccio(page, 'Per buidar', true);
+    await expect(page.locator('[data-col^="my"] .cnt')).toHaveText('1');
+
+    await page.locator('[data-collopt^="my"]').click();
+    await expect(page.locator('#detail.open .collrm')).toHaveCount(1);
+    await page.locator('#detail.open .collrm').first().click();
+    await page.locator('#closeDetail').click();
+    await openCollectionsSection(page);   // al mobil, obrir la fitxa ha tancat el popup
+
+    await expect(page.locator('[data-col^="my"] .cnt')).toHaveText('0');
+  });
+
+  test('esborrar-la la treu del panell i de les desades', async ({ page }) => {
+    await freshIndex(page);
+    await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await openCollectionsSection(page);
+    await creaColleccio(page, 'Per esborrar');
+    await expect(page.locator('[data-col^="my"]')).toHaveCount(1);
+
+    await page.locator('[data-collopt^="my"]').click();
+    await page.locator('#detail.open [data-act="del"]').click();
+
+    await expect(page.locator('[data-col^="my"]')).toHaveCount(0);
+    expect(await mevesDesades(page)).toHaveLength(0);
+  });
+
+  test('activar-la pinta les seves barres', async ({ page }) => {
+    await freshIndex(page);
+    await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await addFirstPerson(page);
+    await openCollectionsSection(page);
+    await creaColleccio(page, 'Per activar', true);
+
+    // Es treu qui hi ha a la vista i s'activa la col·leccio: ha de tornar a sortir
+    await closeCfgPopup(page);   // el #reset viu a la topbar, que al mobil queda sota el scrim
+    await page.locator('#reset').click();
+    await expect(page.locator('#barsLayer .bar')).toHaveCount(0);
+    await openCollectionsSection(page);
+    const btn = page.locator('[data-col^="my"]');
+    await btn.click();
+    await expect(page.locator('#barsLayer .bar')).toHaveCount(1, { timeout: 5000 });
+    await expect(btn).toHaveClass(/on/);
   });
 });
 
