@@ -2037,6 +2037,11 @@ function openNewCollCard(qid){
 
 function drawCollCard(nom,wds,cid,url){
   const draft=!cid;
+  // Al mobil les colleccions nomes viuen dins del popup de configuracio (z-index 70) i la
+  // fitxa es una safata de z-index 50: sense tancar-lo, tocar el ⋮ obria una fitxa que
+  // quedava DARRERE del vel, amb el nom i el boto d'esborrar inaccessibles. Nomes en treia
+  // el nas per sota. A l'escriptori el popup ja esta tancat i la crida no fa res.
+  closeCfg();
   state.selected=null;state.selectedEvent=null;state.selectedColl=cid;
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   const files=wds.map(q=>{
@@ -2409,7 +2414,9 @@ $('#onview').addEventListener('mousemove',e=>{   // same styled tooltip as the b
 $('#onview').addEventListener('mouseleave',hideBartip);
 $('#onview').addEventListener('click',e=>{
   const g=e.target.closest('[data-goto]');
-  if(g){revealPerson(g.getAttribute('data-goto'));return;}   // clicking a name pans it to the centre
+  // Es tanca el popup del mobil abans de desplaçar: el pan i el parpelleig passen al canvas,
+  // que hi queda a sota, i el flash s'hauria acabat abans que l'usuari el tanques a ma.
+  if(g){closeCfg();revealPerson(g.getAttribute('data-goto'));return;}   // clicking a name pans it to the centre
   const ac=e.target.closest('[data-addc]');
   if(ac){e.stopPropagation();openAddToColl(ac.getAttribute('data-addc'),ac);return;}
   if(e.target.closest('[data-report]')){WIP();return;}
