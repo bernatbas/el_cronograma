@@ -27,6 +27,25 @@ REPO = os.path.dirname(HERE)
 PORT = 7777
 HOST = "127.0.0.1"
 
+# El dashboard ESCRIU i COMMITTEJA (BD, personatge del dia, backlog), i fins ara seguia la
+# branca que hi hagues posada sense dir-ho. El 27/09/2026 aixo va deixar dues persones a la
+# branca `colleccions`, que anava 42 commits enrere: ni sortien a GitHub —alla es mira `main`
+# per defecte— ni engegaven el CI, que nomes escolta `main`.
+#
+# Ara: el selector de branca del dashboard deixa canviar-hi, pero fora de BRANCA_BD les
+# escriptures es refusen. Es a proposit que NO committegem a `main` des d'una altra branca:
+# deixaria el fitxer de disc i el committejat divergits, que es menys control i no mes.
+BRANCA_BD = "main"
+
+# Els POST que toquen fitxers del repo. /api/push i /api/shutdown no hi son: empenyer la
+# branca on ets es legitim, i aturar el servidor no escriu res.
+POST_QUE_ESCRIUEN = (
+    "/api/db/add", "/api/db/regen",
+    "/api/pinned/set", "/api/pinned/del",
+    "/api/backlog/add", "/api/backlog/close",
+    "/api/backlog/delete", "/api/backlog/annotate",
+)
+
 # Endpoints previstos pero encara no implementats. El frontend els demana,
 # rep 501 i ensenya la seccio en mode demo amb el badge de pendent.
 NOT_YET = ()
@@ -647,6 +666,41 @@ def gen_data_js():
 # git
 # --------------------------------------------------------------------------
 
+def branca_actual():
+    ok, b = run(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+    return b if ok else "?"
+
+
+def branques():
+    """Branques LOCALS i quina hi ha posada. Nomes locals: canviar a una de remota crearia
+    una branca nova sense voler, i aixo no es feina d'un desplegable."""
+    ok, out = run(["git", "for-each-ref", "--format=%(refname:short)", "refs/heads/"])
+    llista = [l.strip() for l in out.splitlines() if l.strip()] if ok else []
+    actual = branca_actual()
+    return {"branques": llista, "actual": actual,
+            "esperada": BRANCA_BD, "ok": actual == BRANCA_BD}
+
+
+def canvia_branca(nom):
+    """Checkout, amb dues condicions: que la branca existeixi i que l'arbre estigui NET.
+    Amb canvis sense committejar el checkout se'ls emporta a l'altra branca o falla a
+    mitges, i des d'un desplegable aixo seria una sorpresa lletja."""
+    nom = (nom or "").strip()
+    info = branques()
+    if nom not in info["branques"]:
+        return False, "La branca «%s» no existeix en local" % nom
+    if nom == info["actual"]:
+        return True, "Ja eres a «%s»" % nom
+    ok, porcelain = run(["git", "status", "--porcelain"])
+    if ok and [l for l in porcelain.splitlines() if l.strip()]:
+        return False, ("Tens canvis sense committejar. Committeja'ls o desa'ls "
+                       "abans de canviar de branca.")
+    ok, out = run(["git", "checkout", nom])
+    if not ok:
+        return False, "No s'ha pogut canviar: %s" % out[:160]
+    return True, "Ara ets a «%s»" % nom
+
+
 def git_state():
     ok, branch = run(["git", "rev-parse", "--abbrev-ref", "HEAD"])
     branch = branch if ok else "?"
@@ -663,7 +717,8 @@ def git_state():
         if len(parts) == 2:
             behind, ahead = int(parts[0]), int(parts[1])
 
-    return {"branch": branch, "dirty": dirty, "ahead": ahead, "behind": behind}
+    return {"branch": branch, "dirty": dirty, "ahead": ahead, "behind": behind,
+            "branch_ok": branch == BRANCA_BD, "branca_bd": BRANCA_BD}
 
 
 # --------------------------------------------------------------------------
@@ -1504,6 +1559,13 @@ class Handler(BaseHTTPRequestHandler):
             self._json(403, {"ok": False, "msg": "Peticio rebutjada (%s)" % why})
             return
         path = self.path.split("?", 1)[0]
+        if path in POST_QUE_ESCRIUEN:
+            b = branca_actual()
+            if b != BRANCA_BD:
+                self._json(409, {"ok": False, "wrong_branch": True, "branch": b,
+                                 "msg": "Ets a «%s». La BD nomes s'edita des de «%s»."
+                                        % (b, BRANCA_BD)})
+                return
         length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(length) if length > 0 else b""
         try:
@@ -1555,6 +1617,11 @@ class Handler(BaseHTTPRequestHandler):
                 return
             ok, msg = backlog_annotate(title, note)
             self._json(200 if ok else 404, {"ok": ok, "msg": msg})
+            return
+
+        if path == "/api/branch/switch":
+            ok, msg = canvia_branca(data.get("branch", ""))
+            self._json(200 if ok else 409, {"ok": ok, "msg": msg, **branques()})
             return
 
         if path == "/api/db/resolve":
@@ -1632,6 +1699,10 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(200, lint_state())
             except Exception as e:
                 self._json(500, {"error": str(e)})
+            return
+
+        if path == "/api/branches":
+            self._json(200, branques())
             return
 
         if path == "/api/backlog":

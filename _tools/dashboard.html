@@ -56,6 +56,16 @@ section{margin-bottom:26px;scroll-margin-top:66px}
 .shead{display:flex;align-items:center;gap:9px;margin:0 0 11px}
 .shead h2{margin:0;font-size:14px;font-weight:600;letter-spacing:.01em}
 .shead .hint{font-size:12px;color:var(--text3);margin-left:auto}
+/* El selector de branca. Abans era un retol gris i passava desapercebut: dues persones van
+   acabar a la branca equivocada sense que res ho digues. Ara es un CONTROL, i quan no ets a
+   la branca de la BD es posa en vermell i surt l'avis al costat. */
+.shead .branchwrap{margin-left:auto;display:flex;align-items:center;gap:8px}
+.shead #branch{font:inherit;font-size:12px;color:var(--text3);background:var(--card);
+  border:1px solid var(--line);border-radius:6px;padding:3px 8px;cursor:pointer;max-width:220px}
+.shead #branch:hover{border-color:var(--text3)}
+.shead #branch.bad{color:#B23A2E;border-color:#B23A2E;background:#FDF3F1;font-weight:600}
+.shead .branchwarn{font-size:12px;color:#B23A2E}
+.shead .branchwarn[hidden]{display:none}
 .shead .hint.sub{margin-left:0}   /* subtitol enganxat al titol, no a la dreta */
 .pend{font-size:11px;color:var(--warn);background:var(--warn-bg);border:1px solid #EFD9AE;padding:2px 8px;border-radius:var(--r-pill);letter-spacing:.02em}
 .card{background:var(--canvas);border:1px solid var(--border);border-radius:12px}
@@ -225,7 +235,7 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
   <div class="tabpane" id="tab-general">
 
   <section id="estat">
-    <div class="shead"><h2>Estat</h2><span class="hint" id="branch">—</span></div>
+    <div class="shead"><h2>Estat</h2><span class="branchwrap"><select id="branch" title="Branca del repositori"></select><span class="branchwarn" id="branchwarn" hidden></span></span></div>
     <div class="stats" id="stats"></div>
   </section>
 
@@ -454,12 +464,64 @@ const DEMO = {
   ]
 };
 
+/* ---------- branca ---------- */
+// Quan no som a la branca de la BD, el servidor rebutja les escriptures amb 409 i
+// wrong_branch:true. Aqui la interficie ho diu ABANS, que val mes no deixar omplir un
+// formulari per res.
+let BRANCA = {branques:[], actual:"?", esperada:"main", ok:true};
+
+function renderBranques(s, live){
+  const sel = el("branch");
+  if(!live){ sel.innerHTML = '<option>dades d\'exemple</option>'; sel.disabled = true; return; }
+  sel.disabled = false;
+  const llista = (BRANCA.branques && BRANCA.branques.length) ? BRANCA.branques : [s.branch];
+  sel.innerHTML = llista.map(function(b){
+    return '<option value="'+b+'"'+(b===s.branch?' selected':'')+'>'+b+'</option>';
+  }).join("");
+  const malament = s.branch_ok === false;
+  sel.classList.toggle("bad", malament);
+  const w = el("branchwarn");
+  w.hidden = !malament;
+  w.textContent = malament ? "la BD no s'edita des d'aquí" : "";
+  bloquejaEscriptures(malament, s.branch, s.branca_bd || "main");
+}
+
+// Desactiva tot el que escriu al repo. No amaga res: el motiu ha de quedar a la vista.
+function bloquejaEscriptures(bloquejat, branca, esperada){
+  ["dcommit","dgo"].forEach(function(id){ const e=el(id); if(e) e.disabled = bloquejat; });
+  document.querySelectorAll(".bkact, #bknou, .pinbtn").forEach(function(e){ e.disabled = bloquejat; });
+  const t = bloquejat ? ("Ets a «"+branca+"». Canvia a «"+esperada+"» per editar la BD.") : "";
+  ["dcommit","dgo","bknou"].forEach(function(id){ const e=el(id); if(e) e.title = t; });
+}
+
+async function carregaBranques(){
+  // api() embolcalla la resposta en {live, data}: el que volem es el data.
+  try{
+    const r = await api("/branches");
+    if(r && r.live && r.data) BRANCA = r.data;
+  }catch(e){}
+}
+
+async function canviaBranca(nom){
+  const sel = el("branch");
+  sel.disabled = true;
+  try{
+    const r = await fetch("/api/branch/switch", {method:"POST",
+      headers:{"Content-Type":"application/json"}, body:JSON.stringify({branch:nom})});
+    const d = await r.json();
+    if(!d.ok){ showError(d.msg); }
+    if(d.branques) BRANCA = d;
+    await boot();
+  }catch(e){ showError("No s'ha pogut canviar de branca."); }
+  finally{ sel.disabled = false; }
+}
+
 /* ---------- estat ---------- */
 function ciClass(c){ return c==="success" ? "ok" : (c==="failure" ? "bad" : "warn"); }
 function ciLabel(c){ return c==="success" ? "Verd" : (c==="failure" ? "Vermell" : "En curs"); }
 
 function renderStats(s, live){
-  el("branch").textContent = live ? (s.branch + (OFFLINE?"":"")) : "dades d'exemple";
+  renderBranques(s, live);
   el("push").disabled = !live || s.ahead === 0;
   const gitPend = s.dirty + s.ahead;
   const gitCls = gitPend===0 ? "ok" : (s.ahead>0 ? "warn" : "warn");
@@ -914,6 +976,7 @@ async function boot(){
     api("/status"), api("/backlog"), api("/pinned"), api("/lint"), api("/density"),
     api("/anniversaries")
   ]);
+  await carregaBranques();   // el selector ha d'estar ple abans de renderStats()
 
   el("offline").hidden = !OFFLINE;
 
@@ -1069,6 +1132,7 @@ DF.forEach(function(f){
   });
 });
 el("dcommit").addEventListener("click", dbCommit);
+el("branch").addEventListener("change", function(){ canviaBranca(this.value); });
 DF.forEach(function(id){
   el(id).addEventListener("input", renderPreview);
   el(id).addEventListener("change", renderPreview);
