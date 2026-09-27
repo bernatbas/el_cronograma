@@ -859,6 +859,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Erasme_de_Rotterdam",
       "desc": "Humanista i teòleg neerlandès"
+    },
+    {
+      "id": "paracels",
+      "wd": "Q83428",
+      "name": "Paracels",
+      "birth": 1493,
+      "death": 1541,
+      "cats": [
+        "science"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Paracels",
+      "desc": "Metge, filòsof, teòleg i alquimista suís"
     }
   ],
   "EVENTS": [
