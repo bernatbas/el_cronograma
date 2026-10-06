@@ -1,6 +1,6 @@
 /* =============================================================================
  * data.js — SNAPSHOT PROVISIONAL de la base de dades del cronograma.
- * Generat automàticament des d'index.html el 2026-09-27.
+ * Generat automàticament des d'index.html el 2026-10-06.
  *
  * ⚠️  PROVISIONAL: això és una CÒPIA de les dades que ara viuen a index.html,
  *     feta per facilitar el testeig local (file://). Quan existeixi la DB externa,
@@ -35,7 +35,7 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Plató",
-      "desc": "Filòsof atenès, deixeble de Sòcrates i fundador de l'Acadèmia, autor de La República.",
+      "desc": "Filòsof atenès, deixeble de Sòcrates i fundador de l’Acadèmia, autor de La República.",
       "approx": "aprox"
     },
     {
@@ -63,7 +63,7 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Aristòtil",
-      "desc": "Filòsof i científic grec, deixeble de Plató i tutor d'Alexandre Magne, sistematitzà gran part del saber antic."
+      "desc": "Filòsof i científic grec, deixeble de Plató i tutor d’Alexandre Magne, sistematitzà gran part del saber antic."
     },
     {
       "id": "alexandre",
@@ -76,7 +76,7 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Alexandre_el_Gran",
-      "desc": "Rei de Macedònia, conquerí un dels imperis més vastos de l'antiguitat abans dels 33 anys."
+      "desc": "Rei de Macedònia, conquerí un dels imperis més vastos de l’antiguitat abans dels 33 anys."
     },
     {
       "id": "epicur",
@@ -89,7 +89,7 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Epicur",
-      "desc": "Filòsof grec, fundador de l'epicureisme, defensor d'una vida senzilla orientada a la recerca del plaer moderat."
+      "desc": "Filòsof grec, fundador de l’epicureisme, defensor d’una vida senzilla orientada a la recerca del plaer moderat."
     },
     {
       "id": "cesar",
@@ -102,7 +102,7 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Juli_Cèsar",
-      "desc": "General i dictador romà, la seva figura marca la transició de la República a l'Imperi Romà."
+      "desc": "General i dictador romà, la seva figura marca la transició de la República a l’Imperi Romà."
     },
     {
       "id": "cleopatra",
@@ -115,7 +115,7 @@ window.HB_DATA = {
       ],
       "gender": "F",
       "wiki": "https://ca.wikipedia.org/wiki/Cleòpatra",
-      "desc": "Última reina ptolemaica d'Egipte, coneguda per les seves aliances amb Juli Cèsar i Marc Antoni."
+      "desc": "Última reina ptolemaica d’Egipte, coneguda per les seves aliances amb Juli Cèsar i Marc Antoni."
     },
     {
       "id": "jesucrist",
@@ -142,7 +142,7 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Gengis_Khan",
-      "desc": "Fundador i primer gran khan de l'Imperi Mongol, el més extens de la història en superfície contínua."
+      "desc": "Fundador i primer gran khan de l’Imperi Mongol, el més extens de la història en superfície contínua."
     },
     {
       "id": "gutenberg",
@@ -160,7 +160,7 @@ window.HB_DATA = {
     {
       "id": "joanadarc",
       "wd": "Q7226",
-      "name": "Joana d'Arc",
+      "name": "Joana d’Arc",
       "birth": 1412,
       "death": 1431,
       "cats": [
@@ -168,7 +168,7 @@ window.HB_DATA = {
       ],
       "gender": "F",
       "wiki": "https://ca.wikipedia.org/wiki/Joana_d'Arc",
-      "desc": "Pagesa francesa que liderà l'exèrcit reial durant la Guerra dels Cent Anys, cremada per heretgia i després canonitzada."
+      "desc": "Pagesa francesa que liderà l’exèrcit reial durant la Guerra dels Cent Anys, cremada per heretgia i després canonitzada."
     },
     {
       "id": "davinci",
@@ -182,7 +182,7 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Leonardo_da_Vinci",
-      "desc": "Pintor i polímata del Renaixement, autor de la Gioconda i precursor de la ciència i l'enginyeria modernes."
+      "desc": "Pintor i polímata del Renaixement, autor de la Gioconda i precursor de la ciència i l’enginyeria modernes."
     },
     {
       "id": "copernic",
@@ -195,7 +195,7 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Nicolau_Copèrnic",
-      "desc": "Astrònom polonès, formulà el model heliocèntric que revolucionà la comprensió de l'univers."
+      "desc": "Astrònom polonès, formulà el model heliocèntric que revolucionà la comprensió de l’univers."
     },
     {
       "id": "miquelangel",
@@ -221,7 +221,7 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Galileu_Galilei",
-      "desc": "Astrònom i físic italià, defensà l'heliocentrisme i és considerat el pare del mètode científic modern."
+      "desc": "Astrònom i físic italià, defensà l’heliocentrisme i és considerat el pare del mètode científic modern."
     },
     {
       "id": "shakespeare",
@@ -274,7 +274,7 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Voltaire",
-      "desc": "Filòsof i escriptor il·lustrat, defensor de la llibertat d'expressió."
+      "desc": "Filòsof i escriptor il·lustrat, defensor de la llibertat d’expressió."
     },
     {
       "id": "franklin",
@@ -328,7 +328,7 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Napoleó_Bonaparte",
-      "desc": "Militar i emperador francès, dominà gran part d'Europa i deixà una petjada duradora en el dret i la política modernes."
+      "desc": "Militar i emperador francès, dominà gran part d’Europa i deixà una petjada duradora en el dret i la política modernes."
     },
     {
       "id": "austen",
@@ -354,7 +354,7 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Charles_Darwin",
-      "desc": "Naturalista, formulà la teoria de l'evolució per selecció natural."
+      "desc": "Naturalista, formulà la teoria de l’evolució per selecció natural."
     },
     {
       "id": "lovelace",
@@ -381,7 +381,7 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Karl_Marx",
-      "desc": "Filòsof i economista, autor d'El Capital i pare del pensament comunista modern."
+      "desc": "Filòsof i economista, autor d’El Capital i pare del pensament comunista modern."
     },
     {
       "id": "vangogh",
@@ -394,7 +394,7 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Vincent_van_Gogh",
-      "desc": "Pintor postimpressionista holandès, autor de La nit estrellada, incomprès en vida i icona de l'art modern."
+      "desc": "Pintor postimpressionista holandès, autor de La nit estrellada, incomprès en vida i icona de l’art modern."
     },
     {
       "id": "curie",
@@ -446,7 +446,7 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Pablo_Picasso",
-      "desc": "Pintor i escultor, cofundador del cubisme i l'artista més influent del segle XX."
+      "desc": "Pintor i escultor, cofundador del cubisme i l’artista més influent del segle XX."
     },
     {
       "id": "frida",
@@ -472,7 +472,7 @@ window.HB_DATA = {
       ],
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Nelson_Mandela",
-      "desc": "Líder sud-africà, empresonat 27 anys per lluitar contra l'apartheid, president i símbol de reconciliació."
+      "desc": "Líder sud-africà, empresonat 27 anys per lluitar contra l’apartheid, president i símbol de reconciliació."
     },
     {
       "id": "bernat",
@@ -1239,6 +1239,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Johan_Cruyff",
       "desc": "Jugador i entrenador de futbol neerlandès"
+    },
+    {
+      "id": "charlesdickens",
+      "wd": "Q5686",
+      "name": "Charles Dickens",
+      "birth": 1812,
+      "death": 1870,
+      "cats": [
+        "literature"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Charles_Dickens",
+      "desc": "Escriptor anglès"
     }
   ],
   "EVENTS": [
@@ -1336,7 +1349,7 @@ window.HB_DATA = {
       "year": 1517,
       "wiki": "https://ca.wikipedia.org/wiki/Reforma_protestant",
       "sitelinks": 154,
-      "desc": "Martí Luter publica les 95 tesis, trencant la unitat del cristianisme occidental i desencadenant guerres religioses arreu d'Europa."
+      "desc": "Martí Luter publica les 95 tesis, trencant la unitat del cristianisme occidental i desencadenant guerres religioses arreu d’Europa."
     },
     {
       "id": "revolindust",
