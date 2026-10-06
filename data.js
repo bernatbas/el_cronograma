@@ -1252,6 +1252,17 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Charles_Dickens",
       "desc": "Escriptor anglès"
+    },
+    {
+      "id": "edwardsmith",
+      "wd": "Q215786",
+      "name": "Edward Smith",
+      "birth": 1850,
+      "death": 1912,
+      "cats": [],
+      "gender": "",
+      "wiki": "https://es.wikipedia.org/wiki/Edward_Smith",
+      "desc": "Capità del Titanic"
     }
   ],
   "EVENTS": [
