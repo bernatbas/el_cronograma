@@ -1,6 +1,6 @@
 /* =============================================================================
  * data.js — SNAPSHOT PROVISIONAL de la base de dades del cronograma.
- * Generat automàticament des d'index.html el 2026-10-06.
+ * Generat automàticament des d'index.html el 2026-10-09.
  *
  * ⚠️  PROVISIONAL: això és una CÒPIA de les dades que ara viuen a index.html,
  *     feta per facilitar el testeig local (file://). Quan existeixi la DB externa,
@@ -1263,6 +1263,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://es.wikipedia.org/wiki/Edward_Smith",
       "desc": "Capità del Titanic"
+    },
+    {
+      "id": "franciscodegoyaylucien",
+      "wd": "Q5432",
+      "name": "Francisco de Goya y Lucientes",
+      "birth": 1746,
+      "death": 1828,
+      "cats": [
+        "painting"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Francisco_de_Goya_y_Lucientes",
+      "desc": "Pintor i gravador aragonés"
     }
   ],
   "EVENTS": [
