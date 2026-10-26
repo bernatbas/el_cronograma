@@ -1417,6 +1417,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Abraham_Lincoln",
       "desc": "16è president dels Estats Units d’Amèrica"
+    },
+    {
+      "id": "georgewashington",
+      "wd": "Q23",
+      "name": "George Washington",
+      "birth": 1732,
+      "death": 1799,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/George_Washington",
+      "desc": "1r President dels Estats Units"
     }
   ],
   "EVENTS": [
