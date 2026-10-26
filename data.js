@@ -1456,6 +1456,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://es.wikipedia.org/wiki/Gilberto_Gil",
       "desc": "Cantant, Brasil"
+    },
+    {
+      "id": "juanluisguerra",
+      "wd": "Q158753",
+      "name": "Juan Luis Guerra",
+      "birth": 1957,
+      "death": null,
+      "cats": [
+        "music"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Juan_Luis_Guerra",
+      "desc": "Cantautor i productor musical dominicà"
     }
   ],
   "EVENTS": [
