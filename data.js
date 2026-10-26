@@ -1339,6 +1339,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Antonio_Vivaldi",
       "desc": "Compositor i violinista italià"
+    },
+    {
+      "id": "henrimatisse",
+      "wd": "Q5589",
+      "name": "Henri Matisse",
+      "birth": 1869,
+      "death": 1954,
+      "cats": [
+        "painting"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Henri_Matisse",
+      "desc": "Artista francès"
     }
   ],
   "EVENTS": [
