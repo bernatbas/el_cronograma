@@ -1522,6 +1522,19 @@ window.HB_DATA = {
       "wiki": "https://ca.wikipedia.org/wiki/Hatxepsut",
       "desc": "Faraona d’Egipte del 1479 al 1458 aC",
       "approx": "disputada"
+    },
+    {
+      "id": "felipeiideespana",
+      "wd": "Q34417",
+      "name": "Felipe II de España",
+      "birth": 1527,
+      "death": 1598,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://es.wikipedia.org/wiki/Felipe_II_de_Espa%C3%B1a",
+      "desc": "Rei d’Espanya de 1556 a 1598"
     }
   ],
   "EVENTS": [
