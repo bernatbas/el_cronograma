@@ -1326,6 +1326,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Paul_C%C3%A9zanne",
       "desc": "Pintor francès"
+    },
+    {
+      "id": "antoniovivaldi",
+      "wd": "Q1340",
+      "name": "Antonio Vivaldi",
+      "birth": 1678,
+      "death": 1741,
+      "cats": [
+        "music"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Antonio_Vivaldi",
+      "desc": "Compositor i violinista italià"
     }
   ],
   "EVENTS": [
