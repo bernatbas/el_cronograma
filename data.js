@@ -1404,6 +1404,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Llu%C3%ADs_XVI_de_Fran%C3%A7a",
       "desc": "Rei de França de 1774 a 1792"
+    },
+    {
+      "id": "abrahamlincoln",
+      "wd": "Q91",
+      "name": "Abraham Lincoln",
+      "birth": 1809,
+      "death": 1865,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Abraham_Lincoln",
+      "desc": "16è president dels Estats Units d’Amèrica"
     }
   ],
   "EVENTS": [
