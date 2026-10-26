@@ -1430,6 +1430,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/George_Washington",
       "desc": "1r President dels Estats Units"
+    },
+    {
+      "id": "mariaantonietadaustria",
+      "wd": "Q47365",
+      "name": "Maria Antonieta d’Àustria",
+      "birth": 1755,
+      "death": 1793,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Maria_Antonieta_d%27%C3%80ustria",
+      "desc": "Reina consort de França de 1774 a 1792"
     }
   ],
   "EVENTS": [
