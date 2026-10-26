@@ -1469,6 +1469,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Juan_Luis_Guerra",
       "desc": "Cantautor i productor musical dominicà"
+    },
+    {
+      "id": "rubenblades",
+      "wd": "Q474980",
+      "name": "Rubén Blades",
+      "birth": 1948,
+      "death": null,
+      "cats": [
+        "music"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Rub%C3%A9n_Blades",
+      "desc": "Cantant i actor panameny"
     }
   ],
   "EVENTS": [
