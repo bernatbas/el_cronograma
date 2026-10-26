@@ -1302,6 +1302,17 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Diego_Armando_Maradona",
       "desc": "Futbolista argentí"
+    },
+    {
+      "id": "antonigaudiicornet",
+      "wd": "Q25328",
+      "name": "Antoni Gaudí i Cornet",
+      "birth": 1852,
+      "death": 1926,
+      "cats": [],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Antoni_Gaud%C3%AD_i_Cornet",
+      "desc": "Arquitecte català"
     }
   ],
   "EVENTS": [
