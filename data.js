@@ -1508,6 +1508,20 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Nefertiti",
       "desc": "Gran esposa reial d’Akhenaton i reina d’Egipte"
+    },
+    {
+      "id": "hatxepsut",
+      "wd": "Q129234",
+      "name": "Hatxepsut",
+      "birth": -1507,
+      "death": -1458,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Hatxepsut",
+      "desc": "Faraona d’Egipte del 1479 al 1458 aC",
+      "approx": "disputada"
     }
   ],
   "EVENTS": [
