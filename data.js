@@ -1391,6 +1391,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Robert_Charlton",
       "desc": "Futbolista anglès"
+    },
+    {
+      "id": "lluisxvidefranca",
+      "wd": "Q7732",
+      "name": "Lluís XVI de França",
+      "birth": 1754,
+      "death": 1793,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Llu%C3%ADs_XVI_de_Fran%C3%A7a",
+      "desc": "Rei de França de 1774 a 1792"
     }
   ],
   "EVENTS": [
