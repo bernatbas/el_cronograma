@@ -1289,6 +1289,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Luis_de_Le%C3%B3n",
       "desc": "Poeta espanyol"
+    },
+    {
+      "id": "diegoarmandomaradona",
+      "wd": "Q17515",
+      "name": "Diego Armando Maradona",
+      "birth": 1960,
+      "death": 2020,
+      "cats": [
+        "sport"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Diego_Armando_Maradona",
+      "desc": "Futbolista argentí"
     }
   ],
   "EVENTS": [
