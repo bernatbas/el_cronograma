@@ -42,6 +42,7 @@ BRANCA_BD = "main"
 POST_QUE_ESCRIUEN = (
     "/api/db/add", "/api/db/regen",
     "/api/pinned/set", "/api/pinned/del",
+    "/api/conpinned/set", "/api/conpinned/del",
     "/api/backlog/add", "/api/backlog/close",
     "/api/backlog/delete", "/api/backlog/annotate",
 )
@@ -222,13 +223,17 @@ def _wd_year(claims, pid):
             break
     if best is None and vals:
         best = vals[0][1]
+    # ⚠️ QUATRE valors a TOTS els camins. Aquests dos tornaven 3 i qui crida fa
+    # `a, b, c, d = _wd_year(...)`: amb algu VIU (sense P570) petava amb un 500 i el
+    # dashboard deia «error del servidor», que semblava que Wikidata hagues caigut.
+    # Va passar desapercebut perque la BD gairebe no te gent viva i el CI no toca dash.py.
     if not best:
-        return None, None, 0
+        return None, None, 0, 0
     t = best["time"]
     try:
         year = int(t[1:5]) * (-1 if t[0] == "-" else 1)
     except Exception:
-        return None, None, 0
+        return None, None, 0, 0
     return year, best.get("precision"), len(anys), (max(anys) - min(anys)) if anys else 0
 
 
@@ -974,6 +979,146 @@ def pd_state():
 
 
 # --------------------------------------------------------------------------
+# Contemporanis (CON_PINNED, dins joc.html)
+# --------------------------------------------------------------------------
+# Germa del PD_PINNED de mes amunt, pero el valor NO es un QID pelat sino un objecte
+# {qid,name,by,dy,...}. La rao es del joc, no del dashboard: «Contemporanis» no beu de
+# Wikidata sino de la nostra BD i arrenca sincron, aixi que el pin s'ha de portar els anys
+# a sobre. Veure ESTRATEGIA_JOC.md.
+
+CON_BLOCK = re.compile(r"(const\s+CON_PINNED\s*=\s*\{)(.*?)(\n[ \t]*\};)", re.DOTALL)
+CON_LINE = re.compile(r"^\s*['\"](\d{4}-\d{2}-\d{2})['\"]\s*:\s*\{(.+)\}\s*,?\s*$")
+
+def _con_field(body, name):
+    m = re.search(r"\b%s\s*:\s*'((?:[^'\\]|\\.)*)'" % name, body)
+    return m.group(1) if m else ""
+
+def _con_num(body, name):
+    m = re.search(r"\b%s\s*:\s*(null|-?\d+)" % name, body)
+    if not m or m.group(1) == "null":
+        return None
+    return int(m.group(1))
+
+
+def parse_con_pinned():
+    """[{date, qid, name, by, dy, approx, desc}] ordenat per data. Nomes llegeix."""
+    src = read("joc.html")
+    m = CON_BLOCK.search(src)
+    if not m:
+        return []
+    out = []
+    for line in m.group(2).splitlines():
+        lm = CON_LINE.match(line)
+        if not lm:
+            continue
+        body = lm.group(2)
+        out.append({
+            "date": lm.group(1),
+            "qid": _con_field(body, "qid"),
+            "name": _con_field(body, "name"),
+            "by": _con_num(body, "by"),
+            "dy": _con_num(body, "dy"),
+            "approx": _con_field(body, "approx"),
+            "desc": _con_field(body, "desc"),
+        })
+    out.sort(key=lambda p: p["date"])
+    return out
+
+
+def _con_line(e, coma):
+    """Una entrada del calendari com a literal JS.
+
+    ⚠️ `name` i `desc` passen per _js_str(). El PD_PINNED nomes guarda un QID i mai va tenir
+    aquest problema, pero aqui hi ha TEXT dins de cometes simples: un apostrof recte de
+    «Joana d'Arc» tancaria la cadena i deixaria el joc en blanc.
+    """
+    dy = "null" if e.get("dy") is None else str(int(e["dy"]))
+    extra = ""
+    if e.get("approx"):
+        extra += ",approx:'%s'" % _js_str(e["approx"])
+    if e.get("desc"):
+        extra += ",desc:'%s'" % _js_str(e["desc"])
+    return "      '%s':{qid:'%s',name:'%s',by:%d,dy:%s%s}%s" % (
+        e["date"], e["qid"], _js_str(e["name"]), int(e["by"]), dy, extra, coma)
+
+
+def _con_write(entries, commit_msg):
+    """Reescriu el bloc CON_PINNED sencer, ordenat per data, i committeja joc.html."""
+    src = read("joc.html")
+    m = CON_BLOCK.search(src)
+    if not m:
+        return False, "No trobo el bloc CON_PINNED a joc.html"
+
+    entries = sorted(entries, key=lambda p: p["date"])
+    lines = [_con_line(e, "," if i < len(entries) - 1 else "")
+             for i, e in enumerate(entries)]
+    body = ("\n" + "\n".join(lines)) if lines else ""
+    new_src = src[:m.start()] + m.group(1) + body + m.group(3) + src[m.end():]
+
+    if "\ufffd" in new_src:
+        return False, "S'han colat caracters corromputs: no toco res"
+    # xarxa: el bloc reescrit ha de tornar a parsejar amb les entrades que toca
+    m2 = CON_BLOCK.search(new_src)
+    if not m2 or len([l for l in m2.group(2).splitlines() if CON_LINE.match(l)]) != len(entries):
+        return False, "El bloc reescrit no quadra: no toco res"
+
+    with open(os.path.join(REPO, "joc.html"), "w", encoding="utf-8") as f:
+        f.write(new_src)
+    ok, out = run(["git", "commit", "-m", commit_msg, "--", "joc.html"])
+    return True, ("Desat i committejat" if ok else "Desat (el commit ha fallat: %s)" % out[:120])
+
+
+def con_pinned_set(d):
+    """Clava (o reassigna) un dia del Contemporanis. {date, qid}.
+
+    Els anys i l'`approx` NO els envia el navegador: es resolen aqui des de Wikidata, com
+    a [1] DATA. Si depengues del formulari, l'`approx` quedaria a mitges i el guard
+    d'APX_GAP del joc seria fals.
+    """
+    ds = (d.get("date") or "").strip()
+    qid = (d.get("qid") or "").strip().upper()
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", ds):
+        return False, "Data invalida (cal AAAA-MM-DD)"
+    try:
+        datetime.strptime(ds, "%Y-%m-%d")
+    except ValueError:
+        return False, "Aquesta data no existeix"
+    if not re.fullmatch(r"Q\d+", qid):
+        return False, "QID invalid"
+    if ds < date.today().isoformat():
+        return False, "El %s ja ha passat: els dies emesos no es toquen" % ds
+
+    # allow_existing: que ja sigui a PEOPLE no es cap problema. El joc busca per QID i
+    # forca l'entitat de la BD, aixi que el pin funciona igual (i no el duplica).
+    r = resolve_person(qid, allow_existing=True)
+    if not r.get("ok"):
+        return False, r.get("msg") or "No he pogut resoldre %s" % qid
+    if r.get("birth") is None:
+        return False, ("%s no te any de naixement a Wikidata, i «Contemporanis» el necessita "
+                       "per poder preguntar res: no es pot clavar." % (r.get("name") or qid))
+
+    entries = [p for p in parse_con_pinned() if p["date"] != ds]
+    entries.append({"date": ds, "qid": qid, "name": r.get("name") or qid,
+                    "by": r["birth"], "dy": r.get("death"),
+                    "approx": r.get("approx") or "", "desc": r.get("desc") or ""})
+    return _con_write(entries, "Joc: clava %s al Contemporanis del %s"
+                      % (r.get("name") or qid, ds))
+
+
+def con_pinned_del(d):
+    """Treu un dia clavat del Contemporanis."""
+    ds = (d.get("date") or "").strip()
+    if ds < date.today().isoformat():
+        return False, "El %s ja ha passat: l'historic no es desfa" % ds
+    pins = parse_con_pinned()
+    keep = [p for p in pins if p["date"] != ds]
+    if len(keep) == len(pins):
+        return False, "El %s no estava clavat" % ds
+    gone = next(p for p in pins if p["date"] == ds)
+    return _con_write(keep, "Joc: desclava %s del Contemporanis (%s)" % (gone["name"], ds))
+
+
+# --------------------------------------------------------------------------
 # Aniversaris propers (des de PEOPLE)
 # --------------------------------------------------------------------------
 
@@ -1649,6 +1794,16 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {"ok": ok, "msg": msg})
             return
 
+        if path == "/api/conpinned/set":
+            ok, msg = con_pinned_set(data)
+            self._json(200, {"ok": ok, "msg": msg})
+            return
+
+        if path == "/api/conpinned/del":
+            ok, msg = con_pinned_del(data)
+            self._json(200, {"ok": ok, "msg": msg})
+            return
+
         if path == "/api/backlog/add":
             title = data.get("title", "").strip()
             if not title:
@@ -1715,6 +1870,13 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/pinned":
             try:
                 self._json(200, parse_pinned())
+            except Exception as e:
+                self._json(500, {"error": str(e)})
+            return
+
+        if path == "/api/conpinned":
+            try:
+                self._json(200, parse_con_pinned())
             except Exception as e:
                 self._json(500, {"error": str(e)})
             return
