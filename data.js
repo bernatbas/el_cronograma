@@ -1443,6 +1443,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Maria_Antonieta_d%27%C3%80ustria",
       "desc": "Reina consort de França de 1774 a 1792"
+    },
+    {
+      "id": "gilbertogil",
+      "wd": "Q221479",
+      "name": "Gilberto Gil",
+      "birth": 1942,
+      "death": null,
+      "cats": [
+        "music"
+      ],
+      "gender": "",
+      "wiki": "https://es.wikipedia.org/wiki/Gilberto_Gil",
+      "desc": "Cantant, Brasil"
     }
   ],
   "EVENTS": [
