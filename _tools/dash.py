@@ -16,6 +16,7 @@ import os
 import re
 import subprocess
 import sys
+import traceback
 import unicodedata
 import urllib.parse
 import urllib.request
@@ -1699,6 +1700,25 @@ class Handler(BaseHTTPRequestHandler):
         return True, ""   # ni Origin ni Referer: no ve d'un navegador
 
     def do_POST(self):
+        """Xarxa de seguretat: qualsevol excepcio que s'escapi d'un handler ha de tornar un
+        missatge LLEGIBLE, no un 500 pelat.
+
+        El dia que _wd_year() tornava 3 valors en comptes de 4, el dashboard deia nomes
+        «error del servidor» i semblava que Wikidata hagues caigut; el traceback anava a la
+        consola del servidor, que no mira ningu. Amb aixo, el mateix error hauria dit
+        «ValueError: not enough values to unpack» a la pantalla i s'hauria trobat de seguida.
+        """
+        try:
+            self._post_dispatch()
+        except Exception as e:
+            traceback.print_exc()
+            try:
+                self._json(500, {"ok": False,
+                                 "msg": "El servidor ha petat: %s: %s" % (type(e).__name__, e)})
+            except Exception:
+                pass   # la connexio ja no hi es: prou feina hem fet
+
+    def _post_dispatch(self):
         ok, why = self._same_origin()
         if not ok:
             self._json(403, {"ok": False, "msg": "Peticio rebutjada (%s)" % why})

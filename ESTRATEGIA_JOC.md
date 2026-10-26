@@ -833,6 +833,18 @@ del formulari).
 aquest problema; aquí hi ha TEXT dins de cometes simples i una «Joana d'Arc» amb apòstrof recte
 deixaria el joc en blanc.
 
+**Els errors del servidor arriben a la pantalla.** `do_POST` embolcalla el despatxador: si un
+handler peta, el navegador rep `{ok:false, msg:"El servidor ha petat: <Error>: <missatge>"}` en
+comptes d'un 500 pelat, i el traceback segueix anant al log. No és cosmètic — el dia que
+`_wd_year()` tornava 3 valors en comptes de 4, el dashboard deia només «error del servidor» i
+semblava que Wikidata hagués caigut; amb això hauria dit «ValueError: not enough values to
+unpack» i s'hauria trobat de seguida. El servidor sobreviu a la petició i segueix atenent.
+
+⚠️ **El pin garanteix QUI surt, no contra qui.** El rival es decideix amb la BD que hi hagi quan
+es carrega la pàgina: afegir gent a `PEOPLE` canvia l'enumeració de parelles i, per tant, les
+barreges. Mesurat el mateix dia: al Lula li tocava la Frida Kahlo, i després d'afegir sis
+persones a la BD li tocava en Kafka. No és cap inestabilitat del mecanisme.
+
 **Deute conscient**: el calendari és ~120 línies duplicades entre les dues pestanyes. No s'han
 unificat **a posta** — refactoritzar la pestanya que ja es fa servir cada dia dins del mateix
 canvi que n'estrena una altra és escalar sense validar. Quan arribi el **tercer** joc amb pin,
