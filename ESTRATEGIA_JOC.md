@@ -808,3 +808,32 @@ l'enumeració de parelles i, per tant, les barreges— i això és inevitable i 
 
 ⚠️ El QID es verifica **sempre** pel títol de l'article, no de memòria: muntant això jo hauria
 dit que el Lula era `Q39837`, i `Q39837` **és Averroes**. El bo és `Q37181`.
+
+### La UI: pestanya «Contemporanis» al dashboard (2026-10-26)
+
+Mirall de la del Personatge del dia: calendari del mes, clica un dia, cerca per enllaç/QID/nom,
+fitxa, «Clava aquest dia» / «Canvia'l» / «Treu l'homenatge», i la llista de dies clavats.
+Endpoints `/api/conpinned`, `/api/conpinned/set`, `/api/conpinned/del`, tots tres al guard de
+branca (`POST_QUE_ESCRIUEN`): la BD i els calendaris només s'editen des de `main`.
+
+**Dues diferències amb el del Personatge del dia, i les dues són del joc, no del dashboard:**
+
+1. **El navegador només envia `{date, qid}`.** Els anys, la descripció i l'`approx` els torna a
+   resoldre el servidor amb `resolve_person(qid, allow_existing=True)`. Si els enviés el
+   formulari, el dia que el formulari canviés quedarien desparellats — i l'`approx`, que decideix
+   si els jocs poden emparellar aquesta persona, quedaria a mitges.
+2. **`allow_existing=True` a propòsit.** Que ja sigui a `PEOPLE` no és cap problema: el joc busca
+   per QID i força l'entitat de la BD, així que el pin funciona igual i no la duplica.
+
+**Es rebutja qui no tingui any de naixement**, perquè «Contemporanis» no en pot preguntar res. Es
+talla al navegador (per no fer el viatge) i també al servidor (perquè la comprovació no depengui
+del formulari).
+
+⚠️ **`name` i `desc` passen per `_js_str()`.** El `PD_PINNED` només guarda un QID i mai va tenir
+aquest problema; aquí hi ha TEXT dins de cometes simples i una «Joana d'Arc» amb apòstrof recte
+deixaria el joc en blanc.
+
+**Deute conscient**: el calendari és ~120 línies duplicades entre les dues pestanyes. No s'han
+unificat **a posta** — refactoritzar la pestanya que ja es fa servir cada dia dins del mateix
+canvi que n'estrena una altra és escalar sense validar. Quan arribi el **tercer** joc amb pin,
+toca extreure'n un component compartit. Mentrestant: si toques el calendari d'una, mira l'altra.

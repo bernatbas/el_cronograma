@@ -217,6 +217,7 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
   <nav class="nav">
     <a href="#general" data-tab="general">General</a>
     <a href="#personatgedia" data-tab="personatgedia">Personatge del dia</a>
+    <a href="#contemporanis" data-tab="contemporanis">Contemporanis</a>
   </nav>
   <div class="tb-right">
     <span class="clock" id="stamp">—</span>
@@ -383,6 +384,58 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
   </section>
   </div><!-- /tab-personatgedia -->
 
+  <div class="tabpane" id="tab-contemporanis" hidden>
+  <section id="calendari-con">
+    <div class="shead"><h2>Contemporanis</h2>
+      <span class="hint sub" title="Clica un dia per clavar-hi algú. Sortirà en una de les 5 parelles d'aquell dia; les altres quatre i el rival els tria la llavor. Els dies en blanc no canvien gens.">clica un dia per clavar-hi algú</span>
+      <span class="hint" id="conhint">—</span></div>
+    <div class="card pad">
+      <div class="cal2">
+        <div>
+          <div class="calhead">
+            <span class="m" id="concalm">—</span>
+            <span class="nav2">
+              <button class="btn" id="conprevm" aria-label="Mes anterior">‹</button>
+              <button class="btn" id="connextm" aria-label="Mes següent">›</button>
+            </span>
+          </div>
+          <div class="dow"><span>dl</span><span>dt</span><span>dc</span><span>dj</span><span>dv</span><span>ds</span><span>dg</span></div>
+          <div class="grid" id="concal"></div>
+          <div class="legend">
+            <span><i style="background:var(--terracota)"></i>Clavat</span>
+            <span><i style="background:var(--surface)"></i>Aleatori</span>
+            <span><i style="background:transparent;box-shadow:inset 0 0 0 1.5px var(--border-strong)"></i>Avui</span>
+          </div>
+        </div>
+        <div>
+          <div class="pdedit" id="conedit" hidden>
+            <div class="calhead"><span class="m" id="conday">—</span>
+              <span class="nav2"><button class="btn" id="conclose" aria-label="Tanca">✕</button></span></div>
+            <div class="fields" id="consearch" style="grid-template-columns:1fr auto">
+              <input type="text" id="conq" placeholder="Enllaç, QID o nom">
+              <button class="btn primary" id="congo">Cerca</button>
+            </div>
+            <div class="pdres" id="conres" hidden></div>
+            <div class="pdmsg" id="conmsg" hidden></div>
+            <div class="pdactions">
+              <button class="btn primary" id="consave" disabled>Clava aquest dia</button>
+              <button class="btn" id="conchange" hidden>Canvia&rsquo;l</button>
+              <button class="btn del" id="conrm" hidden>Treu l&rsquo;homenatge</button>
+            </div>
+          </div>
+          <div class="calhead"><span class="m">Dies clavats</span></div>
+          <div class="rows" id="conpins"><div class="empty">Carregant&hellip;</div></div>
+          <div class="note" style="margin-top:12px">
+            A diferència del Personatge del dia, aquí el pin es desa amb <b>els anys a sobre</b>
+            (el joc no parla amb Wikidata). Els anys i la nota d&rsquo;incertesa els resol el
+            servidor: tu només tries el dia i qui.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  </div><!-- /tab-contemporanis -->
+
 </div>
 
 <script>
@@ -444,6 +497,7 @@ const DEMO = {
     {title:"Opcional: encastar Oswald en base64", body:"Eliminar el FOUT del títol a la primera visita. La solució actual ja és prou bona.", closed:false},
   ],
   pins:[ {date:"2026-08-19", qid:"Q733621", name:"Juan Tamariz"} ],
+  conpins:[ {date:"2026-10-27", qid:"Q37181", name:"Luiz Inácio Lula da Silva", by:1945, dy:null} ],
   anniv:[
     {date:"2027-03-26", qid:"Q255", name:"Ludwig van Beethoven", desc:"", kind:"mort", years:200, century:true},
     {date:"2027-04-15", qid:"Q762", name:"Leonardo da Vinci", desc:"", kind:"naixement", years:575, century:false}
@@ -838,6 +892,166 @@ async function pdRemove(ds){
   } catch(e){ pdMsg("No s'ha pogut connectar al servidor."); }
 }
 
+/* ---------- Contemporanis: calendari de dies clavats ----------
+   Bessó del de dalt. Avui són dos blocs separats a propòsit: refactoritzar el del
+   Personatge del dia —que funciona i es fa servir cada dia— dins del mateix canvi que
+   estrena aquest hauria estat escalar sense validar. Quan hi hagi el TERCER joc amb pin,
+   toca extreure'n un component compartit; mentrestant, si toques el calendari d'un, mira
+   l'altre. Diferències reals respecte del PD, i són només dues:
+     · el servidor resol els anys i l'`approx`; aquí només s'envia {date, qid}
+     · no hi ha llista d'aniversaris                                                     */
+let conCursor = new Date();
+conCursor.setDate(1);            // sempre dia 1: veure la nota del calendari de dalt
+let CON_PINS = {};
+let CON_SEL = null;              // dia obert a l'editor
+let CON_CAND = null;             // persona resolta, pendent de clavar
+
+function conMsg(txt){ const m=el("conmsg"); if(!txt){ m.hidden=true; return; } m.textContent=txt; m.hidden=false; }
+
+function renderConCal(){
+  const y = conCursor.getFullYear(), m = conCursor.getMonth();
+  const first = new Date(y, m, 1);
+  const shift = (first.getDay() + 6) % 7;          // dilluns primer
+  const days = new Date(y, m+1, 0).getDate();
+  const todayIso = iso(new Date());
+  el("concalm").textContent = first.toLocaleDateString("ca-ES",{month:"long",year:"numeric"});
+
+  let html = "";
+  for(let i=0;i<shift;i++) html += '<span class="day out"></span>';
+  for(let d=1; d<=days; d++){
+    const ds = y+"-"+pad2(m+1)+"-"+pad2(d);
+    const cls = ["day"];
+    if(CON_PINS[ds]) cls.push("pin");
+    if(ds === todayIso) cls.push("today");
+    else if(ds < todayIso) cls.push("past");
+    if(ds === CON_SEL) cls.push("sel");
+    const p = CON_PINS[ds];
+    const tip = ds < todayIso
+      ? (p ? p.name+" ("+p.qid+") · ja passat" : "Ja passat")
+      : (p ? p.name+" ("+p.qid+")" : "Aleatori");
+    html += '<span class="'+cls.join(" ")+'" data-d="'+ds+'" title="'+esc(dmy(ds)+" · "+tip)+'">'+d
+         + (p ? '<span class="pd"></span>' : "") + '</span>';
+  }
+  el("concal").innerHTML = html;
+}
+
+function conYears(p){
+  if(p.by==null) return "";
+  return (p.by<0 ? (-p.by)+" aC" : p.by) + "–" + (p.dy==null ? "avui" : (p.dy<0 ? (-p.dy)+" aC" : p.dy));
+}
+
+function renderConPins(){
+  const keys = Object.keys(CON_PINS).sort();
+  if(!keys.length){ el("conpins").innerHTML = '<div class="empty">Cap dia clavat.</div>'; return; }
+  const todayIso = iso(new Date());
+  el("conpins").innerHTML = keys.map(function(k){
+    const p = CON_PINS[k], stale = k < todayIso;
+    return '<div class="row'+(stale?" stale":"")+'" data-d="'+k+'"'+(stale?' title="Ja passat"':'')+'>'
+      + '<span class="num">'+dmy(k)+'</span>'
+      + '<span class="txt">'+esc(p.name)+'</span>'
+      + '<span class="when">'+esc(conYears(p))+'</span>'
+      + (stale ? '' : '<button class="btn conrm1" title="Treu el clavat del '+dmy(k)+'">×</button>')
+      + '</div>';
+  }).join("");
+}
+
+function conCard(name, extra, qid){
+  el("conres").innerHTML = '<b>'+esc(name)+'</b><span class="yr">'+esc(extra||"")+'</span>'
+    + '<span class="q">'+esc(qid)+'</span>';
+  el("conres").hidden = false;
+}
+
+function openCon(ds){
+  if(isPast(ds)) return;              // els dies passats ja s'han emes
+  CON_SEL = ds; CON_CAND = null;
+  const pin = CON_PINS[ds];
+  el("conday").textContent = pdLabel(ds);
+  el("conq").value = "";
+  conMsg("");
+  if(pin){
+    conCard(pin.name, conYears(pin), pin.qid);
+    el("consearch").hidden = true;
+    el("consave").hidden = true;
+    el("conchange").hidden = false;
+    el("conrm").hidden = false;
+  } else {
+    el("conres").hidden = true;
+    el("consearch").hidden = false;
+    el("consave").hidden = false;
+    el("consave").disabled = true;
+    el("consave").textContent = "Clava aquest dia";
+    el("conchange").hidden = true;
+    el("conrm").hidden = true;
+  }
+  el("conedit").hidden = false;
+  renderConCal();
+  if(!pin) el("conq").focus();
+}
+
+function conChange(){
+  el("conres").hidden = true;
+  el("conchange").hidden = true;
+  el("consearch").hidden = false;
+  el("consave").hidden = false;
+  el("consave").disabled = true;
+  el("consave").textContent = "Reassigna aquest dia";
+  el("conq").focus();
+}
+
+function closeCon(){ el("conedit").hidden = true; CON_SEL = null; CON_CAND = null; renderConCal(); }
+
+async function conResolve(){
+  const q = el("conq").value.trim();
+  if(!q) return;
+  const btn = el("congo");
+  btn.disabled = true; btn.textContent = "Cercant…"; conMsg("");
+  try{
+    const r = await fetch("/api/db/resolve", {method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({q:q, allow_existing:true})});
+    const d = await r.json();
+    if(!d.ok){ conMsg(d.msg); el("conres").hidden = true; el("consave").disabled = true; return; }
+    // Sense any de naixement el joc no en pot preguntar res: es talla aqui i no al servidor,
+    // per no fer-li fer el viatge sabent ja que no pot ser.
+    if(d.birth==null){
+      conMsg(d.name+" no té any de naixement a Wikidata, i «Contemporanis» el necessita.");
+      el("conres").hidden = true; el("consave").disabled = true; return;
+    }
+    CON_CAND = d;
+    conCard(d.name, conYears({by:d.birth, dy:d.death}), d.qid);
+    if(d.approx) conMsg("Data poc fiable (" + d.approx + "): el joc ja evitarà emparellar-lo amb algú massa a prop.");
+    el("consave").disabled = false;
+  } catch(e){ conMsg("No s'ha pogut connectar al servidor."); }
+  finally { btn.disabled = false; btn.textContent = "Cerca"; }
+}
+
+async function conSave(){
+  if(!CON_SEL || !CON_CAND) return;
+  const btn = el("consave"); const label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Escrivint…";
+  try{
+    // Nomes {date,qid}: els anys i l'approx els torna a resoldre el servidor, que es qui
+    // els escriu. Si els envies des d'aqui, el dia que el formulari canvii quedaran desparellats.
+    const r = await fetch("/api/conpinned/set", {method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({date: CON_SEL, qid: CON_CAND.qid})});
+    const d = await r.json();
+    if(!d.ok){ conMsg(d.msg); btn.disabled=false; btn.textContent=label; return; }
+    closeCon(); boot();
+  } catch(e){ conMsg("No s'ha pogut connectar al servidor."); btn.disabled=false; btn.textContent=label; }
+}
+
+async function conRemove(ds){
+  if(isPast(ds)) return;
+  try{
+    const r = await fetch("/api/conpinned/del", {method:"POST",
+      headers:{"Content-Type":"application/json"}, body:JSON.stringify({date: ds})});
+    const d = await r.json();
+    if(!d.ok){ conMsg(d.msg); return; }
+    closeCon(); boot();
+  } catch(e){ conMsg("No s'ha pogut connectar al servidor."); }
+}
+
 /* ---------- diagnosi ---------- */
 function renderLint(list){
   const bad = list.filter(function(f){ return f.sev!=="ok"; }).length;
@@ -972,9 +1186,9 @@ async function dbCommit(){
 
 /* ---------- boot ---------- */
 async function boot(){
-  const [st, q, pn, lt, dn, an] = await Promise.all([
+  const [st, q, pn, lt, dn, an, cp] = await Promise.all([
     api("/status"), api("/backlog"), api("/pinned"), api("/lint"), api("/density"),
-    api("/anniversaries")
+    api("/anniversaries"), api("/conpinned")
   ]);
   await carregaBranques();   // el selector ha d'estar ple abans de renderStats()
 
@@ -993,6 +1207,14 @@ async function boot(){
   renderCal();
   renderPins();
   renderAnniv(an.live ? an.data : DEMO.anniv);
+
+  const conpins = cp.live ? cp.data : (DEMO.conpins || []);
+  CON_PINS = {};
+  conpins.forEach(function(p){ CON_PINS[p.date] = p; });
+  const futureCon = Object.keys(CON_PINS).filter(function(k){ return k > iso(new Date()); }).length;
+  el("conhint").textContent = futureCon + (futureCon===1 ? " dia clavat endavant" : " dies clavats endavant");
+  renderConCal();
+  renderConPins();
 
   el("stamp").textContent = new Date().toLocaleTimeString("ca-ES",{hour:"2-digit",minute:"2-digit"});
   showTab(tabFromHash());
@@ -1020,6 +1242,31 @@ el("anniv").addEventListener("click", function(e){
   const a = ANNIV[+row.dataset.i];
   if(a) pdPreload(a);
 });
+
+/* Contemporanis: els mateixos gestos que el calendari de dalt */
+el("concal").addEventListener("click", function(e){
+  const d = e.target.closest(".day");
+  if(!d || d.classList.contains("out") || d.classList.contains("past") || !d.dataset.d) return;
+  openCon(d.dataset.d);
+});
+el("conclose").addEventListener("click", closeCon);
+el("conchange").addEventListener("click", conChange);
+el("congo").addEventListener("click", conResolve);
+el("conq").addEventListener("keydown", function(e){ if(e.key==="Enter") conResolve(); });
+el("consave").addEventListener("click", conSave);
+el("conrm").addEventListener("click", function(){ if(CON_SEL) conRemove(CON_SEL); });
+el("conpins").addEventListener("click", function(e){
+  const row = e.target.closest(".row");
+  if(!row || !row.dataset.d || row.classList.contains("stale")) return;
+  if(e.target.classList.contains("conrm1")){ e.stopPropagation(); conRemove(row.dataset.d); return; }
+  openCon(row.dataset.d);
+});
+function mouMesCon(n){
+  conCursor = new Date(conCursor.getFullYear(), conCursor.getMonth() + n, 1);
+  renderConCal();
+}
+el("conprevm").addEventListener("click", function(){ mouMesCon(-1); });
+el("connextm").addEventListener("click", function(){ mouMesCon(1); });
 
 /* llista d'homenatges: clicar la fila l'obre, la × el treu */
 el("pins").addEventListener("click", function(e){
