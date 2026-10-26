@@ -1535,6 +1535,20 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://es.wikipedia.org/wiki/Felipe_II_de_Espa%C3%B1a",
       "desc": "Rei d’Espanya de 1556 a 1598"
+    },
+    {
+      "id": "muhammadibnmussaalkhwa",
+      "wd": "Q9038",
+      "name": "Muhàmmad ibn Mussa al-Khwarazmí",
+      "birth": 780,
+      "death": 850,
+      "cats": [
+        "science"
+      ],
+      "gender": "M",
+      "wiki": "https://ca.wikipedia.org/wiki/Muh%C3%A0mmad_ibn_Mussa_al-Khwarazm%C3%AD",
+      "desc": "Matemàtic i astrònom persa; dels seus llibres venen les paraules «algorisme» i «àlgebra».",
+      "approx": "disputada"
     }
   ],
   "EVENTS": [
