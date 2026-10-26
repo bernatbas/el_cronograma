@@ -1495,6 +1495,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Daniel_Rabinovich",
       "desc": "Actor, músic, i humorista argentí"
+    },
+    {
+      "id": "nefertiti",
+      "wd": "Q40930",
+      "name": "Nefertiti",
+      "birth": -1370,
+      "death": -1330,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Nefertiti",
+      "desc": "Gran esposa reial d’Akhenaton i reina d’Egipte"
     }
   ],
   "EVENTS": [
