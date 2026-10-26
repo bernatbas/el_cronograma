@@ -1482,6 +1482,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Rub%C3%A9n_Blades",
       "desc": "Cantant i actor panameny"
+    },
+    {
+      "id": "danielrabinovich",
+      "wd": "Q8353654",
+      "name": "Daniel Rabinovich",
+      "birth": 1943,
+      "death": 2015,
+      "cats": [
+        "music"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Daniel_Rabinovich",
+      "desc": "Actor, músic, i humorista argentí"
     }
   ],
   "EVENTS": [
