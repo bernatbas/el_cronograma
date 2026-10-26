@@ -1549,6 +1549,20 @@ window.HB_DATA = {
       "wiki": "https://ca.wikipedia.org/wiki/Muh%C3%A0mmad_ibn_Mussa_al-Khwarazm%C3%AD",
       "desc": "Matemàtic i astrònom persa; dels seus llibres venen les paraules «algorisme» i «àlgebra».",
       "approx": "disputada"
+    },
+    {
+      "id": "ciril",
+      "wd": "Q351026",
+      "name": "Ciril",
+      "birth": 827,
+      "death": 869,
+      "cats": [
+        "religion",
+        "literature"
+      ],
+      "gender": "M",
+      "wiki": "",
+      "desc": "Missioner bizantí als pobles eslaus; amb el seu germà Metodi va crear el primer alfabet eslau."
     }
   ],
   "EVENTS": [
