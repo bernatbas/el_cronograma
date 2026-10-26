@@ -1365,6 +1365,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Marco_Polo",
       "desc": "Mercader i explorador venecià"
+    },
+    {
+      "id": "friedrichengels",
+      "wd": "Q34787",
+      "name": "Friedrich Engels",
+      "birth": 1820,
+      "death": 1895,
+      "cats": [
+        "philosophy"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Friedrich_Engels",
+      "desc": "Filòsof i socialista alemany"
     }
   ],
   "EVENTS": [
