@@ -1563,6 +1563,19 @@ window.HB_DATA = {
       "gender": "M",
       "wiki": "",
       "desc": "Missioner bizantí als pobles eslaus; amb el seu germà Metodi va crear el primer alfabet eslau."
+    },
+    {
+      "id": "carleselcalb",
+      "wd": "Q71231",
+      "name": "Carles el Calb",
+      "birth": 823,
+      "death": 877,
+      "cats": [
+        "politics"
+      ],
+      "gender": "M",
+      "wiki": "https://ca.wikipedia.org/wiki/Carles_el_Calb",
+      "desc": "Rei de Frància Occidental de 843 a 877 i emperador carolingi de 875 a 877"
     }
   ],
   "EVENTS": [
