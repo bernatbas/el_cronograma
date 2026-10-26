@@ -1576,6 +1576,19 @@ window.HB_DATA = {
       "gender": "M",
       "wiki": "https://ca.wikipedia.org/wiki/Carles_el_Calb",
       "desc": "Rei de Frància Occidental de 843 a 877 i emperador carolingi de 875 a 877"
+    },
+    {
+      "id": "abbasibnfirnas",
+      "wd": "Q305975",
+      "name": "Abbàs ibn Firnàs",
+      "birth": 810,
+      "death": 887,
+      "cats": [
+        "science"
+      ],
+      "gender": "M",
+      "wiki": "https://ca.wikipedia.org/wiki/Abb%C3%A0s_ibn_Firn%C3%A0s",
+      "desc": "Erudit andalusí de Còrdova; va provar de volar amb unes ales i va sobreviure a l’intent."
     }
   ],
   "EVENTS": [
