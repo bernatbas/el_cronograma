@@ -1352,6 +1352,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Henri_Matisse",
       "desc": "Artista francès"
+    },
+    {
+      "id": "marcopolo",
+      "wd": "Q6101",
+      "name": "Marco Polo",
+      "birth": 1254,
+      "death": 1324,
+      "cats": [
+        "politics"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Marco_Polo",
+      "desc": "Mercader i explorador venecià"
     }
   ],
   "EVENTS": [
