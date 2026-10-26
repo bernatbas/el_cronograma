@@ -1378,6 +1378,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Friedrich_Engels",
       "desc": "Filòsof i socialista alemany"
+    },
+    {
+      "id": "robertcharlton",
+      "wd": "Q171583",
+      "name": "Robert (Bobby) Charlton",
+      "birth": 1937,
+      "death": 2023,
+      "cats": [
+        "sport"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Robert_Charlton",
+      "desc": "Futbolista anglès"
     }
   ],
   "EVENTS": [
