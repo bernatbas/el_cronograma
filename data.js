@@ -1313,6 +1313,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Antoni_Gaud%C3%AD_i_Cornet",
       "desc": "Arquitecte català"
+    },
+    {
+      "id": "paulcezanne",
+      "wd": "Q35548",
+      "name": "Paul Cézanne",
+      "birth": 1839,
+      "death": 1906,
+      "cats": [
+        "painting"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Paul_C%C3%A9zanne",
+      "desc": "Pintor francès"
     }
   ],
   "EVENTS": [
