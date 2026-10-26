@@ -1993,8 +1993,29 @@
 
     function nowYear(){ return new Date().getFullYear(); }   // "viu" => any actual (en viu)
 
+    // Calendari d'homenatges del Contemporanis: data (AAAA-MM-DD, hora local) -> algu que ha de
+    // sortir SI O SI en una de les 5 parelles del dia. Els dies que no hi surten no canvien gens.
+    // Germa del PD_PINNED del «Personatge del dia», pero amb una diferencia que mana el disseny:
+    // aquell joc beu de WIKIDATA i aquest de la NOSTRA BD, i start() es SINCRON. Per aixo el pin
+    // porta les dades a sobre en comptes d'anar-les a buscar: ni xarxa, ni esperes, ni haver
+    // d'afegir l'homenatjat a PEOPLE —que el faria sortir tambe al cronograma i als altres dos
+    // jocs cronologics, cosa que un homenatge d'un dia no ha de fer.
+    //   by = any de naixement · dy = any de mort, o null si es viu
+    //   approx:true si la data no es fiable a l'any (veure APX_GAP); per a figures actuals, no cal
+    const CON_PINNED={
+      '2026-10-27':{qid:'Q37181',name:'Luiz Inácio Lula da Silva',by:1945,dy:null,desc:'35è i 39è president del Brasil'}
+    };
+    // Entitat jugable a partir d'una entrada del calendari, amb la mateixa forma que les de beings().
+    function pinnedBeing(ds){
+      const q=CON_PINNED[ds]; if(!q||typeof q.by!=='number') return null;
+      const NOW=nowYear(), viu=(q.dy==null);
+      return {uid:'pin:'+q.qid, type:'person', id:'pin_'+q.qid, name:q.name, by:q.by, dy:viu?NOW:q.dy,
+        alive:viu, approx:!!q.approx,
+        crono:{qid:q.qid,name:q.name,birth:q.by,death:viu?null:q.dy,img:null,desc:q.desc||''}};
+    }
+
     // Entitats jugables: persones amb naixement conegut + esdeveniments amb any.
-    function beings(){
+    function beings(ds){
       const out=[]; const NOW=nowYear();
       (HB_DATA.PEOPLE||[]).forEach(function(p){
         if(typeof p.birth!=='number') return;
@@ -2007,6 +2028,9 @@
         out.push({uid:'ev:'+e.id, type:'event', id:e.id, name:e.name, by:e.year, dy:e.year,
           crono:{kind:'event',id:e.id,name:e.name,year:e.year}});
       });
+      // L'homenatjat del dia, si n'hi ha i no el tenim ja a la BD (no el volem duplicat).
+      const pin=pinnedBeing(ds);
+      if(pin && !out.some(function(b){ return b.crono && b.crono.qid===pin.crono.qid; })) out.push(pin);
       return out;
     }
 
@@ -2049,8 +2073,8 @@
     //  - coincidència ~50% PROBABILÍSTICA (no quota fixa) => no predictible
     //  - dels "no": com a molt 1 fàcil per ronda; la resta difícils/mitjans (prioritzant difícils)
     //  - sense repetir entitat dins la ronda (si el pool ho permet)
-    function buildRound(rng){
-      const items=beings();
+    function buildRound(rng,ds){
+      const items=beings(ds);
       if(items.length<10) return null;
       const yes=[], hard=[], med=[], easy=[];
       for(let i=0;i<items.length;i++) for(let j=i+1;j<items.length;j++){
@@ -2063,18 +2087,35 @@
       const SY=seededShuffle(yes,rng), SH=seededShuffle(hard,rng), SM=seededShuffle(med,rng), SE=seededShuffle(easy,rng);
       const wantYes=[]; for(let i=0;i<5;i++) wantYes.push(rng()<0.5);
       const used=new Set(); const out=[]; let easyUsed=0;
-      function take(list,allowReuse){
+      // `must` (opcional): nomes valen les parelles on hi surt aquesta entitat.
+      function take(list,allowReuse,must){
         list.__k=list.__k||new Set();
         for(let i=0;i<list.length;i++){
           if(list.__k.has(i)) continue;
           const p=list[i];
+          if(must && p.a.uid!==must && p.b.uid!==must) continue;
           if(!allowReuse && (used.has(p.a.uid)||used.has(p.b.uid))) continue;
           list.__k.add(i); used.add(p.a.uid); used.add(p.b.uid); return p;
         }
         return null;
       }
-      function takeNo(allowReuse){ let p=take(SH,allowReuse)||take(SM,allowReuse); if(!p && easyUsed<1){ p=take(SE,allowReuse); if(p) easyUsed++; } return p; }
+      function takeNo(allowReuse,must){ let p=take(SH,allowReuse,must)||take(SM,allowReuse,must); if(!p && easyUsed<1){ p=take(SE,allowReuse,must); if(p) easyUsed++; } return p; }
+      // L'homenatjat es reserva ABANS del bucle. Si es deixes al seu torn, una altra parella
+      // ja podria haver-lo gastat («used») i el dia clavat no serviria de res.
+      const pin=pinnedBeing(ds);
+      // Es busca per QID, no per uid: si l'homenatjat JA es a la nostra BD, beings() no l'ha
+      // duplicat i la seva entitat porta l'uid de la BD ('pe:...'), no el del pin ('pin:...').
+      // Sense aixo, clavar algu que ja tenim era un no-op silencios.
+      const pinEnt=pin?items.find(function(b){ return b.crono && b.crono.qid===pin.crono.qid; }):null;
+      const pinSlot=pinEnt?Math.floor(rng()*5):-1;
+      let pinPair=null;
+      if(pinEnt) pinPair = wantYes[pinSlot]
+        ? (take(SY,false,pinEnt.uid)||takeNo(false,pinEnt.uid))
+        : (takeNo(false,pinEnt.uid)||take(SY,false,pinEnt.uid));
       for(let i=0;i<5;i++){
+        // Si l'homenatjat no te cap parella jugable, pinPair es null i el torn va com sempre:
+        // un homenatge impossible no ha de deixar el dia sense ronda (mateix criteri que PD_PINNED).
+        if(i===pinSlot && pinPair){ out.push(pinPair); continue; }
         let p=null;
         if(wantYes[i]){ p=take(SY,false); if(!p) p=takeNo(false); }
         else { p=takeNo(false); if(!p) p=take(SY,false); }
@@ -2211,7 +2252,7 @@
       if(cdTimer){ clearInterval(cdTimer); cdTimer=null; }
       if(!dataOk()){ root.innerHTML='<div class="err">'+t('err_no_data')+'</div>'; return; }
       const rng=mulberry32(seedFromStr('con:'+todayStr()));
-      round=buildRound(rng);
+      round=buildRound(rng,todayStr());
       if(!round){ root.innerHTML='<div class="err">'+t('con_err')+'</div>'; return; }
       const daily=readLS(DAILY_KEY);
       if(daily && daily.date===todayStr()){
@@ -2223,7 +2264,7 @@
     }
 
     // Hook de depuració per als tests (no afecta el joc).
-    try{ window.__CON={ round:function(ds){ return buildRound(mulberry32(seedFromStr('con:'+(ds||todayStr())))); } }; }catch(_){}
+    try{ window.__CON={ round:function(ds){ ds=ds||todayStr(); return buildRound(mulberry32(seedFromStr('con:'+ds)),ds); }, pinned:CON_PINNED }; }catch(_){}
 
     return {
       mount(container){ root=container; gaStarted=false; track('joc_vist',{joc:'contemporanis'}); start(); },

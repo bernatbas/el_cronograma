@@ -674,6 +674,43 @@ test.describe('Mòbil: bottom-sheet', () => {
   });
 });
 
+// ─── Contemporanis: dies clavats ─────────────────────────────────────────────
+// El calendari CON_PINNED (data → algu que ha de sortir si o si) s'exposa al hook de
+// depuracio, aixi que el test NO depen de qui hi hagi clavat: recorre el que hi ha.
+// Es compara per QID i no per nom, perque si l'homenatjat ja es a la nostra BD la ronda
+// fa servir la seva entitat de la BD, amb el nom de la BD i no el del calendari.
+
+test.describe('Contemporanis: dies clavats', () => {
+  test('cada dia clavat porta el seu homenatjat a la ronda', async ({ page }) => {
+    await page.goto(JOC);
+    const pinned = await page.evaluate(() => (window.__CON && window.__CON.pinned) || {});
+    const dies = Object.keys(pinned);
+    test.skip(dies.length === 0, 'no hi ha cap dia clavat al calendari');
+
+    for (const d of dies) {
+      const qids = await page.evaluate((ds) => {
+        const r = window.__CON.round(ds);
+        return r ? r.flatMap(p => [p.a, p.b]).map(b => (b.crono && b.crono.qid) || null) : null;
+      }, d);
+      expect(qids, `la ronda del ${d} no s'ha pogut construir`).not.toBeNull();
+      expect(qids, `el dia clavat ${d} no porta ${pinned[d].qid}`).toContain(pinned[d].qid);
+    }
+  });
+
+  test('un dia sense clavar no canvia, i la ronda és determinista', async ({ page }) => {
+    await page.goto(JOC);
+    const r = await page.evaluate(() => {
+      const lliure = '2026-12-25';            // no es al calendari; si algun dia hi es, canvia'l
+      const key = x => x.map(p => p.a.name + '|' + p.b.name).join('//');
+      const a = window.__CON.round(lliure), b = window.__CON.round(lliure);
+      return { hiEs: Object.keys(window.__CON.pinned).includes(lliure), a: a && key(a), b: b && key(b) };
+    });
+    expect(r.hiEs, 'tria un dia que no sigui al calendari per a aquest test').toBe(false);
+    expect(r.a).not.toBeNull();
+    expect(r.a).toBe(r.b);
+  });
+});
+
 // ─── Integració joc → index ──────────────────────────────────────────────────
 
 test.describe('Integració joc → index', () => {

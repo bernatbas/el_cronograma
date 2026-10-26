@@ -755,3 +755,56 @@ comptes de `+i`: mateixes peticions, mateix determinisme per dia.
 - `wdLbl` no mirava `mul` i es menjava en silenci ~1,1% dels candidats (mesurat sobre 90).
   **Aquest sí que es va arreglar** el 27/09/2026: era una paraula, i el que molestava de debò
   era tenir dos lectors d'etiquetes que no es posaven d'acord dins del mateix fitxer.
+
+## Clavar algú al «Contemporanis»: `CON_PINNED` (2026-10-26)
+
+Germà del `PD_PINNED` del «Personatge del dia», però **no és el mateix mecanisme**, i la raó
+d'això decideix tot el disseny:
+
+| | Personatge del dia | Contemporanis |
+|---|---|---|
+| D'on surt la gent | Wikidata (109k QIDs) | **La nostra BD** (`HB_DATA`) |
+| `start()` | `async` | **síncron** |
+| El pin porta… | només el QID, i va a buscar-ho | **les dades a sobre** |
+
+Com que aquest joc és síncron i no parla amb Wikidata, el pin **es porta el nom i els anys**:
+
+```js
+const CON_PINNED = {
+  '2026-10-27': {qid:'Q37181', name:'Luiz Inácio Lula da Silva', by:1945, dy:null,
+                 desc:'35è i 39è president del Brasil'}
+};
+```
+
+`by` = naixement · `dy` = mort, o **`null` si és viu** · `approx:true` si la data no és fiable a
+l'any (mira `APX_GAP`; per a figures d'actualitat no cal).
+
+### Per què NO s'afegeix l'homenatjat a `PEOPLE`
+
+Era l'altra opció i es va descartar. Posar-lo a la BD el faria sortir **també al cronograma i
+als altres dos jocs cronològics**, per sempre. Un homenatge és d'un dia: no ha de canviar el
+dataset. Portant les dades al calendari no cal ni tocar `PEOPLE`, ni regenerar `data.js`, ni
+xarxa, ni fer `start()` asíncron.
+
+### Tres decisions que no es veuen al codi
+
+- **L'homenatjat es reserva ABANS del bucle de les 5 parelles.** Si se'l deixés al seu torn, una
+  parella anterior ja hauria pogut gastar-lo (`used`) i el dia clavat no serviria de res.
+- **Es busca per QID, no per `uid`.** Si l'homenatjat **ja** és a la BD, `beings()` no el duplica
+  i la seva entitat porta l'uid de la BD (`pe:…`), no el del pin (`pin:…`). Sense això, clavar
+  algú que ja teníem era un **no-op silenciós** — provat amb la Frida Kahlo (Q5588).
+- **Si l'homenatjat no té cap parella jugable, el dia va com sempre.** Mateix criteri que
+  `PD_PINNED`: val més una ronda qualsevol que una pantalla morta.
+
+### Com es verifica
+
+El hook `window.__CON` exposa `round(ds)` **i** `pinned`, així que els dos tests del CI
+recorren el calendari que hi hagi i **no depenen de qui hi estigui clavat**. Comparen per
+**QID i no per nom**, perquè si l'homenatjat ja és a la BD la ronda fa servir el nom de la BD.
+
+Mesurat en afegir el mecanisme: **7 de 7 dies sense clavar donen una ronda byte-idèntica** a la
+d'abans del canvi. Un dia clavat sí que canvia les 5 parelles senceres —afegir una entitat canvia
+l'enumeració de parelles i, per tant, les barreges— i això és inevitable i inofensiu.
+
+⚠️ El QID es verifica **sempre** pel títol de l'article, no de memòria: muntant això jo hauria
+dit que el Lula era `Q39837`, i `Q39837` **és Averroes**. El bo és `Q37181`.
