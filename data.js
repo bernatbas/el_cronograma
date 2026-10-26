@@ -1,6 +1,6 @@
 /* =============================================================================
  * data.js — SNAPSHOT PROVISIONAL de la base de dades del cronograma.
- * Generat automàticament des d'index.html el 2026-10-09.
+ * Generat automàticament des d'index.html el 2026-10-26.
  *
  * ⚠️  PROVISIONAL: això és una CÒPIA de les dades que ara viuen a index.html,
  *     feta per facilitar el testeig local (file://). Quan existeixi la DB externa,
@@ -1276,6 +1276,19 @@ window.HB_DATA = {
       "gender": "",
       "wiki": "https://ca.wikipedia.org/wiki/Francisco_de_Goya_y_Lucientes",
       "desc": "Pintor i gravador aragonés"
+    },
+    {
+      "id": "luisdeleon",
+      "wd": "Q450246",
+      "name": "Luis de León",
+      "birth": 1527,
+      "death": 1591,
+      "cats": [
+        "literature"
+      ],
+      "gender": "",
+      "wiki": "https://ca.wikipedia.org/wiki/Luis_de_Le%C3%B3n",
+      "desc": "Poeta espanyol"
     }
   ],
   "EVENTS": [
