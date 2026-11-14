@@ -467,7 +467,9 @@
     .onview .item .addc,.onview .item .x,.onview .item .rp{
       min-width:36px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0;}
     .onview .item .addc{font-size:20px;}
-    .favb{min-width:30px;min-height:30px;display:inline-flex;align-items:center;justify-content:center;}
+    /* 36x36 com el +, el ⚠ i la ×: la regla del CLAUDE.md es que cap icona tactil es vegi
+     mes gran que una altra. Amb 30 l'estrella cantava al costat de les altres tres. */
+  .favb{min-width:36px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;}
   .onview .item .x{font-size:20px;}
     .onview .item .rp{font-size:13px;}
   }
@@ -2076,7 +2078,7 @@ function openDetail(p){
     <div class="desc">${esc(L(p.desc))}</div>
     <div class="actions">
       <button class="dbtn" data-act="context">${t('cro_context')}</button>
-      ${personQid(p.id)?`<button class="dbtn favbtn" data-act="fav" title="${esc(esFav(personQid(p.id))?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(personQid(p.id))}">${favIco(esFav(personQid(p.id)))}</button>`:''}
+      ${personQid(p.id)?`<button class="dbtn favbtn" data-act="fav" aria-label="${esc(esFav(personQid(p.id))?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(personQid(p.id))}">${favIco(esFav(personQid(p.id)))}</button>`:''}
       ${personQid(p.id)?`<button class="dbtn" data-act="addto">${t('cro_coll_addto')}</button>`:''}
       ${p.wiki?`<button class="dbtn" data-act="wiki">${linkLabel(p.wiki)} ↗</button>`:''}
       ${SEED_PINNED.includes(p.id)?'':`<button class="dbtn danger" data-act="remove">${t('cro_delete')}</button>`}
@@ -3350,7 +3352,7 @@ function toggleFavISincronitza(per){
   if(b && state.selected===per.id){
     const on=esFav(qid);
     b.innerHTML=favIco(on); b.setAttribute('aria-pressed',String(on));
-    b.title=on?t('cro_fav_unmark'):t('cro_fav_mark');
+    b.setAttribute('aria-label',on?t('cro_fav_unmark'):t('cro_fav_mark'));
   }
 }
 const favIco=on=>`<svg class="favi${on?' on':''}" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.9l1.9 3.9 4.3.6-3.1 3 .7 4.2L8 11.7l-3.8 2-.7-4.2-3.1-3 4.3-.6z"/></svg>`;
@@ -3371,11 +3373,26 @@ function renderFavorits(){
     const anys=(f.birth==null?'?':fmtY(f.birth))+(f.death==null?'':'–'+fmtY(f.death));
     return `<div class="item${ja?' favin':''}">`
       + `<span class="swatch" style="background:${swatchBg({cats})}"></span>`
-      + `<button class="nm" data-fav="${esc(f.qid)}" title="${esc(ja?t('cro_fav_already'):t('cro_fav_add'))}">${esc(L(f.name))}</button>`
+      + `<button class="nm" data-fav="${esc(f.qid)}" aria-label="${esc(ja?t('cro_fav_already'):t('cro_fav_add'))}">${esc(L(f.name))}</button>`
       + `<span class="favyr">${esc(anys)}</span>`
       + `</div>`;
   }).join('');
 }
+// Mateix globus que «A la vista»: la llista de Favorits es el mateix patro visual i no pot
+// tenir el tooltip gris i lent del navegador mentre la del costat en te un altre.
+$('#favorits').addEventListener('mousemove',e=>{
+  const b=e.target.closest('[data-fav]');
+  if(!b){hideBartip();return;}
+  placeBartip(b.getAttribute('aria-label')||'',e.clientX,e.clientY);
+});
+$('#favorits').addEventListener('mouseleave',hideBartip);
+// I l'estrella de la fitxa, que es l'unic boto de la fitxa amb etiqueta i no text.
+$('#detail').addEventListener('mousemove',e=>{
+  const b=e.target.closest('.favbtn');
+  if(!b){hideBartip();return;}
+  placeBartip(b.getAttribute('aria-label')||'',e.clientX,e.clientY);
+});
+$('#detail').addEventListener('mouseleave',hideBartip);
 $('#favorits').addEventListener('click',e=>{
   const b=e.target.closest('[data-fav]'); if(!b)return;
   const f=llegeixFavorits().find(x=>x&&x.qid===b.getAttribute('data-fav')); if(!f)return;
