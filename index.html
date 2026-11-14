@@ -2512,7 +2512,15 @@ $('#onview').addEventListener('click',e=>{
   const g=e.target.closest('[data-goto]');
   // Es tanca el popup del mobil abans de desplaçar: el pan i el parpelleig passen al canvas,
   // que hi queda a sota, i el flash s'hauria acabat abans que l'usuari el tanques a ma.
-  if(g){closeCfg();revealPerson(g.getAttribute('data-goto'));return;}   // clicking a name pans it to the centre
+  // ...i s'obre la fitxa, igual que clicar la seva barra al canvas: el nom de la llista i
+  // la barra son la mateixa persona i han de fer el mateix.
+  if(g){
+    closeCfg();
+    const gid=g.getAttribute('data-goto');
+    revealPerson(gid);
+    const gp=PEOPLE.find(x=>x.id===gid); if(gp)openDetail(gp);
+    return;
+  }
   const fv=e.target.closest('[data-favt]');
   if(fv){
     e.stopPropagation();
