@@ -849,3 +849,28 @@ persones a la BD li tocava en Kafka. No és cap inestabilitat del mecanisme.
 unificat **a posta** — refactoritzar la pestanya que ja es fa servir cada dia dins del mateix
 canvi que n'estrena una altra és escalar sense validar. Quan arribi el **tercer** joc amb pin,
 toca extreure'n un component compartit. Mentrestant: si toques el calendari d'una, mira l'altra.
+
+
+## El hub només ensenya jocs que existeixen (2026-11-14)
+
+«Endevina el personatge» sortia al hub amb el distintiu 🚧 i sense mòdul: clicar-lo només treia
+un toast. Tret. Una targeta que no fa res no crea expectativa, resta credibilitat — és el primer
+senyal que això encara no està acabat, i justament el que no vols el dia que ho ensenyes.
+
+El mecanisme del distintiu **es queda**: `badge()` el posa a qualsevol joc de `GAMES` sense entrada
+a `MODULES`. Tornar-hi un joc és afegir la línia i prou, i les claus `t_personatge`/`d_personatge`
+segueixen al diccionari.
+
+## L'estrella de favorits del «Personatge del dia» (2026-11-14)
+
+Era un botó que canviava de **text sencer** («☆ Afegeix a favorits» ↔ «★ Als favorits») i, amb
+ell, d'amplada: es movia tota la fila de botons. Ara és **només la icona**, la mateixa que al
+cronograma, buida o groga. Mesurat: 44px abans i després de clicar-lo.
+
+El text de `fav_on`/`fav_off` es queda com a **`aria-label`**, que és el que ha de llegir un lector
+de pantalla.
+
+⚠️ Fins ara `hb_favorits` era una via d'un sol sentit: l'escrivia el joc i el cronograma no en
+sabia res. **Des d'avui el cronograma també hi escriu** (estrella a la fitxa i a «A la vista»), i
+hi té la seva pròpia secció al panell lateral. Si toques la forma del que es desa, mira'ls tots
+dos: el contracte és `{qid,name,birth,death,img,desc}` i la `img` només la posa el joc.
