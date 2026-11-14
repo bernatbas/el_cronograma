@@ -261,7 +261,7 @@
   .favb{flex:0 0 auto;border:none;background:none;cursor:pointer;padding:2px 3px;line-height:0;color:inherit;border-radius:6px;}
   .favb:hover{background:var(--surface);}
   .favb:hover .favi{stroke:var(--fav);}
-  .dbtn.favbtn{padding:0 10px;line-height:0;display:inline-flex;align-items:center;}
+  .dbtn.favbtn{padding:0 7px;line-height:0;display:inline-flex;align-items:center;justify-content:center;}
   .dbtn.favbtn .favi{width:16px;height:16px;}
   .favyr{flex:0 0 auto;font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums;}
   .onview .item.favin{opacity:.55;}   /* ja es al canvas: segueix clicable, hi porta */
@@ -513,7 +513,7 @@
   .detail a.wiki{display:inline-block;margin-top:8px;color:var(--blue);text-decoration:none;font-size:14px;}
   .detail a.wiki:hover{text-decoration:underline;}
   .detail .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
-  .detail .dbtn{border:1px solid var(--border);background:#fff;border-radius:var(--r-card);padding:7px 12px;font-size:13px;cursor:pointer;color:var(--text);white-space:nowrap;}
+  .detail .dbtn{border:1px solid var(--border);background:#fff;border-radius:var(--r-card);padding:7px 10px;font-size:13px;cursor:pointer;color:var(--text);white-space:nowrap;}
   /* Amb ratoli els botons d'eines reparteixen l'amplada a parts iguals: quatre pastilles de
      mides diferents es llegien com quatre coses de pes diferent, i no ho son. El panell
      passa de 420 a 520px per encabir-los (al desktop hi ha lloc de sobra).
@@ -521,6 +521,9 @@
      no dos botons iguals que semblarien la mateixa cosa. */
   @media (pointer:fine){
     .detail .actions:not(.confirm) .dbtn{flex:1 1 0;min-width:0;}
+    /* ...menys l'estrella: es una icona, no una pastilla de text, i repartint a parts
+       iguals es menjava una cinquena part de la fila i aixafava «Mostra context». */
+    .detail .actions:not(.confirm) .dbtn.favbtn{flex:0 0 auto;}
   }
   .detail .dbtn:hover{background:var(--soft);}
   /* Un esborrany no es una fitxa amb eines, es una decisio per confirmar: per aixo el parell
@@ -664,6 +667,7 @@
     .detail h2{margin-top:6px;}
     .detail .close{top:12px;right:12px;min-width:40px;min-height:40px;display:flex;align-items:center;justify-content:center;font-size:26px;}
     .detail .dbtn{min-height:44px;padding:11px 14px;font-size:13px;}
+    .detail .dbtn.favbtn{padding:0 9px;}   /* al·tura tactil, pero l'ample just de la icona */
     .detail .actions{gap:8px;}
     /* Fitxa compacta i horitzontal al mòbil: menys aire, capçalera a tota amplada, menys scroll. */
     .detail{max-height:72dvh;padding:16px 16px calc(14px + env(safe-area-inset-bottom));}
