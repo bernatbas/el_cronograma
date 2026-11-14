@@ -86,7 +86,7 @@ async function closeCfgPopup(page) {
 async function openCollectionsSection(page) {
   if (await isCoarse(page)) {
     await openCfgPopup(page);
-    await page.locator('#cfgtabs .cfgtab').nth(1).click();   // 0 Marcs · 1 Col·leccions · 2 A la vista
+    await page.locator('#cfgtabs .cfgtab').nth(1).click();   // 0 Marcs · 1 Col·leccions · 2 Favorits · 3 A la vista
   } else {
     await openSidebar(page);
   }
@@ -227,10 +227,13 @@ test.describe('Configuració (tàctil)', () => {
     test.skip(!(await isCoarse(page)), 'Amb ratolí hi ha la barra lateral');
     await expect(page.locator('#cfgwrap')).toBeHidden();
     await openCfgPopup(page);
-    // les tres seccions han de ser DINS del popup, no a la barra
-    const dins = await page.evaluate(() =>
-      ['regions', 'collections', 'onview']
-        .every(id => document.getElementById('cfgbody').contains(document.getElementById(id))));
+    // TOTES les seccions han de ser DINS del popup, no a la barra. La llista es deriva del
+    // DOM i no s'escriu a ma: amb ['regions','collections','onview'] clavat, afegir la
+    // seccio de Favorits no va fer petar aquest test pero si el de les pestanyes.
+    const dins = await page.evaluate(() => {
+      const secs = [...document.querySelectorAll('#cfgbody section > div[id]')];
+      return secs.length >= 3 && secs.every(d => document.getElementById('cfgbody').contains(d));
+    });
     expect(dins).toBe(true);
   });
 
@@ -238,8 +241,15 @@ test.describe('Configuració (tàctil)', () => {
     await freshIndex(page);
     test.skip(!(await isCoarse(page)), 'Amb ratolí hi ha la barra lateral');
     await openCfgPopup(page);
-    const ids = ['regions', 'collections', 'onview'];
-    for (let i = 0; i < 3; i++) {
+    // ⚠️ Els ids es llegeixen del DOM, EN ORDRE, i no s'escriuen a ma: les pestanyes es
+    // generen de les seccions que hi ha (CFG_SECS), i amb la llista clavada el dia que
+    // se n'hi va afegir una (Favorits, 14/11/2026) la pestanya 2 va deixar de ser la que
+    // el test es pensava. Si n'hi ha una de nova, aixo segueix valent.
+    const ids = await page.evaluate(() =>
+      [...document.querySelectorAll('#cfgbody section > div[id]')].map(d => d.id));
+    expect(ids.length).toBeGreaterThanOrEqual(3);
+    await expect(page.locator('#cfgtabs .cfgtab')).toHaveCount(ids.length);
+    for (let i = 0; i < ids.length; i++) {
       await page.locator('#cfgtabs .cfgtab').nth(i).click();
       await expect(page.locator('#' + ids[i])).toBeVisible();
       for (const altre of ids.filter((_, k) => k !== i)) {
@@ -253,7 +263,8 @@ test.describe('Configuració (tàctil)', () => {
     test.skip(!(await isCoarse(page)), 'Amb ratolí hi ha la barra lateral');
     await openCfgPopup(page);
     const altures = [];
-    for (let i = 0; i < 3; i++) {
+    const nTabs = await page.locator('#cfgtabs .cfgtab').count();   // no 3 clavat: n'hi pot haver mes
+    for (let i = 0; i < nTabs; i++) {
       await page.locator('#cfgtabs .cfgtab').nth(i).click();
       altures.push(await page.locator('.cfg').evaluate(el => Math.round(el.getBoundingClientRect().height)));
     }
