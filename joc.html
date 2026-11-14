@@ -170,6 +170,10 @@
   .pbtn{flex:1 1 140px;display:inline-flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;padding:11px 14px;border-radius:var(--r-card);border:1px solid var(--border-strong);background:var(--canvas);color:var(--text);transition:transform .12s,box-shadow .12s,border-color .12s,color .12s;}
   .pbtn:hover{transform:translateY(-1px);border-color:var(--topbar-bg);color:var(--topbar-bg);}
   .pbtn.fav.on{background:#F7E5E0;border-color:var(--topbar-bg);color:#B23A2E;}
+  /* Nomes icona: no reparteix amplada amb els botons de text. */
+  .pbtn.favonly{flex:0 0 auto;padding:11px 13px;line-height:0;}
+  .favi{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round;}
+  .favi.on{fill:#D69A2D;stroke:#D69A2D;}
   .palbum{text-align:center;color:var(--text2);font-size:13px;margin-top:16px;}
   /* Pop-up d'invitacio a contribuir (Personatge del dia) */
   .pinvov{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(30,30,29,.55);opacity:0;transition:opacity .2s ease;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);}
@@ -1385,9 +1389,20 @@
       body.appendChild(chips);
       // (La invitacio a contribuir ja no es inline: ara es mostra com a pop-up modal; veure scheduleInvitePopup.)
       const acts=el('div','pacts');
+      // Nomes la icona: abans el boto canviava de text sencer en marcar-lo i es movia tota la
+      // fila. La mateixa estrella que el cronograma —buida o groga— i prou.
+      const favIco=function(on){ return '<svg class="favi'+(on?' on':'')+'" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.9l1.9 3.9 4.3.6-3.1 3 .7 4.2L8 11.7l-3.8 2-.7-4.2-3.1-3 4.3-.6z"/></svg>'; };
       const fav=isFav(p.qid);
-      const fb=el('button','pbtn fav'+(fav?' on':''), fav?t('fav_on'):t('fav_off'));
-      fb.addEventListener('click',function(){ const on=toggleFav(p); if(on) track('personatge_dia_favorit',{}); fb.classList.toggle('on',on); fb.textContent=on?t('fav_on'):t('fav_off'); });
+      const fb=el('button','pbtn fav favonly'+(fav?' on':''));
+      fb.innerHTML=favIco(fav);
+      fb.setAttribute('aria-label', fav?t('fav_on'):t('fav_off'));
+      fb.setAttribute('aria-pressed', String(fav));
+      fb.addEventListener('click',function(){
+        const on=toggleFav(p); if(on) track('personatge_dia_favorit',{});
+        fb.classList.toggle('on',on); fb.innerHTML=favIco(on);
+        fb.setAttribute('aria-label', on?t('fav_on'):t('fav_off'));
+        fb.setAttribute('aria-pressed', String(on));
+      });
       acts.appendChild(fb);
       const cb=el('button','pbtn',t('see_crono')); cb.addEventListener('click',function(){ viewInCronograma(p); }); acts.appendChild(cb);
       if(p.wiki){ const a=el('a','pbtn',t('read_more')); a.href=p.wiki; a.target='_blank'; a.rel='noopener'; a.addEventListener('click',function(){ track('personatge_dia_wiki',{}); }); acts.appendChild(a); }
