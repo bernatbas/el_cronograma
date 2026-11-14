@@ -922,7 +922,6 @@ const I18N={
     cro_fav_empty:'Encara no en tens cap.',
     cro_fav_mark:'Afegeix a favorits',
     cro_fav_unmark:'Treu dels favorits',
-    cro_fav_noqid:'Sense Q-id de Wikidata: no es pot desar a favorits.',
     cro_fav_add:'Posa’l al cronograma',
     cro_fav_already:'ja hi és',
     cro_onview:'A la vista',
@@ -3343,11 +3342,17 @@ function renderFavorits(){
   const favs=llegeixFavorits().filter(f=>f&&f.qid&&f.name);
   if(!favs.length){ cont.innerHTML=`<div class="empty">${t('cro_fav_empty')}</div>`; return; }
   cont.innerHTML=favs.map(f=>{
-    // El color: el mateix que tindra la barra, deduit de la descripcio igual que a la cerca.
-    const ja=PEOPLE.some(x=>x.wd===f.qid&&state.present.has(x.id));
+    // ⚠️ El color ha de ser EL MATEIX que a «A la vista» i a la barra del canvas: les
+    // categories de la persona. La primera versio les deduia de la descripcio amb
+    // guessCats() i no coincidia — l'Atila sortia teal («sense categoria») a Favorits i
+    // rosa («politica») a les altres dues bandes, que es com es va veure.
+    // guessCats() nomes val de reserva: un favorit marcat al joc pot no ser a la BD.
+    const dins=PEOPLE.find(x=>x.wd===f.qid);
+    const cats=dins?dins.cats:guessCats(f.desc||'');
+    const ja=!!dins&&state.present.has(dins.id);
     const anys=(f.birth==null?'?':fmtY(f.birth))+(f.death==null?'':'–'+fmtY(f.death));
     return `<div class="item${ja?' favin':''}">`
-      + `<span class="swatch" style="background:${swatchBg({cats:guessCats(f.desc||'')})}"></span>`
+      + `<span class="swatch" style="background:${swatchBg({cats})}"></span>`
       + `<button class="nm" data-fav="${esc(f.qid)}" title="${esc(ja?t('cro_fav_already'):t('cro_fav_add'))}">${esc(L(f.name))}</button>`
       + `<span class="favyr">${esc(anys)}</span>`
       + `</div>`;
