@@ -443,7 +443,9 @@
     .onview .item .addc,.onview .item .x,.onview .item .rp{
       min-width:36px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0;}
     .onview .item .addc{font-size:20px;}
-    .onview .item .x{font-size:20px;}
+    .favyr{flex:0 0 auto;font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums;}
+  .onview .item.favin{opacity:.55;}   /* ja es al canvas: segueix clicable, hi porta */
+  .onview .item .x{font-size:20px;}
     .onview .item .rp{font-size:13px;}
   }
   /* Hover tooltip on a person bar. Not a native `title`: that waits ~1s and, zoomed out, the pill is
@@ -688,10 +690,15 @@
         color:var(--text2);font-size:13px;line-height:1;cursor:pointer;border-radius:var(--r-card);padding:0;}
   .cfgx:active{background:var(--surface);}
   /* Les tres pestanyes reparteixen l'espai i la ✕ es queda amb el seu ample */
-  .cfgtabs{display:grid;grid-template-columns:repeat(3,1fr) auto;gap:4px;padding:6px;background:var(--soft);border-bottom:1px solid var(--border);}
+  .cfgtabs{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:4px;padding:6px;background:var(--soft);border-bottom:1px solid var(--border);}
   .cfgtab{min-height:30px;border:1px solid var(--border-strong);background:var(--canvas);color:var(--text2);
-          border-radius:var(--r-card);font:inherit;font-size:11.5px;font-weight:600;letter-spacing:.01em;
-          cursor:pointer;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+          border-radius:var(--r-card);font:inherit;font-size:11px;font-weight:600;letter-spacing:0;
+          cursor:pointer;padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  /* ⚠️ Amb QUATRE pestanyes (des que hi ha Favorits) cada una te ~72px a 375px, i «Col·leccions»
+     en demanava 75: sortia «Col·lecci…» retallat justament a la pestanya activa. S'ha abaixat la
+     lletra i tret el letter-spacing en lloc d'escurcar la paraula, que «col·leccio» es un concepte
+     del producte i no s'ha de dir de dues maneres. Si algun dia n'hi ha una CINQUENA, aixo ja no
+     donara mes de si i tocara una altra solucio (pestanyes amb scroll, o etiquetes curtes). */
   .cfgtab.on{background:var(--topbar-bg);border-color:var(--topbar-bg);color:#fff;}
   .cfgx{order:9;}
   .cfgbody{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 10px calc(10px + env(safe-area-inset-bottom));}
@@ -759,6 +766,10 @@
       <section>
         <h3><span data-i18n="cro_collections">Col·leccions</span></h3>
         <div id="collections"></div>
+      </section>
+      <section>
+        <h3><span data-i18n="cro_favorits">Favorits</span></h3>
+        <div class="onview" id="favorits"></div>
       </section>
       <section>
         <h3><span data-i18n="cro_onview">A la vista</span></h3>
@@ -867,6 +878,7 @@ const I18N={
     cro_act_context:'mostra context',
     cro_act_coll_on: v => 'activar «'+v.name+'»',
     undo_coll_new: v => 'desar «'+v.name+'»',
+    undo_fav_add: v => 'afegir «'+v.name+'» des de favorits',
     undo_coll_del: v => 'esborrar «'+v.name+'»',
     undo_coll_rename: v => 'reanomenar «'+v.name+'»',
     undo_coll_rm: v => 'treure de «'+v.name+'»',
@@ -888,6 +900,11 @@ const I18N={
     cro_marcs:'Marcs històrics',
     cro_marcs_short:'Marcs',   // pestanya del popup del mòbil: «Marcs històrics» no hi cap a 360px
     cro_collections:'Col·leccions',
+    cro_favorits:'Favorits',
+    cro_favorits_short:'Favorits',
+    cro_fav_empty:'Encara no en tens cap. Marca’ls amb l’estrella al Personatge del dia.',
+    cro_fav_add:'Posa’l al cronograma',
+    cro_fav_already:'ja hi és',
     cro_onview:'A la vista',
     cro_events:'Esdeveniments',
     cro_newcol:'+ Nova col·lecció',
@@ -2000,6 +2017,7 @@ function renderSidebar(){
   }else{
     _cont.innerHTML=_botons+(newCollOpen?newCollBoxHTML():newCollBtnHTML());
   }
+  renderFavorits();
   const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>L(a.name).localeCompare(L(b.name),LANG));   // always alphabetical, en l'idioma actiu
   $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}" title="${t('cro_center')}">${esc(L(p.name))}</button>${p.wd?`<button class="addc" data-addc="${p.id}" title="${t('cro_coll_addto')}" aria-label="${t('cro_coll_addto')}">+</button>`:''}${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}">⚠</button><button class="x" data-remove="${p.id}" title="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
 }
@@ -3230,6 +3248,40 @@ function fetchPerson(qid){
 // Afegeix el personatge del joc a la vista com qualsevol resultat de cerca de Wikidata:
 // lsReady segueix actiu, l’estat es desa normalment, i la × de la personbar és equivalent
 // a la × d’«A la vista» (removePerson).
+// --- Favorits -------------------------------------------------------------
+// Els escriu el JOC (l'estrella del «Personatge del dia») a hb_favorits; aqui nomes
+// es LLEGEIXEN, com hb_view_person. Per aixo es tornen a llegir a cada render en lloc
+// de desar-los a `state`: l'altra pestanya els pot haver canviat mentrestant.
+// Forma desada: {qid,name,birth,death,img,desc} — just el que vol mostraPersonatge().
+const FAV_LS='hb_favorits';
+function llegeixFavorits(){
+  try{ const a=JSON.parse(localStorage.getItem(FAV_LS)||'[]'); return Array.isArray(a)?a:[]; }
+  catch(ex){ return []; }   // si algu l'ha deixat malmes, val mes llista buida que pagina morta
+}
+function renderFavorits(){
+  const cont=$('#favorits'); if(!cont)return;
+  const favs=llegeixFavorits().filter(f=>f&&f.qid&&f.name);
+  if(!favs.length){ cont.innerHTML=`<div class="empty">${t('cro_fav_empty')}</div>`; return; }
+  cont.innerHTML=favs.map(f=>{
+    // El color: el mateix que tindra la barra, deduit de la descripcio igual que a la cerca.
+    const ja=PEOPLE.some(x=>x.wd===f.qid&&state.present.has(x.id));
+    const anys=(f.birth==null?'?':fmtY(f.birth))+(f.death==null?'':'–'+fmtY(f.death));
+    return `<div class="item${ja?' favin':''}">`
+      + `<span class="swatch" style="background:${swatchBg({cats:guessCats(f.desc||'')})}"></span>`
+      + `<button class="nm" data-fav="${esc(f.qid)}" title="${esc(ja?t('cro_fav_already'):t('cro_fav_add'))}">${esc(L(f.name))}</button>`
+      + `<span class="favyr">${esc(anys)}</span>`
+      + `</div>`;
+  }).join('');
+}
+$('#favorits').addEventListener('click',e=>{
+  const b=e.target.closest('[data-fav]'); if(!b)return;
+  const f=llegeixFavorits().find(x=>x&&x.qid===b.getAttribute('data-fav')); if(!f)return;
+  const ja=PEOPLE.find(x=>x.wd===f.qid);
+  if(ja&&state.present.has(ja.id)){ revealPerson(ja.id); return; }   // ja hi es: hi porta, no el duplica
+  pushUndo('undo_fav_add',{name:L(f.name)});
+  mostraPersonatge(f,{noBar:true});
+});
+
 function mostraPersonatge(p,opts){
   const existing=PEOPLE.find(x=>x.wd===p.qid);
   const id=existing?existing.id:'wd_'+p.qid;
@@ -3510,7 +3562,7 @@ checkPortrait();
 // es queda el 100% de l'ample i el cos té ~250px per a UNA sola secció.
 const CFG_MQ=window.matchMedia('(pointer:coarse)');
 const CFG_LS='historiabasica.cfgtab';
-const CFG_KEYS=['cro_marcs_short','cro_collections','cro_onview'];   // etiquetes curtes: han de cabre en 1/3 d'un mòbil
+const CFG_KEYS=['cro_marcs_short','cro_collections','cro_favorits_short','cro_onview'];   // etiquetes curtes: han de cabre en 1/4 d'un mòbil
 const CFG_SECS=[...document.querySelectorAll('.sidebar section')];
 function showCfgTab(i){
   CFG_SECS.forEach((sec,k)=>sec.classList.toggle('on',k===i));
