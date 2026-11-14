@@ -1548,7 +1548,7 @@ def _save(path, lines):
 def _commit_backlog(msg):
     """Committeja el BACKLOG.md tot sol, perque un item afegit des del dashboard no
     es quedi com un canvi solt que es pot perdre. Path-limited A PROPOSIT: si en
-    Bernat te l'index.html a mig editar, un commit ampli se l'enduria pel mig.
+    Bernat te la BD o l'index.html a mig editar, un commit ampli se l'enduria pel mig.
     Si no hi ha res a committejar, git retorna != 0 i ho deixem passar."""
     ok, out = run(["git", "commit", "-m", msg, "--", BACKLOG_FILE])
     return ok, out
