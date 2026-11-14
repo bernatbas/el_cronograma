@@ -241,6 +241,19 @@
   .legend .swatch{width:10px;height:10px;border-radius:3px;flex:0 0 auto;}
 
   .onview .item{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:14px;}
+  /* ⚠️ Aquest bloc ha d'anar al NIVELL DE DALT. La primera versio va caure dins de
+     @media (pointer:coarse) i a l'escriptori no s'aplicava res: l'estrella sortia negra
+     (el fill per defecte d'un SVG) i els anys dels favorits sense estil. Si l'has de moure,
+     comprova en quin bloc cau. */
+  :root{ --fav:#D69A2D; }   /* groc de favorits; nomes viu aqui, no es token compartit amb joc.html */
+  .favi{width:14px;height:14px;fill:none;stroke:var(--text2);stroke-width:1.5;stroke-linejoin:round;}
+  .favi.on{fill:var(--fav);stroke:var(--fav);}
+  .favb{flex:0 0 auto;border:none;background:none;cursor:pointer;padding:0 2px;line-height:0;color:inherit;}
+  .favb:hover .favi{stroke:var(--fav);}
+  .dbtn.favbtn{padding:0 10px;line-height:0;display:inline-flex;align-items:center;}
+  .dbtn.favbtn .favi{width:16px;height:16px;}
+  .favyr{flex:0 0 auto;font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums;}
+  .onview .item.favin{opacity:.55;}   /* ja es al canvas: segueix clicable, hi porta */
   .onview .item .nm{flex:1 1 auto;cursor:pointer;border:none;background:none;font:inherit;color:inherit;text-align:left;padding:2px 4px;margin-left:-4px;border-radius:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .onview .item .nm:hover{background:var(--surface);text-decoration:underline;}
   .onview .item .x,.onview .item .rp{flex:0 0 auto;color:var(--text2);cursor:pointer;border:none;background:none;font-size:16px;line-height:1;padding:2px 5px;border-radius:6px;}
@@ -443,8 +456,7 @@
     .onview .item .addc,.onview .item .x,.onview .item .rp{
       min-width:36px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0;}
     .onview .item .addc{font-size:20px;}
-    .favyr{flex:0 0 auto;font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums;}
-  .onview .item.favin{opacity:.55;}   /* ja es al canvas: segueix clicable, hi porta */
+    .favb{min-width:30px;min-height:30px;display:inline-flex;align-items:center;justify-content:center;}
   .onview .item .x{font-size:20px;}
     .onview .item .rp{font-size:13px;}
   }
@@ -902,7 +914,10 @@ const I18N={
     cro_collections:'Col·leccions',
     cro_favorits:'Favorits',
     cro_favorits_short:'Favorits',
-    cro_fav_empty:'Encara no en tens cap. Marca’ls amb l’estrella al Personatge del dia.',
+    cro_fav_empty:'Encara no en tens cap. Marca’ls amb l’estrella, aquí o al Personatge del dia.',
+    cro_fav_mark:'Afegeix a favorits',
+    cro_fav_unmark:'Treu dels favorits',
+    cro_fav_noqid:'Sense Q-id de Wikidata: no es pot desar a favorits.',
     cro_fav_add:'Posa’l al cronograma',
     cro_fav_already:'ja hi és',
     cro_onview:'A la vista',
@@ -2019,7 +2034,7 @@ function renderSidebar(){
   }
   renderFavorits();
   const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>L(a.name).localeCompare(L(b.name),LANG));   // always alphabetical, en l'idioma actiu
-  $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}" title="${t('cro_center')}">${esc(L(p.name))}</button>${p.wd?`<button class="addc" data-addc="${p.id}" title="${t('cro_coll_addto')}" aria-label="${t('cro_coll_addto')}">+</button>`:''}${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}">⚠</button><button class="x" data-remove="${p.id}" title="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
+  $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}" title="${t('cro_center')}">${esc(L(p.name))}</button>${p.wd?`<button class="favb" data-favt="${p.id}" title="${esc(esFav(p.wd)?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(p.wd)}">${favIco(esFav(p.wd))}</button>`:''}${p.wd?`<button class="addc" data-addc="${p.id}" title="${t('cro_coll_addto')}" aria-label="${t('cro_coll_addto')}">+</button>`:''}${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}">⚠</button><button class="x" data-remove="${p.id}" title="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
 }
 
 // ============================================================
@@ -2047,6 +2062,7 @@ function openDetail(p){
     <div class="desc">${esc(L(p.desc))}</div>
     <div class="actions">
       <button class="dbtn" data-act="context">${t('cro_context')}</button>
+      ${personQid(p.id)?`<button class="dbtn favbtn" data-act="fav" title="${esc(esFav(personQid(p.id))?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(personQid(p.id))}">${favIco(esFav(personQid(p.id)))}</button>`:''}
       ${personQid(p.id)?`<button class="dbtn" data-act="addto">${t('cro_coll_addto')}</button>`:''}
       ${p.wiki?`<button class="dbtn" data-act="wiki">${linkLabel(p.wiki)} ↗</button>`:''}
       ${SEED_PINNED.includes(p.id)?'':`<button class="dbtn danger" data-act="remove">${t('cro_delete')}</button>`}
@@ -2057,6 +2073,11 @@ function openDetail(p){
     // ⚠️ stopPropagation obligatori: el handler de «clic fora» viu al document i, sense aixo,
     // tancava el menu just despres d'obrir-lo. El + d'«A la vista» ja el portava, i per aixo
     // aquell funcionava i aquests dos no.
+    if(act==='fav'){
+      ev.stopPropagation();
+      toggleFavISincronitza(p);
+      return;
+    }
     if(act==='addto'){ev.stopPropagation();openAddToColl(p.id,btn);return;}
     if(act==='remove')removePerson(p.id);
     else if(act==='wiki')window.open(p.wiki,'_blank','noopener,noreferrer');
@@ -2468,6 +2489,13 @@ $('#onview').addEventListener('click',e=>{
   // Es tanca el popup del mobil abans de desplaçar: el pan i el parpelleig passen al canvas,
   // que hi queda a sota, i el flash s'hauria acabat abans que l'usuari el tanques a ma.
   if(g){closeCfg();revealPerson(g.getAttribute('data-goto'));return;}   // clicking a name pans it to the centre
+  const fv=e.target.closest('[data-favt]');
+  if(fv){
+    e.stopPropagation();
+    const per=PEOPLE.find(x=>x.id===fv.getAttribute('data-favt'));
+    if(per) toggleFavISincronitza(per);
+    return;
+  }
   const ac=e.target.closest('[data-addc]');
   if(ac){e.stopPropagation();openAddToColl(ac.getAttribute('data-addc'),ac);return;}
   if(e.target.closest('[data-report]')){WIP();return;}
@@ -3258,6 +3286,39 @@ function llegeixFavorits(){
   try{ const a=JSON.parse(localStorage.getItem(FAV_LS)||'[]'); return Array.isArray(a)?a:[]; }
   catch(ex){ return []; }   // si algu l'ha deixat malmes, val mes llista buida que pagina morta
 }
+function esFav(qid){ return !!qid && llegeixFavorits().some(f=>f&&f.qid===qid); }
+// ⚠️ NO passa pel Desfes. La seva foto guarda {pinned, collections, marcs, showEvents, focus}
+// i els favorits no hi son: posar-hi pushUndo() faria que «desfes» desfes una ALTRA cosa.
+function toggleFav(p){
+  const qid=p.wd||p.qid; if(!qid)return null;
+  const a=llegeixFavorits().filter(f=>f&&f.qid);
+  const i=a.findIndex(f=>f.qid===qid);
+  if(i>=0){ a.splice(i,1); }
+  else {
+    // La foto nomes la te el joc; si ja hi era i la portava, no se li pren.
+    const abans=llegeixFavorits().find(f=>f&&f.qid===qid);
+    a.push({qid, name:L(p.name), birth:p.birth==null?null:p.birth, death:p.death==null?null:p.death,
+            img:(abans&&abans.img)||null, desc:L(p.desc)||''});
+  }
+  try{ localStorage.setItem(FAV_LS,JSON.stringify(a)); }catch(ex){}
+  return i<0;   // true = ara es favorit
+}
+// La MATEIXA persona pot tenir dues estrelles a la pantalla alhora (la fitxa i «A la vista»),
+// i han d'anar juntes. Les dues accions passen per aqui: anar-hi posant pedaços a cada banda
+// ja va deixar-les desparellades dues vegades.
+function toggleFavISincronitza(per){
+  const qid=per.wd||per.qid; if(!qid)return;
+  toggleFav(per);
+  render();                                   // refa «A la vista» i la llista de Favorits
+  const b=$('#detail .favbtn');                // i la fitxa, si es oberta i es d'aquesta persona
+  if(b && state.selected===per.id){
+    const on=esFav(qid);
+    b.innerHTML=favIco(on); b.setAttribute('aria-pressed',String(on));
+    b.title=on?t('cro_fav_unmark'):t('cro_fav_mark');
+  }
+}
+const favIco=on=>`<svg class="favi${on?' on':''}" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.9l1.9 3.9 4.3.6-3.1 3 .7 4.2L8 11.7l-3.8 2-.7-4.2-3.1-3 4.3-.6z"/></svg>`;
+
 function renderFavorits(){
   const cont=$('#favorits'); if(!cont)return;
   const favs=llegeixFavorits().filter(f=>f&&f.qid&&f.name);
