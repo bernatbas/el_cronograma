@@ -822,13 +822,18 @@
     try{ document.title=t('doc_title'); }catch(_){}
   }
 
-  // --- Catàleg de jocs (de moment només obren un placeholder) ---
+  // --- Catàleg de jocs ---
+  // Només hi ha d'haver jocs que FUNCIONIN. Una targeta que no fa res no crea expectativa,
+  // resta credibilitat: és el primer senyal que això encara no està acabat.
+  // El mecanisme del distintiu «🚧 Pròximament» es queda (qualsevol joc sense mòdul el rep,
+  // veure badge()), així que tornar a posar-n'hi un és afegir la línia i prou.
+  // Tret del hub el 14/11/2026: 'personatge' («Endevina el personatge»), que no té mòdul.
+  // Les seves claus t_personatge/d_personatge es queden al diccionari, a punt.
   const GAMES=[
     {id:'ordena',       ic:'🕰️', titleKey:'t_ordena',        descKey:'d_ordena'},
     {id:'abansdespres', ic:'⚖️', titleKey:'t_abansdespres',  descKey:'d_abansdespres'},
     {id:'personatgedia',ic:'🎭', titleKey:'t_personatgedia', descKey:'d_personatgedia', discover:true},
     {id:'memory',       ic:'🃏', titleKey:'t_memory',        descKey:'d_memory'},
-    {id:'personatge',   ic:'🕵️', titleKey:'t_personatge',    descKey:'d_personatge'},
     {id:'contemporanis',ic:'🤝', titleKey:'t_contemporanis', descKey:'d_contemporanis'}
   ];
   const app=document.getElementById('app');
