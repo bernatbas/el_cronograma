@@ -245,6 +245,12 @@
      els noms una mica llargs sortien tallats («Sofia Ja...») tenint marge de sobra. */
   .onview .item{display:flex;align-items:center;gap:1px;padding:5px 0;font-size:14px;}
   .onview .item>button:not(.nm):first-of-type{margin-left:6px;}
+  /* ⚠️ El quadrat necessita el SEU marge, no pot dependre del gap de la fila. El `.nm` porta
+     margin-left:-4px perque la pastilla del hover comenci abans del text; amb el gap antic de
+     8px quedaven 4px de respir, pero en ajuntar les icones (gap:1px) la resta donava -3 i la
+     pastilla tapava 3px del quadrat en passar-hi el ratoli: semblava mes petit que els altres.
+     Amb 6px aqui, el text arrenca a 7px del quadrat i la pastilla a 3px. */
+  .onview .item .swatch{margin-right:6px;}
   /* ⚠️ Aquest bloc ha d'anar al NIVELL DE DALT. La primera versio va caure dins de
      @media (pointer:coarse) i a l'escriptori no s'aplicava res: l'estrella sortia negra
      (el fill per defecte d'un SVG) i els anys dels favorits sense estil. Si l'has de moure,
