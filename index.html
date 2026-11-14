@@ -240,7 +240,11 @@
   .legend .lgi{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);white-space:nowrap;}
   .legend .swatch{width:10px;height:10px;border-radius:3px;flex:0 0 auto;}
 
-  .onview .item{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:14px;}
+  /* gap petit: les quatre icones van JUNTES i el que separa el nom del grup es el
+     margin-left de la primera. Amb gap:8px uniforme s'hi menjaven ~32px d'amplada i
+     els noms una mica llargs sortien tallats («Sofia Ja...») tenint marge de sobra. */
+  .onview .item{display:flex;align-items:center;gap:1px;padding:5px 0;font-size:14px;}
+  .onview .item>button:not(.nm):first-of-type{margin-left:6px;}
   /* ⚠️ Aquest bloc ha d'anar al NIVELL DE DALT. La primera versio va caure dins de
      @media (pointer:coarse) i a l'escriptori no s'aplicava res: l'estrella sortia negra
      (el fill per defecte d'un SVG) i els anys dels favorits sense estil. Si l'has de moure,
@@ -248,7 +252,8 @@
   :root{ --fav:#D69A2D; }   /* groc de favorits; nomes viu aqui, no es token compartit amb joc.html */
   .favi{width:14px;height:14px;fill:none;stroke:var(--text2);stroke-width:1.5;stroke-linejoin:round;}
   .favi.on{fill:var(--fav);stroke:var(--fav);}
-  .favb{flex:0 0 auto;border:none;background:none;cursor:pointer;padding:0 2px;line-height:0;color:inherit;}
+  .favb{flex:0 0 auto;border:none;background:none;cursor:pointer;padding:2px 3px;line-height:0;color:inherit;border-radius:6px;}
+  .favb:hover{background:var(--surface);}
   .favb:hover .favi{stroke:var(--fav);}
   .dbtn.favbtn{padding:0 10px;line-height:0;display:inline-flex;align-items:center;}
   .dbtn.favbtn .favi{width:16px;height:16px;}
@@ -256,7 +261,7 @@
   .onview .item.favin{opacity:.55;}   /* ja es al canvas: segueix clicable, hi porta */
   .onview .item .nm{flex:1 1 auto;cursor:pointer;border:none;background:none;font:inherit;color:inherit;text-align:left;padding:2px 4px;margin-left:-4px;border-radius:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .onview .item .nm:hover{background:var(--surface);text-decoration:underline;}
-  .onview .item .x,.onview .item .rp{flex:0 0 auto;color:var(--text2);cursor:pointer;border:none;background:none;font-size:16px;line-height:1;padding:2px 5px;border-radius:6px;}
+  .onview .item .x,.onview .item .rp{flex:0 0 auto;color:var(--text2);cursor:pointer;border:none;background:none;font-size:16px;line-height:1;padding:2px 3px;border-radius:6px;}
   .onview .item .rp{font-size:12px;opacity:.55;}
   .onview .item .x:hover,.onview .item .rp:hover{background:var(--surface);color:var(--text);opacity:1;}
   #collections{display:flex;flex-direction:column;gap:6px;}
@@ -443,7 +448,7 @@
   .bmsublist .bmnew{border-top:1px dashed var(--border-strong);}
   /* El + de cada fila d'«A la vista» */
   .onview .item .addc{flex:0 0 auto;border:none;background:none;color:var(--text2);font-size:17px;
-        line-height:1;padding:2px 5px;border-radius:6px;cursor:pointer;font-family:inherit;}
+        line-height:1;padding:2px 3px;border-radius:6px;cursor:pointer;font-family:inherit;}
   .onview .item .addc:hover{background:var(--surface);color:var(--text);}
   /* ⚠️ Mides tactils de la fila d'«A la vista». Mesurat al mobil: la × feia 19x19, el ⚠ 22x16
      i el + 27x29 —tots per sota de qualsevol minim raonable— i van de tres en tres en una
@@ -914,7 +919,7 @@ const I18N={
     cro_collections:'Col·leccions',
     cro_favorits:'Favorits',
     cro_favorits_short:'Favorits',
-    cro_fav_empty:'Encara no en tens cap. Marca’ls amb l’estrella, aquí o al Personatge del dia.',
+    cro_fav_empty:'Encara no en tens cap.',
     cro_fav_mark:'Afegeix a favorits',
     cro_fav_unmark:'Treu dels favorits',
     cro_fav_noqid:'Sense Q-id de Wikidata: no es pot desar a favorits.',
@@ -2034,7 +2039,7 @@ function renderSidebar(){
   }
   renderFavorits();
   const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>L(a.name).localeCompare(L(b.name),LANG));   // always alphabetical, en l'idioma actiu
-  $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}" title="${t('cro_center')}">${esc(L(p.name))}</button>${p.wd?`<button class="favb" data-favt="${p.id}" title="${esc(esFav(p.wd)?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(p.wd)}">${favIco(esFav(p.wd))}</button>`:''}${p.wd?`<button class="addc" data-addc="${p.id}" title="${t('cro_coll_addto')}" aria-label="${t('cro_coll_addto')}">+</button>`:''}${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}">⚠</button><button class="x" data-remove="${p.id}" title="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
+  $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}">${esc(L(p.name))}</button>${p.wd?`<button class="favb" data-favt="${p.id}" aria-label="${esc(esFav(p.wd)?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(p.wd)}">${favIco(esFav(p.wd))}</button>`:''}${p.wd?`<button class="addc" data-addc="${p.id}" aria-label="${t('cro_coll_addto')}">+</button>`:''}${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}" aria-label="${t('cro_report')}">⚠</button><button class="x" data-remove="${p.id}" aria-label="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
 }
 
 // ============================================================
@@ -2479,9 +2484,23 @@ $('#regions').addEventListener('change',e=>{
   pushUndo('cro_act_marc',{name:L((MARCS.find(x=>x.id===m)||{}).name)});
   if(e.target.checked)state.marcs.add(m);else state.marcs.delete(m);render();
 });
-$('#onview').addEventListener('mousemove',e=>{   // same styled tooltip as the bars, so a bare ⚠ is discoverable
-  const rp=e.target.closest('[data-report]');
-  if(rp)placeBartip('Reportar error',e.clientX,e.clientY);else hideBartip();
+// Un SOL tipus de globus per a tota la fila. Abans el ⚠ tenia el globus negre de l'app
+// (instantani) i els altres tres el `title` natiu del navegador (gris i amb mig segon de
+// retard): passar el dit per la fila donava dues coses diferents. Ara tots fan servir el
+// mateix, i els botons porten aria-label en lloc de title —que es el que ha de llegir un
+// lector de pantalla— aixi el navegador no en pinta cap de propi.
+// Al mobil no en surt cap: placeBartip ja se'n desfa amb (pointer:coarse).
+function etiquetaFila(b){
+  if(b.hasAttribute('data-favt'))  return t(b.getAttribute('aria-pressed')==='true'?'cro_fav_unmark':'cro_fav_mark');
+  if(b.hasAttribute('data-addc'))  return t('cro_coll_addto');
+  if(b.hasAttribute('data-report'))return t('cro_report');
+  if(b.hasAttribute('data-remove'))return t('cro_remove');
+  return t('cro_center');   // el nom
+}
+$('#onview').addEventListener('mousemove',e=>{
+  const b=e.target.closest('[data-goto],[data-favt],[data-addc],[data-report],[data-remove]');
+  if(!b){hideBartip();return;}
+  placeBartip(etiquetaFila(b),e.clientX,e.clientY);
 });
 $('#onview').addEventListener('mouseleave',hideBartip);
 $('#onview').addEventListener('click',e=>{
