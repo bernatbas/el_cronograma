@@ -47,11 +47,13 @@ Un tooltip o overlay que expliqui els gestos bàsics (zoom, cerca, col·leccions
 ## Editar layout mòbil i replantejar funcions
 En mobil no m'acaba de convencer, crec que potser alguna funció simplement s'ha d'eliminar, com veure eres i marcs històrics. També la barra lateral crec que no funciona, suggereixo posar-hi un botó tipus a baix a la dreta de settings (o icone a definir) que permeti modificar la vista amb afegir coleccons, veure personatges de la vista actual, i aquesta interacció que en desktop sí que ofereix la lat bar.
 
-## Unificar DB: data.js com a font única per a index.html i joc.html
+## [TANCAT] Unificar DB: data.js com a font única per a index.html i joc.html
 Ara la DB viu embedded a index.html i es copia a data.js. Objectiu: invertir-ho. data.js (o equivalent) és la font única, i cada pàgina carrega el que necessita (PEOPLE+EVENTS per al joc, tot per al cronograma). ERAS, MARCS, COLLECTIONS seguirien embedded a index.html perquè el joc no les necessita. Afecta: db_add_person escriu a data.js, index.html llegeix HB_DATA.PEOPLE via script src. Prerequisit: i18n real (les entrades de PEOPLE podrien tenir L() en data.js). Veure CLAUDE.md opció B.
+> Nota (2026-11-14): Fet el 14/11/2026, però al revés del que deia l'enunciat: en comptes de fer de data.js la font, la BD surt de l'index.html a db.js i data.js desapareix. index.html passa de 271K a 221K. El joc en treu window.HB_DATA={PEOPLE,EVENTS}.
 
-## Desfer el copy de la db i data.js
+## [TANCAT] Desfer el copy de la db i data.js
 Per garantir que el joc no canvia al llarg del dia, i el seed no genera contingut diferent, proposo només editar la db embeded, i que un cop al día, al final de dia, programar que es corri l'scrip per sincronitzar data.js només a les 11h30 de la nit cada dia, o algo així. Segurament git pot oferir coses així
+> Nota (2026-11-14): Fet el 14/11/2026: no cal cap script diari ni cap còpia, perquè ja no hi ha còpia. db.js és l'original i el carreguen les dues pàgines, així que el joc no pot divergir del cronograma ni a mitja jornada.
 
 ## Afegir el mapping de paraules clau a categories en el dashboard
 Poder editar el mapping de paraules clau a categories des del dashboard, veure quines paraules clau són les que porten a algú a catalogar-lo com a músic, i afegir les que detecti que hi falten.

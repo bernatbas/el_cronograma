@@ -133,7 +133,7 @@ jobs:
           print('OK: blocs compartits i tokens sincronitzats')
           EOF
 
-      # El guard de l'index.html talla les col·leccions massa grosses i ho diu per consola,
+      # El guard de db.js talla les col·leccions massa grosses i ho diu per consola,
       # pero aixo ja es en viu. Aqui hi petem, que es el moment bo: una col·leccio de 500
       # persones ni carregaria (byIds fa UNA consulta SPARQL i Wikidata dona 414 a partir
       # d'uns 600 Q-ids) ni es podria llegir (carrils ~ persones en el pitjor cas, i 60
@@ -144,11 +144,11 @@ jobs:
           python3 - <<'EOF'
           import re, sys
 
-          src = open('index.html', encoding='utf-8').read()
+          src = open('db.js', encoding='utf-8').read()
 
           m = re.search(r'const\s+COLL_MAX\s*=\s*(\d+)\s*,\s*WD_IDS_MAX\s*=\s*(\d+)', src)
           if not m:
-              sys.exit("ERROR: no trobo COLL_MAX/WD_IDS_MAX a l'index.html "
+              sys.exit("ERROR: no trobo COLL_MAX/WD_IDS_MAX a db.js "
                        "(s'han renombrat? el check els llegeix d'alla)")
           COLL_MAX, WD_IDS_MAX = int(m.group(1)), int(m.group(2))
           if COLL_MAX > WD_IDS_MAX:
@@ -156,7 +156,7 @@ jobs:
 
           i = src.find('const COLLECTIONS=[')
           if i < 0:
-              sys.exit("ERROR: no trobo COLLECTIONS a l'index.html")
+              sys.exit("ERROR: no trobo COLLECTIONS a db.js")
           depth, end = 0, None
           for k in range(i + len('const COLLECTIONS='), len(src)):
               if src[k] == '[':
@@ -186,7 +186,7 @@ jobs:
                   fail.append("'%s' te %d Q-id(s) repetits" % (cid, dup))
               if len(qids) > COLL_MAX:
                   fail.append("'%s' te %d persones i el sostre es %d "
-                              "(parteix-la, o apuja COLL_MAX a l'index.html si saps que fas)"
+                              "(parteix-la, o apuja COLL_MAX a db.js si saps que fas)"
                               % (cid, len(qids), COLL_MAX))
               print("  %-18s %3d persones" % (cid, len(qids)))
 
@@ -199,14 +199,19 @@ jobs:
         run: |
           python3 - <<'EOF'
           import re, sys
+          # db.js tambe: des que la BD en va sortir, te el 21% del codi i un error alla
+          # deixa les dues pagines sense dades.
+          trossos = []
           html = open('index.html').read()
           m = re.search(r'<script>(.*)</script>', html, re.DOTALL)
           if not m:
-              sys.exit('ERROR: no s\'ha trobat el bloc <script>')
-          s = m.group(1)
-          if s.count('{') != s.count('}'):
-              sys.exit(f'ERROR: claus desequilibrades ({s.count("{")} open vs {s.count("}")} close)')
-          print(f'OK: script {len(s):,} chars, claus equilibrades')
+              sys.exit('ERROR: no s\'ha trobat el bloc <script> de index.html')
+          trossos.append(('index.html <script>', m.group(1)))
+          trossos.append(('db.js', open('db.js', encoding='utf-8').read()))
+          for nom, s in trossos:
+              if s.count('{') != s.count('}'):
+                  sys.exit(f'ERROR: claus desequilibrades a {nom} ({s.count("{")} open vs {s.count("}")} close)')
+              print(f'OK: {nom} {len(s):,} chars, claus equilibrades')
           EOF
 
   playwright:

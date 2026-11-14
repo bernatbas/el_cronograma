@@ -645,10 +645,10 @@
   <span><span data-i18n="footer_source">Dades de</span> <a href="https://www.wikidata.org" target="_blank" rel="noopener noreferrer">Wikidata</a> · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0</a></span>
 </footer>
 
-<!-- ⚠️ PROVISIONAL: data.js és una CÒPIA (snapshot) de les dades que ara viuen a
-     index.html, feta per facilitar el testeig local. Quan existeixi la DB externa,
-     substituir aquest <script> pel carregador real (fetch a la DB). Veure ESTRATEGIA_JOC.md. -->
-<script src="data.js"></script>
+<!-- La base de dades, la MATEIXA que carrega el cronograma. Abans aqui hi havia data.js,
+     que n'era una copia generada i es podia quedar endarrerida. Deixa window.HB_DATA amb
+     PEOPLE i EVENTS, que es tot el que necessiten els jocs. Veure la capçalera de db.js. -->
+<script src="db.js"></script>
 <!-- Índex d'IDs de Wikidata per al joc «Personatge del dia». Generar amb gen_personatges.py.
      De moment pot ser una MOSTRA de poques entrades per validar el flux. Veure ESTRATEGIA_JOC.md. -->
 <script src="personatges.js"></script>

@@ -36,12 +36,13 @@ HOST = "127.0.0.1"
 # Ara: el selector de branca del dashboard deixa canviar-hi, pero fora de BRANCA_BD les
 # escriptures es refusen. Es a proposit que NO committegem a `main` des d'una altra branca:
 # deixaria el fitxer de disc i el committejat divergits, que es menys control i no mes.
+DB_FILE = "db.js"   # la BD ja no viu dins de index.html
 BRANCA_BD = "main"
 
 # Els POST que toquen fitxers del repo. /api/push i /api/shutdown no hi son: empenyer la
 # branca on ets es legitim, i aturar el servidor no escriu res.
 POST_QUE_ESCRIUEN = (
-    "/api/db/add", "/api/db/regen",
+    "/api/db/add",
     "/api/pinned/set", "/api/pinned/del",
     "/api/conpinned/set", "/api/conpinned/del",
     "/api/backlog/add", "/api/backlog/close",
@@ -252,7 +253,7 @@ def _slug_id(name, taken):
 
 def existing_people():
     """(ids, qids) que ja son a PEOPLE, per no duplicar."""
-    src = read("index.html")
+    src = read(DB_FILE)
     m = re.search(r"const\s+PEOPLE\s*=\s*\[", src)
     if not m:
         return set(), set()
@@ -466,10 +467,10 @@ def db_add_person(d):
     if qid and qid in qids_taken:
         return False, "%s ja es a PEOPLE" % qid
 
-    src0 = read("index.html")
+    src0 = read(DB_FILE)
     m = re.search(r"const\s+PEOPLE\s*=\s*\[", src0)
     if not m:
-        return False, "No trobo PEOPLE a l'index.html"
+        return False, "No trobo PEOPLE a %s" % DB_FILE
     before, close = count_objects(src0, m.end())
 
     approx = (d.get("approx") or "").strip()
@@ -492,17 +493,16 @@ def db_add_person(d):
     if "\ufffd" in new_src:
         return False, "S'han colat caracters corromputs: no toco res"
 
-    with open(os.path.join(REPO, "index.html"), "w", encoding="utf-8") as f:
+    with open(os.path.join(REPO, DB_FILE), "w", encoding="utf-8") as f:
         f.write(new_src)
-    regen_ok, regen_msg = gen_data_js()
-    commit_files = ["--", "index.html"] + (["data.js"] if regen_ok else [])
-    ok, out = run(["git", "commit", "-m", "BD: afegeix %s" % name] + commit_files)
-    suffix = "" if regen_ok else " (data.js NO regenerat: %s)" % regen_msg
-    return True, ("Afegit i committejat" + suffix if ok else "Afegit (el commit ha fallat: %s)" % out[:120])
+    # Ja no cal regenerar res: db.js es l'unic lloc on viuen les dades i el carreguen les
+    # dues pagines. Abans aqui es refeia data.js, que n'era una copia per al joc.
+    ok, out = run(["git", "commit", "-m", "BD: afegeix %s" % name, "--", DB_FILE])
+    return True, ("Afegit i committejat" if ok else "Afegit (el commit ha fallat: %s)" % out[:120])
 
 
 # --------------------------------------------------------------------------
-# Regeneració de data.js
+# Lectura de la BD (db.js) cap a estructures de Python
 # --------------------------------------------------------------------------
 
 def _unescape_js_str(raw):
@@ -566,7 +566,7 @@ def _split_top_objects(text):
 
 
 def _extract_people_events(html):
-    """Extreu PEOPLE i EVENTS de index.html com a llistes de dicts Python."""
+    """Extreu PEOPLE i EVENTS de db.js com a llistes de dicts Python."""
 
     def get_str(text, field):
         m = re.search(field + r":'((?:[^'\\]|\\.)*)'", text)
@@ -612,9 +612,8 @@ def _extract_people_events(html):
             'desc':   get_str(obj, 'desc') or '',
         }
         # Opcional: nota d'incertesa de les dates. Nomes la porten unes poques persones
-        # (antigues, amb precisio de segle o amb fonts en conflicte). Si no s'hi copies,
-        # data.js deixaria de ser un snapshot fidel i el camp es perdria el dia que les
-        # dades es serveixin des de fora.
+        # (antigues, amb precisio de segle o amb fonts en conflicte), pero el guard dels
+        # jocs cronologics hi depen: si no s'hi copies, es perdria en llegir la BD.
         approx = get_str(obj, 'approx')
         if approx:
             entry['approx'] = approx
@@ -639,38 +638,6 @@ def _extract_people_events(html):
 
     return people, events
 
-
-def gen_data_js():
-    """Regenera data.js a partir de PEOPLE i EVENTS de index.html."""
-    import datetime
-    html = read("index.html")
-    people, events = _extract_people_events(html)
-    if not people:
-        return False, "No s'han pogut extreure PEOPLE de index.html"
-
-    today = datetime.date.today().isoformat()
-    header = (
-        "/* " + "=" * 77 + "\n"
-        " * data.js — SNAPSHOT PROVISIONAL de la base de dades del cronograma.\n"
-        " * Generat automàticament des d'index.html el %s.\n"
-        " *\n"
-        " * ⚠️  PROVISIONAL: això és una CÒPIA de les dades que ara viuen a index.html,\n"
-        " *     feta per facilitar el testeig local (file://). Quan existeixi la DB externa,\n"
-        " *     substituir aquest fitxer pel carregador real (fetch a la DB/API) i esborrar\n"
-        " *     el snapshot. NO editar a mà: regenerar amb dash.py /api/db/regen.\n"
-        " * " + "=" * 77 + " */"
-    ) % today
-    body = json.dumps({"PEOPLE": people, "EVENTS": events}, ensure_ascii=False, indent=2)
-    content = header + "\n\n\nwindow.HB_DATA = " + body + ";\n"
-    data_js_path = os.path.join(REPO, "data.js")
-    with open(data_js_path, "w", encoding="utf-8") as f:
-        f.write(content)
-    return True, "data.js regenerat (%d persones, %d events)" % (len(people), len(events))
-
-
-# --------------------------------------------------------------------------
-# git
-# --------------------------------------------------------------------------
 
 def branca_actual():
     ok, b = run(["git", "rev-parse", "--abbrev-ref", "HEAD"])
@@ -757,7 +724,7 @@ def ci_state():
 
 
 # --------------------------------------------------------------------------
-# comptadors de la base de dades (dins index.html)
+# comptadors de la base de dades (db.js)
 # --------------------------------------------------------------------------
 
 def count_objects(src, i):
@@ -841,7 +808,7 @@ def count_marc_blocks(src):
 
 
 def db_state():
-    src = read("index.html")
+    src = read(DB_FILE)
     return {
         "people": count_entries(src, "PEOPLE"),
         "events": count_entries(src, "EVENTS"),
@@ -1177,7 +1144,7 @@ def anniv_state(window=ANNIV_WINDOW):
     planifica amb temps —a 90 dies la caixa sortia buida; a un any, hi ha els 200
     de Beethoven i els 300 de Newton—. Els multiples de 100 van marcats a part.
     """
-    people = [p for p in _extract_people_events(read("index.html"))[0] if p.get("wd")]
+    people = [p for p in _extract_people_events(read(DB_FILE))[0] if p.get("wd")]
     cache = _anniv_cache()
     falten = [p["wd"] for p in people if p["wd"] not in cache]
     if falten:
@@ -1256,7 +1223,7 @@ def density_state():
     Segles buits inclosos (n=0) per mostrar els buits. Contingut anterior
     al s. I aC (any -100) s'ignora: massa antic per ser útil com a densitat.
     """
-    src = read("index.html")
+    src = read(DB_FILE)
     years = _field_years(src, "EVENTS", "year") + _field_years(src, "PEOPLE", "birth")
 
     today_c = (date.today().year // 100) * 100
@@ -1274,7 +1241,7 @@ def density_state():
 
 
 # --------------------------------------------------------------------------
-# diagnosi de la BD (index.html)
+# diagnosi de la BD (db.js)
 # --------------------------------------------------------------------------
 
 MAX_CATS = 2          # el disseny en permet 0-2 (2 = barra ratllada)
@@ -1374,7 +1341,7 @@ def lint_state():
     (no petara, simplement pintara alguna cosa rara o no la pintara).
     Retorna [{sev, txt, who}] amb sev = bad (error) | warn (avis) | ok.
     """
-    src = read("index.html")
+    src = read(DB_FILE)
     cats_ok = _known_cats(src)
     now = date.today().year
     out = []
@@ -1796,11 +1763,6 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/db/add":
             ok, msg = db_add_person(data)
-            self._json(200, {"ok": ok, "msg": msg})
-            return
-
-        if path == "/api/db/regen":
-            ok, msg = gen_data_js()
             self._json(200, {"ok": ok, "msg": msg})
             return
 
