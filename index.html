@@ -207,6 +207,20 @@
   .sidebarHandle:hover{filter:brightness(1.08);box-shadow:0 3px 11px rgba(40,44,60,.30);}
   .body.collapsed .sidebarHandle{left:13px;}
   .sidebar h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin:0 0 10px;font-weight:600;}
+  /* Seccions plegables (nomes a la barra lateral: al popup del mobil els titols s'amaguen i
+     les seccions son pestanyes). El selector porta `.sidebar` a proposit: aixi un estat
+     plegat desat des de l'escriptori no amaga res quan la seccio es mou al popup. */
+  .sidebar h3.sech{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
+  .sidebar h3.sech:hover{color:var(--text);}
+  .sidebar h3.sech:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px;}
+  .secchev{flex:0 0 auto;width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s;}
+  .sidebar section.plegada .secchev{transform:rotate(-90deg);}
+  .seccnt{font-weight:400;}
+  .sidebar section.plegada{min-height:0;flex:0 0 auto;}
+  .sidebar section.plegada>h3{margin-bottom:0;}
+  /* !important: #collections (i altres cossos) fixen el seu `display` amb un selector d'ID, que guanya
+     per especificitat. Es el mateix parany de l'atribut `hidden` del CLAUDE.md. */
+  .sidebar section.plegada>div{display:none!important;}
   /* Cada secció: títol fix + cos amb scroll propi. Amb poc contingut prenen l'alçada natural (sense forçar aire);
      quan la suma no cap, el flexbox les encongeix (les més plenes cedeixen més espai) i cada cos fa scroll intern.
      min-height garanteix que els 3 títols + un tros de llista quedin sempre visibles. */
@@ -801,19 +815,19 @@
   <div class="body">
     <aside class="sidebar">
       <section>
-        <h3><span data-i18n="cro_marcs">Marcs històrics</span></h3>
+        <h3 class="sech" role="button" tabindex="0" aria-expanded="true" data-sec="regions"><svg class="secchev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><span data-i18n="cro_marcs">Marcs històrics</span><span class="seccnt"></span></h3>
         <div id="regions"></div>
       </section>
       <section>
-        <h3><span data-i18n="cro_collections">Col·leccions</span></h3>
+        <h3 class="sech" role="button" tabindex="0" aria-expanded="true" data-sec="collections"><svg class="secchev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><span data-i18n="cro_collections">Col·leccions</span><span class="seccnt"></span></h3>
         <div id="collections"></div>
       </section>
       <section>
-        <h3><span data-i18n="cro_favorits">Favorits</span></h3>
+        <h3 class="sech" role="button" tabindex="0" aria-expanded="true" data-sec="favorits"><svg class="secchev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><span data-i18n="cro_favorits">Favorits</span><span class="seccnt"></span></h3>
         <div class="onview" id="favorits"></div>
       </section>
       <section>
-        <h3><span data-i18n="cro_onview">A la vista</span></h3>
+        <h3 class="sech" role="button" tabindex="0" aria-expanded="true" data-sec="onview"><svg class="secchev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg><span data-i18n="cro_onview">A la vista</span><span class="seccnt"></span></h3>
         <div class="onview" id="onview"></div>
       </section>
     </aside>
@@ -1590,6 +1604,7 @@ function renderSidebar(){
   renderFavorits();
   const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>L(a.name).localeCompare(L(b.name),LANG));   // always alphabetical, en l'idioma actiu
   $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}">${esc(L(p.name))}</button><button class="favb" data-favt="${p.id}" aria-label="${esc(esFav(favKey(p))?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(favKey(p))}">${favIco(esFav(favKey(p)))}</button>${p.wd?`<button class="addc" data-addc="${p.id}" aria-label="${t('cro_coll_addto')}">+</button>`:''}${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}" aria-label="${t('cro_report')}">⚠</button><button class="x" data-remove="${p.id}" aria-label="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
+  actualitzaComptes();
 }
 
 // ============================================================
@@ -2863,6 +2878,47 @@ function fetchPerson(qid){
 // es LLEGEIXEN, com hb_view_person. Per aixo es tornen a llegir a cada render en lloc
 // de desar-los a `state`: l'altra pestanya els pot haver canviat mentrestant.
 // Forma desada: {qid,name,birth,death,img,desc} — just el que vol mostraPersonatge().
+// --- Seccions plegables de la barra lateral -------------------------------
+// L'estat plegat es recorda (es una preferencia, com la de la barra lateral) pero NO es part
+// de `state` ni del Desfes: plegar una seccio no es una dada.
+const SECPLEG_LS='historiabasica.seccions';
+function llegeixPlegades(){
+  try{ const a=JSON.parse(localStorage.getItem(SECPLEG_LS)||'[]'); return Array.isArray(a)?a:[]; }
+  catch(ex){ return []; }
+}
+function plegaSeccio(h3,plegada){
+  const sec=h3.closest('section'); if(!sec)return;
+  sec.classList.toggle('plegada',plegada);
+  h3.setAttribute('aria-expanded',String(!plegada));
+}
+function iniSeccionsPlegables(){
+  const pleg=llegeixPlegades();
+  document.querySelectorAll('.sidebar h3.sech').forEach(h=>plegaSeccio(h,pleg.includes(h.dataset.sec)));
+  const alterna=h=>{
+    const sec=h.closest('section'), ara=!sec.classList.contains('plegada');
+    plegaSeccio(h,ara);
+    const tots=[...document.querySelectorAll('.sidebar h3.sech')].filter(x=>x.closest('section').classList.contains('plegada')).map(x=>x.dataset.sec);
+    try{ localStorage.setItem(SECPLEG_LS,JSON.stringify(tots)); }catch(ex){}
+  };
+  $('.sidebar').addEventListener('click',e=>{ const h=e.target.closest('h3.sech'); if(h)alterna(h); });
+  $('.sidebar').addEventListener('keydown',e=>{
+    const h=e.target.closest('h3.sech');
+    if(h&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); alterna(h); }
+  });
+}
+// «(n)» al costat del nom: Marcs i Col·leccions = els ACTIVATS; Favorits i A la vista = quants n'hi ha.
+function actualitzaComptes(){
+  const n={
+    regions:document.querySelectorAll('#regions input:checked').length,
+    collections:state.collections.size,
+    favorits:llegeixFavorits().filter(f=>f&&f.qid&&f.name).length,
+    onview:document.querySelectorAll('#onview .item').length
+  };
+  document.querySelectorAll('.sidebar h3.sech').forEach(h=>{
+    const c=h.querySelector('.seccnt'); if(c)c.textContent='('+n[h.dataset.sec]+')';
+  });
+}
+
 const FAV_LS='hb_favorits';
 function llegeixFavorits(){
   try{ const a=JSON.parse(localStorage.getItem(FAV_LS)||'[]'); return Array.isArray(a)?a:[]; }
@@ -2945,6 +3001,7 @@ $('#detail').addEventListener('mousemove',e=>{
   placeBartip(b.getAttribute('aria-label')||'',e.clientX,e.clientY);
 });
 $('#detail').addEventListener('mouseleave',hideBartip);
+iniSeccionsPlegables();
 $('#favorits').addEventListener('click',e=>{
   const b=e.target.closest('[data-fav]'); if(!b)return;
   const f=llegeixFavorits().find(x=>x&&x.qid===b.getAttribute('data-fav')); if(!f)return;

@@ -549,6 +549,42 @@ test.describe('Col·leccions pròpies', () => {
   });
 });
 
+// ─── Barra lateral: seccions plegables i comptadors ─────────────────────────
+// Nomes amb ratolí: al mobil les seccions son pestanyes del popup i els titols s'amaguen.
+
+test.describe('Barra lateral: seccions plegables', () => {
+  test('plegar amaga el cos, es recorda en recarregar, i el comptador segueix visible', async ({ page }) => {
+    await freshIndex(page);
+    test.skip(await isCoarse(page), 'Al mobil les seccions son pestanyes');
+    await openSidebar(page);
+    const titol = page.locator('.sidebar h3.sech[data-sec="collections"]');
+    await expect(titol).toContainText('(0)');                  // cap col·leccio activada
+    await expect(page.locator('#collections')).toBeVisible();
+
+    await titol.click();
+    await expect(page.locator('#collections')).toBeHidden();
+    await expect(titol).toHaveAttribute('aria-expanded', 'false');
+    await expect(titol).toContainText('(0)');                  // el titol i el comptador es queden
+
+    await page.reload();
+    await openSidebar(page);
+    await expect(page.locator('#collections')).toBeHidden();   // recordat
+    await page.locator('.sidebar h3.sech[data-sec="collections"]').click();
+    await expect(page.locator('#collections')).toBeVisible();
+  });
+
+  test('el comptador de «A la vista» puja en afegir algu', async ({ page }) => {
+    await freshIndex(page);
+    test.skip(await isCoarse(page), 'Al mobil les seccions son pestanyes');
+    await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
+    await openSidebar(page);
+    const titol = page.locator('.sidebar h3.sech[data-sec="onview"]');
+    await expect(titol).toContainText('(0)');
+    await addFirstPerson(page);
+    await expect(titol).toContainText('(1)');
+  });
+});
+
 // ─── Persistència d'estat ────────────────────────────────────────────────────
 
 test.describe('Persistència', () => {
