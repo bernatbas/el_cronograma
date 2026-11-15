@@ -509,6 +509,7 @@ const PEOPLE=[
   {id:'neilarmstrong',wd:'Q1615',name:'Neil Armstrong',birth:1930,death:2012,cats:['science'],wiki:'https://ca.wikipedia.org/wiki/Neil_Armstrong',desc:'Astronauta estatunidenc'},
   {id:'vassilikandinski',wd:'Q61064',name:'Vassili Kandinski',birth:1866,death:1944,cats:['painting'],wiki:'https://ca.wikipedia.org/wiki/Vassili_Kandinski',desc:'Pintor rus i teòric de l’art'},
   {id:'elisabetiidelregneunit',wd:'Q9682',name:'Elisabet II del Regne Unit',birth:1926,death:2022,cats:['politics'],wiki:'https://ca.wikipedia.org/wiki/Elisabet_II_del_Regne_Unit',desc:'Reina del Regne Unit i altres reialmes de la Commonwealth de 1952 a 2022'},
+  {id:'howardcarter',wd:'Q133682',name:'Howard Carter',birth:1874,death:1939,cats:['painting'],wiki:'https://ca.wikipedia.org/wiki/Howard_Carter',desc:'Arqueòleg i Egiptòleg anglès'},
 ];
 
 // Els jocs només necessiten PEOPLE i EVENTS, i els llegeixen com a window.HB_DATA.
