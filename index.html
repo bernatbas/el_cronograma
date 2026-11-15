@@ -1577,7 +1577,7 @@ function renderSidebar(){
   }
   renderFavorits();
   const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>L(a.name).localeCompare(L(b.name),LANG));   // always alphabetical, en l'idioma actiu
-  $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}">${esc(L(p.name))}</button>${p.wd?`<button class="favb" data-favt="${p.id}" aria-label="${esc(esFav(p.wd)?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(p.wd)}">${favIco(esFav(p.wd))}</button>`:''}${p.wd?`<button class="addc" data-addc="${p.id}" aria-label="${t('cro_coll_addto')}">+</button>`:''}${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}" aria-label="${t('cro_report')}">⚠</button><button class="x" data-remove="${p.id}" aria-label="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
+  $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}">${esc(L(p.name))}</button><button class="favb" data-favt="${p.id}" aria-label="${esc(esFav(favKey(p))?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(favKey(p))}">${favIco(esFav(favKey(p)))}</button>${p.wd?`<button class="addc" data-addc="${p.id}" aria-label="${t('cro_coll_addto')}">+</button>`:''}${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}" aria-label="${t('cro_report')}">⚠</button><button class="x" data-remove="${p.id}" aria-label="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
 }
 
 // ============================================================
@@ -1602,10 +1602,10 @@ function openDetail(p){
     <h2>${esc(L(p.name))}</h2>
     <div class="dhead"><span class="life">${approxText(p)?'~':''}${fmtY(p.birth)} – ${isAlive(p)?t('cro_present'):fmtY(p.death)}</span>${hasCat(p)?p.cats.map(a=>`<span class="chip"><span class="swatch" style="background:${CAT_COLORS[a]}"></span>${t('cat_'+a)}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${t('cat_none')}</span>`}<span class="chip era">${eraLabel(p.birth)}</span></div>
     ${approxText(p)?`<div class="approx">${esc(approxText(p))}</div>`:''}
-    <div class="desc">${esc(L(p.desc))}</div>
+    <div class="desc">${descHtml(L(p.desc))}</div>
     <div class="actions">
       <button class="dbtn" data-act="context">${t('cro_context')}</button>
-      ${personQid(p.id)?`<button class="dbtn favbtn" data-act="fav" aria-label="${esc(esFav(personQid(p.id))?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(personQid(p.id))}">${favIco(esFav(personQid(p.id)))}</button>`:''}
+      <button class="dbtn favbtn" data-act="fav" aria-label="${esc(esFav(favKey(p))?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(favKey(p))}">${favIco(esFav(favKey(p)))}</button>
       ${personQid(p.id)?`<button class="dbtn" data-act="addto">${t('cro_coll_addto')}</button>`:''}
       ${p.wiki?`<button class="dbtn" data-act="wiki">${linkLabel(p.wiki)} ↗</button>`:''}
       ${SEED_PINNED.includes(p.id)?'':`<button class="dbtn danger" data-act="remove">${t('cro_delete')}</button>`}
@@ -1766,6 +1766,11 @@ function removeFromColl(cid,qid){ if(setMember(cid,qid,false))openCollDetail(cid
 // Nomes surten les colleccions PROPIES: les de serie son contingut d'autor i s'editen al
 // dashboard. Reaprofita el menu flotant de les barres, que ja es generic.
 const myColls=()=>COLLECTIONS.filter(c=>c._mine);
+// La descripcio s'escapa sencera i NOMES es deixa passar el <br>: les descripcions son
+// text pla (moltes venen de Wikidata, que es public i editable) pero les d'autor poden
+// voler un salt de linia. Qualsevol altra etiqueta es queda escapada i es veu tal qual.
+const descHtml=v=>esc(v).replace(/&lt;br\s*\/?&gt;/gi,'<br>');
+
 function personQid(pid){
   const p=PEOPLE.find(x=>x.id===pid);
   return (p&&/^Q\d+$/.test(p.wd||''))?p.wd:null;
@@ -2851,11 +2856,16 @@ function llegeixFavorits(){
   try{ const a=JSON.parse(localStorage.getItem(FAV_LS)||'[]'); return Array.isArray(a)?a:[]; }
   catch(ex){ return []; }   // si algu l'ha deixat malmes, val mes llista buida que pagina morta
 }
-function esFav(qid){ return !!qid && llegeixFavorits().some(f=>f&&f.qid===qid); }
+// La clau d'un favorit. Qui ve de Wikidata s'indexa pel seu QID —i aixi el joc i el
+// cronograma parlen del mateix—, pero la BD tambe te gent SENSE QID (en Bernat mateix) i
+// no tenien manera de ser favorits. Aquests s'indexen per l'id local amb prefix, que el
+// joc no reconeixera mai i per tant ignorara, que es el que volem.
+const favKey=p=>p?(/^Q\d+$/.test(p.wd||p.qid||'')?(p.wd||p.qid):'local:'+p.id):null;
+function esFav(k){ return !!k && llegeixFavorits().some(f=>f&&f.qid===k); }
 // ⚠️ NO passa pel Desfes. La seva foto guarda {pinned, collections, marcs, showEvents, focus}
 // i els favorits no hi son: posar-hi pushUndo() faria que «desfes» desfes una ALTRA cosa.
 function toggleFav(p){
-  const qid=p.wd||p.qid; if(!qid)return null;
+  const qid=favKey(p); if(!qid)return null;
   const a=llegeixFavorits().filter(f=>f&&f.qid);
   const i=a.findIndex(f=>f.qid===qid);
   if(i>=0){ a.splice(i,1); }
@@ -2872,7 +2882,7 @@ function toggleFav(p){
 // i han d'anar juntes. Les dues accions passen per aqui: anar-hi posant pedaços a cada banda
 // ja va deixar-les desparellades dues vegades.
 function toggleFavISincronitza(per){
-  const qid=per.wd||per.qid; if(!qid)return;
+  const qid=favKey(per); if(!qid)return;
   toggleFav(per);
   render();                                   // refa «A la vista» i la llista de Favorits
   const b=$('#detail .favbtn');                // i la fitxa, si es oberta i es d'aquesta persona
@@ -2894,7 +2904,10 @@ function renderFavorits(){
     // guessCats() i no coincidia — l'Atila sortia teal («sense categoria») a Favorits i
     // rosa («politica») a les altres dues bandes, que es com es va veure.
     // guessCats() nomes val de reserva: un favorit marcat al joc pot no ser a la BD.
-    const dins=PEOPLE.find(x=>x.wd===f.qid);
+    // La clau pot ser un QID (de Wikidata) o 'local:<id>' (algu de la BD sense QID).
+    const dins=f.qid.startsWith('local:')
+      ? PEOPLE.find(x=>x.id===f.qid.slice(6))
+      : PEOPLE.find(x=>x.wd===f.qid);
     const cats=dins?dins.cats:guessCats(f.desc||'');
     const ja=!!dins&&state.present.has(dins.id);
     const anys=(f.birth==null?'?':fmtY(f.birth))+(f.death==null?'':'–'+fmtY(f.death));
@@ -2923,9 +2936,18 @@ $('#detail').addEventListener('mouseleave',hideBartip);
 $('#favorits').addEventListener('click',e=>{
   const b=e.target.closest('[data-fav]'); if(!b)return;
   const f=llegeixFavorits().find(x=>x&&x.qid===b.getAttribute('data-fav')); if(!f)return;
-  const ja=PEOPLE.find(x=>x.wd===f.qid);
+  const local=f.qid.startsWith('local:');
+  const ja=local?PEOPLE.find(x=>x.id===f.qid.slice(6)):PEOPLE.find(x=>x.wd===f.qid);
   if(ja&&state.present.has(ja.id)){ revealPerson(ja.id); return; }   // ja hi es: hi porta, no el duplica
   pushUndo('undo_fav_add',{name:L(f.name)});
+  if(local){
+    // Algu de la BD sense QID: ja existeix a PEOPLE, nomes cal posar-lo al canvas.
+    // mostraPersonatge() el tractaria com un resultat de Wikidata i en crearia un de fantasma.
+    if(!ja)return;
+    state.present.add(ja.id); state.pinned.add(ja.id);
+    scheduleSave(); render(); revealPerson(ja.id);
+    return;
+  }
   mostraPersonatge(f,{noBar:true});
 });
 
