@@ -296,6 +296,16 @@
   }
   .colitem.on{background:linear-gradient(135deg,#F7E5E0,#EFD4CC);border-color:var(--topbar-bg);box-shadow:inset 3px 0 0 var(--topbar-bg),0 1px 3px rgba(40,44,60,.13);font-weight:600;}
   .colitem.on .ico{opacity:.8;}
+  /* Barra lateral: files PLANES, com les de Marcs, Favorits i A la vista. Eren pastilles
+     amb vora, ombra i farciment —37px d'alt contra 27-30 dels veins— i les col·leccions
+     semblaven mes grans que la resta tenint la mateixa lletra. Ara la vora i el fons
+     nomes surten en passar-hi o quan esta activa. Va a `.sidebar .colitem` i no a `.colitem`
+     a proposit: al mobil les seccions viuen al popup, que ja te el seu estil mes pla. */
+  .sidebar #collections{gap:1px;}
+  .sidebar .colitem{border-color:transparent;background:none;box-shadow:none;padding:5px 6px;
+    margin:0 -6px;width:calc(100% + 12px);font-size:14px;}
+  .sidebar .colitem:hover{background:var(--surface);border-color:transparent;box-shadow:none;}
+  .sidebar .colitem.on{background:#FBF1EE;border-color:transparent;box-shadow:inset 3px 0 0 var(--topbar-bg);}
   .newcol{width:100%;border:1px dashed var(--border-strong);background:none;border-radius:var(--r-card);padding:8px 10px;font-size:13px;color:var(--text2);cursor:pointer;font-family:inherit;}
   .newcol:hover{background:var(--surface);color:var(--text);}
   .newcol:disabled{opacity:.5;cursor:default;}
@@ -598,6 +608,7 @@
     .sidebar section{margin-bottom:0;}
     .filter{padding:3px 0;font-size:13px;}
     .filter input{width:15px;height:15px;}
+    .sidebar .colitem{padding:3px 6px;font-size:13px;}
     .legend{left:12px;padding:6px 10px;gap:5px;max-width:60vw;}
     .legend .lgi{font-size:11px;gap:6px;}
     .legend .lgi{font-size:11px;gap:5px;}
@@ -651,6 +662,7 @@
     .sidebar{gap:12px;}
     .sidebar h3{margin:0 0 6px;}
     .filter{padding:5px 0;font-size:13px;}
+    .sidebar .colitem{padding:5px 6px;font-size:13px;}
     .filter input{width:17px;height:17px;}
     .onview .item{padding:5px 0;font-size:13px;}
     #collections{gap:5px;}
