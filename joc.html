@@ -749,9 +749,9 @@
       joker_used_title:'Comodí ja gastat en aquesta partida',
       perfect_round:'Ronda perfecta! 🏆',
       challenge_done:'Repte completat',
-      hits_in_row:'encerts seguits',
+      hits_in_row:'encerts',
       err_not_enough:'No hi ha prou dades per jugar.',
-      share_ad: v => '🏛️ Història Bàsica — Repte diari '+v.date+'\n🎯 '+v.score+' encerts seguits\n🔥 '+v.days+' '+(v.days===1?'dia':'dies')+' seguits',
+      share_ad: v => '🏛️ Història Bàsica — Repte diari '+v.date+'\n🎯 '+v.score+' encerts\n🔥 '+v.days+' '+(v.days===1?'dia':'dies')+' seguits',
       // -- Personatge del dia --
       searching_wikidata:'Cercant a Wikidata…',
       no_desc:'Sense descripció disponible.',
@@ -1056,7 +1056,7 @@
     function livesHtml(){
       let h='<div class="glives" role="img" aria-label="'+lives+'/'+VIDES+'">';
       for(let i=0;i<VIDES;i++){
-        const ple=i<lives;
+        const ple=i>=VIDES-lives;   // es buiden d'esquerra a dreta
         h+='<svg class="heart'+(ple?'':' empty')+'" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-10-9.3C.4 8.5 2 4.5 5.8 4.1 8.2 3.9 10.2 5.3 12 7.4c1.8-2.1 3.8-3.5 6.2-3.3 3.8.4 5.4 4.4 3.8 7.6C19.5 16.4 12 21 12 21z"/></svg>';
       }
       return h+'</div>';
@@ -1105,7 +1105,7 @@
       const correct = (ans==='abans' && candidate.year<current.year) || (ans==='despres' && candidate.year>current.year);
       const slot=root.querySelector('#candslot');
       if(slot){ slot.innerHTML=card(candidate,{role:'new',reveal:true,flip:true}); const c=slot.querySelector('.itemcard'); if(c) c.classList.add(correct?'flash-ok':'flash-no'); }
-      root.querySelectorAll('.choice,.pass').forEach(b=>{ b.disabled=true; });
+      root.querySelectorAll('.choice').forEach(b=>{ b.disabled=true; });   // el comodi no: el locked ja el bloqueja, i apagar-lo el feia parpellejar en gris
       if(correct){
         score++;
         const sn=root.querySelector('#scoren'); if(sn){ const v=sn.querySelector('.v'); if(v) v.textContent=score; sn.classList.remove('pop'); void sn.offsetWidth; sn.classList.add('pop'); }
@@ -1114,7 +1114,7 @@
         failPairs.push([current,candidate]);
         lives--;
         const hs=root.querySelectorAll('.glives .heart');
-        if(hs[lives]){ hs[lives].classList.add('empty','lost'); }
+        const perdut=hs[VIDES-1-lives]; if(perdut){ perdut.classList.add('empty','lost'); }
         const gl=root.querySelector('.glives'); if(gl) gl.setAttribute('aria-label',lives+'/'+VIDES);
         if(lives<=0){ timer=setTimeout(()=>finish(false),2100); return; }
         avanca(2100);   // queda un cor: la carta fallada (ja revelada) passa a ser la referencia
