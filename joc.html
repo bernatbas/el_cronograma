@@ -250,7 +250,14 @@
   .game{max-width:560px;margin:0 auto;}
   .gtop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:20px;}
   .gtitle{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-weight:600;letter-spacing:.03em;font-size:20px;line-height:1.1;}
-  .gscore{flex:0 0 auto;}
+  .gscore{flex:0 0 auto;display:flex;align-items:center;gap:10px;}
+  .glives{display:inline-flex;gap:3px;}
+  .heart{width:22px;height:22px;fill:var(--topbar-bg);stroke:var(--topbar-bg);stroke-width:1.5;transition:fill .25s;}
+  .heart.empty{fill:none;}
+  .heart.lost{animation:heartlost .45s ease-out;}
+  @keyframes heartlost{0%{transform:scale(1);}35%{transform:scale(1.35);}100%{transform:scale(1);}}
+  /* Comodi: el boto que era la resposta, del mateix verd que l'encert de la carta */
+  .choice.answer{border-color:#2E9B5B;background:#E9F7EE;color:#238049;opacity:1;}
   .gscore .n{display:inline-flex;align-items:center;gap:6px;background:#F7E5E0;color:var(--topbar-bg);font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-weight:600;font-size:18px;line-height:1;padding:6px 13px;border-radius:var(--r-pill);}
   @keyframes scorepop{0%{transform:scale(1);}40%{transform:scale(1.3);}100%{transform:scale(1);}}
   .gscore .n.pop{animation:scorepop .4s ease-out;}
@@ -287,7 +294,7 @@
   .pass:disabled .jt{text-decoration:line-through;}
   .pass:disabled .jn{background:#A9A9A9;}
   @media (prefers-reduced-motion:reduce){
-    .itemcard.enter,.itemcard .yr.reveal,.gscore .n.pop,.flash-ok,.flash-no{animation:none!important;}
+    .itemcard.enter,.itemcard .yr.reveal,.gscore .n.pop,.flash-ok,.flash-no,.heart.lost{animation:none!important;}
     .choice,.choice .big,.gamecard{transition:none!important;}
   }
   .itemcard.flash-ok{border:3px solid #2E9B5B;background:#E9F7EE;box-shadow:0 8px 24px rgba(45,150,90,.30);animation:okpulse .5s;}
@@ -938,9 +945,15 @@
 
   // ===== Mòdul: «Abans o després?» — REPTE DIARI (determinista per data + 1 intent/dia) =====
   const AbansDespres = (function(){
-    const DAILY_KEY='hb_ad_daily';    // { date, score, perfect }
+    const DAILY_KEY='hb_ad_daily';    // { date, score, perfect, failKeys }
     const STREAK_KEY='hb_ad_streak';  // { last, days }
-    let root=null, deck=[], idx=0, current=null, candidate=null, score=0, locked=false, skipUsed=false, timer=null, cdTimer=null, gaStarted=false, failPair=null;
+    // Ronda de ROUND_N preguntes amb VIDES vides. Abans s'acabava al primer error i el final era
+    // esgotar la baralla (160 cartes, inabastable): «ronda perfecta» no la feia ningu. Ara es
+    // perfecta si arribes al final de les 20 amb algun cor, encara que n'hagis perdut un o hagis
+    // fet servir el comodi. El comodi tambe compta com una de les 20.
+    const ROUND_N=20, VIDES=2;
+    let root=null, deck=[], idx=0, current=null, candidate=null, score=0, locked=false, skipUsed=false, timer=null, cdTimer=null, gaStarted=false,
+        lives=VIDES, answered=0, failPairs=[], failItems=[];
 
     // Meta discreta: esdeveniments només icôna 📜; persones indiquen naixement/mort (imprescindible).
     function meta(it){
@@ -1038,12 +1051,34 @@
       sim: function(ds){ const r=mulberry32(seedFromStr(ds)); return buildPath(dailyPool(r), r); }
     }; }catch(_){}
 
+    // Dos cors: plens els que queden, buits els perduts. Es repinta sol a cada render(); en perdre'n
+    // un, guess() el buida a ma perque la carta revelada es queda a la pantalla fins al seguent torn.
+    function livesHtml(){
+      let h='<div class="glives" role="img" aria-label="'+lives+'/'+VIDES+'">';
+      for(let i=0;i<VIDES;i++){
+        const ple=i<lives;
+        h+='<svg class="heart'+(ple?'':' empty')+'" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-10-9.3C.4 8.5 2 4.5 5.8 4.1 8.2 3.9 10.2 5.3 12 7.4c1.8-2.1 3.8-3.5 6.2-3.3 3.8.4 5.4 4.4 3.8 7.6C19.5 16.4 12 21 12 21z"/></svg>';
+      }
+      return h+'</div>';
+    }
+
+    // Tanca una pregunta (encert, error o comodi) i decideix que ve despres: el final de la ronda,
+    // la baralla esgotada, o la seguent carta. La carta resolta passa a ser la nova referencia.
+    function avanca(delay){
+      answered++;
+      current=candidate;
+      if(answered>=ROUND_N){ candidate=null; timer=setTimeout(()=>finish(true),delay); return; }
+      const nxt=nextCandidate();
+      if(nxt){ candidate=nxt; timer=setTimeout(()=>{ locked=false; render(); },delay); }
+      else { candidate=null; timer=setTimeout(()=>finish(true),delay); }   // baralla esgotada
+    }
+
     function render(){
       root.innerHTML = `
         <div class="game">
           <div class="gtop">
             <div class="gtitle">⚖️ ${t('t_abansdespres')}</div>
-            <div class="gscore"><div class="n" id="scoren"><span class="ic">🎯</span><span class="v">${score}</span></div></div>
+            <div class="gscore">${livesHtml()}<div class="n" id="scoren"><span class="ic">🎯</span><span class="v">${score}</span></div></div>
           </div>
           <div class="cards2">
             ${card(current,{role:'ref',reveal:true})}
@@ -1070,28 +1105,36 @@
       const correct = (ans==='abans' && candidate.year<current.year) || (ans==='despres' && candidate.year>current.year);
       const slot=root.querySelector('#candslot');
       if(slot){ slot.innerHTML=card(candidate,{role:'new',reveal:true,flip:true}); const c=slot.querySelector('.itemcard'); if(c) c.classList.add(correct?'flash-ok':'flash-no'); }
-      root.querySelectorAll('.choice').forEach(b=>{ b.disabled=true; });
+      root.querySelectorAll('.choice,.pass').forEach(b=>{ b.disabled=true; });
       if(correct){
         score++;
         const sn=root.querySelector('#scoren'); if(sn){ const v=sn.querySelector('.v'); if(v) v.textContent=score; sn.classList.remove('pop'); void sn.offsetWidth; sn.classList.add('pop'); }
-        current=candidate;
-        const nxt=nextCandidate();
-        if(nxt){ candidate=nxt; timer=setTimeout(()=>{ locked=false; render(); },2000); }
-        else { candidate=null; timer=setTimeout(()=>finish(true),2000); } // ronda perfecta
+        avanca(2000);
       }else{
-        failPair=[current,candidate];
-        timer=setTimeout(()=>finish(false),2100);
+        failPairs.push([current,candidate]);
+        lives--;
+        const hs=root.querySelectorAll('.glives .heart');
+        if(hs[lives]){ hs[lives].classList.add('empty','lost'); }
+        const gl=root.querySelector('.glives'); if(gl) gl.setAttribute('aria-label',lives+'/'+VIDES);
+        if(lives<=0){ timer=setTimeout(()=>finish(false),2100); return; }
+        avanca(2100);   // queda un cor: la carta fallada (ja revelada) passa a ser la referencia
       }
     }
 
-    // Comodí: passar UN cop per partida. No suma ni resta; només avança a un nou candidat.
+    // Comodi: UN cop per partida. Abans saltava la parella sense dir res; ara MOSTRA la resposta:
+    // gira la carta amb l'any i pinta de verd el boto que tocava, com si l'haguessis premut tu.
+    // No suma punt (seria un encert regalat) i compta com una de les preguntes de la ronda.
     function skip(){
       if(locked||skipUsed||!candidate) return;
-      skipUsed=true;
+      skipUsed=true; locked=true;
+      if(!gaStarted){ gaStarted=true; track('joc_iniciat',{joc:'abansdespres',mode:'default'}); }
       track('joc_comodin_usat',{joc:'abansdespres',mode:'default'});
-      const nxt=nextCandidate();
-      if(nxt){ candidate=nxt; render(); }
-      else { candidate=null; finish(true); } // baralla esgotada en passar => ronda perfecta
+      const bona = candidate.year<current.year ? 'abans' : 'despres';
+      const slot=root.querySelector('#candslot');
+      if(slot) slot.innerHTML=card(candidate,{role:'new',reveal:true,flip:true});
+      root.querySelectorAll('.choice,.pass').forEach(b=>{ b.disabled=true; });
+      const bb=root.querySelector('.choice[data-a="'+bona+'"]'); if(bb) bb.classList.add('answer');
+      avanca(2000);
     }
 
     function finish(perfect){
@@ -1100,8 +1143,12 @@
       let days=1;
       if(st){ if(st.last===yesterdayStr()) days=(st.days||0)+1; else if(st.last===today) days=st.days||1; else days=1; }
       writeLS(STREAK_KEY,{last:today,days:days});
-      track('joc_completat',{joc:'abansdespres',mode:'default',encerts:score,errors:perfect?0:1,ratxa:days});
-      const failKeys=!perfect&&failPair?failPair.map(function(it){return it.key;}):null;
+      track('joc_completat',{joc:'abansdespres',mode:'default',encerts:score,errors:failPairs.length,ratxa:days});
+      // Totes les cartes de les parelles fallades, sense repetir: si fallaves dues vegades seguides,
+      // la carta del mig hi seria dos cops.
+      const vistes={}; failItems=[];
+      failPairs.forEach(function(pr){ pr.forEach(function(it){ if(it&&!vistes[it.key]){ vistes[it.key]=1; failItems.push(it); } }); });
+      const failKeys=failItems.length?failItems.map(function(it){return it.key;}):null;
       writeLS(DAILY_KEY,{date:today,score:score,perfect:!!perfect,failKeys:failKeys});
       showResult(score,!!perfect);
     }
@@ -1110,8 +1157,10 @@
       if(timer){ clearTimeout(timer); timer=null; }
       const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
       const title = perfect ? '<span class="perfect">'+t('perfect_round')+'</span>' : t('challenge_done');
-      const cronoPeople = !perfect && failPair ? failPair.map(personFromItem).filter(Boolean) : [];
-      const cronoEvents = !perfect && failPair ? failPair.map(eventFromItem).filter(Boolean) : [];
+      // Les parelles fallades es poden veure al cronograma TAMBE si la ronda ha estat perfecta:
+      // ara s'hi pot arribar havent perdut un cor.
+      const cronoPeople = failItems.map(personFromItem).filter(Boolean);
+      const cronoEvents = failItems.map(eventFromItem).filter(Boolean);
       const hasCrono = cronoPeople.length || cronoEvents.length;
       root.innerHTML = `
         <div class="gameover">
@@ -1152,11 +1201,11 @@
       const today=todayStr();
       const daily=readLS(DAILY_KEY);
       if(daily && daily.date===today){
-        if(!daily.perfect && daily.failKeys){
+        failItems=[];
+        if(daily.failKeys){
           const allPool=buildPool(); const byKey={};
           allPool.forEach(function(it){byKey[it.key]=it;});
-          const fp=daily.failKeys.map(function(k){return byKey[k];}).filter(Boolean);
-          failPair=fp.length?fp:null;
+          failItems=daily.failKeys.map(function(k){return byKey[k];}).filter(Boolean);
         }
         showResult(daily.score,!!daily.perfect); return;
       } // ja jugat avui => bloquejat
@@ -1164,6 +1213,7 @@
       const pool=dailyPool(rng); // cada persona només un cop (naix O mort) segons la llavor del dia
       deck=buildPath(pool,rng);  // ordena el pool en un camí amb dificultat controlada (g logarítmic)
       idx=0; score=0; locked=false; skipUsed=false; current=null; candidate=null;
+      lives=VIDES; answered=0; failPairs=[]; failItems=[];
       current=deck[idx++]||null;
       candidate=current?nextCandidate():null;
       if(!current||!candidate){ root.innerHTML='<div class="err">'+t('err_not_enough')+'</div>'; return; }
@@ -1171,7 +1221,7 @@
     }
 
     return {
-      mount(container){ root=container; gaStarted=false; failPair=null; track('joc_vist',{joc:'abansdespres'}); start(); },
+      mount(container){ root=container; gaStarted=false; failPairs=[]; failItems=[]; track('joc_vist',{joc:'abansdespres'}); start(); },
       unmount(){ if(timer){ clearTimeout(timer); timer=null; } if(cdTimer){ clearInterval(cdTimer); cdTimer=null; } root=null; }
     };
   })();

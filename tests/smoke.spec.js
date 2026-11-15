@@ -721,6 +721,54 @@ test.describe('Mòbil: bottom-sheet', () => {
   });
 });
 
+// ─── Abans o després? ────────────────────────────────────────────────────────
+// Per poder fallar (o encertar) a posta cal saber la resposta ABANS de girar la carta. El hook
+// __AD exposa el pool del dia, i en un dia cada persona hi surt un sol cop: el nom n'és la clau.
+
+async function respostaBona(page) {
+  return page.evaluate(() => {
+    const d = new Date(), p = n => String(n).padStart(2, '0');
+    const avui = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    const perNom = {}; window.__AD.pool(avui).forEach(it => { perNom[it.name] = it; });
+    const ref = perNom[document.querySelector('.cards2 .itemcard.ref .nm').textContent];
+    const cand = perNom[document.querySelector('#candslot .nm').textContent];
+    return cand.year < ref.year ? 'abans' : 'despres';
+  });
+}
+async function obreAbansDespres(page) {
+  await page.goto(JOC);
+  await page.evaluate(() => localStorage.clear());
+  await page.goto(JOC + '#/abansdespres');
+  await dismissRotateHint(page);
+  await expect(page.locator('.glives .heart')).toHaveCount(2);
+  await expect(page.locator('.glives .heart.empty')).toHaveCount(0);
+}
+const contraria = a => (a === 'abans' ? 'despres' : 'abans');
+
+test.describe('Abans o després?', () => {
+  test('el comodí mostra la resposta, la pinta de verd i no suma punt', async ({ page }) => {
+    await obreAbansDespres(page);
+    const bona = await respostaBona(page);
+    await page.locator('[data-x="skip"]').click();
+    await expect(page.locator('#candslot .yr')).not.toContainText('?');          // carta girada
+    await expect(page.locator(`.choice[data-a="${bona}"]`)).toHaveClass(/answer/); // el bo, en verd
+    await expect(page.locator('#scoren .v')).toHaveText('0');
+    await expect(page.locator('[data-x="skip"]')).toBeDisabled();                // un cop per partida
+  });
+
+  test('un error buida un cor i el joc segueix; el segon l’acaba', async ({ page }) => {
+    await obreAbansDespres(page);
+    await page.locator(`.choice[data-a="${contraria(await respostaBona(page))}"]`).click();
+    await expect(page.locator('.glives .heart.empty')).toHaveCount(1);
+    // queda un cor: torna una pregunta nova en lloc de la pantalla final
+    await expect(page.locator('.choice').first()).toBeEnabled({ timeout: 5000 });
+    await expect(page.locator('.gameover')).toHaveCount(0);
+
+    await page.locator(`.choice[data-a="${contraria(await respostaBona(page))}"]`).click();
+    await expect(page.locator('.gameover')).toBeVisible({ timeout: 5000 });
+  });
+});
+
 // ─── Contemporanis: dies clavats ─────────────────────────────────────────────
 // El calendari CON_PINNED (data → algu que ha de sortir si o si) s'exposa al hook de
 // depuracio, aixi que el test NO depen de qui hi hagi clavat: recorre el que hi ha.

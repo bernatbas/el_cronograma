@@ -37,6 +37,18 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
   suma; error → fi de partida. Es desa la **millor ratxa** a `localStorage`
   (`hb_abansdespres_best`). Arquitectura: mòdul amb `mount()/unmount()` registrat a `MODULES`;
   el router crida `unmount()` en sortir.
+- **2026-11-15 · «Abans o després?»: 2 vides, rondes de 20 i comodí que ensenya la resposta.**
+  Substitueix el «error → fi de partida» de dalt.
+  - **Ronda de 20 preguntes** (`ROUND_N`). Abans era infinita fins al primer error.
+  - **2 vides** (`VIDES`), pintades com dos cors a la capçalera. El primer error buida un cor i
+    la carta fallada passa a referència igualment; el segon acaba la partida.
+  - **Comodí:** un cop per partida. Gira la carta (surt l'any) i pinta de **verd** el botó bo;
+    **no suma punt**, però compta com una de les 20 i la carta passa a referència.
+  - **Ronda perfecta** = arribar a la 20a amb algun cor. Un error i el comodí hi caben.
+  - **Totes les parelles fallades** van a `failKeys` i al botó «Veure al cronograma», que ara
+    surt també amb ronda perfecta si hi ha hagut l'error.
+  - Tests: `Abans o després?` a `smoke.spec.js`. Llegeixen la resposta del pool del dia via
+    `window.__AD.pool(data)`, per nom de la carta.
 - **2026-08-12 · Contingut dels jocs cronològics: esdeveniments + persones; MAI marcs/eres.**
   Els anys d'inici/fi de marcs/eres són massa imprecisos (p. ex. l'edat mitjana no acaba en un any
   concret), així que **s'exclouen** del pool. Per a **persones** cal **especificar sempre**
