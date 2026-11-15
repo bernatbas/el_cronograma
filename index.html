@@ -206,6 +206,19 @@
   .sidebarHandle{position:absolute;top:50%;left:225px;transform:translateY(-50%);width:30px;height:52px;border:1.5px solid var(--topbar-bg);background:var(--topbar-bg);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:15px;line-height:1;padding:0;z-index:10;box-shadow:0 2px 7px rgba(40,44,60,.22);transition:left .18s ease,filter .14s ease,box-shadow .14s ease;}
   .sidebarHandle:hover{filter:brightness(1.08);box-shadow:0 3px 11px rgba(40,44,60,.30);}
   .body.collapsed .sidebarHandle{left:13px;}
+  /* Barra lateral mes ampla on hi ha lloc: a 240px els noms d'«A la vista» i de les col·leccions
+     sortien tallats amb marge de sobra a la pantalla. +50% a partir de 1280px d'ample i +60% a
+     partir de 1600. No toca les pantalles baixes (min-height:561px, el tram compacte fa 190px) ni
+     el mobil, on la barra no hi es. El tirador va sempre a amplada − 15 (el radi del boto rodo).
+     `.body.collapsed .sidebar` te mes especificitat i segueix guanyant: plegada fa 28px igual. */
+  @media (min-width:1280px) and (min-height:561px){
+    .sidebar{width:360px;}
+    .sidebarHandle{left:345px;}
+  }
+  @media (min-width:1600px) and (min-height:561px){
+    .sidebar{width:384px;}
+    .sidebarHandle{left:369px;}
+  }
   .sidebar h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin:0 0 10px;font-weight:600;}
   /* Seccions plegables (nomes a la barra lateral: al popup del mobil els titols s'amaguen i
      les seccions son pestanyes). El selector porta `.sidebar` a proposit: aixi un estat
@@ -247,7 +260,7 @@
      canvas right now, so it appears on the first search and empties again when you clear. */
   .legend{position:absolute;left:16px;bottom:calc(var(--axis-h) + 12px);z-index:8;display:flex;flex-direction:column;gap:6px;max-width:40vw;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-card);background:rgba(255,255,255,.84);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 4px 16px rgba(40,44,60,.13);transition:left .18s ease;pointer-events:none;}
   /* Floats over the canvas so it costs zero layout height — vertical space is the scarcest thing on
-     a phone. Tucked against the sidebar (240px + gutter), which overlays the stage rather than
+     a phone. Tucked against the sidebar (240–384px + gutter), which overlays the stage rather than
      shrinking it, so it has to follow the sidebar open/closed. Always open and non-interactive:
      pointer-events:none means it can never block a bar in a low lane that it happens to overlap. */
   .legend:empty{display:none;}                 /* nothing painted → no floating card at all */
