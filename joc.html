@@ -141,13 +141,15 @@
   .lead{color:var(--text2);font-size:14px;margin:2px 0 22px;}
   /* grid-auto-rows:1fr = totes les caixes fan l'alcada de la mes alta: si un titol salta de linia,
      l'espai hi es a totes. */
-  .menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));grid-auto-rows:1fr;gap:16px;}
-  /* Escriptori: els 5 jocs en una fila (amb auto-fill quedava un 3+2 estrany). Si n'hi ha un sisè, revisar. */
-  @media (min-width:861px){ .menu{grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;} .gamecard{padding:16px 14px;} }
-  .gamecard{display:flex;flex-direction:column;gap:8px;text-align:left;background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-card);padding:18px;cursor:pointer;transition:transform .12s,box-shadow .12s;font:inherit;color:inherit;}
+  .menu{display:grid;grid-template-columns:minmax(0,1fr);grid-auto-rows:1fr;gap:12px;max-width:560px;margin:0 auto;}
+  /* Una fila per joc a tot arreu (decisio d'en Bernat, 16/11): icona i titol a l'esquerra, l'estat
+     (ratxa, jugat...) a la dreta. A l'escriptori queda aire als laterals, a posta. L'unica excepcio
+     es l'horitzontal tactil, on van els 5 en una fila (mes avall). */
+  .gamecard{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:'ic t badge';column-gap:14px;align-items:center;text-align:left;background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-card);padding:16px 18px;cursor:pointer;transition:transform .12s,box-shadow .12s;font:inherit;color:inherit;}
   .gamecard:hover{transform:translateY(-2px);box-shadow:0 0 0 2px var(--slate),0 5px 11px rgba(40,44,60,.20);}
-  .gamecard .ic{font-size:30px;line-height:1;}
-  .gamecard .t{font-size:17px;font-weight:600;}
+  .gamecard .ic{grid-area:ic;font-size:28px;line-height:1;}
+  .gamecard .t{grid-area:t;font-size:17px;font-weight:600;line-height:1.2;}
+  .gamecard .tagd,.gamecard .soon{grid-area:badge;justify-self:end;align-self:center;margin:0;white-space:nowrap;}
   .placeholder{background:var(--canvas);border:1px dashed var(--border-strong);border-radius:var(--r-card);padding:48px 24px;text-align:center;}
   .placeholder .ic{font-size:52px;line-height:1;}
   .placeholder h2{margin:14px 0 6px;font-size:22px;font-family:'Oswald','Roboto Condensed','Arial Narrow',Arial,sans-serif;font-weight:600;letter-spacing:.03em;}
@@ -238,14 +240,6 @@
     .pacts .pbtn{flex:0 0 auto;width:100%;padding:10px;font-size:13px;}
     .palbum{display:none;}
     .pinvite{margin:6px 0 0;font-size:11px;line-height:1.35;}
-  }
-  /* Menu de jocs: HORITZONTAL TACTIL = targetes mes petites, mes per fila, marges apurats */
-  @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
-    .menu{grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:8px;}
-    .gamecard{padding:10px 11px;gap:4px;border-radius:12px;}
-    .gamecard .ic{font-size:22px;}
-    .gamecard .t{font-size:13.5px;line-height:1.1;}
-    .gamecard .tagd,.gamecard .soon{font-size:10px;padding:2px 7px;margin-top:1px;}
   }
 
   /* ===== Joc: «Abans o després?» ===== */
@@ -434,12 +428,27 @@
     .gscore .n{font-size:16px;}
     /* Menu de jocs compacte per a mobil: targetes horitzontals i lleugeres perque hi capiguen totes */
     .lead{margin:0 0 14px;font-size:13px;}
-    .menu{grid-template-columns:1fr;gap:10px;}
-    /* Una sola fila: icona i titol a l'esquerra, l'estat (ratxa, jugat...) a la dreta. */
-    .gamecard{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:'ic t badge';column-gap:12px;align-items:center;padding:12px 14px;}
-    .gamecard .ic{grid-area:ic;font-size:24px;}
-    .gamecard .t{grid-area:t;font-size:15px;line-height:1.2;}
-    .gamecard .tagd,.gamecard .soon{grid-area:badge;justify-self:end;align-self:center;margin:0;white-space:nowrap;}
+    .menu{gap:10px;}
+    .gamecard{column-gap:12px;padding:12px 14px;}
+    .gamecard .ic{font-size:24px;}
+    .gamecard .t{font-size:15px;}
+  }
+  /* Menu de jocs: HORITZONTAL TACTIL = els 5 en una fila, targetes petites (icona, titol, estat a baix).
+     Va DARRERE del bloc de max-width:600 perque un mobil petit en horitzontal (568px) tambe hi entra. */
+  @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
+    .menu{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;max-width:none;}
+    .gamecard{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px 8px;border-radius:12px;}
+    .gamecard .ic{font-size:22px;}
+    /* 12.5px: a 667px «Contemporanis?» (100px) just hi cap sense partir-se. A 568 es parteix amb guionet. */
+    .gamecard .t{font-size:12.5px;line-height:1.15;hyphens:auto;-webkit-hyphens:auto;}
+    .gamecard .tagd,.gamecard .soon{margin-top:auto;font-size:9.5px;padding:2px 5px;letter-spacing:-.01em;}
+  }
+  /* Mobil petit en horitzontal (568px): cada targeta en fa ~100. «Contemporanis?» no hi cabia a 13px. */
+  @media (orientation:landscape) and (pointer:coarse) and (max-height:600px) and (max-width:620px){
+    main:has(.menu){padding-left:10px;padding-right:10px;}
+    .menu{gap:6px;}
+    .gamecard{padding:9px 6px;}
+    .gamecard .t{font-size:12px;}
   }
   @media (max-height:560px){
     .topbar{padding:6px 12px;gap:10px;border-bottom-width:3px;}

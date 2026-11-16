@@ -113,8 +113,14 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
   - **Totes les caixes, la mateixa alçada** (`grid-auto-rows:1fr`): si un títol salta de línia en
     una, l'espai hi és a totes. A 320px «Abans o després?» i «Personatge del dia» fan dues línies i
     les cinc fan 62px.
-  - **Escriptori (≥861px): els 5 en una fila** (`repeat(5,…)`). Amb `auto-fill` quedava un 3+2
-    estrany. Si mai n'hi ha un sisè, cal revisar-ho.
+  - **Disposició (decisió d'en Bernat, 16/11): una fila per joc a tot arreu, escriptori inclòs**
+    (llista de 560px centrada; l'aire als laterals és a posta). L'**única excepció és l'horitzontal
+    tàctil**, on van **els 5 en una fila** (`repeat(5,…)`): icona, títol i l'estat a baix. Abans
+    l'escriptori feia un 3+2 i l'horitzontal un 4+1. Si mai hi ha un sisè joc, revisar l'horitzontal.
+  - En horitzontal el títol va a **12,5px**: a 667px «Contemporanis?» fa 100px i hi cap just. A 568
+    (12px) es parteix amb guionet («Contempora-nis?», `hyphens:auto` amb `lang="ca"`), acceptat.
+  - ⚠️ El bloc horitzontal del hub va **darrere** del de `max-width:600px`: un mòbil petit en
+    horitzontal (568px) entra a tots dos i guanya l'últim.
 - **2026-08-12 · Contingut dels jocs cronològics: esdeveniments + persones; MAI marcs/eres.**
   Els anys d'inici/fi de marcs/eres són massa imprecisos (p. ex. l'edat mitjana no acaba en un any
   concret), així que **s'exclouen** del pool. Per a **persones** cal **especificar sempre**
