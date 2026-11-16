@@ -65,6 +65,14 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
   - **S'omple en respondre** (a `avanca()`), sigui encert, error o comodí, **tot del mateix
     color**: 0% a l'inici, 100% en contestar la 20a. Si perds el segon cor **no s'omple**: acaba on
     acaba (decidit).
+- **2026-11-16 · Contemporanis: la mateixa barra de progrés.** 0% a l'inici, +20% a cada tirada
+  **en respondre**, 100% a la 5a. Mateixa classe `.gprog` i dins de `.concards` (`grid-column:1/-1`),
+  així fa l'amplada de les dues cartes. `answer()` refà la barra amb el valor d'abans i l'amplia
+  després d'un `offsetWidth`, perquè la transició es vegi. Els **punts** de la capçalera
+  (`.conprog`, verd/vermell per tirada) **es queden**: diuen com t'ha anat, la barra només per on vas.
+  - A 320×460 ja feia **15px de scroll** abans de la barra, i en va afegir 18. Tram
+    `max-height:520px` en vertical (padding de `main`, aires de capçalera i cartes): ara 0, també
+    amb les tirades respostes. A la resta de mides no fa scroll ni amb barra.
 - **2026-11-16 · «Abans o després?» sense scroll al mòbil vertical.** Mesurant amb la barra del
   navegador (el que queda de veritat), el joc **ja feia scroll abans de la barra** a tots els
   mòbils baixos: demanava 595px de `main` i un iPhone SE en deixa 493. La barra en va afegir 14 i

@@ -586,6 +586,14 @@
     .gameover.ad .locknote{margin:4px 0 2px;}
     .gameover.ad .countdown{margin:2px 0 12px;}
   }
+  /* Contemporanis en vertical molt baix (320x460): ja feia 15px de scroll, i la barra de progres en
+     va afegir 18. Aires mes curts, res amagat. */
+  @media (orientation:portrait) and (max-height:520px){
+    main:has(.game.con){padding-top:12px;padding-bottom:12px;}
+    .game.con .gtop{margin-bottom:10px;}
+    .con .concards{margin:6px 0 12px;}
+    .con .concards .itemcard.con{padding:16px 8px;}
+  }
   /* Segon tram: iPhone SE de 1a generacio amb la barra del navegador (320x460). Mateix criteri. */
   @media (orientation:portrait) and (max-height:520px){
     main:has(.game.ad){padding-top:4px;padding-bottom:4px;}
@@ -2330,11 +2338,15 @@
     }
     function head(){ return '<div class="gamehead"><h2>🤝 '+t('t_contemporanis')+'</h2><div class="sub">'+t('daily_challenge')+' · '+ddmm(todayStr())+'</div></div>'; }
 
+    // Barra de progres, la mateixa que a «Abans o despres?»: n tirades respostes de 5. Va DINS de
+    // .concards (grid-column:1/-1), aixi fa l'amplada de les dues cartes.
+    function barra(n){ return '<div class="gprog" aria-hidden="true"><i style="width:'+(n/5*100)+'%"></i></div>'; }
+
     function render(){
       const pair=round[idx];
       root.innerHTML='<div class="game con">'
         +'<div class="gtop"><div class="gtitle">🤝 '+t('t_contemporanis')+'</div><div class="conprog">'+dots()+'</div></div>'
-        +'<div class="concards">'+card(pair.a,false,null,pairYrClass(pair))+card(pair.b,false,null,pairYrClass(pair))+'</div>'
+        +'<div class="concards">'+barra(idx)+card(pair.a,false,null,pairYrClass(pair))+card(pair.b,false,null,pairYrClass(pair))+'</div>'
         +'<div class="conq">'+q(pair)+'</div>'
         +'<div class="conchoices"><button class="choice conyes" data-a="yes"><span class="big">✓</span>'+t('con_yes')+'</button><button class="choice conno" data-a="no"><span class="big">✗</span>'+t('con_no')+'</button></div>'
         +'<div class="gamefoot">📅 '+t('daily_challenge')+' · '+ddmm(todayStr())+'</div>'
@@ -2349,7 +2361,10 @@
       const correct=((ans==='yes')===pair.coincide);
       marks[idx]=correct; if(correct) score++;
       const flash=correct?'flash-ok':'flash-no';
-      const cc=root.querySelector('.concards'); if(cc) cc.innerHTML=card(pair.a,true,flash,pairYrClass(pair))+card(pair.b,true,flash,pairYrClass(pair));
+      const cc=root.querySelector('.concards'); if(cc){
+        cc.innerHTML=barra(idx)+card(pair.a,true,flash,pairYrClass(pair))+card(pair.b,true,flash,pairYrClass(pair));
+        const pb=cc.querySelector('.gprog>i'); if(pb){ void pb.offsetWidth; pb.style.width=((idx+1)/5*100)+'%'; }   // s'omple en respondre, amb la transicio
+      }
       const cq=root.querySelector('.conq'); if(cq){ cq.textContent=correct?t('con_fb_ok'):t('con_fb_no'); cq.className='conq '+(correct?'ok':'no'); }
       root.querySelectorAll('.conchoices .choice').forEach(function(b){ b.disabled=true; if(b.getAttribute('data-a')===ans) b.classList.add(correct?'sel-ok':'sel-no'); });
       const prog=root.querySelector('.conprog'); if(prog) prog.innerHTML=dots();
