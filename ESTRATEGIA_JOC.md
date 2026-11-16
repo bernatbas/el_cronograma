@@ -37,6 +37,12 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
   reis no es toquen). Girada la carta, o a la de referència, surt sencera. Tapa de més (edats,
   ordinals), mai de menys. ⚠️ **En traduir**, la regla dels segles s'ha d'ampliar amb les paraules de
   cada idioma («siglo», «century»…); la dels números ja val per a tots.
+  **Sense descripció**, el nom es pot tocar igualment i el globus ho diu (en cursiva, claus
+  `desc_none_person` i `desc_none` del diccionari): a una persona amb Q-id, «Em sap greu, encara no en
+  tenim descripció. Quan acabis la partida pots col·laborar amb Wikidata i afegir-ne una tu.»; a un
+  esdeveniment, només la primera frase (els escrivim nosaltres, no venen de Wikidata). **Sense
+  enllaç** a Wikidata, a posta: allà es veurien els anys. Al cronograma no hi ha text de reserva:
+  ja hi ha l'enllaç a la Viquipèdia.
 - **Contemporanis**: la mateixa **barra de progrés** (5 tirades); al resultat **totes** les
   parelles porten al cronograma; en horitzontal i al portàtil baix, resultat en **dues columnes**.
 - **Ordena la línia**: en encertar «🔥 n dies seguits»; en fallar, només el títol («Ai, per poc!»…).

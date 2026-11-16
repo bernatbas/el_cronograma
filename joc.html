@@ -274,6 +274,7 @@
   .descpop{position:fixed;z-index:70;width:min(300px,calc(100vw - 20px));background:var(--canvas);color:var(--text);border:1px solid var(--border-strong);border-radius:var(--r-card);box-shadow:0 10px 28px rgba(0,0,0,.22);padding:12px 40px 13px 14px;font-size:14px;line-height:1.45;text-align:left;}
   .descpop .descnm{font-weight:600;margin-bottom:3px;}
   .descpop .desctx{color:var(--text2);}
+  .descpop .desctx.none{font-style:italic;}
   .descpop .descx{position:absolute;top:4px;right:4px;width:32px;height:32px;border:none;background:none;border-radius:var(--r-card);font-size:22px;line-height:1;color:var(--text2);cursor:pointer;}
   .descpop .descx:hover{background:var(--surface);color:var(--text);}
   /* Lliscar la carta: segueix el dit, i en passar el llindar s'encen el boto que es premera. */
@@ -882,6 +883,10 @@
       copied_short:'✓ Copiat!',
       retry:'Torna-ho a provar',
       close:'Tanca',
+      // Globus de l'«Abans o després?» quan no tenim descripció. La de persones convida a escriure-la
+      // a Wikidata (és d'on venen); la d'esdeveniments no, perquè aquests els escrivim nosaltres.
+      desc_none_person:'Em sap greu, encara no en tenim descripció. Quan acabis la partida pots col·laborar amb Wikidata i afegir-ne una tu.',
+      desc_none:'Em sap greu, encara no en tenim descripció.',
       read_more:'🔗 Llegeix-ne més',
       err_no_data:"Ens hem quedat sense història! N'estem fabricant de nova. Torna demà 🛠️",
       meta_birth:'🎂 naixement',
@@ -1079,8 +1084,8 @@
     });
     (HB_DATA.PEOPLE||[]).forEach(p=>{
       const ap=!!p.approx;   // data que no ens crèiem del tot: veure APX_GAP
-      if(typeof p.birth==='number') pool.push({key:'pe:'+p.id+':b',kind:'person',anchor:'naix',name:p.name,year:p.birth,approx:ap,desc:p.desc});
-      if(typeof p.death==='number') pool.push({key:'pe:'+p.id+':d',kind:'person',anchor:'mort',name:p.name,year:p.death,approx:ap,desc:p.desc});
+      if(typeof p.birth==='number') pool.push({key:'pe:'+p.id+':b',kind:'person',anchor:'naix',name:p.name,year:p.birth,approx:ap,desc:p.desc,wd:p.wd});
+      if(typeof p.death==='number') pool.push({key:'pe:'+p.id+':d',kind:'person',anchor:'mort',name:p.name,year:p.death,approx:ap,desc:p.desc,wd:p.wd});
     });
     return pool;
   }
@@ -1167,7 +1172,7 @@
       const cls='itemcard '+(opts.role||'')+(opts.enter?' enter':'');
       const yrInner = opts.reveal ? fmtYear(it.year) : '<span class="q">?</span>';
       const yrCls = 'yr'+(opts.flip?' reveal':'');
-      const nmAttr = descText(it) ? ' data-desc="1" role="button" tabindex="0"' : '';
+      const nmAttr = ' data-desc="1" role="button" tabindex="0"';   // sempre: sense descripció, el globus ho diu
       return `<div class="${cls}">${meta(it)}<div class="nm"${nmAttr}>${it.name}</div><div class="${yrCls}">${yrInner}</div></div>`;
     }
 
@@ -1200,10 +1205,11 @@
     function foraDesc(e){ if(!document.querySelector('.descpop')) return; if(e.target.closest&&(e.target.closest('.descpop')||e.target.closest('.nm[data-desc]'))) return; tancaDesc(); }
     function obreDesc(nmEl, it, tapat){
       tancaDesc();
-      const txt=descText(it); if(!txt) return;
+      // Sense descripció: text de reserva (de persona amb Q-id, que convida a Wikidata, o el curt).
+      const txt=descText(it), buit=!txt;
       const pop=document.createElement('div');
       pop.className='descpop'; pop.setAttribute('role','dialog');
-      pop.innerHTML='<button class="descx" type="button" aria-label="'+t('close')+'">×</button><div class="descnm"></div><div class="desctx">'+descHtml(tapat?tapaAnys(txt):txt)+'</div>';
+      pop.innerHTML='<button class="descx" type="button" aria-label="'+t('close')+'">×</button><div class="descnm"></div><div class="desctx'+(buit?' none':'')+'">'+(buit ? descHtml(t(it.kind==='person'&&it.wd?'desc_none_person':'desc_none')) : descHtml(tapat?tapaAnys(txt):txt))+'</div>';
       pop.querySelector('.descnm').textContent=it.name;
       document.body.appendChild(pop);
       // Sota el nom i centrat, sense sortir de la pantalla; si a sota no hi cap, a sobre.
