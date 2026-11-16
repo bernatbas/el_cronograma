@@ -563,6 +563,55 @@
     .ordwrap.resolved{height:auto;}
     .ordwrap.resolved .ordlist{overflow:visible;-webkit-overflow-scrolling:auto;}
   }
+  /* «Abans o després?»: VERTICAL en pantalles baixes. Amb la barra del navegador, un iPhone SE deixa
+     ~553px i un iPhone 14 ~664px; el joc en demanava 609 de main i feia scroll a tots dos (abans de la
+     barra de progres l'SE ja en feia: 595). Es retallen aires i lletra, no es amaga res. */
+  @media (orientation:portrait) and (max-height:770px){
+    main:has(.game.ad){padding-top:12px;padding-bottom:12px;}
+    .game.ad .gtop{margin-bottom:12px;}
+    .game.ad .cards2{gap:8px;}
+    .game.ad .itemcard{padding:12px 14px 10px;}
+    .game.ad .itemcard .nm{font-size:17px;}
+    .game.ad .itemcard .yr{font-size:28px;min-height:32px;margin-top:4px;}
+    .game.ad .choices{margin-top:12px;}
+    .game.ad .choice{padding:12px 14px;}
+    .game.ad .choice .big{font-size:24px;}
+    .game.ad .gamefoot{margin-top:12px;}
+    /* Pantalla de resultat: tambe feia scroll (566px de 493 a l'SE), i ja venia d'abans. */
+    main:has(.gameover.ad){padding-top:12px;padding-bottom:12px;}
+    .gameover.ad{padding:16px 18px;}
+    .gameover.ad .gamehead{margin-bottom:4px;}
+    .gameover.ad .rtitle{font-size:21px;margin:2px 0 0;}
+    .gameover.ad .stats{gap:28px;margin:8px 0 8px;}
+    .gameover.ad .stat .v{font-size:34px;}
+    .gameover.ad .locknote{margin:4px 0 2px;}
+    .gameover.ad .countdown{margin:2px 0 12px;}
+  }
+  /* Segon tram: iPhone SE de 1a generacio amb la barra del navegador (320x460). Mateix criteri. */
+  @media (orientation:portrait) and (max-height:520px){
+    main:has(.game.ad){padding-top:4px;padding-bottom:4px;}
+    .game.ad .gtop{margin-bottom:4px;}
+    .game.ad .cards2{gap:4px;}
+    .game.ad .itemcard{padding:8px 12px 6px;}
+    .game.ad .itemcard .meta{min-height:14px;margin-bottom:0;}
+    .game.ad .itemcard .nm{font-size:15px;line-height:1.15;margin-top:2px;}
+    .game.ad .itemcard .yr{font-size:24px;min-height:28px;margin-top:2px;}
+    .game.ad .choices{margin-top:8px;}
+    .game.ad .choice{padding:8px 12px;}
+    .game.ad .choice .big{font-size:20px;margin-bottom:2px;}
+    .game.ad .gamefoot{margin-top:4px;}
+    main:has(.gameover.ad){padding-top:6px;padding-bottom:6px;}
+    .gameover.ad{padding:12px 14px;}
+    .gameover.ad .gamehead h2{font-size:17px;}
+    .gameover.ad .rtitle{font-size:19px;}
+    .gameover.ad .stats{margin:6px 0 4px;}
+    .gameover.ad .stat .v{font-size:30px;}
+    .gameover.ad .stat .k{margin-top:3px;}
+    .gameover.ad .locknote{font-size:12px;line-height:1.3;}
+    .gameover.ad .countdown{margin:2px 0 8px;}
+    .gameover.ad .btnrow{gap:6px;margin-top:0;}
+    .gameover.ad .btnrow .cta,.gameover.ad .hubbtn{padding:7px 20px;font-size:14px;}
+  }
   /* «Ordena la línia»: VERTICAL en pantalles baixes (iPhone SE i similars) => lletra i marges més petits perquè el resultat càpiga sense scroll */
   @media (orientation:portrait) and (max-height:770px){
     .ordhead{margin:0 0 8px;}
@@ -1081,7 +1130,7 @@
 
     function render(){
       root.innerHTML = `
-        <div class="game">
+        <div class="game ad">
           <div class="gtop">
             <div class="gtitle">⚖️ ${t('t_abansdespres')}</div>
             <div class="gscore">${livesHtml()}<div class="n" id="scoren"><span class="ic">🎯</span><span class="v">${score}</span></div></div>
@@ -1170,7 +1219,7 @@
       const cronoEvents = failItems.map(eventFromItem).filter(Boolean);
       const hasCrono = cronoPeople.length || cronoEvents.length;
       root.innerHTML = `
-        <div class="gameover">
+        <div class="gameover ad">
           ${head()}
           <h2 class="rtitle">${title}</h2>
           <div class="stats">

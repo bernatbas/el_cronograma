@@ -49,6 +49,39 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
     surt també amb ronda perfecta si hi ha hagut l'error.
   - Tests: `Abans o després?` a `smoke.spec.js`. Llegeixen la resposta del pool del dia via
     `window.__AD.pool(data)`, per nom de la carta.
+  - **Els cors es buiden d'esquerra a dreta** (decisió d'en Bernat, 15/11). `livesHtml()` pinta
+    ple el cor `i >= VIDES-lives`, i `guess()` buida el `VIDES-1-lives`.
+  - **El comodí no s'apaga en respondre.** Abans `guess()` desactivava `.choice,.pass` i el comodí
+    sortia gris dos segons a cada pregunta. Ara només desactiva `.choice`; el comodí queda bloquejat
+    pel `locked`, que `skip()` ja mirava. Només s'apaga quan l'has gastat.
+  - **Text:** «encerts seguits» → **«encerts»** (`hits_in_row` i `share_ad`): amb dues vides ja no
+    han de ser seguits. El globus del comodí («passa aquesta parella») es queda així de moment.
+- **2026-11-16 · «Abans o després?»: barra de progrés de la ronda.**
+  - **Fina (4px), contínua, sense números**, terracota sobre el rosa de la pastilla del marcador
+    (`#F7E5E0`). Es va triar entre contínua i 20 segments: contínua.
+  - Va **dins de `.cards2`** amb `grid-column:1/-1`: en vertical fa l'amplada de la carta de
+    referència, en horitzontal la de les dues cartes (la fila de cartes passa a
+    `grid-template-rows:auto minmax(0,1fr)`).
+  - **S'omple en respondre** (a `avanca()`), sigui encert, error o comodí, **tot del mateix
+    color**: 0% a l'inici, 100% en contestar la 20a. Si perds el segon cor **no s'omple**: acaba on
+    acaba (decidit).
+- **2026-11-16 · «Abans o després?» sense scroll al mòbil vertical.** Mesurant amb la barra del
+  navegador (el que queda de veritat), el joc **ja feia scroll abans de la barra** a tots els
+  mòbils baixos: demanava 595px de `main` i un iPhone SE en deixa 493. La barra en va afegir 14 i
+  va fer caure també l'iPhone 14 (664 d'alt). La pantalla de resultat també en feia (566).
+  - Dos trams `@media (orientation:portrait)`, a `max-height:770px` i `520px`, que **retallen aires
+    i lletra i no amaguen res**. Van amb la classe **`.game.ad` / `.gameover.ad`** perquè no toquin
+    els altres jocs, i el `padding` de `main` amb `main:has(...)`.
+  - Mesurat (alt de `main` necessari / disponible): 320×460 **362/400**, 360×560 i 375×553
+    **468/≈495**, 390×664 **468/604**. Resultat: 375×553 i 320×460, **just a ras**.
+  - **El pitjor cas són dos noms llargs a la mateixa parella.** A 320px n'hi ha 4 que fan dues
+    línies (al-Khwarazmí, la Declaració d'Independència dels EUA, Hiroshima i Nagasaki, la
+    Declaració Universal dels Drets Humans); a 360, només l'última; a 390, cap. Amb dos d'aquests
+    a 320×460: **396/400**. Si n'entren de més llargs a la BD, és aquí on petarà primer.
+  - En horitzontal (568×320, 667×375, 740×340) i a l'escriptori: cap scroll.
+  - ⚠️ Al panell del navegador les animacions es queden congelades, i la `cardIn` (translateY
+    26px) fa semblar que en horitzontal hi ha 8px de scroll. **No és real**: traient `.enter`
+    quadra.
 - **2026-08-12 · Contingut dels jocs cronològics: esdeveniments + persones; MAI marcs/eres.**
   Els anys d'inici/fi de marcs/eres són massa imprecisos (p. ex. l'edat mitjana no acaba en un any
   concret), així que **s'exclouen** del pool. Per a **persones** cal **especificar sempre**
