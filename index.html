@@ -321,18 +321,24 @@
     .colitem .extlink svg{width:15px;height:15px;}
     .colitem.on .extlink{opacity:.85;}
   }
-  .colitem.on{background:linear-gradient(135deg,#F7E5E0,#EFD4CC);border-color:var(--topbar-bg);box-shadow:inset 3px 0 0 var(--topbar-bg),0 1px 3px rgba(40,44,60,.13);font-weight:600;}
+  .colitem.on{background:linear-gradient(135deg,#F7E5E0,#EFD4CC);border-color:var(--topbar-bg);box-shadow:0 1px 3px rgba(40,44,60,.13);font-weight:600;}
+  /* Marca de l'activa: una barreta propia, no un `box-shadow:inset 3px 0 0` com abans. Aquella
+     seguia el radi de la fila i a dalt i a baix de l'esquerra hi feia dues mini cantonades (16/11/2026). */
+  .colitem{position:relative;}
+  .colitem.on::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:0 3px 3px 0;background:var(--topbar-bg);}
   .colitem.on .ico{opacity:.8;}
   /* Barra lateral: files PLANES, com les de Marcs, Favorits i A la vista. Eren pastilles
      amb vora, ombra i farciment —37px d'alt contra 27-30 dels veins— i les col·leccions
      semblaven mes grans que la resta tenint la mateixa lletra. Ara la vora i el fons
      nomes surten en passar-hi o quan esta activa. Va a `.sidebar .colitem` i no a `.colitem`
      a proposit: al mobil les seccions viuen al popup, que ja te el seu estil mes pla. */
-  .sidebar #collections{gap:1px;}
+  /* #collections fa scroll (overflow:hidden/auto) i les files hi sobresurten 6px a cada banda: sense
+     aquest padding, el contenidor en retallava el costat esquerre i nomes en quedaven les cantonades. */
+  .sidebar #collections{gap:1px;margin:0 -6px;padding:0 6px;}
   .sidebar .colitem{border-color:transparent;background:none;box-shadow:none;padding:5px 6px;
     margin:0 -6px;width:calc(100% + 12px);font-size:14px;}
   .sidebar .colitem:hover{background:var(--surface);border-color:transparent;box-shadow:none;}
-  .sidebar .colitem.on{background:#FBF1EE;border-color:transparent;box-shadow:inset 3px 0 0 var(--topbar-bg);}
+  .sidebar .colitem.on{background:#FBF1EE;border-color:transparent;box-shadow:none;}
   .newcol{width:100%;border:1px dashed var(--border-strong);background:none;border-radius:var(--r-card);padding:8px 10px;font-size:13px;color:var(--text2);cursor:pointer;font-family:inherit;}
   .newcol:hover{background:var(--surface);color:var(--text);}
   .newcol:disabled{opacity:.5;cursor:default;}
@@ -781,7 +787,7 @@
      n'hi han de cabre cinc o sis. */
   .cfgbody .colitem{padding:0 9px;min-height:38px;font-size:13px;gap:8px;box-shadow:none;
        border-color:var(--border);background:var(--canvas);}
-  .cfgbody .colitem.on{background:#FBF1EE;box-shadow:inset 3px 0 0 var(--topbar-bg);
+  .cfgbody .colitem.on{background:#FBF1EE;box-shadow:none;
        border-color:#E8D2CB;font-weight:600;}
   .cfgbody .colitem .cnt{font-size:11px;}
   .cfgbody .newcol{padding:6px 9px;font-size:12px;}
