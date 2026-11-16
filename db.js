@@ -277,6 +277,37 @@ const COLLECTIONS=[
     'Q40909', // Virginia Woolf      1882–1941
     'Q41408', // García Lorca        1898–1936
     'Q7251'   // Alan Turing         1912–1954
+  ]},
+  // Filosofia de la ciència: els autors i els casos històrics de «Què és aquesta cosa anomenada
+  // ciència?» (Chalmers), per a l'assignatura de la UNED. Q-ids resolts pel títol de l'article de la
+  // Viquipèdia i verificats amb l'any esperat i la mateixa SPARQL que byIds() (16/11/2026).
+  {id:'ipcuned',name:'IPC - UNED 2026',wds:[
+    'Q37388',   // Francis Bacon       1561–1626
+    'Q37160',   // David Hume          1711–1776
+    'Q81244',   // Karl Popper         1902–1994
+    'Q184980',  // Thomas Kuhn         1922–1996
+    'Q296249',  // Imre Lakatos        1922–1974
+    'Q78497',   // Paul Feyerabend     1924–1994
+    'Q314172',  // Pierre Duhem        1861–1916
+    'Q214969',  // W. V. O. Quine      1908–2000
+    'Q208452',  // Thomas Bayes        1702–1761
+    'Q16732191',// Deborah Mayo        1953–
+    'Q188357',  // Ian Hacking         1936–2023
+    'Q809744',  // Bas van Fraassen    1941–
+    'Q321606',  // John Worrall        1946–
+    'Q619',     // Copèrnic            1473–1543
+    'Q36620',   // Tycho Brahe         1546–1601
+    'Q8963',    // Kepler              1571–1630
+    'Q307',     // Galileu             1564–1642
+    'Q935',     // Isaac Newton        1643–1727
+    'Q104154',  // Le Verrier          1811–1877
+    'Q20015',   // John Couch Adams    1819–1892
+    'Q39607',   // Lavoisier           1743–1794
+    'Q159636',  // Joseph Priestley    1733–1804
+    'Q8750',    // Michael Faraday     1791–1867
+    'Q9095',    // James Clerk Maxwell 1831–1879
+    'Q41257',   // Heinrich Hertz      1857–1894
+    'Q937'      // Albert Einstein     1879–1955
   ]}
 ];
 
