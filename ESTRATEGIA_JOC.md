@@ -91,8 +91,9 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
     **Abandonar a mitja partida no compta.**
   - Es va provar primer «jugar = primera interacció» i en Bernat ho va descartar: compta acabar.
   - Textos de l'Ordena: encertar → «🔥 n dies seguits» (com els altres jocs; fora el «…encertant»).
-    Fallar → «Oh, llàstima!» (fora «S'ha trencat la ratxa. En vermell, els que…»). Claus
-    `streak_days_hit` i `ord_streak_broken` esborrades; nova `ord_fail_line`.
+    Fallar → només el títol que ja hi era («Ai, per poc!», etc.); fora «S'ha trencat la ratxa. En
+    vermell, els que…» (es va provar «Oh, llàstima!» a sota i sobrava). Claus `streak_days_hit` i
+    `ord_streak_broken` esborrades.
 - **2026-11-16 · Resultat de Contemporanis: TOTES les parelles porten al cronograma.** Abans només
   les fallades, amb un 📅 per indicar-ho; ara ho són totes (encertades en verd, fallades en vermell)
   i l'icona s'ha tret. Només queda inert una parella sense cap ítem que es pugui posar al cronograma.

@@ -912,7 +912,6 @@
       ord_fail_2:'Suposo que la idea era bona però… 🙄',
       ord_fail_3:'Osti quin desastre… 🙈',
       ord_win:'Ben ordenat! 🎉',
-      ord_fail_line:'Oh, llàstima!',
       ord_locked_win:'Encertat! 🎉',
       ord_locked_lose:'No encertat 😬',
       share_ord: v => '🕰️ Història BASica · Ordena la línia — '+v.dd+v.nl+v.squares+v.nl+'🔥 '+v.days+' '+(v.days===1?'dia':'dies')+' seguits',
@@ -1819,7 +1818,7 @@
       const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
       foot.innerHTML = correct
         ? '<div class="ordbanner ok"><div class="rtitle perfect">'+t('ord_win')+'</div><div class="streak">🔥 '+days+' '+t('streak_days',{n:days})+'</div><div class="locknote">'+t('locknote_solved')+'</div><div class="countdown">'+t('new_challenge_in')+' <b id="ocd">--:--:--</b></div></div>'
-        : '<div class="ordbanner no"><div class="rtitle">'+ordFailTitle(wrong)+'</div><div class="streak">'+t('ord_fail_line')+'</div><div class="locknote">'+t('locknote_solved')+'</div><div class="countdown">'+t('new_challenge_in')+' <b id="ocd">--:--:--</b></div></div>';
+        : '<div class="ordbanner no"><div class="rtitle">'+ordFailTitle(wrong)+'</div><div class="locknote">'+t('locknote_solved')+'</div><div class="countdown">'+t('new_challenge_in')+' <b id="ocd">--:--:--</b></div></div>';
       startCd();
       const bn=foot.querySelector('.ordbanner');
       if(bn){
