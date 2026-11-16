@@ -768,6 +768,22 @@ test.describe('Abans o després?', () => {
     await expect(page.locator('.gameover')).toBeVisible({ timeout: 5000 });
   });
 
+  test('la descripció de la carta de la pregunta surt amb els anys tapats', async ({ page }) => {
+    await obreAbansDespres(page);
+    const t = await page.evaluate(() => window.__AD.tapa(
+      'Rei d’Anglaterra de 1189 a 1199, mort als 41 anys. Segle XII, segles XV i XVI, s. IV. Felip II i Lluís XIV no.'));
+    expect(t).toBe('Rei d’Anglaterra de ···· a ····, mort als ···· anys. Segle ···, segles ···, s. ···. Felip II i Lluís XIV no.');
+    // i el nom de la carta de referència obre el globus, que es tanca amb la ✕. (Una persona de la
+    // BD no té descripció: si el dia la posa de referència, aquesta part no s'hi pot provar.)
+    const nom = page.locator('.cards2 .itemcard.ref .nm[data-desc]');
+    if (await nom.count()) {
+      await nom.click();
+      await expect(page.locator('.descpop')).toBeVisible();
+      await page.locator('.descpop .descx').click();
+      await expect(page.locator('.descpop')).toHaveCount(0);
+    }
+  });
+
   test('fletxa amunt = comodí, i lliscar la carta respon', async ({ page }) => {
     await obreAbansDespres(page);
     const barra = page.locator('.gprog > i');

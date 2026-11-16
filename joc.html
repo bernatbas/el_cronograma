@@ -268,6 +268,14 @@
   @keyframes heartlost{0%{transform:scale(1);}35%{transform:scale(1.35);}100%{transform:scale(1);}}
   /* Comodi: el boto que era la resposta, del mateix verd que l'encert de la carta */
   .choice.answer{border-color:#2E9B5B;background:#E9F7EE;color:#238049;opacity:1;}
+  /* Nom amb descripcio: es pot tocar. Subratllat de punts discret perque es vegi que s'hi pot clicar. */
+  .itemcard .nm[data-desc]{cursor:pointer;text-decoration:underline dotted;text-decoration-color:var(--border-strong);text-underline-offset:4px;text-decoration-thickness:1.5px;}
+  .itemcard .nm[data-desc]:hover{text-decoration-color:var(--text2);}
+  .descpop{position:fixed;z-index:70;width:min(300px,calc(100vw - 20px));background:var(--canvas);color:var(--text);border:1px solid var(--border-strong);border-radius:var(--r-card);box-shadow:0 10px 28px rgba(0,0,0,.22);padding:12px 40px 13px 14px;font-size:14px;line-height:1.45;text-align:left;}
+  .descpop .descnm{font-weight:600;margin-bottom:3px;}
+  .descpop .desctx{color:var(--text2);}
+  .descpop .descx{position:absolute;top:4px;right:4px;width:32px;height:32px;border:none;background:none;border-radius:var(--r-card);font-size:22px;line-height:1;color:var(--text2);cursor:pointer;}
+  .descpop .descx:hover{background:var(--surface);color:var(--text);}
   /* Lliscar la carta: segueix el dit, i en passar el llindar s'encen el boto que es premera. */
   #candslot .itemcard.new{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;transition:transform .2s ease-out;}
   #candslot .itemcard.new.drag{transition:none;cursor:grabbing;}
@@ -1067,12 +1075,12 @@
   function buildPool(){
     const pool=[];
     (HB_DATA.EVENTS||[]).forEach(e=>{
-      if(typeof e.year==='number') pool.push({key:'ev:'+e.id,kind:'event',name:e.name,year:e.year});
+      if(typeof e.year==='number') pool.push({key:'ev:'+e.id,kind:'event',name:e.name,year:e.year,desc:e.desc});
     });
     (HB_DATA.PEOPLE||[]).forEach(p=>{
       const ap=!!p.approx;   // data que no ens crèiem del tot: veure APX_GAP
-      if(typeof p.birth==='number') pool.push({key:'pe:'+p.id+':b',kind:'person',anchor:'naix',name:p.name,year:p.birth,approx:ap});
-      if(typeof p.death==='number') pool.push({key:'pe:'+p.id+':d',kind:'person',anchor:'mort',name:p.name,year:p.death,approx:ap});
+      if(typeof p.birth==='number') pool.push({key:'pe:'+p.id+':b',kind:'person',anchor:'naix',name:p.name,year:p.birth,approx:ap,desc:p.desc});
+      if(typeof p.death==='number') pool.push({key:'pe:'+p.id+':d',kind:'person',anchor:'mort',name:p.name,year:p.death,approx:ap,desc:p.desc});
     });
     return pool;
   }
@@ -1159,7 +1167,65 @@
       const cls='itemcard '+(opts.role||'')+(opts.enter?' enter':'');
       const yrInner = opts.reveal ? fmtYear(it.year) : '<span class="q">?</span>';
       const yrCls = 'yr'+(opts.flip?' reveal':'');
-      return `<div class="${cls}">${meta(it)}<div class="nm">${it.name}</div><div class="${yrCls}">${yrInner}</div></div>`;
+      const nmAttr = descText(it) ? ' data-desc="1" role="button" tabindex="0"' : '';
+      return `<div class="${cls}">${meta(it)}<div class="nm"${nmAttr}>${it.name}</div><div class="${yrCls}">${yrInner}</div></div>`;
+    }
+
+    // ── Descripció en tocar el nom (16/11/2026) ─────────────────────────────────────────
+    // Per quan surt algú que no has vist mai. A la carta de la PREGUNTA (any amagat) els anys i
+    // els segles surten tapats, perquè algunes descripcions duen la resposta («Rei d'Anglaterra de
+    // 1189 a 1199»); les pistes d'època («grec», «romà») s'hi queden. Un cop girada, sencera.
+    // Regles fixes, sense llistes: valen igual per a qualsevol entrada nova de la BD.
+    //   1. qualsevol número -> ····   (1547, 800, 33, 1.480)
+    //   2. un romà NOMÉS darrere de «segle», «s.» o «mil·lenni» -> ···   («Felip II» no es toca)
+    // Quan s'equivoca, tapa de més (edats, ordinals), mai de menys. ⚠️ En traduir, la regla 2
+    // s'ha d'ampliar amb les paraules de cada idioma («siglo», «century»…).
+    function descText(it){
+      const d=it&&it.desc; if(!d) return '';
+      return typeof d==='object' ? (d[LANG]||d.ca||'') : String(d);
+    }
+    function tapaAnys(txt){
+      return txt
+        .replace(/\b(segles?|s\.|mil·lennis?)(\s+)[IVXLC]+\b(?:\s*(?:i|-|–|al?)\s*[IVXLC]+\b)?/gi, (m,w,sp)=>w+sp+'···')
+        .replace(/\d[\d.,]*\d|\d/g, '····');
+    }
+    // Text pla escapat; només es deixa passar el <br> (com descHtml() al cronograma).
+    function descHtml(txt){
+      return txt.split(/<br\s*\/?>/i).map(function(part){
+        return part.replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; });
+      }).join('<br>');
+    }
+    function tancaDesc(){ const p=document.querySelector('.descpop'); if(p) p.remove(); }
+    // Tocar fora del globus el tanca (però no tocar un altre nom: aquell n'obrirà un de nou).
+    function foraDesc(e){ if(!document.querySelector('.descpop')) return; if(e.target.closest&&(e.target.closest('.descpop')||e.target.closest('.nm[data-desc]'))) return; tancaDesc(); }
+    function obreDesc(nmEl, it, tapat){
+      tancaDesc();
+      const txt=descText(it); if(!txt) return;
+      const pop=document.createElement('div');
+      pop.className='descpop'; pop.setAttribute('role','dialog');
+      pop.innerHTML='<button class="descx" type="button" aria-label="'+t('close')+'">×</button><div class="descnm"></div><div class="desctx">'+descHtml(tapat?tapaAnys(txt):txt)+'</div>';
+      pop.querySelector('.descnm').textContent=it.name;
+      document.body.appendChild(pop);
+      // Sota el nom i centrat, sense sortir de la pantalla; si a sota no hi cap, a sobre.
+      const r=nmEl.getBoundingClientRect(), pw=pop.offsetWidth, ph=pop.offsetHeight, M=10;
+      let left=Math.min(Math.max(M, r.left+r.width/2-pw/2), innerWidth-pw-M);
+      let top=r.bottom+8; if(top+ph>innerHeight-M) top=Math.max(M, r.top-ph-8);
+      pop.style.left=left+'px'; pop.style.top=top+'px';
+      pop.querySelector('.descx').addEventListener('click',tancaDesc);
+    }
+    // Cada nom es lliga a l'ítem de la SEVA carta en pintar-la (no a `candidate`, que avanca() ja
+    // ha canviat mentre la carta resolta encara és a la pantalla). Tapat = l'any encara és «?».
+    function wireDesc(){
+      root.querySelectorAll('.itemcard .nm[data-desc]').forEach(function(nm){
+        if(nm._obre) return;
+        const it = nm.closest('#candslot') ? candidate : current;
+        const obre=function(){ obreDesc(nm, it, !!nm.closest('.itemcard').querySelector('.yr .q')); };
+        nm._obre=obre;
+        // A la carta de la pregunta el toc el detecta wireSwipe (toc sense moviment), perquè la
+        // carta captura el punter per arrossegar-la i el click no arriba al nom.
+        if(!nm.closest('#candslot')) nm.addEventListener('click',obre);
+        nm.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); obre(); } });
+      });
     }
 
     function head(){ return `<div class="gamehead"><h2>⚖️ ${t('t_abansdespres')}</h2><div class="sub">${t('daily_challenge')} · ${ddmm(todayStr())}</div></div>`; }
@@ -1239,6 +1305,7 @@
       config: AD_CONFIG,
       gap: gap,
       pool: function(ds){ return dailyPool(mulberry32(seedFromStr(ds))); },
+      tapa: function(txt){ return tapaAnys(txt); },   // per als tests: la regla de tapar anys
       sim: function(ds){ const r=mulberry32(seedFromStr(ds)); return buildPath(dailyPool(r), r); }
     }; }catch(_){}
 
@@ -1289,7 +1356,9 @@
         b.addEventListener('click',()=>guess(b.getAttribute('data-a')));
       });
       const sk=root.querySelector('[data-x="skip"]'); if(sk) sk.addEventListener('click',skip);
+      tancaDesc();
       wireSwipe();
+      wireDesc();
     }
 
     // Lliscar la carta nova: esquerra = Abans, dreta = Despres, amunt = comodi (com les fletxes del
@@ -1298,7 +1367,7 @@
     const SWIPE_TH=70;
     function wireSwipe(){
       const card=root.querySelector('#candslot .itemcard'); if(!card) return;
-      let id=null, x0=0, y0=0, dx=0, dy=0, apunta=null;
+      let id=null, x0=0, y0=0, dx=0, dy=0, apunta=null, nmToc=null;
       const boto=a=> a==='skip' ? root.querySelector('[data-x="skip"]') : root.querySelector('.choice[data-a="'+a+'"]');
       const cap=()=>{
         if(Math.abs(dx)>=SWIPE_TH && Math.abs(dx)>Math.abs(dy)) return dx<0?'abans':'despres';
@@ -1310,6 +1379,7 @@
         if(locked||!candidate||id!==null) return;
         if(e.pointerType==='mouse'&&e.button!==0) return;
         id=e.pointerId; x0=e.clientX; y0=e.clientY; dx=dy=0;
+        nmToc=e.target.closest&&e.target.closest('.nm[data-desc]');
         try{ card.setPointerCapture(id); }catch(_){}
         card.classList.add('drag');
       });
@@ -1326,6 +1396,8 @@
         const a = e.type==='pointerup' ? cap() : null;
         marca(null); card.style.transform='';
         if(a==='skip') skip(); else if(a) guess(a);
+        else if(e.type==='pointerup' && nmToc && Math.abs(dx)<6 && Math.abs(dy)<6 && nmToc._obre) nmToc._obre();
+        nmToc=null;
       };
       card.addEventListener('pointerup',deixa);
       card.addEventListener('pointercancel',deixa);
@@ -1334,6 +1406,7 @@
     // Teclat: fletxa esquerra = Abans, dreta = Despres, amunt = comodi. Nomes amb una pregunta
     // oberta: a la pantalla de resultat, amb el joc bloquejat o escrivint en un camp, no fa res.
     function onKey(e){
+      if(e.key==='Escape' && document.querySelector('.descpop')){ tancaDesc(); return; }
       if(!root||locked||!candidate||e.altKey||e.ctrlKey||e.metaKey) return;
       const tg=e.target; if(tg&&(tg.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) return;
       if(!root.querySelector('#candslot')) return;
@@ -1348,7 +1421,8 @@
       if(!gaStarted){ gaStarted=true; track('joc_iniciat',{joc:'abansdespres',mode:'default'}); }
       const correct = (ans==='abans' && candidate.year<current.year) || (ans==='despres' && candidate.year>current.year);
       const slot=root.querySelector('#candslot');
-      if(slot){ slot.innerHTML=card(candidate,{role:'new',reveal:true,flip:true}); const c=slot.querySelector('.itemcard'); if(c) c.classList.add(correct?'flash-ok':'flash-no'); }
+      tancaDesc();
+      if(slot){ slot.innerHTML=card(candidate,{role:'new',reveal:true,flip:true}); const c=slot.querySelector('.itemcard'); if(c) c.classList.add(correct?'flash-ok':'flash-no'); wireDesc(); }
       root.querySelectorAll('.choice').forEach(b=>{ b.disabled=true; });   // el comodi no: el locked ja el bloqueja, i apagar-lo el feia parpellejar en gris
       if(correct){
         score++;
@@ -1375,7 +1449,8 @@
       track('joc_comodin_usat',{joc:'abansdespres',mode:'default'});
       const bona = candidate.year<current.year ? 'abans' : 'despres';
       const slot=root.querySelector('#candslot');
-      if(slot) slot.innerHTML=card(candidate,{role:'new',reveal:true,flip:true});
+      tancaDesc();
+      if(slot){ slot.innerHTML=card(candidate,{role:'new',reveal:true,flip:true}); wireDesc(); }
       root.querySelectorAll('.choice,.pass').forEach(b=>{ b.disabled=true; });
       const bb=root.querySelector('.choice[data-a="'+bona+'"]'); if(bb) bb.classList.add('answer');
       avanca(2000);
@@ -1462,8 +1537,8 @@
     }
 
     return {
-      mount(container){ root=container; gaStarted=false; failPairs=[]; failItems=[]; track('joc_vist',{joc:'abansdespres'}); document.addEventListener('keydown',onKey); start(); },
-      unmount(){ document.removeEventListener('keydown',onKey); if(timer){ clearTimeout(timer); timer=null; } if(cdTimer){ clearInterval(cdTimer); cdTimer=null; } root=null; }
+      mount(container){ root=container; gaStarted=false; failPairs=[]; failItems=[]; track('joc_vist',{joc:'abansdespres'}); document.addEventListener('keydown',onKey); document.addEventListener('pointerdown',foraDesc,true); start(); },
+      unmount(){ document.removeEventListener('keydown',onKey); document.removeEventListener('pointerdown',foraDesc,true); tancaDesc(); if(timer){ clearTimeout(timer); timer=null; } if(cdTimer){ clearInterval(cdTimer); cdTimer=null; } root=null; }
     };
   })();
 

@@ -31,6 +31,12 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
   suma, compta com a pregunta). **Ronda perfecta** = arribar a la 20a amb algun cor. **Barra de
   progrés** fina sobre la carta de referència. **Lliscar** la carta (← Abans, → Després, ↑ comodí)
   i **fletxes del teclat** igual. Resultat: «encerts», no «encerts seguits».
+- **«Abans o després?» — descripció en tocar el nom**: globus amb ✕ (també es tanca tocant fora o
+  amb Esc). A la carta de la **pregunta** els anys van **tapats** per regla fixa (`tapaAnys()`):
+  qualsevol número → «····», i un romà només darrere de «segle/s./mil·lenni» → «···» (els noms de
+  reis no es toquen). Girada la carta, o a la de referència, surt sencera. Tapa de més (edats,
+  ordinals), mai de menys. ⚠️ **En traduir**, la regla dels segles s'ha d'ampliar amb les paraules de
+  cada idioma («siglo», «century»…); la dels números ja val per a tots.
 - **Contemporanis**: la mateixa **barra de progrés** (5 tirades); al resultat **totes** les
   parelles porten al cronograma; en horitzontal i al portàtil baix, resultat en **dues columnes**.
 - **Ordena la línia**: en encertar «🔥 n dies seguits»; en fallar, només el títol («Ai, per poc!»…).
