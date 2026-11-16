@@ -20,10 +20,12 @@ concurrency:
 # Accions a versions que corren amb Node 24 (16/11/2026): les @v4 i companyia eren Node 20 i
 # GitHub en donava un avís de deprecació a cada execució. upload-pages-artifact@v5 ja no posa els
 # fitxers que comencen per punt al paquet: el web no en fa servir cap.
+# Sistema fixat a ubuntu-24.04: ubuntu-latest passa a Ubuntu 26 i GitHub ho avisava a cada
+# execució. Canviar de versió ha de ser una decisió, no una sorpresa al CI.
 jobs:
   structural:
     name: Checks estructurals
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
 
@@ -219,7 +221,7 @@ jobs:
 
   playwright:
     name: Playwright (${{ matrix.project }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: structural
     strategy:
       fail-fast: false
@@ -269,7 +271,7 @@ jobs:
   deploy:
     name: Publica a GitHub Pages
     needs: [structural, playwright]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
