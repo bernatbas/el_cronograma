@@ -413,6 +413,10 @@ function metricOf(ev){return typeof ev.imp==='number'?ev.imp:((ev.sitelinks||0)>
 EVENTS.forEach(ev=>{ev._m=metricOf(ev);});
 // Stable label LAYOUT for the semantic zoom, precomputed ONCE here (zoom-independent), like _m above.
 
+// Descripcions de PEOPLE: venen de Wikidata (en català), netejades com fa el dashboard. Aquesta
+// és la data de l'última vegada que el dashboard les va revisar totes («Actualitza les
+// descripcions»). Les que Wikidata no té en català es queden com estan.
+const DESC_SYNC='2026-11-16';
 const PEOPLE=[
   {id:'socrates',wd:'Q913',name:'Sòcrates',birth:-470,death:-399,cats:['philosophy'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Sòcrates',desc:'Filòsof grec'},
   {id:'plato',wd:'Q859',name:'Plató',birth:-428,death:-348,cats:['philosophy'],gender:'M',wiki:'https://ca.wikipedia.org/wiki/Plató',desc:'Filòsof grec',approx:'aprox'},

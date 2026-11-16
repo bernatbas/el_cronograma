@@ -42,7 +42,7 @@ BRANCA_BD = "main"
 # Els POST que toquen fitxers del repo. /api/push i /api/shutdown no hi son: empenyer la
 # branca on ets es legitim, i aturar el servidor no escriu res.
 POST_QUE_ESCRIUEN = (
-    "/api/db/add",
+    "/api/db/add", "/api/db/sync-desc",
     "/api/pinned/set", "/api/pinned/del",
     "/api/conpinned/set", "/api/conpinned/del",
     "/api/backlog/add", "/api/backlog/close",
@@ -816,7 +816,94 @@ def db_state():
         "blocks": count_marc_blocks(src),
         "collections": count_entries(src, "COLLECTIONS"),
         "eras": count_entries(src, "ERAS"),
+        "desc_sync": _desc_sync_date(src),
     }
+
+
+DESC_SYNC_RE = re.compile(r"const\s+DESC_SYNC\s*=\s*'(\d{4}-\d{2}-\d{2})'\s*;")
+
+
+def _desc_sync_date(src):
+    m = DESC_SYNC_RE.search(src)
+    return m.group(1) if m else None
+
+
+def db_sync_descs():
+    """Torna a demanar a Wikidata la descripcio en catala de TOTES les persones amb Q-id, hi
+    aplica les mateixes normes que en afegir-ne una (_clean_desc + _js_str) i canvia nomes les
+    que han canviat. Les que Wikidata no te en catala es queden com estan. Desa la data a
+    DESC_SYNC i committeja db.js tot sol. No toca res mes de cada objecte."""
+    src0 = read(DB_FILE)
+    m = re.search(r"const\s+PEOPLE\s*=\s*\[", src0)
+    if not m:
+        return {"ok": False, "msg": "No trobo PEOPLE a %s" % DB_FILE}
+    before, close = count_objects(src0, m.end())
+    head, block, tail = src0[:m.end()], src0[m.end():close], src0[close:]
+
+    objs = list(re.finditer(r"\{[^{}]*\}", block))
+    ids = []
+    for o in objs:
+        q = re.search(r"wd:'(Q\d+)'", o.group(0))
+        if q:
+            ids.append(q.group(1))
+    wd = {}
+    for k in range(0, len(ids), 50):
+        e = _wd_get(WD_API + "?action=wbgetentities&props=descriptions&languages=ca&format=json&ids="
+                    + "|".join(ids[k:k + 50]))
+        if not e or "entities" not in e:
+            return {"ok": False, "msg": "Wikidata no respon: no toco res"}
+        for q, v in e["entities"].items():
+            wd[q] = ((v.get("descriptions") or {}).get("ca") or {}).get("value")
+
+    changed, missing = [], []
+    out, last = [], 0
+    for o in objs:
+        txt = o.group(0)
+        q = re.search(r"wd:'(Q\d+)'", txt)
+        nm = re.search(r"name:'((?:[^'\\]|\\.)*)'", txt)
+        name = nm.group(1) if nm else "?"
+        new_txt = txt
+        if q:
+            w = wd.get(q.group(1))
+            if not w:
+                missing.append(name)
+            else:
+                new = _js_str(_clean_desc(w))
+                dm = re.search(r"desc:'((?:[^'\\]|\\.)*)'", txt)
+                if dm and dm.group(1) != new:
+                    new_txt = txt[:dm.start()] + "desc:'" + new + "'" + txt[dm.end():]
+                elif not dm and new:
+                    new_txt = txt[:-1].rstrip() + ",desc:'" + new + "'}"
+                if new_txt != txt:
+                    changed.append(name)
+        out.append(block[last:o.start()])
+        out.append(new_txt)
+        last = o.end()
+    out.append(block[last:])
+    new_src = head + "".join(out) + tail
+
+    today = date.today().isoformat()
+    if DESC_SYNC_RE.search(new_src):
+        new_src = DESC_SYNC_RE.sub("const DESC_SYNC='%s';" % today, new_src, count=1)
+    else:
+        return {"ok": False, "msg": "No trobo DESC_SYNC a %s: no toco res" % DB_FILE}
+
+    m2 = re.search(r"const\s+PEOPLE\s*=\s*\[", new_src)
+    after, _ = count_objects(new_src, m2.end())
+    if after != before:
+        return {"ok": False, "msg": "El recompte no quadra (%d -> %d): no toco res" % (before, after)}
+    if "\ufffd" in new_src:
+        return {"ok": False, "msg": "S'han colat caracters corromputs: no toco res"}
+
+    if new_src == src0:
+        # Ni una descripcio diferent i la data ja era la d'avui: res a escriure ni a committejar.
+        return {"ok": True, "date": today, "changed": [], "missing": missing, "msg": "Cap canvi"}
+    with open(os.path.join(REPO, DB_FILE), "w", encoding="utf-8") as f:
+        f.write(new_src)
+    msg = "BD: actualitza descripcions des de Wikidata (%d canviades)" % len(changed)
+    ok, outc = run(["git", "commit", "-m", msg, "--", DB_FILE])
+    return {"ok": True, "date": today, "changed": changed, "missing": missing,
+            "msg": ("%d canviades" % len(changed)) + ("" if ok else " (el commit ha fallat: %s)" % outc[:120])}
 
 
 # --------------------------------------------------------------------------
@@ -1764,6 +1851,10 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/db/add":
             ok, msg = db_add_person(data)
             self._json(200, {"ok": ok, "msg": msg})
+            return
+
+        if path == "/api/db/sync-desc":
+            self._json(200, db_sync_descs())
             return
 
         if path == "/api/pinned/set":

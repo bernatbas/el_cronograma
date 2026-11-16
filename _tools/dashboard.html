@@ -67,6 +67,11 @@ section{margin-bottom:26px;scroll-margin-top:66px}
 .shead .branchwarn{font-size:12px;color:#B23A2E}
 .shead .branchwarn[hidden]{display:none}
 .shead .hint.sub{margin-left:0}   /* subtitol enganxat al titol, no a la dreta */
+.shead .dsync{margin-left:auto;display:flex;align-items:center;gap:8px}
+.shead .dsync .hint{margin-left:0}
+#dsyncres{font-size:12px;line-height:1.5;margin:0 0 12px;padding:9px 11px;border-radius:var(--r);background:var(--soft,#F9F8F7);border:1px solid var(--border)}
+#dsyncres[hidden]{display:none}
+#dsyncres .e{color:#B23A2E}
 .pend{font-size:11px;color:var(--warn);background:var(--warn-bg);border:1px solid #EFD9AE;padding:2px 8px;border-radius:var(--r-pill);letter-spacing:.02em}
 .card{background:var(--canvas);border:1px solid var(--border);border-radius:12px}
 .pad{padding:14px 16px}
@@ -278,8 +283,11 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
 
   <section id="dades">
     <div class="shead"><h2>Editor de la base de dades</h2>
-      <span class="hint sub" title="Enganxa un enllaç de la Viquipèdia, un QID o un nom. Va a Wikidata i omple el que pot; el que quedi buit o malament, corregeix-ho a mà. Només persones, de moment.">enllaç, QID o nom → omple sol</span></div>
+      <span class="hint sub" title="Enganxa un enllaç de la Viquipèdia, un QID o un nom. Va a Wikidata i omple el que pot; el que quedi buit o malament, corregeix-ho a mà. Només persones, de moment.">enllaç, QID o nom → omple sol</span>
+      <span class="dsync"><span class="hint" id="dsyncdate"></span>
+        <button class="btn" id="dsync" title="Torna a demanar a Wikidata la descripció en català de totes les persones i canvia les que siguin diferents. Les que Wikidata no té en català es queden com estan. Committeja db.js tot sol.">Actualitza les descripcions</button></span></div>
     <div class="card pad">
+      <div id="dsyncres" hidden></div>
       <div class="fields" style="grid-template-columns:1fr auto">
         <input type="text" id="dq" placeholder="https://ca.wikipedia.org/wiki/… · Q7231 · Rosa Luxemburg">
         <button class="btn primary" id="dgo">Cerca</button>
@@ -481,7 +489,7 @@ const DEMO = {
   status:{
     branch:"main", dirty:2, ahead:2, behind:0,
     ci:{conclusion:"success", name:"CI", when:"fa 2 h", url:"#"},
-    db:{people:36, events:15, marcs:2, blocks:23, collections:2, eras:5},
+    db:{people:36, events:15, marcs:2, blocks:23, collections:2, eras:5, desc_sync:"2026-11-16"},
     pd:{pinned:1, future:0, next:null, cushion:null}
   },
   backlog:[
@@ -571,6 +579,9 @@ function ciLabel(c){ return c==="success" ? "Verd" : (c==="failure" ? "Vermell" 
 
 function renderStats(s, live){
   renderBranques(s, live);
+  const ds = s.db && s.db.desc_sync;
+  el("dsyncdate").textContent = ds ? "Última actualització: " + dmy(ds) : "Mai actualitzades";
+  el("dsync").disabled = !live;
   el("push").disabled = !live || s.ahead === 0;
   const gitPend = s.dirty + s.ahead;
   const gitCls = gitPend===0 ? "ok" : (s.ahead>0 ? "warn" : "warn");
@@ -1374,6 +1385,30 @@ DF.forEach(function(f){
   });
 });
 el("dcommit").addEventListener("click", dbCommit);
+el("dsync").addEventListener("click", syncDescs);
+
+/* Actualitza les descripcions de PEOPLE des de Wikidata (totes, d'un cop). El servidor fa la
+   feina i el commit; aquí només s'ensenya què ha canviat i què s'ha quedat igual. */
+async function syncDescs(){
+  const btn = el("dsync"), box = el("dsyncres");
+  btn.disabled = true; btn.textContent = "Revisant…";
+  box.hidden = true;
+  try{
+    const r = await fetch("/api/db/sync-desc", {method:"POST", headers:{"Content-Type":"application/json"}, body:"{}"});
+    const d = await r.json();
+    if(!d.ok){ box.innerHTML = '<span class="e">'+esc(d.msg)+'</span>'; box.hidden = false; return; }
+    let h = d.changed.length
+      ? "<b>"+d.changed.length+" canviades:</b> "+d.changed.map(esc).join(", ")
+      : "<b>Cap canvi:</b> totes coincideixen amb Wikidata.";
+    if(d.missing.length) h += "<br>Sense descripció en català a Wikidata (es queden com estan): "+d.missing.map(esc).join(", ");
+    box.innerHTML = h; box.hidden = false;
+    el("dsyncdate").textContent = "Última actualització: " + dmy(d.date);
+  }catch(e){
+    box.innerHTML = '<span class="e">No s\'ha pogut connectar al servidor.</span>'; box.hidden = false;
+  }finally{
+    btn.disabled = false; btn.textContent = "Actualitza les descripcions";
+  }
+}
 el("branch").addEventListener("change", function(){ canviaBranca(this.value); });
 DF.forEach(function(id){
   el(id).addEventListener("input", renderPreview);

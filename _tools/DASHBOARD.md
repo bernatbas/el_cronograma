@@ -23,6 +23,7 @@ tens alguna altra cosa a mig editar, un commit ampli se l'enduria pel mig.
 | Acció | Escriu a |
 |---|---|
 | Afegir una persona | `db.js` |
+| Actualitzar les descripcions des de Wikidata | `db.js` |
 | Clavar un dia del «Personatge del dia» (`PD_PINNED`) | `joc.html` |
 | Clavar un dia del «Contemporanis» (`CON_PINNED`) | `joc.html` |
 | Afegir, tancar, anotar o esborrar una entrada del backlog | `BACKLOG.md` |
@@ -71,6 +72,22 @@ Dues coses les calcula el servidor i no el formulari, a posta:
 
 `db_add_person()` torna a validar-ho tot pel seu compte (QID, id, anys, categories) i, després
 d'escriure, comprova que l'array segueixi quadrant. No es refia del cos de la petició.
+
+### Actualitzar les descripcions
+
+Les descripcions de `PEOPLE` **venen totes de Wikidata** (en català), netejades amb les mateixes
+normes que en afegir algú: `_clean_desc()` (fora el parèntesi final amb anys, majúscula inicial) i
+`_js_str()` (apòstrof tipogràfic). Decisió del 16/11/2026: una sola font, més fàcil de mantenir i de
+traduir, tot i ser més curtes que les que hi havia escrites a mà.
+
+`db.js` en guarda una **còpia**: si Wikidata canvia, la nostra no canvia sola. Per posar-les al dia hi
+ha el botó **«Actualitza les descripcions»** a la capçalera de l'editor (`/api/db/sync-desc`,
+`db_sync_descs()`): les torna a demanar totes, canvia només les diferents, desa la data a
+`DESC_SYNC` (a `db.js`, just abans de `PEOPLE`) i committeja `db.js` tot sol. Si no hi ha res a
+canviar i la data ja és la d'avui, no escriu ni committeja.
+
+⚠️ Les que **Wikidata no té en català** es queden com estan i el botó les llista. La solució de fons és
+escriure-les a Wikidata mateix.
 
 ## Els calendaris dels jocs
 
