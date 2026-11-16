@@ -264,6 +264,10 @@
   .ad-q{color:var(--text2);text-align:center;margin:10px 0 18px;font-size:14px;}
   .gamefoot{text-align:center;color:var(--text2);font-size:12px;margin-top:22px;letter-spacing:.02em;}
   .cards2{display:grid;grid-template-columns:1fr;gap:10px;perspective:900px;}
+  /* Progres de la ronda: preguntes respostes / ROUND_N. Dins de .cards2 i de punta a punta, aixi fa
+     l'amplada de la carta en vertical i la de les dues cartes en horitzontal. */
+  .gprog{grid-column:1/-1;height:4px;border-radius:var(--r-pill);background:#F7E5E0;overflow:hidden;}
+  .gprog>i{display:block;height:100%;background:var(--topbar-bg);border-radius:inherit;transition:width .4s ease-out;}
   .itemcard{position:relative;background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-card);padding:18px 18px 16px;text-align:center;}
   .itemcard.ref{border:3px solid var(--topbar-bg);}
   .itemcard.new{border-color:var(--border-strong);box-shadow:0 8px 20px rgba(40,44,60,.16);}
@@ -295,7 +299,7 @@
   .pass:disabled .jn{background:#A9A9A9;}
   @media (prefers-reduced-motion:reduce){
     .itemcard.enter,.itemcard .yr.reveal,.gscore .n.pop,.flash-ok,.flash-no,.heart.lost{animation:none!important;}
-    .choice,.choice .big,.gamecard{transition:none!important;}
+    .choice,.choice .big,.gamecard,.gprog>i{transition:none!important;}
   }
   .itemcard.flash-ok{border:3px solid #2E9B5B;background:#E9F7EE;box-shadow:0 8px 24px rgba(45,150,90,.30);animation:okpulse .5s;}
   .itemcard.flash-no{border:3px solid #C43A2C;background:#FBECEA;box-shadow:0 8px 24px rgba(196,58,44,.30);animation:nopulse .5s;}
@@ -456,7 +460,8 @@
     .game{max-width:none;height:100%;display:grid;grid-template-columns:1fr 1fr minmax(120px,.8fr);grid-template-rows:auto 1fr;grid-template-areas:"top top top" "cards cards btns";column-gap:14px;row-gap:6px;align-items:stretch;}
     .gtop{grid-area:top;margin-bottom:2px;}
     /* Cartes estretes (format retrat) i centrades dins l'espai; s'estiren en alcada (align-items:stretch). */
-    .cards2{grid-area:cards;grid-template-columns:minmax(0,220px) auto minmax(0,220px);justify-content:center;align-items:stretch;gap:14px;min-height:0;}
+    .cards2{grid-area:cards;grid-template-columns:minmax(0,220px) auto minmax(0,220px);grid-template-rows:auto minmax(0,1fr);justify-content:center;align-items:stretch;gap:14px;min-height:0;}
+    .gprog{align-self:start;}
     .vs{align-self:center;}
     /* #candslot embolcalla la carta nova: cal que tambe s'estiri i passi l'alcada a la .itemcard de dins. */
     #candslot{display:flex;flex-direction:column;min-height:0;}
@@ -1066,6 +1071,7 @@
     // la baralla esgotada, o la seguent carta. La carta resolta passa a ser la nova referencia.
     function avanca(delay){
       answered++;
+      const pb=root.querySelector('.gprog>i'); if(pb) pb.style.width=(answered/ROUND_N*100)+'%';
       current=candidate;
       if(answered>=ROUND_N){ candidate=null; timer=setTimeout(()=>finish(true),delay); return; }
       const nxt=nextCandidate();
@@ -1081,6 +1087,7 @@
             <div class="gscore">${livesHtml()}<div class="n" id="scoren"><span class="ic">🎯</span><span class="v">${score}</span></div></div>
           </div>
           <div class="cards2">
+            <div class="gprog" aria-hidden="true"><i style="width:${answered/ROUND_N*100}%"></i></div>
             ${card(current,{role:'ref',reveal:true})}
             <div class="vs">VS</div>
             <div id="candslot">${card(candidate,{role:'new',enter:true})}</div>
