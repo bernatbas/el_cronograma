@@ -79,3 +79,21 @@ Ara la barra lateral llista TOTES les col·leccions que existeixen, i això no e
 
 ## Reportar error: decidir qui rep el report
 El ⚠ de cada persona a «A la vista» i l'entrada del menú ⋮ criden WIP() i només treuen un toast de «En construcció». És l'últim placeholder que queda a la interfície. El que es vol és sense fricció: popup, descrius l'error, s'envia. Això no es pot fer només amb el navegador — hi ha d'haver algú escoltant a l'altra banda. mailto: envia des del correu de l'usuari i la meitat de la gent no té client configurat al mòbil; una incidència de GitHub prellenada demana compte de GitHub. Queda un servei de formularis: sense servidor propi i sense fricció. Cal decidir QUIN servei i QUÈ s'hi envia (el mínim: QID, camp que falla i text; mai res que identifiqui qui ho envia), i dir-ho a la pàgina, perquè són dades que van a un tercer.
+
+## Col·leccions com a playlists: catàleg, «Les meves» i compartir
+Idea oberta (16/11/2026), encara per decidir. Les col·leccions haurien de ser com les playlists d'Spotify: en entrar no les veus totes, cadascú es guarda les que vol i les pot compartir amb amics.
+
+Model proposat:
+- **Barra lateral**: només «Les meves» (les guardades del catàleg + les creades per un mateix). Avui hi surten totes les de `db.js`.
+- **Catàleg**: les de `db.js`, que es troben amb un cercador (o una llista per explorar) i es guarden amb un botó.
+- **Compartir**: un botó a cada col·lecció que copia un enllaç. Qui l'obre la veu al canvas i la pot guardar.
+
+⚠️ El límit que ho condiciona: **no hi ha servidor**. Una col·lecció del catàleg es comparteix amb el seu id (`?col=ipcuned`). Una de creada per l'usuari només viu al seu navegador, així que l'enllaç ha de **portar dins la llista de Q-ids** (p. ex. `?col=Nom&q=Q37388,Q37160,…`). La còpia de l'amic és independent: si després hi afegeixes algú, ell no ho veu. Que quedin connectades voldria un servidor, i això és un altre projecte.
+
+Decidit:
+- Les notes per persona (p. ex. «precursor de la visió inductivista») **no** van a l'enllaç ni a la col·lecció.
+
+Per decidir:
+1. Qui arriba de nou: barra lateral buida o amb una o dues col·leccions suggerides?
+2. Catàleg: només cercador, o també una llista per explorar? Amb 7 col·leccions un cercador sobra; amb 50, no.
+3. Qui obre un enllaç: veu només aquella col·lecció, o s'afegeix al que ja tenia?
