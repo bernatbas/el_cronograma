@@ -78,6 +78,9 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
     `clamp(160px,34vh,320px)`.
   - Eina de mesura reutilitzable: un script que obre la pantalla en un `iframe` de la mida que vols
     (les media queries del `iframe` van per la seva mida; el `pointer:coarse` l'hereta de la finestra).
+- **2026-11-16 · Resultat de Contemporanis: TOTES les parelles porten al cronograma.** Abans només
+  les fallades, amb un 📅 per indicar-ho; ara ho són totes (encertades en verd, fallades en vermell)
+  i l'icona s'ha tret. Només queda inert una parella sense cap ítem que es pugui posar al cronograma.
 - **2026-11-16 · Contemporanis: la mateixa barra de progrés.** 0% a l'inici, +20% a cada tirada
   **en respondre**, 100% a la 5a. Mateixa classe `.gprog` i dins de `.concards` (`grid-column:1/-1`),
   així fa l'amplada de les dues cartes. `answer()` refà la barra amb el valor d'abans i l'amplia
@@ -119,6 +122,9 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
   escriptori, amb l'alçada útil de debò— i mira si `main` o la pàgina fan scroll. **No peta mai**:
   apunta cada cas a `noscroll-warnings.txt`, i el pas «Avisos de scroll als jocs» del CI el converteix
   en un **avís groc** a la pàgina de l'execució. Només corre al projecte `desktop`.
+  - ⚠️ El `test.skip` va **dins** de cada test (`test.info().project.name`). Al primer push el vaig
+    posar al `describe` com a `test.skip((fixtures, info) => …)` i el CI va petar als tres projectes:
+    aquella funció només rep fixtures, no el `testInfo`.
   - Primer mesurament a mà (375×553): fan scroll el **hub** (281px), el **resultat de Contemporanis**
     (112px) i el **Personatge del dia** (14px). Els dos últims, arreglats el mateix dia (a sota).
   - **El hub NO és al test**, decisió d'en Bernat: és una llista i en un mòbil molt petit pot fer

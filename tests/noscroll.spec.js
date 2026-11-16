@@ -62,10 +62,11 @@ function desaEstat(tipus) {
 }
 
 test.describe('Sense scroll (només avisa)', () => {
-  test.skip(({}, info) => info.project.name !== 'desktop', 'les mides les posa el test');
-
   for (const m of MIDES) {
     test(`${m.nom} ${m.w}×${m.h}`, async ({ browser }) => {
+      // ⚠️ Dins del test, no amb test.skip(fn) al describe: aquella funció només rep fixtures, no el
+      // testInfo, i petava amb «Cannot read properties of undefined (reading 'project')».
+      test.skip(test.info().project.name !== 'desktop', 'les mides les posa el test');
       test.setTimeout(90_000);
       const ctx = await browser.newContext({
         viewport: { width: m.w, height: m.h },

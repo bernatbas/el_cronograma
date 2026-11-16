@@ -370,10 +370,12 @@
   .concrono{display:block;width:100%;text-align:left;background:rgba(184,80,60,.05);border:1px solid var(--border);border-radius:var(--r-card);padding:8px 14px;font:inherit;font-size:13px;font-weight:600;color:var(--topbar-bg);cursor:pointer;}
   .concrono:hover{background:rgba(184,80,60,.1);}
   .concrono.dis{color:var(--text2);cursor:default;background:transparent;}
-  .concrono.okrow{background:rgba(46,155,91,.08);border-color:#BFE6CC;color:#238049;cursor:default;}
-  .concrono.failrow{background:rgba(196,58,44,.06);border-color:#E7C3B8;color:#B4321F;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .concrono.okrow{background:rgba(46,155,91,.08);border-color:#BFE6CC;color:#238049;}
+  .concrono.okrow:hover{background:rgba(46,155,91,.15);}
+  .concrono.okrow.dis{cursor:default;background:rgba(46,155,91,.05);}
+  .concrono.failrow{background:rgba(196,58,44,.06);border-color:#E7C3B8;color:#B4321F;}
+  .concrono.failrow:hover{background:rgba(196,58,44,.12);}
   .concrono.failrow.dis{cursor:default;background:rgba(196,58,44,.04);}
-  .concrono .cgo{opacity:.8;flex:0 0 auto;}
   @media (min-width:861px){
     .game.con{max-width:640px;min-height:58vh;display:flex;flex-direction:column;justify-content:center;}
     .con .concards{min-height:190px;margin:16px 0 24px;}
@@ -2473,12 +2475,13 @@
           const pr=round[i];
           const ok=marks[i]!==false;
           const label=pr.a.name+' · '+pr.b.name;
-          if(ok){ rows+='<div class="concrono okrow">✅ '+label+'</div>'; }
-          else {
-            const items=[pr.a.crono,pr.b.crono].filter(Boolean);
-            if(items.length) rows+='<button class="concrono failrow" data-fi="'+i+'">❌ '+label+' <span class="cgo">📅</span></button>';
-            else rows+='<div class="concrono failrow dis">❌ '+label+'</div>';
-          }
+          // TOTES les parelles porten al cronograma, encertades o no (16/11/2026). Abans nomes les
+          // fallades, i duien un 📅 per dir-ho; ara que ho son totes, l'icona sobra.
+          const cls='concrono '+(ok?'okrow':'failrow');
+          const txt=(ok?'✅ ':'❌ ')+label;
+          const items=[pr.a.crono,pr.b.crono].filter(Boolean);
+          if(items.length) rows+='<button class="'+cls+'" data-fi="'+i+'">'+txt+'</button>';
+          else rows+='<div class="'+cls+' dis">'+txt+'</div>';
         }
         failHTML='<div class="confailwrap"><div class="confailt">'+t('con_pairs')+'</div>'+rows+'</div>';
       }
