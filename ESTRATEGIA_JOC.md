@@ -65,6 +65,19 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
   - **S'omple en respondre** (a `avanca()`), sigui encert, error o comodí, **tot del mateix
     color**: 0% a l'inici, 100% en contestar la 20a. Si perds el segon cor **no s'omple**: acaba on
     acaba (decidit).
+- **2026-11-16 · Resultat de Contemporanis i Personatge del dia, sense scroll.** Mesurats amb
+  iframes a 17 mides (vertical, horitzontal i escriptori). Abans: resultat de Contemporanis
+  **65–310px** de scroll (pitjor a 320×460) i Personatge del dia **9–80px**, també als portàtils.
+  Ara **0 a totes**. No s'amaga res:
+  - **Vertical**: dos trams (`max-height:770px` i `520px`) que retallen aires, lletra i el
+    `padding` de `main` (`main:has(...)`); al Personatge del dia, la foto passa a 120px al tram baix.
+  - **Resultat de Contemporanis en horitzontal i a l'escriptori amb finestra baixa**
+    (`min-width:861px and max-height:820px`): **dues columnes**, el resum a l'esquerra (títol, punts,
+    compte enrere, botons, aquests un al costat de l'altre) i les 5 parelles a la dreta.
+  - **Personatge del dia a l'escriptori baix**: la foto, que era fixa de 320px, fa
+    `clamp(160px,34vh,320px)`.
+  - Eina de mesura reutilitzable: un script que obre la pantalla en un `iframe` de la mida que vols
+    (les media queries del `iframe` van per la seva mida; el `pointer:coarse` l'hereta de la finestra).
 - **2026-11-16 · Contemporanis: la mateixa barra de progrés.** 0% a l'inici, +20% a cada tirada
   **en respondre**, 100% a la 5a. Mateixa classe `.gprog` i dins de `.concards` (`grid-column:1/-1`),
   així fa l'amplada de les dues cartes. `answer()` refà la barra amb el valor d'abans i l'amplia
@@ -107,7 +120,7 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
   apunta cada cas a `noscroll-warnings.txt`, i el pas «Avisos de scroll als jocs» del CI el converteix
   en un **avís groc** a la pàgina de l'execució. Només corre al projecte `desktop`.
   - Primer mesurament a mà (375×553): fan scroll el **hub** (281px), el **resultat de Contemporanis**
-    (112px) i el **Personatge del dia** (14px). Els dos últims, pendents.
+    (112px) i el **Personatge del dia** (14px). Els dos últims, arreglats el mateix dia (a sota).
   - **El hub NO és al test**, decisió d'en Bernat: és una llista i en un mòbil molt petit pot fer
     scroll. Però ha de cabre en un mòbil normal (ell té un iPhone 13 → 390×664).
 - **2026-11-16 · Hub dels jocs més fi** (proposta d'en Bernat).
