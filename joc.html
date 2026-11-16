@@ -315,7 +315,6 @@
   .hubh1{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-weight:600;letter-spacing:.02em;font-size:26px;margin:0;color:var(--text);}
   .hubmeta{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 10px;margin-top:12px;}
   .hubchip{display:inline-flex;align-items:center;gap:6px;background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-pill);padding:5px 12px;font-size:12.5px;font-weight:600;color:var(--text2);}
-  .hubchip.hubcount{color:var(--topbar-bg);border-color:#E7C3B8;background:#FBECEA;}
   .hubchip b{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;color:var(--text);letter-spacing:.04em;font-weight:600;}
   .gameover{background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-card);padding:32px 24px;text-align:center;max-width:560px;margin:0 auto;}
   .gameover h2{font-family:'Oswald',Arial,sans-serif;font-weight:600;margin:0 0 8px;font-size:24px;letter-spacing:.03em;}
@@ -841,7 +840,6 @@
       badge_done:'✓ Fet avui',
       badge_streak:v=>'🔥 '+v.n+(v.n===1?' dia':' dies'),
       hub_title:'Reptes del dia',
-      hub_done_today:'fets avui',
       hub_reset_in:'Es reinicia en',
       hub_all_games:'🎮 Tots els jocs',
       toast_wip:'🚧 En construcció',
@@ -2586,13 +2584,11 @@
       return;
     }
     let cards='';
-    let doneCount=0, totalCount=0;
     GAMES.forEach(g=>{
       const badge = gameBadge(g);
-      if(MODULES[g.id]){ totalCount++; if(doneToday(g.id)) doneCount++; }
       cards+=`<button class="gamecard" data-id="${g.id}"><span class="ic">${g.ic}</span><span class="t">${t(g.titleKey)}</span>${badge}</button>`;   // sense descripcio (16/11/2026): no aportava i feia scroll al mobil; els d_* segueixen al diccionari
     });
-    const header=`<div class="hubhead"><h1 class="hubh1">${t('hub_title')}</h1><div class="hubmeta"><span class="hubchip hubcount">🎯 ${doneCount}/${totalCount} ${t('hub_done_today')}</span><span class="hubchip">⏳ ${t('hub_reset_in')} <b id="hubcd">--:--:--</b></span></div></div>`;
+    const header=`<div class="hubhead"><h1 class="hubh1">${t('hub_title')}</h1><div class="hubmeta"><span class="hubchip">⏳ ${t('hub_reset_in')} <b id="hubcd">--:--:--</b></span></div></div>`;
     app.innerHTML=`${header}<div class="menu">${cards}</div>`;
     startHubCd();
     app.querySelectorAll('.gamecard').forEach(btn=>{

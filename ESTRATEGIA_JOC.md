@@ -18,6 +18,30 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
 4. 🤝 **Contemporanis?** — dues persones van coincidir en vida?
 5. 🃏 **Memory** — trobar les parelles de personatges. ✅ *Implementat (18/08/2026)*.
 
+## 2b. Estat actual (16/11/2026) — llegir això abans que el registre
+
+El registre de sota és **cronològic** i hi ha decisions que en substitueixen d'altres. El que val avui:
+
+- **Ratxa (tots els jocs)** = dies seguits **acabant** el joc, guanyis o perdis. Helper únic
+  `tocaRatxa(key)`; fallar no la trenca mai i qui no havia jugat comença a 1. Abandonar a mitja
+  partida no compta. Al Personatge del dia, acabar = obrir-lo. (Abans l'Ordena comptava dies
+  *encertant* i fallar la posava a 0: ja no.)
+- **«Abans o després?»**: ronda de **20** preguntes, **2 vides** (cors, es buiden d'esquerra a
+  dreta), **comodí** un cop que ensenya la resposta (gira la carta, pinta de verd el botó bo, no
+  suma, compta com a pregunta). **Ronda perfecta** = arribar a la 20a amb algun cor. **Barra de
+  progrés** fina sobre la carta de referència. **Lliscar** la carta (← Abans, → Després, ↑ comodí)
+  i **fletxes del teclat** igual. Resultat: «encerts», no «encerts seguits».
+- **Contemporanis**: la mateixa **barra de progrés** (5 tirades); al resultat **totes** les
+  parelles porten al cronograma; en horitzontal i al portàtil baix, resultat en **dues columnes**.
+- **Ordena la línia**: en encertar «🔥 n dies seguits»; en fallar, només el títol («Ai, per poc!»…).
+- **Hub**: una **fila per joc a tot arreu** (escriptori i horitzontal inclosos), totes de la
+  mateixa alçada, sense descripcions. A dalt només el compte enrere: **fora la data i el
+  comptador «n/5 fets avui»**.
+- **Sense scroll**: és la màxima dels jocs (el hub en queda fora). `tests/noscroll.spec.js` ho
+  mira a 12 mides i ho converteix en **avisos grocs** al CI, no en errors. Pendents coneguts (i
+  aparcats): Memory en horitzontal, resultat de l'«Abans o després?» en horitzontal, «Abans o
+  després?» a 1366×657, Ordena a 320×460.
+
 ## 3. Decisions (registre)
 - **2026-08-12 · Dades: snapshot provisional (`data.js`).** De moment **dupliquem** la DB en un
   `data.js` (còpia de PEOPLE/EVENTS/MARCS d'index.html) per poder testejar en local amb doble
@@ -148,9 +172,11 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
 - **2026-11-16 · Hub dels jocs més fi** (proposta d'en Bernat).
   - **Fora les descripcions** de les targetes (no aportaven). Les claus `d_*` i el `descKey` de
     `GAMES` segueixen al codi, sense fer-se servir.
-  - **Fora la data d'avui** de dalt. Queden «n/5 fets avui» i el compte enrere.
+  - **Fora la data d'avui** de dalt. Quedava «n/5 fets avui» i el compte enrere; el comptador
+    també es va treure el mateix dia (decisió d'en Bernat): ara només hi ha el compte enrere.
   - Al mòbil vertical, **una fila per joc**: icona i títol a l'esquerra, l'estat (Repte diari,
-    Fet avui · 🔥n, ratxa…) a la dreta. En horitzontal i a l'escriptori segueixen sent targetes.
+    Fet avui · 🔥n, ratxa…) a la dreta. (Al principi l'horitzontal i l'escriptori seguien amb
+    targetes; el mateix dia van passar també a files: veure a sota.)
   - Mesurat: 390×664 **sense scroll** (i de sobres), 375×553 i 360×560 també; 320×460 encara en fa
     (123px), acceptat.
   - **Totes les caixes, la mateixa alçada** (`grid-auto-rows:1fr`): si un títol salta de línia en
@@ -188,7 +214,7 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
   - **Un intent/dia:** en acabar es desa a `localStorage` (`hb_ad_daily` = `{date,score,perfect}`).
     Si tornes a entrar el mateix dia → pantalla de resultat **bloquejada** (no es pot rejugar).
     Bloqueig **tou** (client-side); anti-trampa dur → quan hi hagi backend.
-  - **Ratxa de dies consecutius:** `hb_ad_streak` = `{last,days}` (+1 si `last`=ahir, si no reinicia).
+  - **Ratxa de dies consecutius:** `hb_ad_streak` = `{last,days}` (+1 si `last`=ahir, si no reinicia). *(Des del 16/11/2026, via `tocaRatxa()` en acabar.)*
   - **Pantalla de resultat:** marcador + ratxa de dies + **compte enrere** fins a mitjanit local
     + **botó de compartir** (text estil Wordle sense spoilers; Web Share API al mòbil, còpia al
     porta-retalls al desktop).
@@ -196,7 +222,7 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
   - **UI/UX:** capçalera del joc amb títol + data, disseny centrat (max 560px) per desktop,
     botons grans i tàctils per mòbil. Distintiu 📅 "Repte diari" a les targetes actives.
 - **2026-08-12 · Refinament UI/UX del joc (implementat i verificat desktop + mòbil).**
-  - **Icones coherents:** 🎯 **diana** = encerts seguits (dins la partida i al resultat); 🔥 **foc** =
+  - **Icones coherents:** 🎯 **diana** = encerts seguits (dins la partida i al resultat; *des del 15/11/2026 «encerts», que amb 2 vides ja no són seguits*); 🔥 **foc** =
     dies consecutius. Abans el foc s'usava per a les dues coses (incoherència, corregida).
   - Marcador 🎯 alineat a la **dreta** (número + etiqueta), amb pols en encertar.
   - Cartes **sense els ròtuls "Referència/Nou"**: la referència és "fixada" (fons suau + 📌) i la
@@ -410,7 +436,7 @@ Nou mòdul `OrdenaLinia` a joc.html, registrat a MODULES amb id `ordena`.
 - **Drag & drop** vertical amb Pointer Events (ratolí + tàctil): "ghost" fix segueix el dit, la fila original queda buida i es reinsereix entre germans pel punter. touch-action:none a `.orditem`. Ordre = ordre del DOM (`syncOrder`).
 - **Botó**: "Ho tinc!".
 - **Revelació**: tot bé => tots verds + festa (okpulse) + títol "Ben ordenat! 🎉". Error => es revelen els anys i NOMÉS es marquen en vermell (.no) els mal col·locats (posició actual != posició correcta); els ben col·locats queden neutres (.rev). Sense puntuació, és SÍ/NO.
-- **Ratxa** `hb_ord_streak`={last,days}: dies consecutius ENCERTANT; fallar => days=0. Estat diari `hb_ord_daily`={date,correct}; en remuntar un dia ja jugat => pantalla de bloqueig (gameover) amb ratxa + compte enrere fins mitjanit.
+- **Ratxa** `hb_ord_streak`={last,days}: ~~dies consecutius ENCERTANT; fallar => days=0~~ *(superat el 16/11/2026: ara compta acabar)*. Estat diari `hb_ord_daily`={date,correct}; en remuntar un dia ja jugat => pantalla de bloqueig (gameover) amb ratxa + compte enrere fins mitjanit.
 - **Horitzontal tàctil** (mateix trigger que AD/Personatge): llista compacta perquè els 5 càpiguen sense scroll (sub amagat, files padding 4px, fonts reduïdes). Verificat Chromium a 844x390 / 740x360 / 667x375: 5 files, cap scroll, botó visible.
 
 **localStorage nou:** `hb_ord_daily`, `hb_ord_streak`.
