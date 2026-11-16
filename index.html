@@ -25,6 +25,21 @@
     --eventc:#4B4F57;
     --struct:#8B93AD; --struct-ink:#565D78; --band:#F3F4F7; --r-card:8px; --r-pill:999px; --axis-h:32px;
   }
+  /* ===== MODE FOSC (16/11/2026) =====
+     Automatic: segueix el sistema (prefers-color-scheme), sense boto. Els tokens de dalt son els
+     CLARS i el CI els compara entre index i joc mirant el PRIMER :root{} de cada fitxer: aquest bloc
+     ha d'anar sempre DESPRES. Els tokens foscos compartits han de coincidir als dos fitxers igual que
+     els clars. La terracota de la topbar no canvia: sobre fosc ja funciona. */
+  :root{color-scheme:light dark;}
+  @media (prefers-color-scheme:dark){
+    :root{
+      --text:#E7E5E1; --text2:#A29E97; --canvas:#1C1C1B; --soft:#232321;
+      --surface:#2D2C2A; --border:#3A3936; --border-strong:#575550;
+      --topbar-bg:#B8503C; --band:#26272B;
+      --blue:#5BA6EE; --blueSoft:#1D3247; --eventc:#BFC4CC;
+      --struct:#8B93AD; --struct-ink:#AEB5CC;
+    }
+  }
 
   /* ===== Base ===== */
   *{box-sizing:border-box;}
@@ -148,8 +163,8 @@
   /* ===== fi del bloc compartit ===== */
   .search{position:relative;width:320px;flex:0 0 auto;}
   .search input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none;background:var(--soft);}
-  .search input:focus{border-color:var(--blue);background:#fff;}
-  .results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.06);max-height:280px;overflow:auto;display:none;z-index:20;}
+  .search input:focus{border-color:var(--blue);background:var(--canvas);}
+  .results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--canvas);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.06);max-height:280px;overflow:auto;display:none;z-index:20;}
   .results.open{display:block;}
   .qclear{position:absolute;top:50%;right:6px;transform:translateY(-50%);display:none;width:34px;height:34px;border:none;background:none;font-size:22px;line-height:1;color:var(--text2);cursor:pointer;align-items:center;justify-content:center;border-radius:8px;padding:0;}
   .topbar .search.has-text .qclear{display:flex;color:rgba(255,255,255,.9);}   /* botó × visible al desktop quan hi ha text; blanc sobre topbar terracota */
@@ -187,14 +202,14 @@
   @keyframes wdspin{to{transform:rotate(360deg);}}
   .canvas-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:40;background:rgba(255,255,255,.35);opacity:0;visibility:hidden;transition:opacity .15s,visibility 0s .15s;pointer-events:none;}
   .canvas-loading.on{opacity:1;visibility:visible;transition:opacity .15s,visibility 0s;pointer-events:auto;}
-  .canvas-loading .cl-box{display:flex;flex-direction:column;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:var(--r-card);padding:18px 22px;box-shadow:0 8px 26px rgba(0,0,0,.12);}
+  .canvas-loading .cl-box{display:flex;flex-direction:column;align-items:center;gap:10px;background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-card);padding:18px 22px;box-shadow:0 8px 26px rgba(0,0,0,.12);}
   .canvas-loading .cl-spin{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--text2);border-radius:50%;animation:wdspin .7s linear infinite;}
   .canvas-loading .cl-txt{font-size:13px;color:var(--text2);}
   .results .row.wderror{color:#B23A2E;font-style:normal;cursor:default;}
-  .results .row.wderror .retry{margin-left:auto;border:1px solid #B23A2E;background:#fff;color:#B23A2E;border-radius:6px;padding:3px 9px;font-size:12px;line-height:1;cursor:pointer;font-family:inherit;}
+  .results .row.wderror .retry{margin-left:auto;border:1px solid #B23A2E;background:var(--canvas);color:#B23A2E;border-radius:6px;padding:3px 9px;font-size:12px;line-height:1;cursor:pointer;font-family:inherit;}
   .results .row.wderror .retry:hover{background:#F7E5E0;}
   .controls{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
-  .btn{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer;color:var(--text);min-width:38px;min-height:38px;}
+  .btn{border:1px solid var(--border);background:var(--canvas);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer;color:var(--text);min-width:38px;min-height:38px;}
   .btn:hover{background:var(--soft);}
 
   /* ===== Sidebar (marcs · col·leccions · a la vista) ===== */
@@ -449,7 +464,7 @@
   .event .edot{position:absolute;left:0;transform:translateX(-50%);width:8px;height:8px;border-radius:50%;background:var(--eventc);box-shadow:0 0 0 4px rgba(44,44,43,.13);}
   .event .ename{position:absolute;left:10px;white-space:nowrap;font-size:12px;font-weight:600;color:var(--eventc);cursor:pointer;pointer-events:auto;}
   .event .ename:hover{text-decoration:underline;}
-  .event .eyear{position:absolute;left:0;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:600;color:var(--eventc);background:#fff;border:1.5px solid var(--eventc);padding:2px 9px;border-radius:var(--r-card);font-variant-numeric:tabular-nums;}
+  .event .eyear{position:absolute;left:0;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:600;color:var(--eventc);background:var(--canvas);border:1.5px solid var(--eventc);padding:2px 9px;border-radius:var(--r-card);font-variant-numeric:tabular-nums;}
   .event.dotonly .edot{pointer-events:auto;cursor:pointer;width:6px;height:6px;box-shadow:0 0 0 3px rgba(44,44,43,.10);opacity:.5;transition:opacity .15s ease,transform .15s ease;}
   .event.dotonly .edot:hover{opacity:1;transform:translateX(-50%) scale(1.35);}
   .event.focus{z-index:8;}
@@ -474,7 +489,7 @@
   /* Floating context menu (bar ⋮ button) */
   /* z-index 80: ha de sortir per sobre de la fitxa (50) i del popup de configuracio (70),
      perque s'obre des de tots dos llocs. Amb 30 quedava a sota i no es veia. */
-  .barmenu{position:fixed;display:none;background:#fff;border:1px solid var(--border);border-radius:var(--r-card);box-shadow:0 6px 18px rgba(0,0,0,.14);z-index:80;overflow:hidden;min-width:150px;}
+  .barmenu{position:fixed;display:none;background:var(--canvas);border:1px solid var(--border);border-radius:var(--r-card);box-shadow:0 6px 18px rgba(0,0,0,.14);z-index:80;overflow:hidden;min-width:150px;}
   .barmenu.open{display:block;}
   .barmenu button{display:block;width:100%;text-align:left;border:none;background:none;padding:9px 14px;font-size:13px;cursor:pointer;color:var(--text);white-space:nowrap;}
   .barmenu button:hover{background:var(--soft);}
@@ -521,9 +536,9 @@
   /* ===== Toast (feedback curt per accions encara no implementades) ===== */
   /* bottom 28 el deixava DINS del footer (30px) i gairebe no es llegia. Ara el sobrepassa,
      amb el safe-area del mobil comptat. */
-  .toast{position:fixed;left:50%;bottom:calc(46px + env(safe-area-inset-bottom));transform:translate(-50%,12px);background:var(--text);color:#fff;font-size:13px;padding:10px 18px;border-radius:var(--r-card);z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.26);opacity:0;visibility:hidden;transition:opacity .18s,transform .18s,visibility 0s .18s;pointer-events:none;}
+  .toast{position:fixed;left:50%;bottom:calc(46px + env(safe-area-inset-bottom));transform:translate(-50%,12px);background:#2C2C2B;color:#fff;font-size:13px;padding:10px 18px;border-radius:var(--r-card);z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.26);opacity:0;visibility:hidden;transition:opacity .18s,transform .18s,visibility 0s .18s;pointer-events:none;}
   .toast.on{opacity:1;visibility:visible;transform:translate(-50%,0);transition:opacity .18s,transform .18s,visibility 0s;}
-  .bartip{position:fixed;display:none;background:var(--text);color:#fff;font-size:12px;font-weight:500;padding:5px 10px;border-radius:var(--r-card);white-space:nowrap;z-index:40;pointer-events:none;box-shadow:0 3px 10px rgba(0,0,0,.24);}
+  .bartip{position:fixed;display:none;background:#2C2C2B;color:#fff;font-size:12px;font-weight:500;padding:5px 10px;border-radius:var(--r-card);white-space:nowrap;z-index:40;pointer-events:none;box-shadow:0 3px 10px rgba(0,0,0,.24);}
   .bartip.on{display:block;}
 
   /* ===== Hover guide + "today" line ===== */
@@ -542,7 +557,7 @@
   /* ===== Detail panel — modal popup ===== */
   .detail-backdrop{position:fixed;inset:0;background:rgba(20,8,10,.3);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);z-index:49;visibility:hidden;opacity:0;transition:opacity .2s,visibility 0s .2s;}
   .detail-backdrop.open{visibility:visible;opacity:1;transition:opacity .2s,visibility 0s;}
-  .detail{position:fixed;top:50dvh;left:50%;transform:translate(-50%,-50%) scale(.95);width:min(520px,calc(100vw - 32px));max-height:calc(100dvh - 80px);overflow-y:auto;background:#fff;border-radius:16px;padding:24px 24px 20px;box-shadow:0 24px 64px rgba(0,0,0,.18),0 4px 20px rgba(0,0,0,.08);z-index:50;visibility:hidden;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s,visibility 0s .2s;}
+  .detail{position:fixed;top:50dvh;left:50%;transform:translate(-50%,-50%) scale(.95);width:min(520px,calc(100vw - 32px));max-height:calc(100dvh - 80px);overflow-y:auto;background:var(--canvas);border-radius:16px;padding:24px 24px 20px;box-shadow:0 24px 64px rgba(0,0,0,.18),0 4px 20px rgba(0,0,0,.08);z-index:50;visibility:hidden;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s,visibility 0s .2s;}
   .detail.open{visibility:visible;opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);transition:opacity .2s,transform .2s,visibility 0s;}
   .detail .close{position:absolute;top:14px;right:16px;border:none;background:none;font-size:22px;cursor:pointer;color:var(--text2);line-height:1;padding:2px 6px;border-radius:6px;}
   .detail .close:hover{background:var(--soft);}
@@ -558,7 +573,7 @@
   .detail a.wiki{display:inline-block;margin-top:8px;color:var(--blue);text-decoration:none;font-size:14px;}
   .detail a.wiki:hover{text-decoration:underline;}
   .detail .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
-  .detail .dbtn{border:1px solid var(--border);background:#fff;border-radius:var(--r-card);padding:7px 10px;font-size:13px;cursor:pointer;color:var(--text);white-space:nowrap;}
+  .detail .dbtn{border:1px solid var(--border);background:var(--canvas);border-radius:var(--r-card);padding:7px 10px;font-size:13px;cursor:pointer;color:var(--text);white-space:nowrap;}
   /* Amb ratoli els botons d'eines reparteixen l'amplada a parts iguals: quatre pastilles de
      mides diferents es llegien com quatre coses de pes diferent, i no ho son. El panell
      passa de 420 a 520px per encabir-los (al desktop hi ha lloc de sobra).
@@ -602,7 +617,7 @@
   .footer a:hover{color:#fff;text-decoration:underline;}
 
   /* ===== Rotate hint (touch devices in portrait: a dismissible suggestion, not a blocker) ===== */
-  .rotate-hint{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.94);width:calc(100vw - 32px);max-width:560px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;background:var(--text);color:#fff;padding:34px 26px calc(34px + env(safe-area-inset-bottom));border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.42);z-index:70;opacity:0;visibility:hidden;transition:opacity .25s,transform .25s,visibility 0s .25s;}
+  .rotate-hint{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.94);width:calc(100vw - 32px);max-width:560px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;background:#2C2C2B;color:#fff;padding:34px 26px calc(34px + env(safe-area-inset-bottom));border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.42);z-index:70;opacity:0;visibility:hidden;transition:opacity .25s,transform .25s,visibility 0s .25s;}
   .rotate-hint.on{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1);transition:opacity .25s,transform .25s,visibility 0s;}
   .rotate-hint .p-icon{font-size:46px;animation:pSpin 2.4s ease-in-out infinite;}
   @keyframes pSpin{0%,40%,100%{transform:rotate(0deg);}60%,85%{transform:rotate(90deg);}}
@@ -800,6 +815,33 @@
   .cfgbody section.on{display:block;}
   .cfgbody section>h3{display:none;}
   .cfgbody section>div{overflow:visible;max-height:none;}   /* el scroll el fa .cfgbody, no cada seccio */
+
+  /* ===== MODE FOSC: el que no surt dels tokens =====
+     Colors escrits a ma pensats per a fons blanc. La regla: superficies -> var(--canvas); els rosats de
+     "seleccionat" -> terracota translucida; el text blanc sobre terracota es queda igual. */
+  @media (prefers-color-scheme:dark){
+    .canvas-loading{background:rgba(0,0,0,.35);}
+    .legend{background:rgba(28,28,27,.86);}
+    .sidebar section>div{background:
+      linear-gradient(var(--soft) 28%, rgba(35,35,33,0)) top/100% 24px no-repeat,
+      linear-gradient(rgba(35,35,33,0), var(--soft) 72%) bottom/100% 24px no-repeat,
+      radial-gradient(farthest-side at 50% 0, rgba(0,0,0,.55), rgba(0,0,0,0)) top/100% 12px no-repeat,
+      radial-gradient(farthest-side at 50% 100%, rgba(0,0,0,.55), rgba(0,0,0,0)) bottom/100% 12px no-repeat;
+      background-attachment:local,local,scroll,scroll;}
+    .sidebar section>div:hover::-webkit-scrollbar-thumb{background:#5A5853;}
+    .colitem{background:var(--canvas);}
+    .colitem:hover{border-color:#6A6862;}
+    .colitem.on{background:rgba(184,80,60,.22);}
+    .sidebar .colitem.on,.cfgbody .colitem.on{background:rgba(184,80,60,.18);}
+    .cfgbody .colitem.on{border-color:rgba(184,80,60,.45);}
+    .results .row.wderror .retry{background:transparent;color:#E5887A;border-color:#E5887A;}
+    .results .row.wderror .retry:hover{background:rgba(184,80,60,.18);}
+    .detail .dbtn.danger{color:#E5887A;border-color:rgba(229,136,122,.45);}
+    .detail .dbtn.danger:hover{background:rgba(184,80,60,.18);}
+    .toast,.bartip,.rotate-hint{box-shadow:0 0 0 1px rgba(255,255,255,.12),0 6px 20px rgba(0,0,0,.5);}
+    .secnav.navcollapsed .modeswitch{background:var(--canvas);}   /* desplegable de la topbar: igual que al joc.html */
+    .secnav.navcollapsed .mode.on{background:rgba(184,80,60,.22);color:#F0A493;}
+  }
 </style>
 </head>
 <body>
@@ -1291,7 +1333,11 @@ const barBg=p=>hasCat(p)?stripeBg(p.cats.map(a=>CAT_COLORS[a]),14):NOCAT_COLOR; 
 const swatchBg=p=>hasCat(p)?stripeBg(p.cats.map(a=>CAT_COLORS[a]),7):NOCAT_COLOR;
 const hexA=(hex,a)=>{const n=parseInt(hex.slice(1),16);return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;};                                   // hex → translucent rgba
 const shade=(hex,f)=>{const n=parseInt(hex.slice(1),16);const r=Math.round(((n>>16)&255)*f),g=Math.round(((n>>8)&255)*f),b=Math.round((n&255)*f);return `rgb(${r},${g},${b})`;};   // darken toward black
-const mix=(hex,f)=>{const n=parseInt(hex.slice(1),16);const m=v=>Math.round(255+(v-255)*f);return `rgb(${m((n>>16)&255)},${m((n>>8)&255)},${m(n&255)})`;};   // opaque tint toward white (f=0 white … 1 full colour)
+// MODE FOSC: els tints dels marcs es barregen amb el FONS, no amb el blanc, i la tinta dels noms
+// s'aclareix en comptes d'enfosquir-se. En clar, mix() i ink() fan exactament el mateix que abans.
+const ESFOSC=()=>matchMedia('(prefers-color-scheme: dark)').matches;
+const mix=(hex,f)=>{const n=parseInt(hex.slice(1),16);const B=ESFOSC()?[28,28,27]:[255,255,255];const m=(v,k)=>Math.round(B[k]+(v-B[k])*f);return `rgb(${m((n>>16)&255,0)},${m((n>>8)&255,1)},${m(n&255,2)})`;};   // opaque tint toward the background (white in light, canvas in dark)
+const ink=(hex,f)=>{if(!ESFOSC())return shade(hex,f);const n=parseInt(hex.slice(1),16);const l=v=>Math.round(v+(255-v)*(1-f));return `rgb(${l((n>>16)&255)},${l((n>>8)&255)},${l(n&255)})`;};   // text on a tint: darker in light, lighter in dark   // opaque tint toward white (f=0 white … 1 full colour)
 const fmtY=y=>y<0?(-y)+' '+t('bce'):''+y;
 // Escapat per als noms i descripcions que venen de Wikidata (contingut public i editable) i que
 // es pinten via innerHTML. Sense aixo, una etiqueta amb HTML s'injectaria: la cerca i les
@@ -1448,7 +1494,7 @@ function render(){
     const bl=x(b.start),bw=Math.max(x(b.end)-x(b.start),2);
     const tint=hexA(ERAS_COLOR,k%2?0.13:0.06);
     const dv=k>0?`border-left:1px solid ${hexA(ERAS_COLOR,.26)};`:'';
-    return `<div class="blockzone" style="left:${bl}px;width:${bw}px;height:${erasH}px;background:${tint};${dv}"><span class="blabel" style="left:14px;top:${ERAS_TOP}px;color:${shade(ERAS_COLOR,.55)}">${L(b.name)}</span></div>`;
+    return `<div class="blockzone" style="left:${bl}px;width:${bw}px;height:${erasH}px;background:${tint};${dv}"><span class="blabel" style="left:14px;top:${ERAS_TOP}px;color:${ink(ERAS_COLOR,.55)}">${L(b.name)}</span></div>`;
   }).join('');
   // marc blocks: cada marc actiu en TIERS propis (semi-solapament); els nivells profunds es col·lapsen en «+N»
   const ml=marcLayout();
@@ -1461,12 +1507,12 @@ function render(){
       // El to codifica la PROFUNDITAT: tier 0 (context) clar, cada nivell més avall s'enfosqueix. Sempre el hue del marc.
       const f=Math.min(0.92,0.26+b._tier*0.22);
       const grad=`linear-gradient(to right,${mix(c,f)},${mix(c,Math.max(0.08,f-0.15))})`;
-      return `<div class="seg mov" data-blk="${b.key}" style="left:${left+1}px;width:${Math.max(w-2,2)}px;top:${top}px;height:${MOV_BAR_H}px;z-index:${10+b._tier};background:${grad};--mc:${c};--mink:${shade(c,.55)};"><span class="segname">${b.name}</span><span class="segyears">${fmtY(b.start)}–${fmtY(b.end)}</span></div>`;
+      return `<div class="seg mov" data-blk="${b.key}" style="left:${left+1}px;width:${Math.max(w-2,2)}px;top:${top}px;height:${MOV_BAR_H}px;z-index:${10+b._tier};background:${grad};--mc:${c};--mink:${ink(c,.55)};"><span class="segname">${b.name}</span><span class="segyears">${fmtY(b.start)}–${fmtY(b.end)}</span></div>`;
     }).join('');
     const chips=M.clusters.map(cl=>{
       const left=x(cl.start),w=Math.max(x(cl.end)-x(cl.start),26),top=blocksY+M.marcTop+M.chipTop;
       const lbl=cl.expanded?'−':('+'+cl.items.length);
-      return `<div class="marcchip${cl.expanded?' open':''}" data-cluster="${cl.ckey}" style="left:${left}px;width:${w}px;top:${top}px;height:${MCHIP_H}px;--mc:${hexA(c,.75)};color:${shade(c,.5)};background:${hexA(c,.12)};" title="${cl.expanded?'Recollir':cl.items.map(i=>i.name).join(', ')}">${lbl}</div>`;
+      return `<div class="marcchip${cl.expanded?' open':''}" data-cluster="${cl.ckey}" style="left:${left}px;width:${w}px;top:${top}px;height:${MCHIP_H}px;--mc:${hexA(c,.75)};color:${ink(c,.5)};background:${hexA(c,.12)};" title="${cl.expanded?'Recollir':cl.items.map(i=>i.name).join(', ')}">${lbl}</div>`;
     }).join('');
     return bars+chips;
   }).join('');
@@ -3293,6 +3339,9 @@ function settleRender(){applyMetrics();render();}
 function scheduleSettle(){requestAnimationFrame(settleRender);clearTimeout(_settleT);_settleT=setTimeout(settleRender,180);}
 window.addEventListener('resize',()=>{applyMetrics();setZoom(pxPerYear);scheduleSettle();});   // en girar el mobil canvia el llindar compacte: cal recalcular la geometria abans de repintar
 window.addEventListener('load',scheduleSettle);
+// Mode fosc: els tints dels marcs i eres es calculen al JS (mix/ink), aixi que en canviar el tema del
+// sistema amb la pagina oberta s'han de repintar. El CSS ja canvia sol.
+{const _dm=matchMedia('(prefers-color-scheme: dark)');if(_dm.addEventListener)_dm.addEventListener('change',()=>render());}
 
 // Rotate hint: es mostra UN SOL COP per usuari (dismiss persistit a localStorage).
 const ROTATE_LS='historiabasica.rotateDismissed';

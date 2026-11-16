@@ -19,6 +19,20 @@
     --topbar-bg:#B8503C; --band:#F3F4F7; --slate:#5f6570;
     --r-card:8px; --r-pill:999px;
   }
+  /* ===== MODE FOSC (16/11/2026) =====
+     Automatic: segueix el sistema (prefers-color-scheme), sense boto. Els tokens de dalt son els
+     CLARS i el CI els compara entre index i joc mirant el PRIMER :root{} de cada fitxer: aquest bloc
+     ha d'anar sempre DESPRES. Els tokens foscos compartits han de coincidir als dos fitxers igual que
+     els clars. La terracota de la topbar no canvia: sobre fosc ja funciona. */
+  :root{color-scheme:light dark;}
+  @media (prefers-color-scheme:dark){
+    :root{
+      --text:#E7E5E1; --text2:#A29E97; --canvas:#1C1C1B; --soft:#232321;
+      --surface:#2D2C2A; --border:#3A3936; --border-strong:#575550;
+      --topbar-bg:#B8503C; --band:#26272B;
+      --slate:#9AA0AA;
+    }
+  }
   *{box-sizing:border-box;}
   html,body{margin:0;}
   /* Model fix: el body ocupa EXACTAMENT l'alcada visible (dvh) i no scrolleja mai la pagina sencera.
@@ -328,7 +342,7 @@
   .cta.sec{background:transparent;color:var(--topbar-bg);border:2px solid var(--topbar-bg);}
   .cta.sec:hover:not(:disabled){background:rgba(184,80,60,.08);}
   /* Botó terciari discret "Tots els jocs" (torna al hub des del resultat). Sense classe .cta => no li afecta el width:100% del landscape, per evitar scroll. */
-  .hubbtn{background:#fff;border:2px solid var(--topbar-bg);color:var(--topbar-bg);font:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:10px 24px;border-radius:var(--r-pill);transition:color .12s,background .12s;}
+  .hubbtn{background:var(--canvas);border:2px solid var(--topbar-bg);color:var(--topbar-bg);font:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:10px 24px;border-radius:var(--r-pill);transition:color .12s,background .12s;}
   .hubbtn:hover{background:rgba(184,80,60,.08);}
   .tagd{align-self:flex-start;margin-top:auto;background:#F7E5E0;color:#B23A2E;font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);}
   .tagd.done{background:#E7F4EC;color:#2E7D4F;}
@@ -761,6 +775,44 @@
     .mem-pbtns{margin-top:12px;gap:8px;}
   }
   .mbanner .memshare{margin-top:14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+
+  /* ===== MODE FOSC: el que no surt dels tokens =====
+     Rosats, verds i daurats pensats per a fons blanc. Els tints passen a translucids sobre el fosc i el
+     text s'aclareix. El text blanc sobre terracota es queda igual. */
+  @media (prefers-color-scheme:dark){
+    .secnav.navcollapsed .modeswitch{background:var(--canvas);}
+    .secnav.navcollapsed .mode.on{background:rgba(184,80,60,.22);color:#F0A493;}
+    .badge,.err,.pchip,.pbtn.fav.on,.tagd{background:rgba(184,80,60,.22);color:#F0A493;}
+    .tagd.done{background:rgba(46,155,91,.2);color:#7FD8A4;}
+    .tagd.streak{background:rgba(199,154,58,.2);color:#E8C373;}
+    .gscore .n{background:rgba(184,80,60,.22);color:#F0A493;}
+    .gprog{background:rgba(184,80,60,.25);}
+    .choice{box-shadow:0 3px 0 rgba(184,80,60,.45);}
+    .choice:active{box-shadow:0 1px 0 rgba(184,80,60,.45);}
+    .choice.answer{background:rgba(46,155,91,.2);color:#7FD8A4;}
+    .pass{background:rgba(199,154,58,.14);color:#E8C373;box-shadow:0 3px 0 rgba(199,154,58,.35);}
+    .pass:hover:not(:disabled),.pass.aim{color:#F2D38F;}
+    .pass:active:not(:disabled){box-shadow:0 1px 0 rgba(199,154,58,.35);}
+    .pass:disabled{background:var(--surface);border-color:var(--border-strong);color:var(--text2);}
+    .pass:disabled .jn{background:#5A5853;}
+    .itemcard.flash-ok{background:rgba(46,155,91,.18);}
+    .itemcard.flash-no{background:rgba(196,58,44,.2);}
+    .itemcard.flash-ok .yr,.conq.ok{color:#7FD8A4;}
+    .itemcard.flash-no .yr,.conq.no{color:#F08A7E;}
+    .gameover .perfect,.ordbanner .rtitle.perfect{color:#7FD8A4;}
+    .conchoices .choice.sel-ok{color:#7FD8A4;box-shadow:0 3px 0 rgba(46,155,91,.4);}
+    .conchoices .choice.sel-no{color:#F08A7E;box-shadow:0 3px 0 rgba(196,58,44,.4);}
+    .concrono.okrow{background:rgba(46,155,91,.14);border-color:rgba(46,155,91,.4);color:#7FD8A4;}
+    .concrono.okrow:hover{background:rgba(46,155,91,.24);}
+    .concrono.failrow{background:rgba(196,58,44,.14);border-color:rgba(196,58,44,.4);color:#F08A7E;}
+    .concrono.failrow:hover{background:rgba(196,58,44,.24);}
+    .orditem.ok{background:rgba(46,155,91,.18);}
+    .orditem.no{background:rgba(196,58,44,.2);}
+    .orditem.ok .oyr{color:#7FD8A4;}
+    .orditem.no .oyr{color:#F08A7E;}
+    .mem-back{background:#4A2E27;}
+    .toast{box-shadow:0 0 0 1px rgba(255,255,255,.12),0 10px 28px rgba(0,0,0,.5);}
+  }
 </style>
 </head>
 <body>
