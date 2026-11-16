@@ -17,12 +17,15 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# Accions a versions que corren amb Node 24 (16/11/2026): les @v4 i companyia eren Node 20 i
+# GitHub en donava un avís de deprecació a cada execució. upload-pages-artifact@v5 ja no posa els
+# fitxers que comencen per punt al paquet: el web no en fa servir cap.
 jobs:
   structural:
     name: Checks estructurals
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Codificació — U+FFFD i UTF-8 vàlid
         run: |
@@ -223,9 +226,9 @@ jobs:
       matrix:
         project: [desktop, mobile-portrait, mobile-landscape]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -251,7 +254,7 @@ jobs:
 
       - name: Puja l'informe si falla
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report-${{ matrix.project }}
           path: playwright-report/
@@ -271,7 +274,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # ⚠️ Aixo NO hi era abans i cal. El mode antic passava per Jekyll, que ignora les
       # carpetes que comencen per «_», i per aixo _tools/ donava 404 al web. Desplegant per
@@ -281,10 +284,10 @@ jobs:
       - name: Treu del paquet el que no es el web
         run: rm -rf _tools tests .github playwright.config.js package.json package-lock.json node_modules
 
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: .
 
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
