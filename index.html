@@ -468,9 +468,9 @@
   .event.dotonly .edot{pointer-events:auto;cursor:pointer;width:6px;height:6px;box-shadow:0 0 0 3px rgba(44,44,43,.10);opacity:.5;transition:opacity .15s ease,transform .15s ease;}
   .event.dotonly .edot:hover{opacity:1;transform:translateX(-50%) scale(1.35);}
   .event.focus{z-index:8;}
-  .event.focus .edot{background:#2C2C2B;box-shadow:0 0 0 5px rgba(44,44,43,.22);opacity:1;width:9px;height:9px;}
-  .event.focus .ename{color:#2C2C2B;text-decoration:underline;}
-  .event.focus .eyear{color:#2C2C2B;border-color:#2C2C2B;}
+  .event.focus .edot{background:var(--text);box-shadow:0 0 0 5px rgba(44,44,43,.22);opacity:1;width:9px;height:9px;}
+  .event.focus .ename{color:var(--text);text-decoration:underline;}
+  .event.focus .eyear{color:var(--text);border-color:var(--text);}
   .event.evPop .edot{animation:evPop 4s ease-out;}
   @keyframes evPop{0%{box-shadow:0 0 0 0 rgba(44,44,43,.6);}6%{transform:translateX(-50%) scale(1.5);}16%{transform:translateX(-50%) scale(1);box-shadow:0 0 0 12px rgba(44,44,43,0);}24%{box-shadow:0 0 0 0 rgba(44,44,43,.5);}40%{box-shadow:0 0 0 11px rgba(44,44,43,0);}50%{box-shadow:0 0 0 0 rgba(44,44,43,.42);}68%{box-shadow:0 0 0 11px rgba(44,44,43,0);}78%{box-shadow:0 0 0 0 rgba(44,44,43,.34);}100%{box-shadow:0 0 0 10px rgba(44,44,43,0);}}
 
@@ -840,6 +840,13 @@
     .detail .dbtn.danger:hover{background:rgba(184,80,60,.18);}
     .toast,.bartip,.rotate-hint{box-shadow:0 0 0 1px rgba(255,255,255,.12),0 6px 20px rgba(0,0,0,.5);}
     .secnav.navcollapsed .modeswitch{background:var(--canvas);}   /* desplegable de la topbar: igual que al joc.html */
+    /* Esdeveniment seleccionat: l'halo i el «pop» eren negres translúcids, invisibles sobre fosc. */
+    .event .edot{box-shadow:0 0 0 4px rgba(231,229,225,.14);}
+    .event .eline{background:linear-gradient(to bottom,var(--eventc),rgba(231,229,225,.18));}
+    .event.dotonly .edot{box-shadow:0 0 0 3px rgba(231,229,225,.12);}
+    .event.focus .edot{box-shadow:0 0 0 5px rgba(231,229,225,.25);}
+    .event.evPop .edot{animation-name:evPopFosc;}
+  @keyframes evPopFosc{0%{box-shadow:0 0 0 0 rgba(231,229,225,.6);}6%{transform:translateX(-50%) scale(1.5);}16%{transform:translateX(-50%) scale(1);box-shadow:0 0 0 12px rgba(231,229,225,0);}24%{box-shadow:0 0 0 0 rgba(231,229,225,.5);}40%{box-shadow:0 0 0 11px rgba(231,229,225,0);}50%{box-shadow:0 0 0 0 rgba(231,229,225,.42);}68%{box-shadow:0 0 0 11px rgba(231,229,225,0);}78%{box-shadow:0 0 0 0 rgba(231,229,225,.34);}100%{box-shadow:0 0 0 10px rgba(231,229,225,0);}}
     .secnav.navcollapsed .mode.on{background:rgba(184,80,60,.22);color:#F0A493;}
   }
 </style>
