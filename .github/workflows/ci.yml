@@ -238,6 +238,17 @@ jobs:
       - name: Corre els tests (${{ matrix.project }})
         run: npx playwright test --project=${{ matrix.project }}
 
+      # tests/noscroll.spec.js no peta mai: si una pantalla dels jocs fa scroll, ho apunta a
+      # noscroll-warnings.txt i aqui es converteix en un avis groc a la pagina de l'execucio.
+      - name: Avisos de scroll als jocs
+        if: always() && matrix.project == 'desktop'
+        run: |
+          if [ -s noscroll-warnings.txt ]; then
+            sort -u noscroll-warnings.txt | while IFS= read -r l; do echo "::warning title=Fa scroll::$l"; done
+          else
+            echo "Cap pantalla dels jocs fa scroll."
+          fi
+
       - name: Puja l'informe si falla
         if: failure()
         uses: actions/upload-artifact@v4

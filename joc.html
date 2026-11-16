@@ -258,6 +258,11 @@
   @keyframes heartlost{0%{transform:scale(1);}35%{transform:scale(1.35);}100%{transform:scale(1);}}
   /* Comodi: el boto que era la resposta, del mateix verd que l'encert de la carta */
   .choice.answer{border-color:#2E9B5B;background:#E9F7EE;color:#238049;opacity:1;}
+  /* Lliscar la carta: segueix el dit, i en passar el llindar s'encen el boto que es premera. */
+  #candslot .itemcard.new{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;transition:transform .2s ease-out;}
+  #candslot .itemcard.new.drag{transition:none;cursor:grabbing;}
+  .choice.aim{transform:translateY(-2px);border-color:var(--topbar-bg);color:var(--topbar-bg);box-shadow:0 6px 14px rgba(184,80,60,.22);}
+  .pass.aim{transform:translateY(-2px);border-color:#B4841F;color:#6E5416;box-shadow:0 6px 14px rgba(199,154,58,.3);}
   .gscore .n{display:inline-flex;align-items:center;gap:6px;background:#F7E5E0;color:var(--topbar-bg);font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-weight:600;font-size:18px;line-height:1;padding:6px 13px;border-radius:var(--r-pill);}
   @keyframes scorepop{0%{transform:scale(1);}40%{transform:scale(1.3);}100%{transform:scale(1);}}
   .gscore .n.pop{animation:scorepop .4s ease-out;}
@@ -1152,6 +1157,57 @@
         b.addEventListener('click',()=>guess(b.getAttribute('data-a')));
       });
       const sk=root.querySelector('[data-x="skip"]'); if(sk) sk.addEventListener('click',skip);
+      wireSwipe();
+    }
+
+    // Lliscar la carta nova: esquerra = Abans, dreta = Despres, amunt = comodi (com les fletxes del
+    // teclat). La carta segueix el dit i s'inclina; si no arriba al llindar, torna al seu lloc.
+    // Pointer Events: el mateix codi serveix per al dit i per arrossegar amb el ratoli.
+    const SWIPE_TH=70;
+    function wireSwipe(){
+      const card=root.querySelector('#candslot .itemcard'); if(!card) return;
+      let id=null, x0=0, y0=0, dx=0, dy=0, apunta=null;
+      const boto=a=> a==='skip' ? root.querySelector('[data-x="skip"]') : root.querySelector('.choice[data-a="'+a+'"]');
+      const cap=()=>{
+        if(Math.abs(dx)>=SWIPE_TH && Math.abs(dx)>Math.abs(dy)) return dx<0?'abans':'despres';
+        if(!skipUsed && -dy>=SWIPE_TH && -dy>Math.abs(dx)) return 'skip';
+        return null;
+      };
+      const marca=a=>{ if(a===apunta) return; const b0=apunta&&boto(apunta); if(b0) b0.classList.remove('aim'); apunta=a; const b1=a&&boto(a); if(b1) b1.classList.add('aim'); };
+      card.addEventListener('pointerdown',e=>{
+        if(locked||!candidate||id!==null) return;
+        if(e.pointerType==='mouse'&&e.button!==0) return;
+        id=e.pointerId; x0=e.clientX; y0=e.clientY; dx=dy=0;
+        try{ card.setPointerCapture(id); }catch(_){}
+        card.classList.add('drag');
+      });
+      card.addEventListener('pointermove',e=>{
+        if(e.pointerId!==id) return;
+        dx=e.clientX-x0; dy=e.clientY-y0;
+        const ty = dy<0 ? dy : dy*0.3;   // cap avall no vol dir res: s'hi resisteix
+        card.style.transform='translate('+dx+'px,'+ty+'px) rotate('+(dx/18)+'deg)';
+        marca(cap());
+      });
+      const deixa=e=>{
+        if(e.pointerId!==id) return;
+        id=null; card.classList.remove('drag');
+        const a = e.type==='pointerup' ? cap() : null;
+        marca(null); card.style.transform='';
+        if(a==='skip') skip(); else if(a) guess(a);
+      };
+      card.addEventListener('pointerup',deixa);
+      card.addEventListener('pointercancel',deixa);
+    }
+
+    // Teclat: fletxa esquerra = Abans, dreta = Despres, amunt = comodi. Nomes amb una pregunta
+    // oberta: a la pantalla de resultat, amb el joc bloquejat o escrivint en un camp, no fa res.
+    function onKey(e){
+      if(!root||locked||!candidate||e.altKey||e.ctrlKey||e.metaKey) return;
+      const tg=e.target; if(tg&&(tg.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) return;
+      if(!root.querySelector('#candslot')) return;
+      if(e.key==='ArrowLeft'){ e.preventDefault(); guess('abans'); }
+      else if(e.key==='ArrowRight'){ e.preventDefault(); guess('despres'); }
+      else if(e.key==='ArrowUp'){ e.preventDefault(); skip(); }
     }
 
     function guess(ans){
@@ -1277,8 +1333,8 @@
     }
 
     return {
-      mount(container){ root=container; gaStarted=false; failPairs=[]; failItems=[]; track('joc_vist',{joc:'abansdespres'}); start(); },
-      unmount(){ if(timer){ clearTimeout(timer); timer=null; } if(cdTimer){ clearInterval(cdTimer); cdTimer=null; } root=null; }
+      mount(container){ root=container; gaStarted=false; failPairs=[]; failItems=[]; track('joc_vist',{joc:'abansdespres'}); document.addEventListener('keydown',onKey); start(); },
+      unmount(){ document.removeEventListener('keydown',onKey); if(timer){ clearTimeout(timer); timer=null; } if(cdTimer){ clearInterval(cdTimer); cdTimer=null; } root=null; }
     };
   })();
 

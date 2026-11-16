@@ -767,6 +767,29 @@ test.describe('Abans o després?', () => {
     await page.locator(`.choice[data-a="${contraria(await respostaBona(page))}"]`).click();
     await expect(page.locator('.gameover')).toBeVisible({ timeout: 5000 });
   });
+
+  test('fletxa amunt = comodí, i lliscar la carta respon', async ({ page }) => {
+    await obreAbansDespres(page);
+    const barra = page.locator('.gprog > i');
+    await expect(barra).toHaveAttribute('style', /width:\s*0%/);
+
+    await page.keyboard.press('ArrowUp');
+    await expect(page.locator('[data-x="skip"]')).toBeDisabled();
+    await expect(page.locator('.choice.answer')).toHaveCount(1);
+    await expect(barra).toHaveAttribute('style', /width:\s*5%/);
+
+    // Arrossegar la carta cap a l'esquerra = «Abans». Pointer Events: el ratolí val igual que el dit.
+    await expect(page.locator('.choice').first()).toBeEnabled({ timeout: 5000 });
+    const caixa = await page.locator('#candslot .itemcard').boundingBox();
+    const x = caixa.x + caixa.width / 2, y = caixa.y + caixa.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x - 60, y, { steps: 4 });
+    await page.mouse.move(x - 140, y, { steps: 4 });
+    await page.mouse.up();
+    await expect(page.locator('.choice').first()).toBeDisabled();
+    await expect(barra).toHaveAttribute('style', /width:\s*10%/);
+  });
 });
 
 // ─── Contemporanis: dies clavats ─────────────────────────────────────────────

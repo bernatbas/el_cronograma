@@ -82,6 +82,24 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
   - ⚠️ Al panell del navegador les animacions es queden congelades, i la `cardIn` (translateY
     26px) fa semblar que en horitzontal hi ha 8px de scroll. **No és real**: traient `.enter`
     quadra.
+- **2026-11-16 · «Abans o després?»: lliscar la carta i fletxes del teclat.**
+  - **Lliscar** la carta nova: esquerra = Abans, dreta = Després, **amunt = comodí**. La carta
+    **segueix el dit** i s'inclina (`rotate(dx/18)`); cap avall s'hi resisteix (×0,3) perquè no vol
+    dir res. Llindar `SWIPE_TH = 70px`, i guanya l'eix que s'ha mogut més. En passar el llindar
+    **s'encén el botó** que es premerà (`.aim`, el mateix aspecte que el hover). Si no hi arriba,
+    torna al lloc.
+  - **Pointer Events** (`wireSwipe()`): el mateix codi per al dit i per arrossegar amb el ratolí.
+    `touch-action:none` a la carta perquè el navegador no s'ho quedi.
+  - **Teclat** (`onKey`, registrat a `mount()` i tret a `unmount()`): ← Abans, → Després, ↑ comodí.
+    No fa res amb el joc bloquejat, a la pantalla de resultat, amb modificadors o escrivint en un camp.
+  - Els botons no canvien. Test a `smoke.spec.js`.
+- **2026-11-16 · Avís de scroll al CI (`tests/noscroll.spec.js`).** Obre tots els jocs (i el hub,
+  i els resultats d'«Abans o després?» i Contemporanis) a 12 mides —vertical, horitzontal i
+  escriptori, amb l'alçada útil de debò— i mira si `main` o la pàgina fan scroll. **No peta mai**:
+  apunta cada cas a `noscroll-warnings.txt`, i el pas «Avisos de scroll als jocs» del CI el converteix
+  en un **avís groc** a la pàgina de l'execució. Només corre al projecte `desktop`.
+  - Primer mesurament a mà (375×553): fan scroll el **hub** (281px), el **resultat de Contemporanis**
+    (112px) i el **Personatge del dia** (14px). Pendent de decidir.
 - **2026-08-12 · Contingut dels jocs cronològics: esdeveniments + persones; MAI marcs/eres.**
   Els anys d'inici/fi de marcs/eres són massa imprecisos (p. ex. l'edat mitjana no acaba en un any
   concret), així que **s'exclouen** del pool. Per a **persones** cal **especificar sempre**

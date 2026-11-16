@@ -22,3 +22,6 @@ __pycache__/
 
 # Cau de dates completes de Wikidata (es regenera sol)
 _tools/.anniv_cache.json
+
+# Avisos del test de scroll (els llegeix el CI)
+noscroll-warnings.txt
