@@ -110,6 +110,11 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
     Fet avui · 🔥n, ratxa…) a la dreta. En horitzontal i a l'escriptori segueixen sent targetes.
   - Mesurat: 390×664 **sense scroll** (i de sobres), 375×553 i 360×560 també; 320×460 encara en fa
     (123px), acceptat.
+  - **Totes les caixes, la mateixa alçada** (`grid-auto-rows:1fr`): si un títol salta de línia en
+    una, l'espai hi és a totes. A 320px «Abans o després?» i «Personatge del dia» fan dues línies i
+    les cinc fan 62px.
+  - **Escriptori (≥861px): els 5 en una fila** (`repeat(5,…)`). Amb `auto-fill` quedava un 3+2
+    estrany. Si mai n'hi ha un sisè, cal revisar-ho.
 - **2026-08-12 · Contingut dels jocs cronològics: esdeveniments + persones; MAI marcs/eres.**
   Els anys d'inici/fi de marcs/eres són massa imprecisos (p. ex. l'edat mitjana no acaba en un any
   concret), així que **s'exclouen** del pool. Per a **persones** cal **especificar sempre**
