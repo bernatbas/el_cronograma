@@ -815,7 +815,6 @@
       daily_challenge:'Repte diari',
       new_challenge_in:'Nou repte en',
       streak_days: v => (v.n===1?'dia':'dies')+' seguits',
-      streak_days_hit: v => (v.n===1?'dia':'dies')+' seguits encertant',
       locknote_played:"Ja has jugat el repte d'avui. Torna demà per un de nou!",
       locknote_solved:"Ja has resolt el repte d'avui. Torna demà per un de nou!",
       share_btn:'📤 Comparteix',
@@ -913,7 +912,7 @@
       ord_fail_2:'Suposo que la idea era bona però… 🙄',
       ord_fail_3:'Osti quin desastre… 🙈',
       ord_win:'Ben ordenat! 🎉',
-      ord_streak_broken:"S'ha trencat la ratxa. En vermell, els que estaven fora de lloc.",
+      ord_fail_line:'Oh, llàstima!',
       ord_locked_win:'Encertat! 🎉',
       ord_locked_lose:'No encertat 😬',
       share_ord: v => '🕰️ Història BASica · Ordena la línia — '+v.dd+v.nl+v.squares+v.nl+'🔥 '+v.days+' '+(v.days===1?'dia':'dies')+' seguits',
@@ -997,6 +996,15 @@
   // ---- Utils del repte diari: determinisme per data (mitjanit LOCAL de cada jugador) ----
   function todayStr(d){ d=d||new Date(); const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
   function yesterdayStr(){ const d=new Date(); d.setDate(d.getDate()-1); return todayStr(d); }
+  // RATXA = dies seguits ACABANT el joc, guanyis o perdis (decisio d'en Bernat, 16/11/2026). Es marca
+  // en acabar; fallar no la trenca mai, i qui no havia jugat o feia dies que no jugava comenca a 1.
+  // Idempotent: cridar-la mes d'un cop el mateix dia no suma res. {last, days}
+  function tocaRatxa(key){
+    const today=todayStr(), st=readLS(key);
+    if(st && st.last===today && st.days) return st.days;
+    const days = (st && st.last===yesterdayStr() && st.days) ? st.days+1 : 1;
+    writeLS(key,{last:today,days:days}); return days;
+  }
   function ddmm(s){ const a=s.split('-'); return a[2]+'/'+a[1]+'/'+a[0]; }
   // Llavor estable a partir de la data (FNV-1a) + PRNG mulberry32 + barreja sembrada.
   function seedFromStr(s){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
@@ -1326,10 +1334,7 @@
 
     function finish(perfect){
       const today=todayStr();
-      const st=readLS(STREAK_KEY);
-      let days=1;
-      if(st){ if(st.last===yesterdayStr()) days=(st.days||0)+1; else if(st.last===today) days=st.days||1; else days=1; }
-      writeLS(STREAK_KEY,{last:today,days:days});
+      const days=tocaRatxa(STREAK_KEY);
       track('joc_completat',{joc:'abansdespres',mode:'default',encerts:score,errors:failPairs.length,ratxa:days});
       // Totes les cartes de les parelles fallades, sense repetir: si fallaves dues vegades seguides,
       // la carta del mig hi seria dos cops.
@@ -1561,7 +1566,7 @@
 
     // --- Àlbum + favorits (localStorage) ---
     function addToAlbum(p){ const a=readLS(ALBUM_KEY)||[]; if(!a.some(function(x){ return x.qid===p.qid; })){ a.push({qid:p.qid,name:p.name,birth:p.birth,death:p.death,img:p.img,desc:p.desc,date:todayStr()}); writeLS(ALBUM_KEY,a); } }
-    function bumpStreak(){ const today=todayStr(); const st=readLS(STREAK_KEY); let days=1; if(st){ if(st.last===yesterdayStr()) days=(st.days||0)+1; else if(st.last===today) days=st.days||1; else days=1; } writeLS(STREAK_KEY,{last:today,days:days}); return days; }
+    function bumpStreak(){ return tocaRatxa(STREAK_KEY); }   // aqui acabar = obrir-lo: no hi ha res mes a fer
     function favs(){ return readLS(FAV_KEY)||[]; }
     function isFav(qid){ return favs().some(function(x){ return x.qid===qid; }); }
     function toggleFav(p){ let a=favs(); if(a.some(function(x){ return x.qid===p.qid; })) a=a.filter(function(x){ return x.qid!==p.qid; }); else a.push({qid:p.qid,name:p.name,birth:p.birth,death:p.death,img:p.img,desc:p.desc}); writeLS(FAV_KEY,a); return isFav(p.qid); }
@@ -1796,13 +1801,8 @@
       showBanner(res.allCorrect, res.wrong, res.marks);
     }
 
-    function bumpStreak(correct){
-      const today=todayStr(); const st=readLS(STREAK_KEY); let days;
-      if(correct){ if(st && st.last===yesterdayStr()) days=(st.days||0)+1; else if(st && st.last===today) days=st.days||1; else days=1; }
-      else days=0;
-      writeLS(STREAK_KEY,{last:today,days:days});
-      return days;
-    }
+    // Abans: dies seguits ENCERTANT, i fallar la posava a 0. Ara compta acabar, encertis o no.
+    function bumpStreak(){ return tocaRatxa(STREAK_KEY); }
 
     function startCd(){
       if(ocdTimer){ clearInterval(ocdTimer); ocdTimer=null; }
@@ -1818,8 +1818,8 @@
       const foot=root.querySelector('.ordfoot'); if(!foot) return;
       const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
       foot.innerHTML = correct
-        ? '<div class="ordbanner ok"><div class="rtitle perfect">'+t('ord_win')+'</div><div class="streak">🔥 '+days+' '+t('streak_days_hit',{n:days})+'</div><div class="locknote">'+t('locknote_solved')+'</div><div class="countdown">'+t('new_challenge_in')+' <b id="ocd">--:--:--</b></div></div>'
-        : '<div class="ordbanner no"><div class="rtitle">'+ordFailTitle(wrong)+'</div><div class="streak">'+t('ord_streak_broken')+'</div><div class="locknote">'+t('locknote_solved')+'</div><div class="countdown">'+t('new_challenge_in')+' <b id="ocd">--:--:--</b></div></div>';
+        ? '<div class="ordbanner ok"><div class="rtitle perfect">'+t('ord_win')+'</div><div class="streak">🔥 '+days+' '+t('streak_days',{n:days})+'</div><div class="locknote">'+t('locknote_solved')+'</div><div class="countdown">'+t('new_challenge_in')+' <b id="ocd">--:--:--</b></div></div>'
+        : '<div class="ordbanner no"><div class="rtitle">'+ordFailTitle(wrong)+'</div><div class="streak">'+t('ord_fail_line')+'</div><div class="locknote">'+t('locknote_solved')+'</div><div class="countdown">'+t('new_challenge_in')+' <b id="ocd">--:--:--</b></div></div>';
       startCd();
       const bn=foot.querySelector('.ordbanner');
       if(bn){
@@ -2111,11 +2111,7 @@
     function finishGame(ms){
       ms.done=true;
       const today=todayStr();
-      const st=readLS(STREAK_KEY)||{};
-      let days=1;
-      if(st.last===yesterdayStr()) days=(st.days||0)+1;
-      else if(st.last===today) days=st.days||1;
-      writeLS(STREAK_KEY,{last:today,days:days});
+      const days=tocaRatxa(STREAK_KEY);
       track('joc_completat',{joc:'memory',mode:mode,encerts:5,errors:ms.errors,ratxa:days});
       saveState();
       render();
@@ -2445,11 +2441,7 @@
       ansTimer=setTimeout(function(){ idx++; locked=false; if(idx<5) render(); else finish(); }, delay);
     }
 
-    function bumpStreak(){
-      const today=todayStr(); const st=readLS(STREAK_KEY); let days=1;
-      if(st){ if(st.last===yesterdayStr()) days=(st.days||0)+1; else if(st.last===today) days=st.days||1; else days=1; }
-      writeLS(STREAK_KEY,{last:today,days:days}); return days;
-    }
+    function bumpStreak(){ return tocaRatxa(STREAK_KEY); }
     function finish(){
       const days=bumpStreak();
       track('joc_completat',{joc:'contemporanis',mode:'default',encerts:score,errors:5-score,ratxa:days});

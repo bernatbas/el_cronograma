@@ -80,6 +80,19 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
     `clamp(160px,34vh,320px)`.
   - Eina de mesura reutilitzable: un script que obre la pantalla en un `iframe` de la mida que vols
     (les media queries del `iframe` van per la seva mida; el `pointer:coarse` l'hereta de la finestra).
+- **2026-11-16 · RATXA = dies seguits ACABANT el joc, guanyis o perdis** (decisió d'en Bernat).
+  Substitueix tot el que diu més amunt sobre ratxes (sobretot la de l'Ordena, que era «encertant» i
+  fallar la posava a 0).
+  - Un sol helper per a tots els jocs, **`tocaRatxa(key)`**: si l'últim dia és avui no suma res; si és
+    ahir, +1; si no, **1**. Per tant qui no havia jugat mai, o feia dies que no jugava, **no pot
+    «perdre» res** en fallar: comença a 1.
+  - Es crida **en acabar**: `finish()` de l'«Abans o després?» i del Contemporanis, l'enviament de
+    l'Ordena, el `finishGame()` del Memory. Al **Personatge del dia** acabar = obrir-lo.
+    **Abandonar a mitja partida no compta.**
+  - Es va provar primer «jugar = primera interacció» i en Bernat ho va descartar: compta acabar.
+  - Textos de l'Ordena: encertar → «🔥 n dies seguits» (com els altres jocs; fora el «…encertant»).
+    Fallar → «Oh, llàstima!» (fora «S'ha trencat la ratxa. En vermell, els que…»). Claus
+    `streak_days_hit` i `ord_streak_broken` esborrades; nova `ord_fail_line`.
 - **2026-11-16 · Resultat de Contemporanis: TOTES les parelles porten al cronograma.** Abans només
   les fallades, amb un 📅 per indicar-ho; ara ho són totes (encertades en verd, fallades en vermell)
   i l'icona s'ha tret. Només queda inert una parella sense cap ítem que es pugui posar al cronograma.
