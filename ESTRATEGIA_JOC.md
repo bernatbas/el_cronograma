@@ -74,6 +74,8 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
   - **Resultat de Contemporanis en horitzontal i a l'escriptori amb finestra baixa**
     (`min-width:861px and max-height:820px`): **dues columnes**, el resum a l'esquerra (títol, punts,
     compte enrere, botons, aquests un al costat de l'altre) i les 5 parelles a la dreta.
+    Al **portàtil**, la lletra i els aires **de sempre** (més amplada, 860px, i 44px entre columnes):
+    la primera versió hi aplicava la compactació de l'horitzontal i quedava petit i perdut.
   - **Personatge del dia a l'escriptori baix**: la foto, que era fixa de 320px, fa
     `clamp(160px,34vh,320px)`.
   - Eina de mesura reutilitzable: un script que obre la pantalla en un `iframe` de la mida que vols

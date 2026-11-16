@@ -661,16 +661,30 @@
      columnes. A l'esquerra el resum (titol, punts, compte enrere, botons) i a la dreta les 5 parelles.
      Apilat feia 109-162px de scroll en horitzontal i 65-108 en un portatil. */
   @media (orientation:landscape) and (pointer:coarse) and (max-height:600px), (min-width:861px) and (max-height:820px){
-    .gameover.con{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);column-gap:16px;align-items:center;max-width:760px;padding:10px 16px;}
+    .gameover.con{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);align-items:center;}
     .gameover.con > *{grid-column:1;}
     .gameover.con > .confailwrap{grid-column:2;grid-row:1 / span 7;margin:0;align-self:center;}
+    .gameover.con .btnrow{flex-wrap:nowrap;}
+    .gameover.con .btnrow .cta,.gameover.con .hubbtn{width:auto;flex:1 1 0;min-width:0;white-space:nowrap;}
+  }
+  /* ...en horitzontal tactil, a mes, tot compacte: l'alcada hi es molt justa. */
+  @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
+    .gameover.con{column-gap:16px;max-width:760px;padding:10px 16px;}
     .gameover.con .stats{margin:4px 0 6px;}
     .gameover.con .stat .v{font-size:26px;}
     .gameover.con .countdown{margin:0 0 8px;}
-    .gameover.con .btnrow{gap:8px;flex-wrap:nowrap;}
-    .gameover.con .btnrow .cta,.gameover.con .hubbtn{width:auto;flex:1 1 0;min-width:0;padding:7px 10px;font-size:13px;white-space:nowrap;}
+    .gameover.con .btnrow{gap:8px;}
+    .gameover.con .btnrow .cta,.gameover.con .hubbtn{padding:7px 10px;font-size:13px;}
     .gameover.con .gamehead{margin-bottom:2px;}
     .gameover.con .concrono{padding:5px 10px;font-size:12px;line-height:1.25;}
+  }
+  /* ...i al portatil, amb la lletra i els aires de sempre: n'hi ha prou amb les dues columnes. */
+  @media (min-width:861px) and (max-height:820px){
+    .gameover.con{max-width:860px;column-gap:44px;padding:30px 36px;}
+    .gameover.con .confailwrap{gap:8px;}
+    .gameover.con .confailt{margin-bottom:2px;}
+    .gameover.con .concrono{padding:10px 16px;font-size:14px;}
+    .gameover.con .btnrow{gap:10px;}
   }
   /* Personatge del dia a l'ESCRIPTORI amb finestra baixa: la foto fixa de 320px feia 29-72px de
      scroll (1024x700 - 1366x657). Ara s'encongeix amb l'alcada. */
