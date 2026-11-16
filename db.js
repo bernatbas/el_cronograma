@@ -307,6 +307,7 @@ const COLLECTIONS=[
     'Q8750',    // Michael Faraday     1791–1867
     'Q9095',    // James Clerk Maxwell 1831–1879
     'Q41257',   // Heinrich Hertz      1857–1894
+    'Q59736',   // Ignaz Semmelweis    1818–1865   (de la col·lecció local d'en Bernat)
     'Q937'      // Albert Einstein     1879–1955
   ]}
 ];
