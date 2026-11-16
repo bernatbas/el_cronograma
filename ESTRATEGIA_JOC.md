@@ -99,7 +99,17 @@ l'app principal: **un sol HTML, offline-friendly, sense build**.
   apunta cada cas a `noscroll-warnings.txt`, i el pas «Avisos de scroll als jocs» del CI el converteix
   en un **avís groc** a la pàgina de l'execució. Només corre al projecte `desktop`.
   - Primer mesurament a mà (375×553): fan scroll el **hub** (281px), el **resultat de Contemporanis**
-    (112px) i el **Personatge del dia** (14px). Pendent de decidir.
+    (112px) i el **Personatge del dia** (14px). Els dos últims, pendents.
+  - **El hub NO és al test**, decisió d'en Bernat: és una llista i en un mòbil molt petit pot fer
+    scroll. Però ha de cabre en un mòbil normal (ell té un iPhone 13 → 390×664).
+- **2026-11-16 · Hub dels jocs més fi** (proposta d'en Bernat).
+  - **Fora les descripcions** de les targetes (no aportaven). Les claus `d_*` i el `descKey` de
+    `GAMES` segueixen al codi, sense fer-se servir.
+  - **Fora la data d'avui** de dalt. Queden «n/5 fets avui» i el compte enrere.
+  - Al mòbil vertical, **una fila per joc**: icona i títol a l'esquerra, l'estat (Repte diari,
+    Fet avui · 🔥n, ratxa…) a la dreta. En horitzontal i a l'escriptori segueixen sent targetes.
+  - Mesurat: 390×664 **sense scroll** (i de sobres), 375×553 i 360×560 també; 320×460 encara en fa
+    (123px), acceptat.
 - **2026-08-12 · Contingut dels jocs cronològics: esdeveniments + persones; MAI marcs/eres.**
   Els anys d'inici/fi de marcs/eres són massa imprecisos (p. ex. l'edat mitjana no acaba en un any
   concret), així que **s'exclouen** del pool. Per a **persones** cal **especificar sempre**

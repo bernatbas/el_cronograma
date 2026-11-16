@@ -144,7 +144,6 @@
   .gamecard:hover{transform:translateY(-2px);box-shadow:0 0 0 2px var(--slate),0 5px 11px rgba(40,44,60,.20);}
   .gamecard .ic{font-size:30px;line-height:1;}
   .gamecard .t{font-size:17px;font-weight:600;}
-  .gamecard .d{font-size:13px;color:var(--text2);line-height:1.4;}
   .placeholder{background:var(--canvas);border:1px dashed var(--border-strong);border-radius:var(--r-card);padding:48px 24px;text-align:center;}
   .placeholder .ic{font-size:52px;line-height:1;}
   .placeholder h2{margin:14px 0 6px;font-size:22px;font-family:'Oswald','Roboto Condensed','Arial Narrow',Arial,sans-serif;font-weight:600;letter-spacing:.03em;}
@@ -242,7 +241,6 @@
     .gamecard{padding:10px 11px;gap:4px;border-radius:12px;}
     .gamecard .ic{font-size:22px;}
     .gamecard .t{font-size:13.5px;line-height:1.1;}
-    .gamecard .d{font-size:11px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
     .gamecard .tagd,.gamecard .soon{font-size:10px;padding:2px 7px;margin-top:1px;}
   }
 
@@ -433,11 +431,11 @@
     /* Menu de jocs compacte per a mobil: targetes horitzontals i lleugeres perque hi capiguen totes */
     .lead{margin:0 0 14px;font-size:13px;}
     .menu{grid-template-columns:1fr;gap:10px;}
-    .gamecard{display:grid;grid-template-columns:auto 1fr;grid-template-areas:'ic t' 'ic d' 'ic badge';column-gap:13px;row-gap:3px;align-items:center;padding:12px 14px;}
-    .gamecard .ic{grid-area:ic;font-size:26px;align-self:center;}
-    .gamecard .t{grid-area:t;font-size:15px;}
-    .gamecard .d{grid-area:d;font-size:12px;line-height:1.3;}
-    .gamecard .tagd,.gamecard .soon{grid-area:badge;justify-self:start;margin-top:2px;}
+    /* Una sola fila: icona i titol a l'esquerra, l'estat (ratxa, jugat...) a la dreta. */
+    .gamecard{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:'ic t badge';column-gap:12px;align-items:center;padding:12px 14px;}
+    .gamecard .ic{grid-area:ic;font-size:24px;}
+    .gamecard .t{grid-area:t;font-size:15px;line-height:1.2;}
+    .gamecard .tagd,.gamecard .soon{grid-area:badge;justify-self:end;align-self:center;margin:0;white-space:nowrap;}
   }
   @media (max-height:560px){
     .topbar{padding:6px 12px;gap:10px;border-bottom-width:3px;}
@@ -2516,11 +2514,9 @@
     GAMES.forEach(g=>{
       const badge = gameBadge(g);
       if(MODULES[g.id]){ totalCount++; if(doneToday(g.id)) doneCount++; }
-      cards+=`<button class="gamecard" data-id="${g.id}"><span class="ic">${g.ic}</span><span class="t">${t(g.titleKey)}</span><span class="d">${t(g.descKey)}</span>${badge}</button>`;
+      cards+=`<button class="gamecard" data-id="${g.id}"><span class="ic">${g.ic}</span><span class="t">${t(g.titleKey)}</span>${badge}</button>`;   // sense descripcio (16/11/2026): no aportava i feia scroll al mobil; els d_* segueixen al diccionari
     });
-    const _d=new Date(), _p=n=>String(n).padStart(2,'0');
-    const hd=_p(_d.getDate())+'/'+_p(_d.getMonth()+1)+'/'+_d.getFullYear();
-    const header=`<div class="hubhead"><h1 class="hubh1">${t('hub_title')}</h1><div class="hubmeta"><span class="hubchip">📅 ${hd}</span><span class="hubchip hubcount">🎯 ${doneCount}/${totalCount} ${t('hub_done_today')}</span><span class="hubchip">⏳ ${t('hub_reset_in')} <b id="hubcd">--:--:--</b></span></div></div>`;
+    const header=`<div class="hubhead"><h1 class="hubh1">${t('hub_title')}</h1><div class="hubmeta"><span class="hubchip hubcount">🎯 ${doneCount}/${totalCount} ${t('hub_done_today')}</span><span class="hubchip">⏳ ${t('hub_reset_in')} <b id="hubcd">--:--:--</b></span></div></div>`;
     app.innerHTML=`${header}<div class="menu">${cards}</div>`;
     startHubCd();
     app.querySelectorAll('.gamecard').forEach(btn=>{

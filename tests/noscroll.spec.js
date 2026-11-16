@@ -33,9 +33,9 @@ const MIDES = [
   { nom: 'Escriptori 1440', w: 1440, h: 780, mobil: false },
 ];
 
-// Cada pantalla: com s'hi arriba (estat desat abans d'entrar) i on es mira.
+// Cada pantalla: com s'hi arriba (estat desat abans d'entrar) i on es mira. El hub NO hi és a
+// posta: és una llista i als mòbils petits pot fer scroll. L'iPhone 13 (390×664) sí que hi cap.
 const PANTALLES = [
-  { nom: 'Hub dels jocs',            hash: '#/' },
   { nom: 'Abans o després? · joc',   hash: '#/abansdespres' },
   { nom: 'Abans o després? · resultat', hash: '#/abansdespres', desa: 'ad' },
   { nom: 'Ordena la línia · joc',    hash: '#/ordena' },
