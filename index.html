@@ -3566,14 +3566,11 @@ function guiaObre(){
       if(e.target.closest('.gx'))return guiaTanca();
       if(e.target.closest('.gprev'))return guiaVes(Math.max(0,guiaPas-1));
       if(e.target.closest('.gnext'))return guiaSeguent();
-      if(e.target.closest('.gchip')){   // fa la cerca sola: escriu el nom, es veuen els resultats, i l'afegeix
+      if(e.target.closest('.gchip')){   // escriu el nom i busca; AFEGIR-LO ho fa l'usuari clicant el resultat (guiaTick ho detecta)
         if(state.present.has(GUIA_PERSONA)){guiaFocus=GUIA_PERSONA;revealPerson(GUIA_PERSONA);return guiaVes(2);}
         // Després del clic, no dins: el clic bombolleja fins al document, que tanca els resultats
         // perquè «s'ha clicat fora del cercador», i la cerca no es veia mai.
         setTimeout(()=>{q.value='Shakespeare';q.focus();q.dispatchEvent(new Event('input'));},0);
-        // I passa al pas 2 per si sol: no depèn que guiaTick detecti l'alta.
-        setTimeout(()=>{if(guiaPas!==1)return;addFromSearch(GUIA_PERSONA);guiaFocus=GUIA_PERSONA;guiaVist0=null;
-          setTimeout(()=>{if(guiaPas===1)guiaVes(2);},450);},900);
       }
     });
   }
