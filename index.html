@@ -1145,6 +1145,7 @@ const I18N={
     guia_p2_gen:"Aquí tens qui vivia alhora, de qualsevol àmbit: l’art, la ciència, la política… Segur que hi trobes alguna sorpresa.",
     guia_t3:"Col·leccions",
     guia_p3:"Aquí tens col·leccions de personatges per explorar. Prova «La Il·lustració» i els tindràs tots de cop. I quan vulguis, crea les teves.",
+    guia_p3_fet:"Aquí la tens, tota d’un cop d’ull. I si en vols una de teva, crea-la amb els personatges que vulguis.",
     guia_t4:"Viatja pel temps",
     guia_p4:"Fes zoom i arrossega per anar endavant i enrere en el temps. Si et perds, «Vista global» t’ho encaixa tot a la pantalla.",
     guia_t5:"Una cosa més",
@@ -3439,16 +3440,16 @@ q.placeholder=t('cro_search_ph');
 //   aquest bloc no s'hagi executat (una `let` aquí seria TDZ i aturaria tot l'script).
 // ============================================================
 var GUIA_LS='historiabasica.guia', GUIA_PERSONA='shakespeare', GUIA_COL='illustracio', GUIA_N=6;
-var guiaColT=0, guiaColFi=0, guiaCtxFet=false, guiaPas=null, guiaEl=null, guiaHaloEl=null, guiaVeloEl=null, guiaRaf=0, guiaVist0=null, guiaFocus=null, guiaClau='';
+var guiaCol0=null, guiaColT=0, guiaColFi=0, guiaCtxFet=false, guiaPas=null, guiaEl=null, guiaHaloEl=null, guiaVeloEl=null, guiaRaf=0, guiaVist0=null, guiaFocus=null, guiaClau='';
 var GUIA_LLOC={1:['baix','dalt'],2:['baix','dalt','esq','dreta'],3:['dreta','baix'],4:['baix','esq'],5:['baix','dreta']};
 function guiaTick(){
   // Pas 2: un cop surt el context, la gràcia és VEURE'L. S'enquadra perquè es llegeixin els noms
   // i el globus s'aparta a la cantonada (guiaColoca), que si no tapava justament els contemporanis.
-  if(guiaPas===2&&guiaFocus&&state.focus===guiaFocus&&!guiaCtxFet){guiaCtxFet=true;guiaClau='';setTimeout(()=>{if(guiaPas===2){fitToPresent();guiaVes(2);}},350);return;}   // guiaVes: canvia el text (la sorpresa, ara sí)
+  if(guiaPas===2&&guiaFocus&&state.focus===guiaFocus&&!guiaCtxFet){guiaCtxFet=true;guiaClau='';setTimeout(()=>{if(guiaPas===2){fitToPresent();guiaVes(2,true);}},350);return;}   // guiaVes: canvia el text (la sorpresa, ara sí)
   // Pas 3: activar la col·lecció no fa zoom (decisió general de l'app), però a la guia la gràcia
   // és veure-la sencera. Les persones arriben de Wikidata a poc a poc: s'enquadra quan para.
-  if(guiaPas===3&&state.collections.has(GUIA_COL)&&state.present.size){
-    if(!guiaColFi)guiaColFi=Date.now()+4000;
+  if(guiaPas===3&&guiaColNova()&&state.present.size){
+    if(!guiaColFi){guiaColFi=Date.now()+4000;guiaClau='';setTimeout(()=>{if(guiaPas===3)guiaVes(3,true);},0);}   // canvia el text: ja l'ha activada
     if(Date.now()<guiaColFi){clearTimeout(guiaColT);guiaColT=setTimeout(()=>{if(guiaPas===3)fitToPresent();},500);}
     return;
   }
@@ -3472,7 +3473,7 @@ function guiaColoca(){
   if(guiaPas==null)return;
   guiaRaf=requestAnimationFrame(guiaColoca);
   const W=window.innerWidth,H=window.innerHeight,bw=guiaEl.offsetWidth,bh=guiaEl.offsetHeight;
-  if((guiaPas===2&&guiaCtxFet)||(guiaPas===3&&state.collections.has(GUIA_COL))){   // context fet / col·lecció activada: a la cantonada, que no tapi el que s'ha de veure
+  if((guiaPas===2&&guiaCtxFet)||(guiaPas===3&&guiaColNova())){   // context fet / col·lecció activada: a la cantonada, que no tapi el que s'ha de veure
     const clau='ctx'+bw+','+bh+','+W+','+H;if(clau===guiaClau)return;guiaClau=clau;
     guiaEl.className='guia on';guiaEl.style.left=(W-bw-24)+'px';guiaEl.style.top=(H-bh-64)+'px';
     guiaHaloEl.classList.remove('on');return;
@@ -3527,23 +3528,30 @@ function guiaBuida(){
 }
 // El pas 2 té dues fases: abans del context només l'instrucció (dir qui hi sortirà seria fer
 // spoiler); després, la sorpresa de Shakespeare, o un text genèric si l'usuari n'ha triat un altre.
+// El pas 3, igual: abans, la invitació a provar «La Il·lustració»; després d'activar-ne qualsevol, un
+// text que serveix per a totes.
+function guiaColNova(){return !!guiaCol0&&[...state.collections].some(c=>!guiaCol0.has(c));}
 function guiaText(n){
-  if(n!==2||!guiaCtxFet)return 'guia_p'+n;
-  return guiaFocus===GUIA_PERSONA?'guia_p2_sh':'guia_p2_gen';
+  if(n===2&&guiaCtxFet)return guiaFocus===GUIA_PERSONA?'guia_p2_sh':'guia_p2_gen';
+  if(n===3&&guiaColNova())return 'guia_p3_fet';
+  return 'guia_p'+n;
 }
-function guiaVes(n){
+// `nomesText`: només torna a pintar el globus (el text ha canviat), sense els efectes d'entrar al pas.
+function guiaVes(n,nomesText){
   guiaPas=n;guiaClau='';
-  if(n===2&&guiaFocus&&!state.focus)setTimeout(()=>{if(guiaPas===2)guiaZoomA(guiaFocus);},60);
-  if(n===3){guiaColFi=0;}
-  // Pas 4: la col·lecció ja està enquadrada, i «Vista global» no faria res. Ens allunyem (×1/4 sobre
-  // el centre): la col·lecció queda petita enmig de la història i el botó la torna a enquadrar.
-  if(n===4)setTimeout(()=>{if(guiaPas===4){const r=scroll.getBoundingClientRect();zoomAt(r.left+r.width/2,0.25);}},150);
-  if(n===1)guiaVist0=new Set(state.present);
-  if(n!==2)guiaCtxFet=false;
-  if(n===3){   // la col·lecció ha de ser a la vista: barra lateral oberta i secció desplegada
-    if($('.body').classList.contains('collapsed'))$('#sidebarToggle').click();
-    const sec=$('#collections')&&$('#collections').closest('section');
-    if(sec&&sec.classList.contains('plegada')){const h=sec.querySelector('h3.sech');if(h)h.click();}
+  if(!nomesText){   // efectes d'ENTRAR al pas
+    if(n===1)guiaVist0=new Set(state.present);
+    if(n!==2)guiaCtxFet=false;
+    if(n===2&&guiaFocus&&!state.focus)setTimeout(()=>{if(guiaPas===2)guiaZoomA(guiaFocus);},60);
+    if(n===3){   // la col·lecció ha de ser a la vista: barra lateral oberta i secció desplegada
+      guiaColFi=0;if(!guiaCol0)guiaCol0=new Set(state.collections);   // només la 1a vegada: tornant enrere des del 4, la col·lecció ja activada compta
+      if($('.body').classList.contains('collapsed'))$('#sidebarToggle').click();
+      const sec=$('#collections')&&$('#collections').closest('section');
+      if(sec&&sec.classList.contains('plegada')){const h=sec.querySelector('h3.sech');if(h)h.click();}
+    }
+    // Pas 4: la col·lecció ja està enquadrada, i «Vista global» no faria res. Ens allunyem (×1/4 sobre
+    // el centre): la col·lecció queda petita enmig de la història i el botó la torna a enquadrar.
+    if(n===4)setTimeout(()=>{if(guiaPas===4){const r=scroll.getBoundingClientRect();zoomAt(r.left+r.width/2,0.25);}},150);
   }
   const dots=Array.from({length:GUIA_N},(_,k)=>`<span class="${k===n?'on':''}"></span>`).join('');
   const p=PEOPLE.find(x=>x.id===GUIA_PERSONA);
@@ -3586,7 +3594,7 @@ function guiaObre(){
     });
   }
   if(typeof gtag!=='undefined')gtag('event','guia_oberta');
-  guiaVes(0);cancelAnimationFrame(guiaRaf);guiaColoca();
+  guiaCol0=null;guiaVes(0);cancelAnimationFrame(guiaRaf);guiaColoca();
 }
 function guiaTanca(){
   if(typeof gtag!=='undefined')gtag('event','guia_tancada',{pas:guiaPas});
