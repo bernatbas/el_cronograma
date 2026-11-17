@@ -1113,7 +1113,7 @@
   //   ⚖️ Abans o després? · 17/11
   //   🎯 7 encerts · 🔥 12 dies seguits
   //   🟩🟩🟨🟥…            (només els jocs que en tenen)
-  //   babilinia.com/abansdespres
+  //   babilinia.com/jocs/abansdespres
   // No revela cap resposta. L'enllaç és FIX, no surt de `location`: des del .github.io antic o
   // obrint el fitxer amb doble clic sortiria una altra adreça o cap.
   function shareCard(id, extra, ds, v1, k1, days, quadrets){
@@ -1121,7 +1121,7 @@
     const a=(ds||todayStr()).split('-');
     const cap=g.ic+' '+t(g.titleKey)+(extra?' ('+extra+')':'')+' · '+a[2]+'/'+a[1];
     const marc='🎯 '+v1+' '+k1+' · 🔥 '+days+' '+t('streak_days',{n:days});
-    return [cap, marc, quadrets||'', 'babilinia.com/'+id].filter(Boolean).join('\n');   // enllaç curt: carpeta /<joc>/ que redirigeix a joc.html#/<joc>
+    return [cap, marc, quadrets||'', 'babilinia.com/jocs/'+id].filter(Boolean).join('\n');   // enllaç curt: carpeta /jocs/<joc>/ que redirigeix a joc.html#/<joc>
   }
   function tocaRatxa(key){
     const today=todayStr(), st=readLS(key);

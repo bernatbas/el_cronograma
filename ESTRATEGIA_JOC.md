@@ -67,11 +67,13 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
   resultat · 🔥 n dies seguits` (les paraules del marcador) → quadrets (Contemporanis i Ordena com
   abans; **Abans o després**, un per pregunta: 🟩 encert, 🟥 error, 🟨 comodí, desats a `seq` del
   `hb_ad_daily`; el Memory no en té i porta la dificultat al nom) → enllaç **fix**
-  **curt `babilinia.com/<joc>`**, que porta directe al joc. Helper `shareCard()`. No revela cap
+  **curt `babilinia.com/jocs/<joc>`**, que porta directe al joc. Helper `shareCard()`. No revela cap
   resposta. Amb 1, «1 encert» / «1 error» en singular; els quadrets de l'Abans o després, en files de 10.
-- **Enllaços curts** (17/11/2026): una carpeta per joc a l'arrel (`/abansdespres/`, `/ordena/`, `/memory/`,
-  `/contemporanis/`, `/personatgedia/`) amb un `index.html` que només redirigeix a `/joc.html#/<joc>`.
-  En arribar-hi, la barra d'adreces mostra `joc.html#/…`: els jocs segueixen vivint tots a `joc.html`.
+- **Enllaços curts** (17/11/2026): una carpeta per joc dins de **`jocs/`** (`jocs/abansdespres/`,
+  `jocs/ordena/`, `jocs/memory/`, `jocs/contemporanis/`, `jocs/personatgedia/`) amb un `index.html` que
+  només redirigeix a `/joc.html#/<joc>`. Dins de `jocs/` i no a l'arrel per ordre: que no quedin
+  barrejades amb els scripts i els `.md`. En arribar-hi, la barra d'adreces mostra `joc.html#/…`: els
+  jocs segueixen vivint tots a `joc.html`. **Si afegeixes un joc**, crea-li la seva carpeta (copia'n una).
 - **Hub**: una **fila per joc a tot arreu** (escriptori i horitzontal inclosos), totes de la
   mateixa alçada, sense descripcions. A dalt només el compte enrere: **fora la data i el
   comptador «n/5 fets avui»**.
@@ -536,7 +538,7 @@ Verificat (Chromium): footer a totes les seccions, jocs horitzontals sense scrol
 ### Pendents
 - Confirmar icona ↕️ definitiva.
 - Decidir tractament del scroll a SE portrait.
-- Re-desplegar a bernatbas.github.io (joc.html + data.js + personatges.js) quan estigui validat.
+- Re-desplegar a bernatbas.github.io (joc.html + data.js + personatges.js) quan estigui validat. *(Històric: el web viu a www.babilinia.com des del 17/11/2026 i es desplega sol pel CI.)*
 
 ### Actualització scroll — RESOLT (opció lletra més petita)
 - Decisió de l'usuari: en comptes de treure elements, **reduir mida de lletra i marges** en pantalles baixes (hi ha espai horitzontal de sobres).
@@ -782,6 +784,7 @@ Botó **«📤 Comparteix»** al banner de resultat: `navigator.share` al mòbil
 🟢 Fàcil – 0 ERRORS! Increïble 🤩
 bernatbas.github.io/el_cronograma/joc.html
 ```
+*(Superat el 17/11/2026: ara el Memory comparteix amb la targeta comuna de tots els jocs, veure «2b. Estat actual».)*
 
 ### Persistència
 
