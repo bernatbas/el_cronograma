@@ -1572,7 +1572,11 @@
     }
 
     function doShare(sc,days,btn){
-      const text=shareCard('abansdespres','',todayStr(),sc,t('hits_in_row'),days,adSeq);
+      // Fins a 20 quadrets: en files de 10, que en una sola línia el mòbil els parteix on vol.
+      // Array.from i no slice: cada quadret són dos caràcters UTF-16.
+      const q=Array.from(adSeq), files=[];
+      for(let i=0;i<q.length;i+=10) files.push(q.slice(i,i+10).join(''));
+      const text=shareCard('abansdespres','',todayStr(),sc,t('hits_in_row'),days,files.join('\n'));
       if(navigator.share){ navigator.share({text:text}).catch(()=>{}); return; }
       const done=()=>{ if(btn){ const o=btn.textContent; btn.textContent=t('copied'); setTimeout(()=>{ btn.textContent=o; },1800); } };
       if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(done); }
