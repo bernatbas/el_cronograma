@@ -1573,6 +1573,10 @@ function packLanes(people){
 // ============================================================
 function render(){
   recomputePresent();
+  // La guia de benvinguda avança sola quan l'usuari fa el que li demana. Va AQUÍ, no al final:
+  // només necessita saber qui hi ha a la vista, i així cap error de la resta del render no la para.
+  // (Tot el que fa és programar timeouts, que s'executen quan el render ja ha acabat.)
+  try{guiaTick();}catch(ex){console.warn('guia',ex);}
   if(scroll.clientWidth>0)pxPerYear=Math.max(fitPx(),Math.min(20,pxPerYear));   // safety net: whatever path got us here (pinch, resize, page zoom), never draw at a zoom below the fit floor — that's what left a white gap and runaway scroll
   const nowX=x(NOW_YEAR);
   const W=Math.max(Math.min(totalW(),nowX+FUTURE_MARGIN_PX),nowX+FUTURE_FADE+8,scroll.clientWidth);   // cap the scrollable canvas to a fixed px margin past "today" (not a year count, or it balloons at high zoom), but never narrower than the viewport (white gap) nor than the future-fade
@@ -1771,7 +1775,6 @@ function renderSidebar(){
   const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>L(a.name).localeCompare(L(b.name),LANG));   // always alphabetical, en l'idioma actiu
   $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}">${esc(L(p.name))}</button><button class="favb" data-favt="${p.id}" aria-label="${esc(esFav(favKey(p))?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(favKey(p))}">${favIco(esFav(favKey(p)))}</button>${p.wd?`<button class="addc" data-addc="${p.id}" aria-label="${t('cro_coll_addto')}">+</button>`:''}${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}" aria-label="${t('cro_report')}">⚠</button><button class="x" data-remove="${p.id}" aria-label="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
   actualitzaComptes();
-  guiaTick();   // la guia de benvinguda avança sola quan l'usuari fa el que li demana
 }
 
 // ============================================================
