@@ -281,6 +281,17 @@ const COLLECTIONS=[
   // Filosofia de la ciència: els autors i els casos històrics de «Què és aquesta cosa anomenada
   // ciència?» (Chalmers), per a l'assignatura de la UNED. Q-ids resolts pel títol de l'article de la
   // Viquipèdia i verificats amb l'any esperat i la mateixa SPARQL que byIds() (16/11/2026).
+  // La de la guia de benvinguda (pas 3): poca gent, ~110 anys, tots els noms llegibles a «Vista global».
+  {id:'illustracio',name:'La Il·lustració',wds:[
+    'Q15975',   // Montesquieu         1689–1755
+    'Q9068',    // Voltaire            1694–1778
+    'Q37160',   // David Hume          1711–1776
+    'Q6527',    // Jean-Jacques Rousseau 1712–1778
+    'Q448',     // Denis Diderot       1713–1784
+    'Q9381',    // Adam Smith          1723–1790
+    'Q9312',    // Immanuel Kant       1724–1804
+    'Q101638',  // Mary Wollstonecraft 1759–1797
+  ]},
   {id:'ipcuned',name:'IPC - UNED 2026',wds:[
     'Q37388',   // Francis Bacon       1561–1626
     'Q37160',   // David Hume          1711–1776
