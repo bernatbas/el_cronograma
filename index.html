@@ -2,7 +2,7 @@
 <html lang="ca">
 <head>
 <meta charset="utf-8" />
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏳</text></svg>">
+<link rel="icon" href="img/icona.svg" type="image/svg+xml">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-0L1N4BT3QQ"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0L1N4BT3QQ');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10,7 +10,23 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=swap"></noscript>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>Història Bàsica · Cronograma</title>
+<title>Babilínia · Cronograma</title>
+<!-- Metadades: Google (description, canonical) i previsualització en compartir (Open Graph). -->
+<meta name="description" content="Línia de temps interactiva de la història: personatges, esdeveniments i èpoques per veure què passava alhora i qui va coincidir amb qui.">
+<link rel="canonical" href="https://www.babilinia.com/">
+<meta name="theme-color" content="#B8503C">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Babilínia">
+<meta property="og:locale" content="ca_ES">
+<meta property="og:title" content="Babilínia · Cronograma">
+<meta property="og:description" content="Línia de temps interactiva de la història: personatges, esdeveniments i èpoques per veure què passava alhora i qui va coincidir amb qui.">
+<meta property="og:url" content="https://www.babilinia.com/">
+<meta property="og:image" content="https://www.babilinia.com/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Babilínia: la web que no es va fer en un dia">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   /* ============================================================
      DESIGN TOKENS
@@ -117,6 +133,11 @@
      sistema a 14px i en color fosc sobre el terracota. */
   .secnav>.brand{display:inline-flex;align-items:center;gap:6px;margin:0;padding:0;border:0;background:none;cursor:default;-webkit-appearance:none;appearance:none;}
   .brand-short{display:none;}
+  /* Logo Babilínia: la «I» és un zigurat (l'Etemenanki de Babilònia), amb el punt com a temple.
+     El pal fa exactament l'alçada de les majúscules d'Oswald (0,81em) i seu a la línia de base:
+     el dibuix fa 32 unitats d'alt i el pal n'ocupa 23 → 0,81×32/23 = 1,127em. */
+  .brand-i{height:1.127em;width:.563em;fill:currentColor;vertical-align:baseline;margin-right:.06em;}
+  .brand-short .brand-i{margin-right:0;}
   .brandcaret{display:none;width:12px;height:12px;flex:0 0 auto;opacity:.85;transition:transform .15s;}
   .modeswitch{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;}
   .mode{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:38px;min-height:38px;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);font-family:inherit;font-size:14px;font-weight:500;line-height:1;color:#fff;text-decoration:none;white-space:nowrap;transition:background .14s,border-color .14s;}
@@ -860,7 +881,7 @@
     <div class="topbar-left">
       <!-- BLOC COMPARTIT: mateix markup als dos fitxers; nomes canvia quin <a> porta .on -->
       <div class="secnav">
-        <button class="brand" type="button" aria-haspopup="true" aria-expanded="false"><span class="brand-long">HISTÒRIA BASica</span><span class="brand-short">HB</span><svg class="brandcaret" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button>
+        <button class="brand" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Babilínia"><span class="brand-long">BABIL<svg class="brand-i" viewBox="2 0 16 32" aria-hidden="true"><path d="M7 9h6v18.5h2.5V30H18v2H2v-2h2.5v-2.5H7z M5.5 9h9v2.5h-9z M8.25 3.2h3.5v3.5h-3.5z"/></svg>NIA</span><span class="brand-short"><svg class="brand-i" viewBox="2 0 16 32" aria-hidden="true"><path d="M7 9h6v18.5h2.5V30H18v2H2v-2h2.5v-2.5H7z M5.5 9h9v2.5h-9z M8.25 3.2h3.5v3.5h-3.5z"/></svg></span><svg class="brandcaret" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button>
         <nav class="modeswitch" aria-label="Seccions" data-i18n-aria="nav_sections">
           <a class="mode on" href="index.html" aria-current="page" title="Cronograma" data-i18n-title="nav_cronograma"><svg class="mode-ic" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2.5 15h13"/><path d="M4 6h7"/><path d="M7 10.5h7.5"/></svg><span class="mode-tx" data-i18n="nav_cronograma">Cronograma</span></a>
           <a class="mode" href="joc.html" title="Jocs" data-i18n-title="nav_jocs"><svg class="mode-ic" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.4" y="2.4" width="13.2" height="13.2" rx="3.4"/><circle cx="6" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg><span class="mode-tx" data-i18n="nav_jocs">Jocs</span></a>
@@ -941,7 +962,7 @@
     </div>
   </div>
   <footer class="footer">
-    <span>© 2026 HISTÒRIA BASica</span>
+    <span>© 2026 Babilínia</span>
     <span><span data-i18n="footer_source">Dades de</span> <a href="https://www.wikidata.org" target="_blank" rel="noopener noreferrer">Wikidata</a> · <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0</a></span>
   </footer>
 </div>
@@ -979,7 +1000,7 @@ const I18N={
     searching_wikidata:'Cercant a Wikidata…',
     t_personatgedia:'Personatge del dia',
     // -- compartides: topbar, footer i titol del document --
-    doc_title:'Història Bàsica · Cronograma',
+    doc_title:'Babilínia · Cronograma',
     nav_sections:'Seccions',
     nav_cronograma:'Cronograma',
     nav_jocs:'Jocs',
