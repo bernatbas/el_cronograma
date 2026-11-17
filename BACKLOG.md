@@ -109,3 +109,7 @@ Les persones tenen el camp `approx` (aprox / disputada) i els jocs no emparellen
 
 ## Afegir esdeveniments des del dashboard
 Ara el dashboard només afegeix persones; els esdeveniments s'escriuen a mà a `db.js`. Un formulari que, a partir d'un QID de Wikidata, en tregui nom, any, article de la Viquipèdia, descripció i `sitelinks` (el motor de zoom els necessita), i deixi posar `imp` a mà. Compte amb les dates aC (veure CLAUDE.md, «Dates aC de Wikidata»).
+
+## Botó «?» per tornar a veure la guia de benvinguda
+Ara la guia només surt sola a la primera visita, i per tornar-la a veure cal afegir `?guia` a l'adreça. Un botó «?» que la reobri. Si va a la topbar és bloc compartit amb el joc.html i s'ha d'encaixar a l'escala de compressió (CLAUDE.md, «El commutador de secció»).
+
