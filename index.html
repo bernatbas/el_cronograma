@@ -3522,9 +3522,9 @@ function guiaVes(n){
   guiaPas=n;guiaClau='';
   if(n===2&&guiaFocus&&!state.focus)setTimeout(()=>{if(guiaPas===2)guiaZoomA(guiaFocus);},60);
   if(n===3){guiaColFi=0;}
-  // Pas 4: la col·lecció ja està enquadrada, i «Vista global» no faria res. Ens acostem al triple
-  // sobre el centre perquè l'usuari tingui on moure's i el botó, alguna cosa a fer.
-  if(n===4)setTimeout(()=>{if(guiaPas===4){const r=scroll.getBoundingClientRect();zoomAt(r.left+r.width/2,3);}},150);
+  // Pas 4: la col·lecció ja està enquadrada, i «Vista global» no faria res. Ens allunyem (×1/4 sobre
+  // el centre): la col·lecció queda petita enmig de la història i el botó la torna a enquadrar.
+  if(n===4)setTimeout(()=>{if(guiaPas===4){const r=scroll.getBoundingClientRect();zoomAt(r.left+r.width/2,0.25);}},150);
   if(n===1)guiaVist0=new Set(state.present);
   if(n!==2)guiaCtxFet=false;
   if(n===3){   // la col·lecció ha de ser a la vista: barra lateral oberta i secció desplegada
