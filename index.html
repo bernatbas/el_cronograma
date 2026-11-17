@@ -1140,7 +1140,9 @@ const I18N={
     guia_t1:"Comencem per algú conegut",
     guia_p1:"Escriu un nom al cercador. Si no se t’acut ningú, prova amb aquest:",
     guia_t2:"Ara, el truc",
-    guia_p2:"Toca la barra i tria «Mostra context». Mentre Shakespeare escrivia, Galileu apuntava el telescopi al cel i Cervantes publicava el Quixot.",
+    guia_p2:"Toca la barra i tria «Mostra context».",
+    guia_p2_sh:"Mentre Shakespeare escrivia, Galileu apuntava el telescopi al cel i Cervantes publicava el Quixot.",
+    guia_p2_gen:"Aquí tens qui vivia alhora, de qualsevol àmbit: l’art, la ciència, la política… Segur que hi trobes alguna sorpresa.",
     guia_t3:"Col·leccions",
     guia_p3:"Aquí tens col·leccions de personatges per explorar. Prova «La Il·lustració» i els tindràs tots de cop. I quan vulguis, crea les teves.",
     guia_t4:"Viatja pel temps",
@@ -3442,7 +3444,7 @@ var GUIA_LLOC={1:['baix','dalt'],2:['baix','dalt','esq','dreta'],3:['dreta','bai
 function guiaTick(){
   // Pas 2: un cop surt el context, la gràcia és VEURE'L. S'enquadra perquè es llegeixin els noms
   // i el globus s'aparta a la cantonada (guiaColoca), que si no tapava justament els contemporanis.
-  if(guiaPas===2&&guiaFocus&&state.focus===guiaFocus&&!guiaCtxFet){guiaCtxFet=true;guiaClau='';setTimeout(()=>{if(guiaPas===2)fitToPresent();},350);return;}
+  if(guiaPas===2&&guiaFocus&&state.focus===guiaFocus&&!guiaCtxFet){guiaCtxFet=true;guiaClau='';setTimeout(()=>{if(guiaPas===2){fitToPresent();guiaVes(2);}},350);return;}   // guiaVes: canvia el text (la sorpresa, ara sí)
   // Pas 3: activar la col·lecció no fa zoom (decisió general de l'app), però a la guia la gràcia
   // és veure-la sencera. Les persones arriben de Wikidata a poc a poc: s'enquadra quan para.
   if(guiaPas===3&&state.collections.has(GUIA_COL)&&state.present.size){
@@ -3523,6 +3525,12 @@ function guiaBuida(){
   state.pinned=new Set(SEED_PINNED);state.focus=null;state.selected=null;state.selectedEvent=null;
   hideDetail();clearFitLatch();scheduleSave();render();
 }
+// El pas 2 té dues fases: abans del context només l'instrucció (dir qui hi sortirà seria fer
+// spoiler); després, la sorpresa de Shakespeare, o un text genèric si l'usuari n'ha triat un altre.
+function guiaText(n){
+  if(n!==2||!guiaCtxFet)return 'guia_p'+n;
+  return guiaFocus===GUIA_PERSONA?'guia_p2_sh':'guia_p2_gen';
+}
 function guiaVes(n){
   guiaPas=n;guiaClau='';
   if(n===2&&guiaFocus&&!state.focus)setTimeout(()=>{if(guiaPas===2)guiaZoomA(guiaFocus);},60);
@@ -3541,7 +3549,7 @@ function guiaVes(n){
   const p=PEOPLE.find(x=>x.id===GUIA_PERSONA);
   guiaEl.setAttribute('aria-label',t('guia_t'+n));
   guiaEl.innerHTML=`<button class="gx" type="button" aria-label="${esc(t('close'))}"><svg width="11" height="11" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button>
-    <h4>${esc(t('guia_t'+n))}</h4><p>${esc(t('guia_p'+n))}</p>
+    <h4>${esc(t('guia_t'+n))}</h4><p>${esc(t(guiaText(n)))}</p>
     ${n===1&&p?`<button class="gchip" type="button">${esc(L(p.name))}</button>`:''}
     <div class="gft"><span class="gdots">${dots}</span><span>
       <button class="gar gprev" type="button" aria-label="${esc(t('guia_prev'))}" ${n===0?'disabled':''}><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 4L3 8l4 4"/></svg></button>
