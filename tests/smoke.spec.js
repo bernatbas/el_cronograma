@@ -907,8 +907,10 @@ test('Guia: sis passos amb fletxes i la X la tanca per sempre', async ({ page })
   for (let i = 1; i <= 5; i++) {
     await g.locator('.gnext').click();
     await expect(g.locator('.gdots span').nth(i)).toHaveClass(/on/);
+    // pas 2: la fletxa del pas 1 hi ha posat Shakespeare; pas 3: la línia es buida per a les col·leccions
+    if (i === 2) await expect(page.locator('.bar[data-id="shakespeare"]')).toHaveCount(1);
+    if (i === 3) await expect(page.locator('.bar[data-id="shakespeare"]')).toHaveCount(0);
   }
-  await expect(page.locator('.bar[data-id="shakespeare"]')).toHaveCount(1);
   await expect(g.locator('.gnext')).toHaveCount(0);       // l'últim pas només té l'enrere
   await g.locator('.gx').click();
   await expect(page.locator('.guia.on')).toHaveCount(0);

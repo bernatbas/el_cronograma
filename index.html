@@ -3432,12 +3432,19 @@ q.placeholder=t('cro_search_ph');
 //   aquest bloc no s'hagi executat (una `let` aquí seria TDZ i aturaria tot l'script).
 // ============================================================
 var GUIA_LS='historiabasica.guia', GUIA_PERSONA='shakespeare', GUIA_COL='illustracio', GUIA_N=6;
-var guiaCtxFet=false, guiaPas=null, guiaEl=null, guiaHaloEl=null, guiaVeloEl=null, guiaRaf=0, guiaVist0=null, guiaFocus=null, guiaClau='';
+var guiaColT=0, guiaColFi=0, guiaCtxFet=false, guiaPas=null, guiaEl=null, guiaHaloEl=null, guiaVeloEl=null, guiaRaf=0, guiaVist0=null, guiaFocus=null, guiaClau='';
 var GUIA_LLOC={1:['baix','dalt'],2:['baix','dalt','esq','dreta'],3:['dreta','baix'],4:['baix','esq'],5:['baix','dreta']};
 function guiaTick(){
   // Pas 2: un cop surt el context, la gràcia és VEURE'L. S'enquadra perquè es llegeixin els noms
   // i el globus s'aparta a la cantonada (guiaColoca), que si no tapava justament els contemporanis.
   if(guiaPas===2&&guiaFocus&&state.focus===guiaFocus&&!guiaCtxFet){guiaCtxFet=true;guiaClau='';setTimeout(()=>{if(guiaPas===2)fitToPresent();},350);return;}
+  // Pas 3: activar la col·lecció no fa zoom (decisió general de l'app), però a la guia la gràcia
+  // és veure-la sencera. Les persones arriben de Wikidata a poc a poc: s'enquadra quan para.
+  if(guiaPas===3&&state.collections.has(GUIA_COL)&&state.present.size){
+    if(!guiaColFi)guiaColFi=Date.now()+4000;
+    if(Date.now()<guiaColFi){clearTimeout(guiaColT);guiaColT=setTimeout(()=>{if(guiaPas===3)fitToPresent();},500);}
+    return;
+  }
   if(guiaPas!==1||!guiaVist0)return;
   const nou=[...state.present].find(id=>!guiaVist0.has(id));
   if(nou){guiaFocus=nou;guiaVist0=null;setTimeout(()=>{if(guiaPas===1)guiaVes(2);},450);}   // espera que el scroll de revealPerson acabi
@@ -3458,7 +3465,7 @@ function guiaColoca(){
   if(guiaPas==null)return;
   guiaRaf=requestAnimationFrame(guiaColoca);
   const W=window.innerWidth,H=window.innerHeight,bw=guiaEl.offsetWidth,bh=guiaEl.offsetHeight;
-  if(guiaPas===2&&guiaCtxFet){   // context ja fet: a la cantonada de baix a la dreta, sense fletxa ni halo
+  if((guiaPas===2&&guiaCtxFet)||(guiaPas===3&&state.collections.has(GUIA_COL))){   // context fet / col·lecció activada: a la cantonada, que no tapi el que s'ha de veure
     const clau='ctx'+bw+','+bh+','+W+','+H;if(clau===guiaClau)return;guiaClau=clau;
     guiaEl.className='guia on';guiaEl.style.left=(W-bw-24)+'px';guiaEl.style.top=(H-bh-64)+'px';
     guiaHaloEl.classList.remove('on');return;
@@ -3492,8 +3499,27 @@ function guiaColoca(){
   guiaEl.style.setProperty('--gx',cl(cx-o.l-6,14,bw-26)+'px');
   guiaEl.style.setProperty('--gy',(guiaPas===1&&o.p==='esq'?18:cl(cy-o.t-6,14,bh-26))+'px');
 }
+// Zoom JUST perquè el nom hi càpiga dins la barra, i centrat. Més obert, el nom sortia tallat.
+function guiaZoomA(id){
+  const p=PEOPLE.find(x=>x.id===id),b=barsLayer.querySelector(`.bar[data-id="${id}"]`);if(!p||!b)return;
+  const span=Math.max(1,deathOf(p)-p.birth),cx=document.createElement('canvas').getContext('2d');
+  cx.font=getComputedStyle(b).font;
+  const cal=(cx.measureText(L(p.name)).width+44)/span;   // 44: padding de la barra + el ⋮ + aire
+  if(pxPerYear<cal){clearFitLatch();setZoom(cal);}
+  scroll.scrollLeft=Math.min(Math.max(0,x((p.birth+deathOf(p))/2)-scroll.clientWidth/2),maxScroll());
+  panToPerson(id);flashBar(id);
+}
+// Abans de les col·leccions, la línia queda neta: així s'entén què fa la col·lecció. Passa pel Desfés.
+function guiaBuida(){
+  if(![...state.pinned].some(id=>!SEED_PINNED.includes(id)))return;
+  pushUndo('cro_act_reset');
+  state.pinned=new Set(SEED_PINNED);state.focus=null;state.selected=null;state.selectedEvent=null;
+  hideDetail();clearFitLatch();scheduleSave();render();
+}
 function guiaVes(n){
   guiaPas=n;guiaClau='';
+  if(n===2&&guiaFocus&&!state.focus)setTimeout(()=>{if(guiaPas===2)guiaZoomA(guiaFocus);},60);
+  if(n===3){guiaColFi=0;}
   if(n===1)guiaVist0=new Set(state.present);
   if(n!==2)guiaCtxFet=false;
   if(n===3){   // la col·lecció ha de ser a la vista: barra lateral oberta i secció desplegada
@@ -3519,6 +3545,7 @@ function guiaSeguent(){
     else guiaVes(2);
     return;
   }
+  if(guiaPas===2)guiaBuida();
   if(guiaPas<GUIA_N-1)guiaVes(guiaPas+1);
 }
 function guiaObre(){
