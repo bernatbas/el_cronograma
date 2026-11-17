@@ -62,6 +62,13 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
     ensenyam-ho», que només es queda a l'Ordena. Es desa `comodiKey` al `hb_ad_daily`.
   - Sense scroll: en horitzontal i al portàtil baix, l'Abans o després amb llista també va en dues
     columnes, com el Contemporanis (`:has(> .adrows)`).
+- **Text de compartir, igual als 4 jocs** (17/11/2026): targeta sense frase, estil Wordle, **sense el
+  títol del nivell** (decisió d'en Bernat). Quatre línies: icona i nom del joc · data (dd/mm) → `🎯
+  resultat · 🔥 n dies seguits` (les paraules del marcador) → quadrets (Contemporanis i Ordena com
+  abans; **Abans o després**, un per pregunta: 🟩 encert, 🟥 error, 🟨 comodí, desats a `seq` del
+  `hb_ad_daily`; el Memory no en té i porta la dificultat al nom) → enllaç **fix**
+  `www.babilinia.com/joc.html#/<joc>`, que porta directe al joc. Helper `shareCard()`. No revela cap
+  resposta.
 - **Hub**: una **fila per joc a tot arreu** (escriptori i horitzontal inclosos), totes de la
   mateixa alçada, sense descripcions. A dalt només el compte enrere: **fora la data i el
   comptador «n/5 fets avui»**.

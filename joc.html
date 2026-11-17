@@ -975,7 +975,6 @@
       con_hits:'encerts',
       con_failed:'Parelles fallades',
       con_err:"No hi ha prou dades per jugar. Torna demà 🛠️",
-      share_con: v => '🤝 Història BASica · Contemporanis? — '+v.dd+v.nl+v.squares+v.nl+'🎯 '+v.score+'/5 · 🔥 '+v.days+' '+(v.days===1?'dia':'dies')+' seguits',
       // -- Abans o despres? --
       before:'Abans',
       after:'Després',
@@ -985,7 +984,6 @@
       joker_used_title:'Comodí ja gastat en aquesta partida',
       hits_in_row:'encerts',
       err_not_enough:'No hi ha prou dades per jugar.',
-      share_ad: v => '🏛️ Història Bàsica — Repte diari '+v.date+'\n🎯 '+v.score+' encerts\n🔥 '+v.days+' '+(v.days===1?'dia':'dies')+' seguits',
       // -- Personatge del dia --
       searching_wikidata:'Cercant a Wikidata…',
       no_desc:'Sense descripció disponible.',
@@ -1011,7 +1009,6 @@
       ord_submit:'Ho tinc!',
       ord_locked_win:'Encertat! 🎉',
       ord_locked_lose:'No encertat 😬',
-      share_ord: v => '🕰️ Història BASica · Ordena la línia — '+v.dd+v.nl+v.squares+v.nl+'🔥 '+v.days+' '+(v.days===1?'dia':'dies')+' seguits',
       // -- Memory --
       mem_easy:'🟢 Fàcil',
       mem_hard:'🔴 Difícil',
@@ -1030,7 +1027,6 @@
       mem_no_crono_title:'Ja em sap greu, però a la Viquipèdia no hi surt l’any de naixement',
       mem_loading:'Buscant personatges…',
       mem_err_load:'No s’han pogut carregar els personatges. Comprova la connexió i torna-ho a provar.',
-      share_mem: v => '🎴 Memory – '+v.date+'\n'+(v.mode==='easy'?'🟢 Fàcil':'🔴 Difícil')+' – '+v.msg+'\nwww.babilinia.com/joc.html'
     }
   };
   function detectLang(){
@@ -1108,6 +1104,21 @@
   function resMarcador(v1,k1,days){
     return '<div class="stats"><div class="stat"><div class="v">'+v1+'</div><div class="k">'+k1+'</div></div>'
       +'<div class="stat"><div class="v">🔥 '+days+'</div><div class="k">'+t('streak_days',{n:days})+'</div></div></div>';
+  }
+  // ===== Text de compartir, igual a tots els jocs (17/11/2026) =====
+  // Targeta sense frase, estil Wordle (decisió d'en Bernat, sense el títol del nivell):
+  //   ⚖️ Abans o després? · 17/11
+  //   🎯 7 encerts · 🔥 12 dies seguits
+  //   🟩🟩🟨🟥…            (només els jocs que en tenen)
+  //   www.babilinia.com/joc.html#/abansdespres
+  // No revela cap resposta. L'enllaç és FIX, no surt de `location`: des del .github.io antic o
+  // obrint el fitxer amb doble clic sortiria una altra adreça o cap.
+  function shareCard(id, extra, ds, v1, k1, days, quadrets){
+    const g=GAMES.find(function(x){ return x.id===id; })||{ic:'',titleKey:''};
+    const a=(ds||todayStr()).split('-');
+    const cap=g.ic+' '+t(g.titleKey)+(extra?' ('+extra+')':'')+' · '+a[2]+'/'+a[1];
+    const marc='🎯 '+v1+' '+k1+' · 🔥 '+days+' '+t('streak_days',{n:days});
+    return [cap, marc, quadrets||'', 'www.babilinia.com/joc.html#/'+id].filter(Boolean).join('\n');
   }
   function tocaRatxa(key){
     const today=todayStr(), st=readLS(key);
@@ -1205,7 +1216,8 @@
     // fet servir el comodi. El comodi tambe compta com una de les 20.
     const ROUND_N=20, VIDES=2;
     let root=null, deck=[], idx=0, current=null, candidate=null, score=0, locked=false, skipUsed=false, timer=null, cdTimer=null, gaStarted=false,
-        lives=VIDES, answered=0, failPairs=[], failItems=[], comodiItem=null;
+        lives=VIDES, answered=0, failPairs=[], failItems=[], comodiItem=null,
+        adSeq='';   // un quadret per pregunta: 🟩 encert, 🟥 error, 🟨 comodí (per compartir)
 
     // Meta discreta: esdeveniments només icôna 📜; persones indiquen naixement/mort (imprescindible).
     function meta(it){
@@ -1478,6 +1490,7 @@
       tancaDesc();
       if(slot){ slot.innerHTML=card(candidate,{role:'new',reveal:true,flip:true}); const c=slot.querySelector('.itemcard'); if(c) c.classList.add(correct?'flash-ok':'flash-no'); wireDesc(); }
       root.querySelectorAll('.choice').forEach(b=>{ b.disabled=true; });   // el comodi no: el locked ja el bloqueja, i apagar-lo el feia parpellejar en gris
+      adSeq += correct ? '🟩' : '🟥';
       if(correct){
         score++;
         const sn=root.querySelector('#scoren'); if(sn){ const v=sn.querySelector('.v'); if(v) v.textContent=score; sn.classList.remove('pop'); void sn.offsetWidth; sn.classList.add('pop'); }
@@ -1498,7 +1511,7 @@
     // No suma punt (seria un encert regalat) i compta com una de les preguntes de la ronda.
     function skip(){
       if(locked||skipUsed||!candidate) return;
-      skipUsed=true; locked=true; comodiItem=candidate;
+      skipUsed=true; locked=true; comodiItem=candidate; adSeq+='🟨';
       if(!gaStarted){ gaStarted=true; track('joc_iniciat',{joc:'abansdespres',mode:'default'}); }
       track('joc_comodin_usat',{joc:'abansdespres',mode:'default'});
       const bona = candidate.year<current.year ? 'abans' : 'despres';
@@ -1518,7 +1531,7 @@
       // resultat, clicables cap al cronograma.
       failItems=failPairs.map(function(pr){ return pr[1]; }).filter(Boolean);
       const failKeys=failItems.length?failItems.map(function(it){return it.key;}):null;
-      writeLS(DAILY_KEY,{date:today,score:score,perfect:!!perfect,failKeys:failKeys,comodiKey:comodiItem?comodiItem.key:null});
+      writeLS(DAILY_KEY,{date:today,score:score,perfect:!!perfect,failKeys:failKeys,comodiKey:comodiItem?comodiItem.key:null,seq:adSeq});
       showResult(score,!!perfect);
     }
 
@@ -1559,7 +1572,7 @@
     }
 
     function doShare(sc,days,btn){
-      const text=t('share_ad',{date:ddmm(todayStr()),score:sc,days:days});
+      const text=shareCard('abansdespres','',todayStr(),sc,t('hits_in_row'),days,adSeq);
       if(navigator.share){ navigator.share({text:text}).catch(()=>{}); return; }
       const done=()=>{ if(btn){ const o=btn.textContent; btn.textContent=t('copied'); setTimeout(()=>{ btn.textContent=o; },1800); } };
       if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(done); }
@@ -1583,13 +1596,14 @@
         allPool.forEach(function(it){byKey[it.key]=it;});
         if(daily.failKeys) failItems=daily.failKeys.map(function(k){return byKey[k];}).filter(Boolean);
         if(daily.comodiKey) comodiItem=byKey[daily.comodiKey]||null;
+        adSeq=daily.seq||'';
         showResult(daily.score,!!daily.perfect); return;
       } // ja jugat avui => bloquejat
       const rng=mulberry32(seedFromStr(today));
       const pool=dailyPool(rng); // cada persona només un cop (naix O mort) segons la llavor del dia
       deck=buildPath(pool,rng);  // ordena el pool en un camí amb dificultat controlada (g logarítmic)
       idx=0; score=0; locked=false; skipUsed=false; current=null; candidate=null;
-      lives=VIDES; answered=0; failPairs=[]; failItems=[]; comodiItem=null;
+      lives=VIDES; answered=0; failPairs=[]; failItems=[]; comodiItem=null; adSeq='';
       current=deck[idx++]||null;
       candidate=current?nextCandidate():null;
       if(!current||!candidate){ root.innerHTML='<div class="err">'+t('err_not_enough')+'</div>'; return; }
@@ -2019,14 +2033,9 @@
     }
 
     function ordShareText(marks, days){
-      const p=n=>String(n).padStart(2,'0');
-      const d=new Date(); const dd=p(d.getDate())+'/'+p(d.getMonth()+1);
+      const be=(marks||[]).filter(Boolean).length;
       const squares=(marks||[]).map(m=>m?'🟩':'🟥').join('');
-      let url=''; try{ if(location && location.origin && location.origin!=='null') url=location.origin+location.pathname; }catch(_){}
-      const NL=String.fromCharCode(10);
-      let out=t('share_ord',{dd:dd,nl:NL,squares:squares,days:days});
-      if(url) out+=NL+url;
-      return out;
+      return shareCard('ordena','',todayStr(),be+'/5',t('res_k_placed'),days,squares);
     }
     function ordDoShare(marks, days, btn){
       const text=ordShareText(marks,days);
@@ -2358,7 +2367,7 @@
         (function tick(){ const el=document.getElementById(cdId); if(el){ el.textContent=fmtDur(msToMidnight()); cdTimer=setTimeout(tick,1000); } })();
         var shareBtn=document.getElementById(shareId);
         if(shareBtn){ shareBtn.addEventListener('click',function(){
-          var txt=t('share_mem',{date:ddmm(state.date),mode:mode,msg:t('errors_count',{n:ms.errors})+' – '+t('res_lvl'+memNivell(ms.errors))});
+          var txt=shareCard('memory',(mode==='easy'?t('easy'):t('hard')).toLowerCase(),state.date,ms.errors,t('res_k_errors'),days,'');
           if(navigator.share){ navigator.share({text:txt}).catch(function(){}); return; }
           if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ shareBtn.textContent=t('copied_short'); setTimeout(function(){ shareBtn.textContent=t('share_btn'); },2000); }); }
         }); }
@@ -2633,13 +2642,8 @@
     }
 
     function doShare(days,btn){
-      const p=function(n){ return String(n).padStart(2,'0'); }; const d=new Date();
-      const dd=p(d.getDate())+'/'+p(d.getMonth()+1);
-      const NL=String.fromCharCode(10);
       const squares=marks.map(function(m){ return m?'🟩':'🟥'; }).join('');
-      let out=t('share_con',{dd:dd,nl:NL,squares:squares,score:score,days:days});
-      let url=''; try{ if(location && location.origin && location.origin!=='null') url=location.origin+location.pathname; }catch(_){}
-      if(url) out+=NL+url;
+      const out=shareCard('contemporanis','',todayStr(),score+'/5',t('con_hits'),days,squares);
       if(navigator.share){ navigator.share({text:out}).catch(function(){}); return; }
       const done=function(){ if(btn){ const o=btn.textContent; btn.textContent=t('copied'); setTimeout(function(){ btn.textContent=o; },1800); } };
       if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(out).then(done).catch(done); }
