@@ -42,8 +42,9 @@ Podar les entrades de persones per edat i ús via segell `_ts`, o límit dur (~5
 ## Opcional: encastar Oswald en base64
 Eliminar el FOUT (flash de tipografia de marca) a la primera visita. La solució actual (càrrega no bloquejant + fallback condensat) ja és prou bona; seria perfeccionisme.
 
-## Opcional: hint d'onboarding
+## Guia de benvinguda: falta el mòbil
 Un tooltip o overlay que expliqui els gestos bàsics (zoom, cerca, col·leccions) a la primera visita.
+> Nota (2026-11-17): Feta per a escriptori (sis passos, Shakespeare + La Il·lustració; detall a CLAUDE.md). Falta adaptar-la al mòbil: les col·leccions viuen al popup de configuració, el canvas en horitzontal és baix, i en vertical ja surt l'avís de girar.
 
 ## [TANCAT] Editar layout mòbil i replantejar funcions
 En mobil no m'acaba de convencer, crec que potser alguna funció simplement s'ha d'eliminar, com veure eres i marcs històrics. També la barra lateral crec que no funciona, suggereixo posar-hi un botó tipus a baix a la dreta de settings (o icone a definir) que permeti modificar la vista amb afegir coleccons, veure personatges de la vista actual, i aquesta interacció que en desktop sí que ofereix la lat bar.

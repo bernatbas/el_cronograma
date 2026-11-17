@@ -842,6 +842,34 @@
   .cfgbody section>h3{display:none;}
   .cfgbody section>div{overflow:visible;max-height:none;}   /* el scroll el fa .cfgbody, no cada seccio */
 
+  /* ===== GUIA DE BENVINGUDA (17/11/2026) =====
+     Un globus que va apuntant a cada cosa. Crema clar i text fosc a posta: la primera versió en
+     terracota plena era massa agressiva. Va per sobre de tot, fitxa inclosa (60). */
+  .guia-velo{position:fixed;inset:0;background:rgba(60,40,35,.18);z-index:80;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .guia-velo.on{opacity:1;pointer-events:auto;}
+  .guia-halo{position:fixed;border-radius:10px;pointer-events:none;z-index:81;opacity:0;transition:opacity .2s;animation:guiaHalo 1.6s ease-out infinite;}
+  .guia-halo.on{opacity:1;}
+  @keyframes guiaHalo{0%{box-shadow:0 0 0 2px rgba(232,160,140,.95);}100%{box-shadow:0 0 0 12px rgba(232,160,140,0);}}
+  .guia{position:fixed;z-index:82;width:290px;background:#FFF7F2;color:#4A3530;border:1px solid #EDCFC4;border-radius:14px;padding:14px 16px 12px;font-size:13.5px;line-height:1.5;box-shadow:0 10px 30px rgba(74,53,48,.16);opacity:0;transform:translateY(4px);transition:opacity .2s,transform .2s;}
+  .guia.on{opacity:1;transform:none;}
+  .guia h4{margin:0 22px 4px 0;font-family:'Oswald','Roboto Condensed','Arial Narrow',sans-serif;font-weight:500;font-size:17px;letter-spacing:.01em;color:#A8442F;}
+  .guia p{margin:0;}
+  .guia .gx{position:absolute;right:8px;top:8px;width:22px;height:22px;border:none;background:none;color:#A99089;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;border-radius:6px;}
+  .guia .gx:hover{background:rgba(184,80,60,.1);color:#8A3A2B;}
+  .guia .gchip{display:inline-block;margin-top:8px;background:#FBE6DE;color:#9A3E2B;border:1px solid #EDCFC4;border-radius:999px;padding:3px 12px;font:inherit;font-size:12.5px;cursor:pointer;}
+  .guia .gchip:hover{background:#F7D9CD;}
+  .guia .gft{display:flex;align-items:center;justify-content:space-between;margin-top:12px;}
+  .guia .gdots span{display:inline-block;width:6px;height:6px;border-radius:3px;background:#EBC6B9;margin-right:4px;vertical-align:middle;transition:width .2s;}
+  .guia .gdots span.on{background:#C9634D;width:14px;}
+  .guia .gar{width:30px;height:30px;margin-left:6px;border-radius:50%;border:1px solid #E3B6A8;background:#fff;color:#B8503C;cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;}
+  .guia .gar:hover{background:#FBE6DE;}
+  .guia .gar[disabled]{opacity:.3;cursor:default;background:#fff;}
+  .guia::after{content:"";position:absolute;width:12px;height:12px;background:#FFF7F2;transform:rotate(45deg);display:none;}
+  .guia.p-baix::after{display:block;top:-7px;left:var(--gx,30px);border-left:1px solid #EDCFC4;border-top:1px solid #EDCFC4;}
+  .guia.p-dalt::after{display:block;bottom:-7px;left:var(--gx,30px);border-right:1px solid #EDCFC4;border-bottom:1px solid #EDCFC4;}
+  .guia.p-dreta::after{display:block;left:-7px;top:var(--gy,20px);border-left:1px solid #EDCFC4;border-bottom:1px solid #EDCFC4;}
+  .guia.p-esq::after{display:block;right:-7px;top:var(--gy,20px);border-right:1px solid #EDCFC4;border-top:1px solid #EDCFC4;}
+
   /* ===== MODE FOSC: el que no surt dels tokens =====
      Colors escrits a ma pensats per a fons blanc. La regla: superficies -> var(--canvas); els rosats de
      "seleccionat" -> terracota translucida; el text blanc sobre terracota es queda igual. */
@@ -874,6 +902,17 @@
     .event.evPop .edot{animation-name:evPopFosc;}
   @keyframes evPopFosc{0%{box-shadow:0 0 0 0 rgba(231,229,225,.6);}6%{transform:translateX(-50%) scale(1.5);}16%{transform:translateX(-50%) scale(1);box-shadow:0 0 0 12px rgba(231,229,225,0);}24%{box-shadow:0 0 0 0 rgba(231,229,225,.5);}40%{box-shadow:0 0 0 11px rgba(231,229,225,0);}50%{box-shadow:0 0 0 0 rgba(231,229,225,.42);}68%{box-shadow:0 0 0 11px rgba(231,229,225,0);}78%{box-shadow:0 0 0 0 rgba(231,229,225,.34);}100%{box-shadow:0 0 0 10px rgba(231,229,225,0);}}
     .secnav.navcollapsed .mode.on{background:rgba(184,80,60,.22);color:#F0A493;}
+    .guia,.guia::after{background:#2B2422;border-color:#5A3F37;}
+    .guia{color:#E7DCD8;box-shadow:0 10px 30px rgba(0,0,0,.5);}
+    .guia h4{color:#F0A493;}
+    .guia .gx{color:#A8948E;}
+    .guia .gchip{background:rgba(184,80,60,.22);color:#F3B7A8;border-color:#6A4338;}
+    .guia .gchip:hover{background:rgba(184,80,60,.32);}
+    .guia .gdots span{background:#5A3F37;}
+    .guia .gdots span.on{background:#E5887A;}
+    .guia .gar,.guia .gar[disabled]{background:#3A302D;border-color:#6A4338;color:#F0A493;}
+    .guia .gar:hover{background:#4A3A35;}
+    .guia-velo{background:rgba(0,0,0,.35);}
   }
 </style>
 </head>
@@ -1094,6 +1133,20 @@ const I18N={
     cro_today:'avui',
     cro_loading:'Carregant…',
     cro_consulting:'Consultant Wikidata…',
+    guia_t0:"Benvinguda a Babilinia",
+    guia_p0:"A l’escola, la història ve en calaixos: l’art per una banda, la ciència per l’altra, els reis i les guerres a part. Aquí ho posem tot en una sola línia. I passen coses.",
+    guia_t1:"Comencem per algú conegut",
+    guia_p1:"Escriu un nom al cercador. Si no se t’acut ningú, prova amb aquest:",
+    guia_t2:"Ara, el truc",
+    guia_p2:"Toca la barra i tria «Mostra context». Mentre Shakespeare escrivia, Galileu apuntava el telescopi al cel i Cervantes publicava el Quixot.",
+    guia_t3:"Col·leccions",
+    guia_p3:"Aquí tens col·leccions de personatges per explorar. Prova «La Il·lustració» i els tindràs tots de cop. I quan vulguis, crea les teves.",
+    guia_t4:"Viatja pel temps",
+    guia_p4:"Fes zoom i arrossega per anar endavant i enrere en el temps. Si et perds, «Vista global» t’ho encaixa tot a la pantalla.",
+    guia_t5:"Una cosa més",
+    guia_p5:"Si et ve de gust posar-te a prova, a Jocs hi ha un repte nou cada dia.",
+    guia_prev:"Enrere",
+    guia_next:"Endavant",
     cro_empty_canvas:"Clica una col·lecció a l'esquerra o cerca un personatge — o estudia només els períodes.",
     cro_rotate:'Gira el mòbil per veure millor el cronograma',
     cro_rotate_close:"Tanca l'avís",
@@ -1716,6 +1769,7 @@ function renderSidebar(){
   const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>L(a.name).localeCompare(L(b.name),LANG));   // always alphabetical, en l'idioma actiu
   $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}">${esc(L(p.name))}</button><button class="favb" data-favt="${p.id}" aria-label="${esc(esFav(favKey(p))?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(favKey(p))}">${favIco(esFav(favKey(p)))}</button>${p.wd?`<button class="addc" data-addc="${p.id}" aria-label="${t('cro_coll_addto')}">+</button>`:''}${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}" aria-label="${t('cro_report')}">⚠</button><button class="x" data-remove="${p.id}" aria-label="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
   actualitzaComptes();
+  guiaTick();   // la guia de benvinguda avança sola quan l'usuari fa el que li demana
 }
 
 // ============================================================
@@ -3365,6 +3419,134 @@ q.placeholder=t('cro_search_ph');
    $('.body').classList.add('collapsed');$('#sidebarToggle').textContent='›';$('#sidebarToggle').title=t('cro_sidebar_show');
    _sb.getBoundingClientRect();_sb.style.transition=_tr;}}
 
+// ============================================================
+// [12] GUIA DE BENVINGUDA (17/11/2026)
+// Sis passos: benvinguda · cerca (Shakespeare suggerit) · mostra context · col·leccions (La
+// Il·lustració) · moure's · jocs. No explica botons: vol que l'usuari VEGI per a què serveix
+// l'eina (gent de mons diferents que va viure alhora). Detall a BACKLOG/CLAUDE.md.
+// - Surt sola NOMÉS a la primera visita (cap estat desat i cap guia vista) i NOMÉS amb ratolí:
+//   el mòbil queda per més endavant. `?guia` a la URL la força sempre (per provar-la).
+// - Tancar-la (la X, a qualsevol pas) compta com a vista: no torna mai més.
+// - Va avançant sola quan l'usuari fa el que li demana (guiaTick, cridat al final de render()).
+// - ⚠️ `var` i `function` a posta: render() crida guiaTick() i ha de poder-ho fer encara que
+//   aquest bloc no s'hagi executat (una `let` aquí seria TDZ i aturaria tot l'script).
+// ============================================================
+var GUIA_LS='historiabasica.guia', GUIA_PERSONA='shakespeare', GUIA_COL='illustracio', GUIA_N=6;
+var guiaCtxFet=false, guiaPas=null, guiaEl=null, guiaHaloEl=null, guiaVeloEl=null, guiaRaf=0, guiaVist0=null, guiaFocus=null, guiaClau='';
+var GUIA_LLOC={1:['baix','dalt'],2:['baix','dalt','esq','dreta'],3:['dreta','baix'],4:['baix','esq'],5:['baix','dreta']};
+function guiaTick(){
+  // Pas 2: un cop surt el context, la gràcia és VEURE'L. S'enquadra perquè es llegeixin els noms
+  // i el globus s'aparta a la cantonada (guiaColoca), que si no tapava justament els contemporanis.
+  if(guiaPas===2&&guiaFocus&&state.focus===guiaFocus&&!guiaCtxFet){guiaCtxFet=true;guiaClau='';setTimeout(()=>{if(guiaPas===2)fitToPresent();},350);return;}
+  if(guiaPas!==1||!guiaVist0)return;
+  const nou=[...state.present].find(id=>!guiaVist0.has(id));
+  if(nou){guiaFocus=nou;guiaVist0=null;setTimeout(()=>{if(guiaPas===1)guiaVes(2);},450);}   // espera que el scroll de revealPerson acabi
+}
+function guiaObjectiu(){
+  if(guiaPas===1)return results.classList.contains('open')&&results.getBoundingClientRect().height?results:q;   // amb resultats oberts, el globus es posa al costat i no els tapa
+  if(guiaPas===2){
+    const d=$('#detail');
+    if(guiaFocus&&d.classList.contains('open')&&state.selected===guiaFocus){const b=d.querySelector('[data-act="context"]');if(b)return b;}
+    return guiaFocus?barsLayer.querySelector(`.bar[data-id="${guiaFocus}"]`):null;
+  }
+  if(guiaPas===3)return document.querySelector(`.sidebar .colitem[data-col="${GUIA_COL}"]`);
+  if(guiaPas===4)return $('#fitAll');
+  if(guiaPas===5){const a=document.querySelector('.modeswitch a[href="joc.html"]');if(a&&a.getBoundingClientRect().width)return a;return document.querySelector('.secnav .brand');}
+  return null;
+}
+function guiaColoca(){
+  if(guiaPas==null)return;
+  guiaRaf=requestAnimationFrame(guiaColoca);
+  const W=window.innerWidth,H=window.innerHeight,bw=guiaEl.offsetWidth,bh=guiaEl.offsetHeight;
+  if(guiaPas===2&&guiaCtxFet){   // context ja fet: a la cantonada de baix a la dreta, sense fletxa ni halo
+    const clau='ctx'+bw+','+bh+','+W+','+H;if(clau===guiaClau)return;guiaClau=clau;
+    guiaEl.className='guia on';guiaEl.style.left=(W-bw-24)+'px';guiaEl.style.top=(H-bh-64)+'px';
+    guiaHaloEl.classList.remove('on');return;
+  }
+  const el=guiaObjectiu(),r=el&&el.getBoundingClientRect();
+  const visible=r&&r.width>0&&r.bottom>0&&r.top<H&&r.right>0&&r.left<W;
+  const clau=visible?[r.left,r.top,r.width,r.height,bw,bh,W,H].map(Math.round).join(','):'c'+bw+','+bh+','+W+','+H;
+  if(clau===guiaClau)return;guiaClau=clau;
+  const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+  if(!visible){
+    guiaEl.className='guia on';guiaEl.style.left=Math.round((W-bw)/2)+'px';guiaEl.style.top=Math.round((H-bh)/2)+'px';
+    guiaHaloEl.classList.remove('on');return;
+  }
+  Object.assign(guiaHaloEl.style,{left:(r.left-3)+'px',top:(r.top-3)+'px',width:(r.width+6)+'px',height:(r.height+6)+'px'});
+  guiaHaloEl.classList.add('on');
+  const cx=r.left+r.width/2,cy=r.top+r.height/2;
+  const opcions={
+    baix:()=>{const t=r.bottom+14;return t+bh<=H-8&&{p:'baix',l:cl(cx-44,8,W-bw-8),t};},
+    dalt:()=>{const t=r.top-bh-14;return t>=8&&{p:'dalt',l:cl(cx-44,8,W-bw-8),t};},
+    dreta:()=>{const l=r.right+14;return l+bw<=W-8&&{p:'dreta',l,t:cl(cy-30,8,H-bh-8)};},
+    esq:()=>{const l=r.left-bw-14;return l>=8&&{p:'esq',l,t:cl(cy-30,8,H-bh-8)};}
+  };
+  const lloc=(guiaPas===1&&el===results)?['esq','dreta','baix']:(GUIA_LLOC[guiaPas]||['baix']);
+  let o=null;for(const k of lloc){o=opcions[k]();if(o)break;}
+  if(!o)o={p:'',l:cl(cx-bw/2,8,W-bw-8),t:cl(r.bottom+14,8,H-bh-8)};
+  guiaEl.className='guia on'+(o.p?' p-'+o.p:'');
+  guiaEl.style.left=Math.round(o.l)+'px';guiaEl.style.top=Math.round(o.t)+'px';
+  guiaEl.style.setProperty('--gx',cl(cx-o.l-6,14,bw-26)+'px');
+  guiaEl.style.setProperty('--gy',cl(cy-o.t-6,14,bh-26)+'px');
+}
+function guiaVes(n){
+  guiaPas=n;guiaClau='';
+  if(n===1)guiaVist0=new Set(state.present);
+  if(n!==2)guiaCtxFet=false;
+  if(n===3){   // la col·lecció ha de ser a la vista: barra lateral oberta i secció desplegada
+    if($('.body').classList.contains('collapsed'))$('#sidebarToggle').click();
+    const sec=$('#collections')&&$('#collections').closest('section');
+    if(sec&&sec.classList.contains('plegada')){const h=sec.querySelector('h3.sech');if(h)h.click();}
+  }
+  const dots=Array.from({length:GUIA_N},(_,k)=>`<span class="${k===n?'on':''}"></span>`).join('');
+  const p=PEOPLE.find(x=>x.id===GUIA_PERSONA);
+  guiaEl.setAttribute('aria-label',t('guia_t'+n));
+  guiaEl.innerHTML=`<button class="gx" type="button" aria-label="${esc(t('close'))}"><svg width="11" height="11" viewBox="0 0 12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button>
+    <h4>${esc(t('guia_t'+n))}</h4><p>${esc(t('guia_p'+n))}</p>
+    ${n===1&&p?`<button class="gchip" type="button">${esc(L(p.name))}</button>`:''}
+    <div class="gft"><span class="gdots">${dots}</span><span>
+      <button class="gar gprev" type="button" aria-label="${esc(t('guia_prev'))}" ${n===0?'disabled':''}><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 4L3 8l4 4"/></svg></button>
+      ${n<GUIA_N-1?`<button class="gar gnext" type="button" aria-label="${esc(t('guia_next'))}"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>`:''}
+    </span></div>`;
+  guiaVeloEl.classList.toggle('on',n===0);
+}
+function guiaSeguent(){
+  if(guiaPas===1){   // el pas 2 necessita una barra: si encara no n'hi ha cap de nova, hi posem Shakespeare
+    if(guiaVist0){if(state.present.has(GUIA_PERSONA)){guiaFocus=GUIA_PERSONA;revealPerson(GUIA_PERSONA);guiaVes(2);}else addFromSearch(GUIA_PERSONA);}
+    else guiaVes(2);
+    return;
+  }
+  if(guiaPas<GUIA_N-1)guiaVes(guiaPas+1);
+}
+function guiaObre(){
+  if(guiaPas!=null)return;
+  if(!guiaEl){
+    guiaVeloEl=document.createElement('div');guiaVeloEl.className='guia-velo';
+    guiaHaloEl=document.createElement('div');guiaHaloEl.className='guia-halo';
+    guiaEl=document.createElement('div');guiaEl.className='guia';guiaEl.setAttribute('role','dialog');
+    document.body.append(guiaVeloEl,guiaHaloEl,guiaEl);
+    guiaEl.addEventListener('click',e=>{
+      if(e.target.closest('.gx'))return guiaTanca();
+      if(e.target.closest('.gprev'))return guiaVes(Math.max(0,guiaPas-1));
+      if(e.target.closest('.gnext'))return guiaSeguent();
+      if(e.target.closest('.gchip')){   // omple el cercador; el resultat el tria l'usuari
+        if(state.present.has(GUIA_PERSONA)){guiaFocus=GUIA_PERSONA;revealPerson(GUIA_PERSONA);return guiaVes(2);}
+        q.value='Shakespeare';q.focus();q.dispatchEvent(new Event('input'));
+      }
+    });
+  }
+  if(typeof gtag!=='undefined')gtag('event','guia_oberta');
+  guiaVes(0);cancelAnimationFrame(guiaRaf);guiaColoca();
+}
+function guiaTanca(){
+  if(typeof gtag!=='undefined')gtag('event','guia_tancada',{pas:guiaPas});
+  guiaPas=null;cancelAnimationFrame(guiaRaf);
+  guiaEl.classList.remove('on');guiaHaloEl.classList.remove('on');guiaVeloEl.classList.remove('on');
+  try{localStorage.setItem(GUIA_LS,'vista');}catch(ex){}
+}
+// Primera visita = res desat encara. S'ha de llegir ABANS del boot, que desa l'estat de seguida.
+const GUIA_PRIMERA=(function(){try{return !localStorage.getItem(LS_KEY)&&!localStorage.getItem(GUIA_LS);}catch(ex){return false;}})();
+
 const _urlP=new URLSearchParams(location.search);
 const PERSON_QID=_urlP.get('person');
 if(PERSON_QID){
@@ -3373,7 +3555,9 @@ if(PERSON_QID){
   bootFromJoc();                          // traspas intern des dels jocs
 }else{
   restoreState();
-  bootDefault();
+  bootDefault(()=>{
+    if(_urlP.has('guia')||(GUIA_PRIMERA&&!matchMedia('(pointer:coarse)').matches))setTimeout(guiaObre,700);
+  });
 }
 // floorH (el "terra" on s'ancoren l'any de l'event, la linia d'avui i la guia) es calcula DINS de
 // render(), a partir de scroll.clientHeight. Si l'alcada del viewport canvia i no es torna a

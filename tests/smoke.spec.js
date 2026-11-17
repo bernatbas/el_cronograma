@@ -10,6 +10,16 @@ const WIKIDATA = /wikidata\.org/;
 const INDEX = '/index.html';
 const JOC   = '/joc.html';
 
+// La guia de benvinguda surt sola a la PRIMERA visita, i cada test arrenca amb el
+// localStorage buit: sense això el vel de la guia es menjaria els clics de tots els tests.
+// Es marca com a vista abans de cada càrrega (també després dels localStorage.clear()).
+// Qui la vulgui provar, fa servir `?guia`, que la força igualment.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    try { if (!localStorage.getItem('historiabasica.guia')) localStorage.setItem('historiabasica.guia', 'vista'); } catch (e) {}
+  });
+});
+
 // Neteja l'estat desat per garantir una vista buida en cada test
 async function freshIndex(page) {
   await page.goto(INDEX);
@@ -883,3 +893,25 @@ test.describe('Integració joc → index', () => {
     await expect(page.locator('[data-col="filosofs"]')).toHaveClass(/on/, { timeout: 3000 });
   });
 });
+
+// ─── Guia de benvinguda ─────────────────────────────────────────────────────
+// Només escriptori (al mòbil encara no surt). Recorre els sis passos amb les fletxes, comprova
+// que el pas 1 posa Shakespeare si no n'hi ha cap i que la X la deixa marcada com a vista.
+test('Guia: sis passos amb fletxes i la X la tanca per sempre', async ({ page }) => {
+  await page.goto(INDEX + '?guia');
+  test.skip(await isCoarse(page), 'la guia encara és només per a escriptori');
+  const g = page.locator('.guia.on');
+  await expect(g).toBeVisible({ timeout: 5000 });
+  await expect(g.locator('h4')).not.toHaveText('');
+  await expect(g.locator('.gprev')).toBeDisabled();
+  for (let i = 1; i <= 5; i++) {
+    await g.locator('.gnext').click();
+    await expect(g.locator('.gdots span').nth(i)).toHaveClass(/on/);
+  }
+  await expect(page.locator('.bar[data-id="shakespeare"]')).toHaveCount(1);
+  await expect(g.locator('.gnext')).toHaveCount(0);       // l'últim pas només té l'enrere
+  await g.locator('.gx').click();
+  await expect(page.locator('.guia.on')).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('historiabasica.guia'))).toBe('vista');
+});
+
