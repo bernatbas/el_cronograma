@@ -128,7 +128,8 @@ CAT_BY_P106 = [
     ("literature", {"Q36180", "Q49757", "Q6625963", "Q214917", "Q482980",
                     "Q1930187", "Q4853732", "Q18939491"}),
     ("music",      {"Q36834", "Q639669", "Q486748", "Q1259917", "Q158852", "Q177220"}),
-    ("painting",   {"Q1028181", "Q1281618", "Q11569986", "Q33231", "Q644687"}),
+    # Pintura = pintors i gravadors. Escultors, fotografs i il·lustradors van a «art» (17/11/2026).
+    ("painting",   {"Q1028181", "Q11569986", "Q329439", "Q10862983"}),
     ("politics",   {"Q82955", "Q193391", "Q116", "Q47064", "Q189290", "Q30461",
                     "Q372436", "Q842782", "Q10076267", "Q1097498"}),
     ("religion",   {"Q42603", "Q2259532", "Q3315492"}),
@@ -138,7 +139,20 @@ CAT_BY_P106 = [
     # FORA a proposit: el porta tambe en Shakespeare, i li encolomaria cinema.
     ("cinema",     {"Q2526255", "Q10800557", "Q3282637", "Q28389", "Q7042855",
                     "Q2405480", "Q2059704", "Q20971250"}),
+    # ART: paraigua per al que no es Pintura, Literatura, Musica ni Cinema. Nomes s'aplica
+    # si la persona no te cap ocupacio d'aquestes quatre (ho fa resolve_person). L'«artista»
+    # generic (Q483501) queda FORA: el porten cantants i compositors.
+    ("art",        {"Q42973",            # arquitecte
+                    "Q1281618",          # escultor
+                    "Q33231",            # fotograf
+                    "Q5716684", "Q2490358",            # ballari, coreograf
+                    "Q5322166", "Q3501317", "Q627325", # dissenyador, de moda, grafic
+                    "Q644687", "Q1114448", "Q715301", "Q1925963",  # il·lustrador, dibuixant, comic, artista grafic
+                    "Q7541856", "Q211423",             # ceramista, orfebre
+                    "Q2259451", "Q3387717",            # actor de teatre, director de teatre
+                    "Q3391743"}),        # artista visual
 ]
+ART_EXCLOU = {"painting", "literature", "music", "cinema"}
 
 
 def _clean_desc(s):
@@ -346,6 +360,12 @@ def resolve_person(q, allow_existing=False):
         for slug, qids in CAT_BY_P106:
             if q in qids:
                 primera.setdefault(slug, i)
+    # Art nomes si va ABANS que pintura, literatura, musica o cinema: Wikidata hi posa moltes
+    # ocupacions secundaries (Van Gogh porta «dibuixant» a la vuitena) i sense aixo tothom
+    # sortiria amb art. Miquel Angel (escultor primer) i Rodin si que el mantenen.
+    rivals = [primera[c] for c in ART_EXCLOU if c in primera]
+    if "art" in primera and rivals and primera["art"] > min(rivals):
+        primera.pop("art")
     cats = sorted(primera, key=primera.get)[:2]
     if not cats:
         warnings.append({"field": "dcat", "msg": "No he pogut deduir la categoria de l'ocupacio (P106) de Wikidata: tria-la tu"})

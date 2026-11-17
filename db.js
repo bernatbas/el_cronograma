@@ -26,7 +26,7 @@
 const CAT_COLORS={
   'philosophy':'#5E9FE8','music':'#BF8EDA','literature':'#DE9255',
   'science':'#72BC8F','politics':'#DF84A8','painting':'#D4A72C','religion':'#A24E5E',
-  'sport':'#94AD3C','cinema':'#FF7875'
+  'sport':'#94AD3C','cinema':'#FF7875','art':'#A29058'
 };
 const NOW_YEAR=new Date().getFullYear();
 // COL·LECCIONS: playlists de persones. Guarden **Q-ids, no persones** — la mateixa referència
@@ -425,6 +425,7 @@ const EVENTS=[
   {id:'apollo11',name:'Apollo 11',year:1969,wiki:'https://ca.wikipedia.org/wiki/Apollo_11',sitelinks:106,desc:'Armstrong i Aldrin caminen per la Lluna. Sis-cents milions de persones ho miren en directe.'},
   {id:'txernobil',name:'Accident de Txernòbil',year:1986,wiki:'https://ca.wikipedia.org/wiki/Accident_de_Txorn%C3%B2bil',sitelinks:112,desc:'Explota un reactor de la central nuclear de Txernòbil, a Ucraïna. És el pitjor accident nuclear de la història.'},
   {id:'murberlin',name:'Caiguda del Mur de Berlín',year:1989,wiki:'https://ca.wikipedia.org/wiki/Caiguda_del_mur_de_Berl%C3%ADn',sitelinks:38,desc:'El novembre de 1989 cau el símbol de la Guerra Freda, obrint camí a la reunificació alemanya i la dissolució del bloc soviètic.'},
+  {id:'simpson',name:'Primer episodi dels Simpson',year:1989,wiki:'https://ca.wikipedia.org/wiki/Els_Simpson',sitelinks:186,imp:65,desc:'La Fox emet el primer episodi dels Simpson, que es convertirà en la sèrie d’animació més llarga de la televisió.'},
   {id:'fiurss',name:'Dissolució de la Unió Soviètica',year:1991,wiki:'https://ca.wikipedia.org/wiki/Dissoluci%C3%B3_de_la_Uni%C3%B3_Sovi%C3%A8tica',sitelinks:85,desc:'L’URSS s’acaba i la Guerra Freda amb ella. El món deixa de tenir dos centres.'},
   {id:'www',name:'Naixement de la World Wide Web',year:1991,wiki:'https://ca.wikipedia.org/wiki/World_Wide_Web',sitelinks:154,desc:'Tim Berners-Lee obre el primer web al públic. El canvi més gran en la difusió del saber des de la impremta.'},
   {id:'s11',name:'Atemptats de l’11 de setembre',year:2001,wiki:'https://ca.wikipedia.org/wiki/Atemptats_de_l%2711_de_setembre_de_2001',sitelinks:149,desc:'Dos avions tomben les torres de Nova York. Marca l’inici polític del segle XXI.'},
@@ -543,7 +544,7 @@ const PEOPLE=[
   {id:'franciscodegoyaylucien',wd:'Q5432',name:'Francisco de Goya y Lucientes',birth:1746,death:1828,cats:['painting'],wiki:'https://ca.wikipedia.org/wiki/Francisco_de_Goya_y_Lucientes',desc:'Pintor i gravador aragonés'},
   {id:'luisdeleon',wd:'Q450246',name:'Luis de León',birth:1527,death:1591,cats:['literature'],wiki:'https://ca.wikipedia.org/wiki/Luis_de_Le%C3%B3n',desc:'Poeta espanyol'},
   {id:'diegoarmandomaradona',wd:'Q17515',name:'Diego Armando Maradona',birth:1960,death:2020,cats:['sport'],wiki:'https://ca.wikipedia.org/wiki/Diego_Armando_Maradona',desc:'Futbolista argentí'},
-  {id:'antonigaudiicornet',wd:'Q25328',name:'Antoni Gaudí i Cornet',birth:1852,death:1926,cats:[],wiki:'https://ca.wikipedia.org/wiki/Antoni_Gaud%C3%AD_i_Cornet',desc:'Arquitecte català'},
+  {id:'antonigaudiicornet',wd:'Q25328',name:'Antoni Gaudí i Cornet',birth:1852,death:1926,cats:['art'],wiki:'https://ca.wikipedia.org/wiki/Antoni_Gaud%C3%AD_i_Cornet',desc:'Arquitecte català'},
   {id:'paulcezanne',wd:'Q35548',name:'Paul Cézanne',birth:1839,death:1906,cats:['painting'],wiki:'https://ca.wikipedia.org/wiki/Paul_C%C3%A9zanne',desc:'Pintor francès'},
   {id:'antoniovivaldi',wd:'Q1340',name:'Antonio Vivaldi',birth:1678,death:1741,cats:['music'],wiki:'https://ca.wikipedia.org/wiki/Antonio_Vivaldi',desc:'Compositor i violinista italià'},
   {id:'henrimatisse',wd:'Q5589',name:'Henri Matisse',birth:1869,death:1954,cats:['painting'],wiki:'https://ca.wikipedia.org/wiki/Henri_Matisse',desc:'Artista francès'},

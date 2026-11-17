@@ -1020,6 +1020,7 @@ const I18N={
     cat_religion:'Religió',
     cat_sport:'Esport',
     cat_cinema:'Cinema',
+    cat_art:'Art',
     cat_none:'Sense categoria',
     // -- topbar del cronograma --
     cro_search_ph:'Cerca i afegeix un personatge…',
@@ -1379,26 +1380,38 @@ const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const linkLabel=url=>/wikipedia\.org/.test(url)?'Wikipedia':/wikidata\.org/.test(url)?'Wikidata':'Web';   // adaptive label for the detail link
 
 // Guess categories from Wikidata itemDescription (conservative keyword matching)
-const guessCats=desc=>{if(!desc)return[];const d=desc.toLowerCase(),a=[];
+const guessCats=desc=>{if(!desc)return[];const d=desc.toLowerCase(),a=[],pos={};
+  const hit=(re,c)=>{const k=d.search(re);if(k>=0){pos[c]=k;a.push(c);}};   // pos: on surt a la descripció (per a «art», a sota)
   if(/filòsof|filósofo|philosopher/.test(d))a.push('philosophy');
-  if(/compositor|composer|músic|music|cantant|cantante|singer|cantautor|songwriter|guitarr|pianist|violinist|violoncel|trompetist|trumpet|saxofon|saxophon|percussion|drummer|rapper|raper|jazz|òpera|soprano|orquestra|orchestra/.test(d))a.push('music');   // només hi havia compositor: ni músic, ni cantant, ni cap instrumentista
-  if(/escriptor|escritor|writer|poeta|poet|dramaturgo|dramaturg|novel·lista|novelist/.test(d))a.push('literature');
+  hit(/compositor|composer|músic|music|cantant|cantante|singer|cantautor|songwriter|guitarr|pianist|violinist|violoncel|trompetist|trumpet|saxofon|saxophon|percussion|drummer|rapper|raper|jazz|òpera|soprano|orquestra|orchestra/,'music');   // només hi havia compositor: ni músic, ni cantant, ni cap instrumentista
+  hit(/escriptor|escritor|writer|poeta|poet|dramaturgo|dramaturg|novel·lista|novelist/,'literature');
   // Hi havia nomes fisica, matematiques, astronomia i «cientific/naturalista»: ni quimica ni
   // res de biomedicina. Amb la col·leccio dels Nobel es va veure de cop —23 de 49 sortien
   // sense categoria, i entre ells sis quimics i set metges/biolegs. Mateix forat que el cas
   // Verdi: arreglat al dash.py i encara viu aqui.
   if(/físic|physicist|matemàtic|mathematician|astrònom|astronomer|científic|scientist|naturalista|naturalist|químic|chemist|bioquímic|biochemist|metge|metgessa|physician|fisiòleg|physiologist|biòleg|biòloga|biologist|zoòleg|zoologist|bacteriòleg|bacteriologist|neuròleg|neurologist|neurocientífic|neuroscientist|genetista|geneticist|farmacòleg|pharmacologist|immunòleg|immunologist|geòleg|geologist|enginyer|engineer|informàtic|computer scientist/.test(d))a.push('science');
   if(/polític|político|politician|politique|rei|king|emperador|emperor|dictador|dictator|militar|military|president|independentista|ministre|minister|activista|activist|estadista|statesman|diplomàtic|diplomat|líder|leader|canceller|chancellor|secretari general|secretary-general|politòleg|political scientist/.test(d))a.push('politics');
-  if(/pintor|painter|escultor|sculptor/.test(d))a.push('painting');
+  hit(/pintor|painter/,'painting');   // l’escultor ha passat a «art» (17/11/2026)
   // ⚠️ Aqui «actor» SOL sí que val, i al mapa de P106 (dash.py) NO: son dos senyals diferents.
   // A P106 en Shakespeare porta l’ocupacio «actor» (Q33999) i li encolomaria cinema; la seva
   // DESCRIPCIO, en canvi, diu «dramaturg i poeta angles» i no hi surt la paraula. Excloure-la
   // tambe aqui deixava fora tothom descrit nomes com a «actor»: en Tom Cruise sortia sense
   // categoria. El teatre s’aparta amb el guard de sota, no amagant la paraula.
-  if(/cineasta|director[a]? de cinema|film director|filmmaker|guionista|screenwriter|actor|actriu|film producer|productor[a]? de cinema|director[a]? de fotografia|cinematographer|cinema/.test(d) && !/teatre|teatral/.test(d))a.push('cinema');
+  if(!/teatre|teatral/.test(d))hit(/cineasta|director[a]? de cinema|film director|filmmaker|guionista|screenwriter|actor|actriu|film producer|productor[a]? de cinema|director[a]? de fotografia|cinematographer|cinema/,'cinema');
   if(/profeta|prophet|religiós|religious|religiosa|sant|saint|monja|nun|monjo|monk|bisbe|bishop|papa |pope|rabí|rabbi|imam|teòleg|theologian|missioner|missionary/.test(d))a.push('religion');
   if(/futbolista|jugador de futbol|footballer|football player|tennista|tenista|tennis player|jugador de tennis|basquetbol|bàsquet|baloncestista|basketball|boxejador|boxeador|boxer|atleta|athlete|track and field|velocista|sprinter|gimnasta|gymnast|nedador|nadador|swimmer|ciclista|cyclist|golfista|golfer|automobilista|racing driver|motorcycle racer/.test(d)
      ||/(pilot|piloto)[^,;.]{0,18}(autom|motocicl)/.test(d))a.push('sport');   // "pilot" sol cauria sobre aviadors, així que exigim context de motor
+  // ART: paraigua per a les arts que no són Pintura, Literatura, Música ni Cinema. Mana l’ORDRE de
+  // la descripció, com a P106 al dash.py: si «escultor» va abans que «pintor», art i va davant
+  // (Miquel Àngel); si va després, no hi suma (Picasso, «Pintor i escultor»).
+  // ⚠️ «artista» SOL no hi és a posta: Wikidata el posa a cantants («recording artist»).
+  // Teatre: s’aparta de Cinema amb el guard de dalt i ve a parar aquí.
+  {const k=d.search(/arquitect|architect|fotògraf|fotógraf|photographer|escultor|sculptor|ballarí|ballarina|bailar[ií]n|dancer|coreògraf|coreógraf|choreographer|dissenyador|diseñador|designer|il·lustrador|ilustrador|illustrator|dibuixant|dibujante|cartoonist|autor[a]? de còmic|historietista|comic artist|ceramista|ceramicist|orfebre|goldsmith|actor de teatre|actriu de teatre|director[a]? de teatre|director[a]? de teatro|stage actor|theatre director|theater director|artista visual|artista plàstic|artista plástic|visual artist/);
+   if(k>=0){const abans=['painting','literature','music','cinema'].filter(c=>c in pos).map(c=>pos[c]);
+     if(!abans.length||k<Math.min(...abans)){pos.art=k;a.push('art');}}}
+  // Entre les arts també mana l’ordre: «Escultor, pintor, arquitecte i poeta» → art+pintura, no
+  // art+literatura. Només es reordenen aquestes cinc entre elles; la resta queda on era.
+  {const R=a.filter(c=>c in pos).sort((x,y)=>pos[x]-pos[y]);let n=0;for(let i=0;i<a.length;i++)if(a[i] in pos)a[i]=R[n++];}
   return [...new Set(a)].slice(0,2);};   // 0–2 per persona: una descripció tipus "filòsof, escriptor i naturalista" dispararia tres regles
 
 // Who is on the timeline = whoever you put there. Categories only colour the bars; they never
