@@ -46,6 +46,22 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
 - **Contemporanis**: la mateixa **barra de progrés** (5 tirades); al resultat **totes** les
   parelles porten al cronograma; en horitzontal i al portàtil baix, resultat en **dues columnes**.
 - **Ordena la línia**: en encertar «🔥 n dies seguits»; en fallar, només el títol («Ai, per poc!»…).
+- **Final de partida, igual als 4 jocs** (17/11/2026): capçalera (icona, nom, «Repte diari · data»)
+  → **títol de 4 nivells** sense números → **marcador de dues xifres** (🎯 el resultat del joc + 🔥 la
+  ratxa) → el detall del joc (parelles, taulell, cartes per repassar) → compte enrere → botons. Fora el
+  «Ja has jugat el repte d'avui…» (el compte enrere ja ho diu). Helpers globals `resTitol()` i
+  `resMarcador()`; claus `res_lvl1..4`, `res_k_placed`, `res_k_errors`.
+  - Títols (els vacilons que tenia el Memory): **Increïble 🤩 · Bona feina 😌 · Bueno, si tu t'ho has
+    passat bé… 🙄 · Osti quin desastre… 🙈**. El primer, en verd.
+  - Llindars (decisió d'en Bernat): **Abans o després** 20 encerts / 15+ / 7–14 / 0–6 (amb el comodí
+    no s'arriba a 20, perquè no suma) · **Contemporanis** 5 / 4 / 2–3 / 0–1 · **Ordena** 5 / 3 / 2 /
+    0–1 posats bé (4 no pot passar) · **Memory** fàcil 0–1 / 2–3 / 4–6 / 7+ errors, difícil 0–2 /
+    3–5 / 6–9 / 10+.
+  - **Abans o després**: a sota del marcador, les cartes per repassar (la del **comodí en groc**, les
+    **fallades en vermell**), amb l'any, clicables cap al cronograma. Substitueixen el botó «A veure,
+    ensenyam-ho», que només es queda a l'Ordena. Es desa `comodiKey` al `hb_ad_daily`.
+  - Sense scroll: en horitzontal i al portàtil baix, l'Abans o després amb llista també va en dues
+    columnes, com el Contemporanis (`:has(> .adrows)`).
 - **Hub**: una **fila per joc a tot arreu** (escriptori i horitzontal inclosos), totes de la
   mateixa alçada, sense descripcions. A dalt només el compte enrere: **fora la data i el
   comptador «n/5 fets avui»**.

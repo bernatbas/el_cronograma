@@ -609,6 +609,9 @@
     .gameover.ad .stat .v{font-size:34px;}
     .gameover.ad .locknote{margin:4px 0 2px;}
     .gameover.ad .countdown{margin:2px 0 12px;}
+    .gameover.ad .adrows{gap:4px;margin:2px 0 8px;}
+    .gameover.ad .adrow{padding:5px 12px;font-size:12.5px;}
+    .gameover.ad .stat .v{font-size:30px;}
   }
   /* Contemporanis en vertical molt baix (320x460): ja feia 15px de scroll, i la barra de progres en
      va afegir 18. Aires mes curts, res amagat. */
@@ -641,6 +644,12 @@
     .gameover.ad .locknote{font-size:12px;line-height:1.3;}
     .gameover.ad .countdown{margin:2px 0 8px;}
     .gameover.ad .btnrow{gap:6px;margin-top:0;}
+    .gameover.ad .adrows{gap:3px;margin:0 0 6px;}
+    .gameover.ad .adrow{padding:3px 10px;font-size:11.5px;}
+    .gameover.ad .stats{margin:2px 0 4px;}
+    .gameover.ad .stat .v{font-size:24px;}
+    .gameover.ad .rtitle{font-size:17px;}
+    .gameover.ad .stat .k{margin-top:1px;}
     .gameover.ad .btnrow .cta,.gameover.ad .hubbtn{padding:7px 20px;font-size:14px;}
   }
   /* RESULTAT de Contemporanis i PERSONATGE DEL DIA sense scroll (16/11/2026). Mesurat amb l'alcada
@@ -666,7 +675,7 @@
     .gameover.con{padding:10px 12px;}
     .gameover.con .gamehead h2{font-size:16px;}
     .gameover.con .gamehead .sub{font-size:11px;margin-top:0;}
-    .gameover.con .rtitle{font-size:18px;}
+    .gameover.con .rtitle{font-size:16px;}
     .gameover.con .stats{margin:2px 0 2px;}
     .gameover.con .stat .v{font-size:24px;}
     .gameover.con .stat .k{font-size:10px;}
@@ -683,26 +692,38 @@
      columnes. A l'esquerra el resum (titol, punts, compte enrere, botons) i a la dreta les 5 parelles.
      Apilat feia 109-162px de scroll en horitzontal i 65-108 en un portatil. */
   @media (orientation:landscape) and (pointer:coarse) and (max-height:600px), (min-width:861px) and (max-height:820px){
-    .gameover.con{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);align-items:center;}
-    .gameover.con > *{grid-column:1;}
-    .gameover.con > .confailwrap{grid-column:2;grid-row:1 / span 7;margin:0;align-self:center;}
-    .gameover.con .btnrow{flex-wrap:nowrap;}
-    .gameover.con .btnrow .cta,.gameover.con .hubbtn{width:auto;flex:1 1 0;min-width:0;white-space:nowrap;}
+    .gameover.con,.gameover.ad:has(> .adrows){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);align-items:center;}
+    .gameover.con > *,.gameover.ad:has(> .adrows) > *{grid-column:1;}
+    /* La llista (parelles del Contemporanis, cartes per repassar de l'Abans o després) a la dreta. */
+    .gameover.con > .confailwrap,.gameover.ad > .adrows{grid-column:2;grid-row:1 / span 7;margin:0;align-self:center;}
+    .gameover.con .btnrow,.gameover.ad .btnrow{flex-wrap:nowrap;}
+    .gameover.con .btnrow .cta,.gameover.con .hubbtn,.gameover.ad .btnrow .cta,.gameover.ad .hubbtn{width:auto;flex:1 1 0;min-width:0;white-space:nowrap;}
   }
   /* ...en horitzontal tactil, a mes, tot compacte: l'alcada hi es molt justa. */
   @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
-    .gameover.con{column-gap:16px;max-width:760px;padding:10px 16px;}
-    .gameover.con .stats{margin:4px 0 6px;}
-    .gameover.con .stat .v{font-size:26px;}
-    .gameover.con .countdown{margin:0 0 8px;}
-    .gameover.con .btnrow{gap:8px;}
-    .gameover.con .btnrow .cta,.gameover.con .hubbtn{padding:7px 10px;font-size:13px;}
-    .gameover.con .gamehead{margin-bottom:2px;}
+    .gameover.con,.gameover.ad{column-gap:16px;max-width:760px;padding:10px 16px;}
+    .gameover.con .stats,.gameover.ad .stats{margin:4px 0 6px;}
+    .gameover.con .stat .v,.gameover.ad .stat .v{font-size:26px;}
+    .gameover.con .countdown,.gameover.ad .countdown{margin:0 0 8px;}
+    .gameover.con .btnrow,.gameover.ad .btnrow{gap:8px;}
+    .gameover.con .btnrow .cta,.gameover.con .hubbtn,.gameover.ad .btnrow .cta,.gameover.ad .hubbtn{padding:7px 10px;font-size:13px;}
+    .gameover.con .gamehead,.gameover.ad .gamehead{margin-bottom:2px;}
+    .gameover.ad .rtitle{font-size:18px;margin:2px 0 0;}
+    .gameover.ad .adrows{gap:5px;}
+    .gameover.ad .adrow{padding:5px 10px;font-size:12px;}
+    .gameover.ad .stat .v{font-size:24px;}
+  }
+  /* Mòbil petit en horitzontal (568x320): l'Abans o després amb llista hi anava 10px just. */
+  @media (orientation:landscape) and (pointer:coarse) and (max-height:600px) and (max-width:620px){
+    .gameover.ad,.gameover.con{padding:8px 12px;}
+    .gameover.ad .rtitle,.gameover.con .rtitle{font-size:15px;}
+    .gameover.ad .adrow{padding:4px 8px;}
+    .gameover.ad .stats,.gameover.con .stats{margin:2px 0 4px;}
     .gameover.con .concrono{padding:5px 10px;font-size:12px;line-height:1.25;}
   }
   /* ...i al portatil, amb la lletra i els aires de sempre: n'hi ha prou amb les dues columnes. */
   @media (min-width:861px) and (max-height:820px){
-    .gameover.con{max-width:860px;column-gap:44px;padding:30px 36px;}
+    .gameover.con,.gameover.ad:has(> .adrows){max-width:860px;column-gap:44px;padding:30px 36px;}
     .gameover.con .confailwrap{gap:8px;}
     .gameover.con .confailt{margin-bottom:2px;}
     .gameover.con .concrono{padding:10px 16px;font-size:14px;}
@@ -761,7 +782,21 @@
   .mem-loading{text-align:center;padding:48px 16px;color:var(--text2);font-size:15px;}
   .mem-grid-done .mem-card{cursor:pointer;}
   .mbanner{max-width:440px;margin:16px auto 0;border-radius:var(--r-card);background:var(--soft);border:1px solid var(--border-strong);padding:20px;text-align:center;}
-  .mbanner .rtitle{font-size:18px;font-weight:700;margin-bottom:6px;}
+  .mbanner .rtitle{font-family:'Oswald',Arial,sans-serif;font-size:22px;font-weight:600;margin:2px 0;}
+  .mbanner .rtitle.perfect{color:#2E8B57;}
+  /* Marcador de dues xifres també a l'Ordena i al Memory (al Contemporanis i l'Abans o després ja hi era). */
+  .ordbanner .stats,.mbanner .stats{display:flex;justify-content:center;gap:30px;margin:8px 0 10px;}
+  .ordbanner .stat .v,.mbanner .stat .v{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-size:32px;font-weight:600;color:var(--topbar-bg);line-height:1;}
+  .ordbanner .stat .k,.mbanner .stat .k{font-size:11px;color:var(--text2);margin-top:4px;text-transform:uppercase;letter-spacing:.04em;}
+  /* Abans o després: cartes per repassar (comodí en groc, fallades en vermell), cap al cronograma. */
+  .adrows{display:flex;flex-direction:column;gap:6px;margin:4px 0 12px;}
+  .adrow{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;border-radius:var(--r-card);padding:8px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;border:1px solid;}
+  .adrow .adyr{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-weight:600;white-space:nowrap;}
+  .adrow.fail{background:rgba(196,58,44,.06);border-color:#E7C3B8;color:#B4321F;}
+  .adrow.fail:hover{background:rgba(196,58,44,.12);}
+  .adrow.joker{background:#FFF7E0;border-color:#E6D3A0;color:#8A6A1E;}
+  .adrow.joker:hover{background:#FBEFCF;}
+  .adrow.dis{cursor:default;}
   .mbanner .streak{font-size:13px;color:var(--text2);margin-bottom:4px;}
   .mbanner .locknote{font-size:12px;color:var(--text2);margin:8px 0 4px;}
   .mbanner .countdown{font-size:12px;color:var(--text2);}
@@ -818,6 +853,11 @@
     .orditem.ok{background:rgba(46,155,91,.18);}
     .orditem.no{background:rgba(196,58,44,.2);}
     .orditem.ok .oyr{color:#7FD8A4;}
+    .adrow.fail{background:rgba(196,58,44,.14);border-color:rgba(196,58,44,.4);color:#F08A7E;}
+    .adrow.fail:hover{background:rgba(196,58,44,.24);}
+    .adrow.joker{background:rgba(199,154,58,.16);border-color:rgba(199,154,58,.45);color:#E8C373;}
+    .adrow.joker:hover{background:rgba(199,154,58,.26);}
+    .mbanner .rtitle.perfect{color:#7FD8A4;}
     .orditem.no .oyr{color:#F08A7E;}
     .mem-back{background:#4A2E27;}
     .mem-card.matched .mem-front{background:rgba(46,155,91,.2);}
@@ -932,8 +972,6 @@
       con_meta_event:'📜 Fet',
       con_fb_ok:'Correcte ✓',
       con_fb_no:'Incorrecte ✗',
-      con_perfect:'Ple! 5/5 🏆',
-      con_done:'Repte completat',
       con_hits:'encerts',
       con_failed:'Parelles fallades',
       con_err:"No hi ha prou dades per jugar. Torna demà 🛠️",
@@ -945,8 +983,6 @@
       joker_spent:'Gastat',
       joker_title:'Comodí: passa aquesta parella (un cop per partida)',
       joker_used_title:'Comodí ja gastat en aquesta partida',
-      perfect_round:'Ronda perfecta! 🏆',
-      challenge_done:'Repte completat',
       hits_in_row:'encerts',
       err_not_enough:'No hi ha prou dades per jugar.',
       share_ad: v => '🏛️ Història Bàsica — Repte diari '+v.date+'\n🎯 '+v.score+' encerts\n🔥 '+v.days+' '+(v.days===1?'dia':'dies')+' seguits',
@@ -973,10 +1009,6 @@
       oldest:'↑ més antic',
       newest:'més nou ↓',
       ord_submit:'Ho tinc!',
-      ord_fail_1:'Ai, per poc! 😅',
-      ord_fail_2:'Suposo que la idea era bona però… 🙄',
-      ord_fail_3:'Osti quin desastre… 🙈',
-      ord_win:'Ben ordenat! 🎉',
       ord_locked_win:'Encertat! 🎉',
       ord_locked_lose:'No encertat 😬',
       share_ord: v => '🕰️ Història BASica · Ordena la línia — '+v.dd+v.nl+v.squares+v.nl+'🔥 '+v.days+' '+(v.days===1?'dia':'dies')+' seguits',
@@ -986,7 +1018,13 @@
       easy:'Fàcil',
       hard:'Difícil',
       errors_count: v => v.n+' error'+(v.n!==1?'s':''),
-      mem_result: v => { var t1=v.mode==='easy'?1:2, t2=v.mode==='easy'?3:5, n=v.errors; if(n===0) return '0 ERRORS! Increïble 🤩'; if(n<=t1) return n+' error'+(n!==1?'s':'')+' – Increïble 🤩'; if(n<=t2) return n+' error'+(n!==1?'s':'')+' – Bona feina 😌'; return n+' error'+(n!==1?'s':'')+' – Bueno, si tu t’ho has passat bé… 🙄'; },
+      // Final de partida, igual a tots els jocs: títol de 4 nivells (1 = el millor), sense números.
+      res_lvl1:'Increïble 🤩',
+      res_lvl2:'Bona feina 😌',
+      res_lvl3:'Bueno, si tu t’ho has passat bé… 🙄',
+      res_lvl4:'Osti quin desastre… 🙈',
+      res_k_placed:'posats bé',
+      res_k_errors:'errors',
       mem_see_crono:'🗺️ Veure al cronograma',
       mem_no_crono:'🗺️ No disponible al cronograma',
       mem_no_crono_title:'Ja em sap greu, però a la Viquipèdia no hi surt l’any de naixement',
@@ -1063,6 +1101,14 @@
   // RATXA = dies seguits ACABANT el joc, guanyis o perdis (decisio d'en Bernat, 16/11/2026). Es marca
   // en acabar; fallar no la trenca mai, i qui no havia jugat o feia dies que no jugava comenca a 1.
   // Idempotent: cridar-la mes d'un cop el mateix dia no suma res. {last, days}
+  // ===== Final de partida, igual a tots els jocs (17/11/2026) =====
+  // Títol (4 nivells, el 1 és el millor; cada joc hi posa els seus llindars, veure ESTRATEGIA_JOC.md)
+  // + marcador de DUES xifres: el resultat del joc i la ratxa. Sense «Ja has jugat…»: ho diu el compte enrere.
+  function resTitol(n,tag){ tag=tag||'div'; return '<'+tag+' class="rtitle'+(n===1?' perfect':'')+'">'+t('res_lvl'+n)+'</'+tag+'>'; }
+  function resMarcador(v1,k1,days){
+    return '<div class="stats"><div class="stat"><div class="v">'+v1+'</div><div class="k">'+k1+'</div></div>'
+      +'<div class="stat"><div class="v">🔥 '+days+'</div><div class="k">'+t('streak_days',{n:days})+'</div></div></div>';
+  }
   function tocaRatxa(key){
     const today=todayStr(), st=readLS(key);
     if(st && st.last===today && st.days) return st.days;
@@ -1159,7 +1205,7 @@
     // fet servir el comodi. El comodi tambe compta com una de les 20.
     const ROUND_N=20, VIDES=2;
     let root=null, deck=[], idx=0, current=null, candidate=null, score=0, locked=false, skipUsed=false, timer=null, cdTimer=null, gaStarted=false,
-        lives=VIDES, answered=0, failPairs=[], failItems=[];
+        lives=VIDES, answered=0, failPairs=[], failItems=[], comodiItem=null;
 
     // Meta discreta: esdeveniments només icôna 📜; persones indiquen naixement/mort (imprescindible).
     function meta(it){
@@ -1452,7 +1498,7 @@
     // No suma punt (seria un encert regalat) i compta com una de les preguntes de la ronda.
     function skip(){
       if(locked||skipUsed||!candidate) return;
-      skipUsed=true; locked=true;
+      skipUsed=true; locked=true; comodiItem=candidate;
       if(!gaStarted){ gaStarted=true; track('joc_iniciat',{joc:'abansdespres',mode:'default'}); }
       track('joc_comodin_usat',{joc:'abansdespres',mode:'default'});
       const bona = candidate.year<current.year ? 'abans' : 'despres';
@@ -1468,39 +1514,46 @@
       const today=todayStr();
       const days=tocaRatxa(STREAK_KEY);
       track('joc_completat',{joc:'abansdespres',mode:'default',encerts:score,errors:failPairs.length,ratxa:days});
-      // Totes les cartes de les parelles fallades, sense repetir: si fallaves dues vegades seguides,
-      // la carta del mig hi seria dos cops.
-      const vistes={}; failItems=[];
-      failPairs.forEach(function(pr){ pr.forEach(function(it){ if(it&&!vistes[it.key]){ vistes[it.key]=1; failItems.push(it); } }); });
+      // Les cartes que has fallat (la nova de cada parella fallada) i la del comodí: surten al
+      // resultat, clicables cap al cronograma.
+      failItems=failPairs.map(function(pr){ return pr[1]; }).filter(Boolean);
       const failKeys=failItems.length?failItems.map(function(it){return it.key;}):null;
-      writeLS(DAILY_KEY,{date:today,score:score,perfect:!!perfect,failKeys:failKeys});
+      writeLS(DAILY_KEY,{date:today,score:score,perfect:!!perfect,failKeys:failKeys,comodiKey:comodiItem?comodiItem.key:null});
       showResult(score,!!perfect);
     }
 
+    // Nivell del títol: 20 encerts / 15 o més / 7-14 / 0-6. Amb el comodí no s'arriba a 20 (no suma).
+    function adNivell(sc){ return sc>=20?1:(sc>=15?2:(sc>=7?3:4)); }
     function showResult(sc,perfect){
       if(timer){ clearTimeout(timer); timer=null; }
       const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
-      const title = perfect ? '<span class="perfect">'+t('perfect_round')+'</span>' : t('challenge_done');
-      // Les parelles fallades es poden veure al cronograma TAMBE si la ronda ha estat perfecta:
-      // ara s'hi pot arribar havent perdut un cor.
-      const cronoPeople = failItems.map(personFromItem).filter(Boolean);
-      const cronoEvents = failItems.map(eventFromItem).filter(Boolean);
-      const hasCrono = cronoPeople.length || cronoEvents.length;
+      // Les cartes per repassar: la del comodí en groc i les fallades en vermell. Cada una porta al
+      // cronograma (substitueix el botó «A veure, ensenyam-ho»).
+      const files=[];
+      if(comodiItem) files.push({it:comodiItem,cls:'joker'});
+      failItems.forEach(function(it){ files.push({it:it,cls:'fail'}); });
+      const filaHtml=function(f,i){
+        const it=f.it, crono=personFromItem(it)||eventFromItem(it);
+        const ic=it.kind==='person'?(it.anchor==='naix'?'🎂 ':'🕯️ '):'';
+        const txt='<span class="adnm"></span><span class="adyr">'+ic+fmtYear(it.year)+'</span>';
+        return crono ? '<button class="adrow '+f.cls+'" data-fi="'+i+'">'+txt+'</button>' : '<div class="adrow '+f.cls+' dis">'+txt+'</div>';
+      };
       root.innerHTML = `
         <div class="gameover ad">
           ${head()}
-          <h2 class="rtitle">${title}</h2>
-          <div class="stats">
-            <div class="stat"><div class="v">🎯 ${sc}</div><div class="k">${t('hits_in_row')}</div></div>
-            <div class="stat"><div class="v">🔥 ${days}</div><div class="k">${t('streak_days',{n:days})}</div></div>
-          </div>
-          <div class="locknote">${t('locknote_played')}</div>
+          ${resTitol(adNivell(sc),'h2')}
+          ${resMarcador('🎯 '+sc, t('hits_in_row'), days)}
+          ${files.length?'<div class="adrows">'+files.map(filaHtml).join('')+'</div>':''}
           <div class="countdown">${t('new_challenge_in')} <b id="cd">--:--:--</b></div>
-          <div class="btnrow"><button class="cta" data-x="share">${t('share_btn')}</button>${hasCrono?'<button class="cta sec" data-x="crono">'+t('show_crono')+'</button>':''}${hubBtnHTML()}</div>
+          <div class="btnrow"><button class="cta" data-x="share">${t('share_btn')}</button>${hubBtnHTML()}</div>
         </div>`;
+      root.querySelectorAll('.adrow').forEach(function(el){
+        const f=files[[...root.querySelectorAll('.adrow')].indexOf(el)];
+        el.querySelector('.adnm').textContent=f.it.name;
+        if(el.tagName==='BUTTON') el.addEventListener('click',function(){ goToCronograma('abansdespres',[personFromItem(f.it)||eventFromItem(f.it)]); });
+      });
       const sh=root.querySelector('[data-x="share"]');
       if(sh) sh.addEventListener('click',()=>doShare(sc,days,sh));
-      if(hasCrono){const cb=root.querySelector('[data-x="crono"]');if(cb)cb.addEventListener('click',()=>goToCronograma('abansdespres',[...cronoPeople,...cronoEvents]));}
       wireHubBtn(root);
       startCountdown();
     }
@@ -1525,19 +1578,18 @@
       const today=todayStr();
       const daily=readLS(DAILY_KEY);
       if(daily && daily.date===today){
-        failItems=[];
-        if(daily.failKeys){
-          const allPool=buildPool(); const byKey={};
-          allPool.forEach(function(it){byKey[it.key]=it;});
-          failItems=daily.failKeys.map(function(k){return byKey[k];}).filter(Boolean);
-        }
+        failItems=[]; comodiItem=null;
+        const allPool=buildPool(); const byKey={};
+        allPool.forEach(function(it){byKey[it.key]=it;});
+        if(daily.failKeys) failItems=daily.failKeys.map(function(k){return byKey[k];}).filter(Boolean);
+        if(daily.comodiKey) comodiItem=byKey[daily.comodiKey]||null;
         showResult(daily.score,!!daily.perfect); return;
       } // ja jugat avui => bloquejat
       const rng=mulberry32(seedFromStr(today));
       const pool=dailyPool(rng); // cada persona només un cop (naix O mort) segons la llavor del dia
       deck=buildPath(pool,rng);  // ordena el pool en un camí amb dificultat controlada (g logarítmic)
       idx=0; score=0; locked=false; skipUsed=false; current=null; candidate=null;
-      lives=VIDES; answered=0; failPairs=[]; failItems=[];
+      lives=VIDES; answered=0; failPairs=[]; failItems=[]; comodiItem=null;
       current=deck[idx++]||null;
       candidate=current?nextCandidate():null;
       if(!current||!candidate){ root.innerHTML='<div class="err">'+t('err_not_enough')+'</div>'; return; }
@@ -1941,17 +1993,15 @@
       const tick=()=>{ const el=root&&root.querySelector('#ocd'); if(!el){ if(ocdTimer){clearInterval(ocdTimer);ocdTimer=null;} return; } el.textContent=fmtDur(msToMidnight()); };
       tick(); ocdTimer=setInterval(tick,1000);
     }
-    function ordFailTitle(wrong){
-      if(wrong<=2) return t('ord_fail_1');
-      if(wrong===3) return t('ord_fail_2');
-      return t('ord_fail_3');
-    }
     function showBanner(correct, wrong, marks){
       const foot=root.querySelector('.ordfoot'); if(!foot) return;
       const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
-      foot.innerHTML = correct
-        ? '<div class="ordbanner ok"><div class="rtitle perfect">'+t('ord_win')+'</div><div class="streak">🔥 '+days+' '+t('streak_days',{n:days})+'</div><div class="locknote">'+t('locknote_solved')+'</div><div class="countdown">'+t('new_challenge_in')+' <b id="ocd">--:--:--</b></div></div>'
-        : '<div class="ordbanner no"><div class="rtitle">'+ordFailTitle(wrong)+'</div><div class="locknote">'+t('locknote_solved')+'</div><div class="countdown">'+t('new_challenge_in')+' <b id="ocd">--:--:--</b></div></div>';
+      // Nivell del títol: 5 / 3 / 2 / 0-1 posats bé (4 no pot ser: si en falla un, en falla un altre).
+      const be=(marks||[]).filter(Boolean).length;
+      const nivell = be>=5?1:(be>=3?2:(be===2?3:4));
+      foot.innerHTML = '<div class="ordbanner '+(correct?'ok':'no')+'">'+resTitol(nivell)
+        +resMarcador('🎯 '+be+'/5', t('res_k_placed'), days)
+        +'<div class="countdown">'+t('new_challenge_in')+' <b id="ocd">--:--:--</b></div></div>';
       startCd();
       const bn=foot.querySelector('.ordbanner');
       if(bn){
@@ -2036,6 +2086,8 @@
     let root=null, currentPool=null, mode='easy', state=null;
     let flipped=[], locked=false, gaStarted=false, cdTimer=null;
     function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+    // Nivell del títol segons els errors: fàcil 0-1 / 2-3 / 4-6 / 7+; difícil 0-2 / 3-5 / 6-9 / 10+.
+    function memNivell(n){ const L=mode==='easy'?[1,3,6]:[2,5,9]; return n<=L[0]?1:(n<=L[1]?2:(n<=L[2]?3:4)); }
 
     // Wikidata helpers (independents de PersonatgeDia)
     async function wd(params){
@@ -2297,9 +2349,8 @@
         root.innerHTML=head+renderToggle()
           +'<div class="mem-grid mem-grid-done">'+renderGrid(ms)+'</div>'
           +'<div class="mbanner">'
-          +'<div class="rtitle">'+esc(t('mem_result',{errors:ms.errors,mode:mode}))+'</div>'
-          +'<div class="streak">🔥 '+days+' '+t('streak_days',{n:days})+'</div>'
-          +'<div class="locknote">'+t('locknote_solved')+'</div>'
+          +resTitol(memNivell(ms.errors))
+          +resMarcador('🎯 '+ms.errors, t('res_k_errors'), days)
           +'<div class="countdown">'+t('new_challenge_in')+' <b id="'+cdId+'">--:--:--</b></div>'
           +'<div class="memshare"><button class="cta" id="'+shareId+'">'+t('share_btn')+'</button>'+hubBtnHTML()+'</div>'
           +'</div>';
@@ -2307,7 +2358,7 @@
         (function tick(){ const el=document.getElementById(cdId); if(el){ el.textContent=fmtDur(msToMidnight()); cdTimer=setTimeout(tick,1000); } })();
         var shareBtn=document.getElementById(shareId);
         if(shareBtn){ shareBtn.addEventListener('click',function(){
-          var txt=t('share_mem',{date:ddmm(state.date),mode:mode,msg:t('mem_result',{errors:ms.errors,mode:mode})});
+          var txt=t('share_mem',{date:ddmm(state.date),mode:mode,msg:t('errors_count',{n:ms.errors})+' – '+t('res_lvl'+memNivell(ms.errors))});
           if(navigator.share){ navigator.share({text:txt}).catch(function(){}); return; }
           if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ shareBtn.textContent=t('copied_short'); setTimeout(function(){ shareBtn.textContent=t('share_btn'); },2000); }); }
         }); }
@@ -2605,7 +2656,8 @@
       if(ansTimer){ clearTimeout(ansTimer); ansTimer=null; }
       const st=readLS(STREAK_KEY); const days=st?(st.days||0):0;
       const perfect=(score===5);
-      const title=perfect?'<span class="perfect">'+t('con_perfect')+'</span>':t('con_done');
+      // Nivell del títol: 5 / 4 / 2-3 / 0-1 encerts.
+      const nivell = score>=5?1:(score>=4?2:(score>=2?3:4));
       let failHTML='';
       {
         let rows='';
@@ -2624,11 +2676,9 @@
         failHTML='<div class="confailwrap"><div class="confailt">'+t('con_pairs')+'</div>'+rows+'</div>';
       }
       root.innerHTML='<div class="gameover con">'+head()
-        +'<h2 class="rtitle">'+title+'</h2>'
-        +'<div class="stats"><div class="stat"><div class="v">🎯 '+score+'/5</div><div class="k">'+t('con_hits')+'</div></div>'
-        +'<div class="stat"><div class="v">🔥 '+days+'</div><div class="k">'+t('streak_days',{n:days})+'</div></div></div>'
+        +resTitol(nivell,'h2')
+        +resMarcador('🎯 '+score+'/5', t('con_hits'), days)
         +failHTML
-        +'<div class="locknote">'+t('locknote_played')+'</div>'
         +'<div class="countdown">'+t('new_challenge_in')+' <b id="ccd">--:--:--</b></div>'
         +'<div class="btnrow"><button class="cta" data-x="share">'+t('share_btn')+'</button>'+hubBtnHTML()+'</div>'
         +'</div>';
