@@ -3481,13 +3481,16 @@ function guiaColoca(){
     dreta:()=>{const l=r.right+14;return l+bw<=W-8&&{p:'dreta',l,t:cl(cy-30,8,H-bh-8)};},
     esq:()=>{const l=r.left-bw-14;return l>=8&&{p:'esq',l,t:cl(cy-30,8,H-bh-8)};}
   };
-  const lloc=(guiaPas===1&&el===results)?['esq','dreta','baix']:(GUIA_LLOC[guiaPas]||['baix']);
+  // Pas 1: el globus va FIX a l'esquerra del cercador, just sota la topbar. Així no salta quan
+  // s'obren els resultats (que surten a sota del cercador i quedarien tapats).
+  if(guiaPas===1){const rq=q.getBoundingClientRect();opcions.fix=()=>{const l=rq.left-bw-14;return l>=8&&{p:'esq',l,t:rq.bottom+10};};}
+  const lloc=guiaPas===1?['fix','baix']:(GUIA_LLOC[guiaPas]||['baix']);
   let o=null;for(const k of lloc){o=opcions[k]();if(o)break;}
   if(!o)o={p:'',l:cl(cx-bw/2,8,W-bw-8),t:cl(r.bottom+14,8,H-bh-8)};
   guiaEl.className='guia on'+(o.p?' p-'+o.p:'');
   guiaEl.style.left=Math.round(o.l)+'px';guiaEl.style.top=Math.round(o.t)+'px';
   guiaEl.style.setProperty('--gx',cl(cx-o.l-6,14,bw-26)+'px');
-  guiaEl.style.setProperty('--gy',cl(cy-o.t-6,14,bh-26)+'px');
+  guiaEl.style.setProperty('--gy',(guiaPas===1&&o.p==='esq'?18:cl(cy-o.t-6,14,bh-26))+'px');
 }
 function guiaVes(n){
   guiaPas=n;guiaClau='';
@@ -3529,9 +3532,12 @@ function guiaObre(){
       if(e.target.closest('.gx'))return guiaTanca();
       if(e.target.closest('.gprev'))return guiaVes(Math.max(0,guiaPas-1));
       if(e.target.closest('.gnext'))return guiaSeguent();
-      if(e.target.closest('.gchip')){   // omple el cercador; el resultat el tria l'usuari
+      if(e.target.closest('.gchip')){   // fa la cerca sola: escriu el nom, es veuen els resultats, i l'afegeix
         if(state.present.has(GUIA_PERSONA)){guiaFocus=GUIA_PERSONA;revealPerson(GUIA_PERSONA);return guiaVes(2);}
-        q.value='Shakespeare';q.focus();q.dispatchEvent(new Event('input'));
+        // Després del clic, no dins: el clic bombolleja fins al document, que tanca els resultats
+        // perquè «s'ha clicat fora del cercador», i la cerca no es veia mai.
+        setTimeout(()=>{q.value='Shakespeare';q.focus();q.dispatchEvent(new Event('input'));},0);
+        setTimeout(()=>{if(guiaPas===1&&guiaVist0)addFromSearch(GUIA_PERSONA);},900);
       }
     });
   }
