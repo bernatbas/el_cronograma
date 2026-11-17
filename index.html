@@ -852,6 +852,8 @@
   @keyframes guiaHalo{0%{box-shadow:0 0 0 2px rgba(232,160,140,.95);}100%{box-shadow:0 0 0 12px rgba(232,160,140,0);}}
   .guia{position:fixed;z-index:82;width:290px;background:#FFF7F2;color:#4A3530;border:1px solid #EDCFC4;border-radius:14px;padding:14px 16px 12px;font-size:13.5px;line-height:1.5;box-shadow:0 10px 30px rgba(74,53,48,.16);opacity:0;transform:translateY(4px);transition:opacity .2s,transform .2s;}
   .guia.on{opacity:1;transform:none;}
+  .guia.g0{width:400px;padding:24px 26px 18px;font-size:15.5px;line-height:1.6;border-radius:18px;}   /* la benvinguda, amb més presència */
+  .guia.g0 h4{font-size:26px;margin-bottom:10px;}
   .guia h4{margin:0 22px 4px 0;font-family:'Oswald','Roboto Condensed','Arial Narrow',sans-serif;font-weight:500;font-size:17px;letter-spacing:.01em;color:#A8442F;}
   .guia p{margin:0;}
   .guia .gx{position:absolute;right:8px;top:8px;width:22px;height:22px;border:none;background:none;color:#A99089;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;border-radius:6px;}
@@ -3476,7 +3478,7 @@ function guiaColoca(){
   if(clau===guiaClau)return;guiaClau=clau;
   const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
   if(!visible){
-    guiaEl.className='guia on';guiaEl.style.left=Math.round((W-bw)/2)+'px';guiaEl.style.top=Math.round((H-bh)/2)+'px';
+    guiaEl.className='guia on'+(guiaPas===0?' g0':'');guiaEl.style.left=Math.round((W-bw)/2)+'px';guiaEl.style.top=Math.round((H-bh)/2)+'px';
     guiaHaloEl.classList.remove('on');return;
   }
   Object.assign(guiaHaloEl.style,{left:(r.left-3)+'px',top:(r.top-3)+'px',width:(r.width+6)+'px',height:(r.height+6)+'px'});
@@ -3505,7 +3507,7 @@ function guiaColoca(){
 function guiaZoomA(id){
   const p=PEOPLE.find(x=>x.id===id),b=barsLayer.querySelector(`.bar[data-id="${id}"]`);if(!p||!b)return;
   const span=Math.max(1,deathOf(p)-p.birth),cx=document.createElement('canvas').getContext('2d');
-  cx.font=getComputedStyle(b).font;
+  const cs=getComputedStyle(b);cx.font=`${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;   // el shorthand `font` surt buit a Firefox
   const cal=(cx.measureText(L(p.name)).width+44)/span;   // 44: padding de la barra + el ⋮ + aire
   if(pxPerYear<cal){clearFitLatch();setZoom(cal);}
   scroll.scrollLeft=Math.min(Math.max(0,x((p.birth+deathOf(p))/2)-scroll.clientWidth/2),maxScroll());
@@ -3569,7 +3571,9 @@ function guiaObre(){
         // Després del clic, no dins: el clic bombolleja fins al document, que tanca els resultats
         // perquè «s'ha clicat fora del cercador», i la cerca no es veia mai.
         setTimeout(()=>{q.value='Shakespeare';q.focus();q.dispatchEvent(new Event('input'));},0);
-        setTimeout(()=>{if(guiaPas===1&&guiaVist0)addFromSearch(GUIA_PERSONA);},900);
+        // I passa al pas 2 per si sol: no depèn que guiaTick detecti l'alta.
+        setTimeout(()=>{if(guiaPas!==1)return;addFromSearch(GUIA_PERSONA);guiaFocus=GUIA_PERSONA;guiaVist0=null;
+          setTimeout(()=>{if(guiaPas===1)guiaVes(2);},450);},900);
       }
     });
   }
