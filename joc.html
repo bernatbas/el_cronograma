@@ -1022,6 +1022,9 @@
       res_lvl4:'Osti quin desastre… 🙈',
       res_k_placed:'posats bé',
       res_k_errors:'errors',
+      // Al text de compartir, amb 1 va en singular (decisió d'en Bernat); al marcador de pantalla, no.
+      res_k_hit1:'encert',
+      res_k_error1:'error',
       mem_see_crono:'🗺️ Veure al cronograma',
       mem_no_crono:'🗺️ No disponible al cronograma',
       mem_no_crono_title:'Ja em sap greu, però a la Viquipèdia no hi surt l’any de naixement',
@@ -1576,7 +1579,7 @@
       // Array.from i no slice: cada quadret són dos caràcters UTF-16.
       const q=Array.from(adSeq), files=[];
       for(let i=0;i<q.length;i+=10) files.push(q.slice(i,i+10).join(''));
-      const text=shareCard('abansdespres','',todayStr(),sc,t('hits_in_row'),days,files.join('\n'));
+      const text=shareCard('abansdespres','',todayStr(),sc,t(sc===1?'res_k_hit1':'hits_in_row'),days,files.join('\n'));
       if(navigator.share){ navigator.share({text:text}).catch(()=>{}); return; }
       const done=()=>{ if(btn){ const o=btn.textContent; btn.textContent=t('copied'); setTimeout(()=>{ btn.textContent=o; },1800); } };
       if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(done); }
@@ -2371,7 +2374,7 @@
         (function tick(){ const el=document.getElementById(cdId); if(el){ el.textContent=fmtDur(msToMidnight()); cdTimer=setTimeout(tick,1000); } })();
         var shareBtn=document.getElementById(shareId);
         if(shareBtn){ shareBtn.addEventListener('click',function(){
-          var txt=shareCard('memory',(mode==='easy'?t('easy'):t('hard')).toLowerCase(),state.date,ms.errors,t('res_k_errors'),days,'');
+          var txt=shareCard('memory',(mode==='easy'?t('easy'):t('hard')).toLowerCase(),state.date,ms.errors,t(ms.errors===1?'res_k_error1':'res_k_errors'),days,'');
           if(navigator.share){ navigator.share({text:txt}).catch(function(){}); return; }
           if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ shareBtn.textContent=t('copied_short'); setTimeout(function(){ shareBtn.textContent=t('share_btn'); },2000); }); }
         }); }
