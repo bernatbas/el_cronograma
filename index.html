@@ -86,6 +86,7 @@
   .topbar .search input::placeholder{color:rgba(255,255,255,.55);}
   .topbar .search input:focus{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.55);}
   .topbar-left{display:flex;align-items:center;gap:14px;min-width:0;}
+  .btn-undo svg{display:block;margin:0 auto;}   /* en línia, la icona sumava el descendent i el botó feia 33,5px en lloc de 32 */
   .btn-undo:disabled{opacity:.38;cursor:default;}
   .btn-undo:disabled:hover{background:transparent;}
   .topbar-right{display:flex;align-items:center;gap:14px;flex:0 0 auto;}
@@ -155,7 +156,7 @@
     .controls #fitAll .btn-ic,.controls #reset .btn-ic{display:block;}
     /* amplada FIXA perquè tots quedin quadrats iguals: si no, «Vista global» es veia més gran
        que les lupes tot i ser ja una icona */
-    .controls .btn{width:34px;min-width:34px;min-height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;}
+    .controls .btn{width:34px;min-width:34px;min-height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;}
   }
   /* --- pas 2: plegat: la marca fa de botó i obre el desplegable --- */
   .secnav.navcollapsed{position:relative;gap:0;}
@@ -652,6 +653,9 @@
     .brand{font-size:16px;}
     .search{width:200px;}
     .btn{min-width:32px;min-height:32px;padding:4px 8px;font-size:13px;}
+    /* 32px d'alt, com els botons: si el cercador en fa 36, la topbar creix 4px respecte del joc
+       i navegar entre pàgines fa un saltet */
+    .search input{padding-top:7px;padding-bottom:7px;}
   }
   @media (max-width:600px){
     .search{width:140px;}
@@ -670,6 +674,7 @@
     .topbar{padding:6px 12px;gap:10px;border-bottom-width:3px;}
     .brand{font-size:15px;}
     .btn{min-width:30px;min-height:30px;padding:3px 8px;font-size:13px;}
+    .controls .btn{min-height:30px;}   /* la regla d'icones (≤720) és més específica i el deixava a 32: topbar 2px més alta que al joc */
     .search input{padding:5px 10px;font-size:13px;}
     .sidebar{width:190px;padding:10px 12px;}
     .sidebarHandle{left:175px;}   /* sidebar 190 − 15 (radi del botó rodó) → cercle centrat sobre la vora */
