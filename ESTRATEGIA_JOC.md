@@ -67,8 +67,11 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
   resultat · 🔥 n dies seguits` (les paraules del marcador) → quadrets (Contemporanis i Ordena com
   abans; **Abans o després**, un per pregunta: 🟩 encert, 🟥 error, 🟨 comodí, desats a `seq` del
   `hb_ad_daily`; el Memory no en té i porta la dificultat al nom) → enllaç **fix**
-  `www.babilinia.com/joc.html#/<joc>`, que porta directe al joc. Helper `shareCard()`. No revela cap
-  resposta.
+  **curt `babilinia.com/<joc>`**, que porta directe al joc. Helper `shareCard()`. No revela cap
+  resposta. Amb 1, «1 encert» / «1 error» en singular; els quadrets de l'Abans o després, en files de 10.
+- **Enllaços curts** (17/11/2026): una carpeta per joc a l'arrel (`/abansdespres/`, `/ordena/`, `/memory/`,
+  `/contemporanis/`, `/personatgedia/`) amb un `index.html` que només redirigeix a `/joc.html#/<joc>`.
+  En arribar-hi, la barra d'adreces mostra `joc.html#/…`: els jocs segueixen vivint tots a `joc.html`.
 - **Hub**: una **fila per joc a tot arreu** (escriptori i horitzontal inclosos), totes de la
   mateixa alçada, sense descripcions. A dalt només el compte enrere: **fora la data i el
   comptador «n/5 fets avui»**.
