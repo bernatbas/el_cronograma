@@ -29,8 +29,9 @@ Val la pena arreglar dues coses del contracte alhora, i **als dos fitxers**:
   vol dir buits invisibles arreu: millor `return key`.
 - El nucli no cobreix `placeholder`; afegir-hi `data-i18n-ph` estalvia posar-los a mà.
 
-## Poblar la BD
+## [TANCAT] Poblar la BD
 Més esdeveniments i marcs. És manual — els blocs de període no es poden cercar a Wikidata.
+> Nota (2026-11-17): És una tasca contínua, no un ítem tancable. El 17/11/2026 hi havia 59 esdeveniments (28 afegits aquell dia).
 
 ## Escalabilitat dels punts a zoom out
 Ara els events en mode punt es veuen semitransparents i va bé. Amb molts events caldrà revisar densitat i soroll visual. Lligat amb el clustering «+N» (Fase 2 del full de ruta, §7 de ESTRATEGIA.md).
@@ -44,8 +45,9 @@ Eliminar el FOUT (flash de tipografia de marca) a la primera visita. La solució
 ## Opcional: hint d'onboarding
 Un tooltip o overlay que expliqui els gestos bàsics (zoom, cerca, col·leccions) a la primera visita.
 
-## Editar layout mòbil i replantejar funcions
+## [TANCAT] Editar layout mòbil i replantejar funcions
 En mobil no m'acaba de convencer, crec que potser alguna funció simplement s'ha d'eliminar, com veure eres i marcs històrics. També la barra lateral crec que no funciona, suggereixo posar-hi un botó tipus a baix a la dreta de settings (o icone a definir) que permeti modificar la vista amb afegir coleccons, veure personatges de la vista actual, i aquesta interacció que en desktop sí que ofereix la lat bar.
+> Nota (2026-11-17): El botó de configuració a baix a la dreta amb el popup de pestanyes (Marcs, Col·leccions, Favorits, A la vista) ja substitueix la barra lateral al mòbil. Treure eres i marcs al mòbil es descarta de moment.
 
 ## [TANCAT] Unificar DB: data.js com a font única per a index.html i joc.html
 Ara la DB viu embedded a index.html i es copia a data.js. Objectiu: invertir-ho. data.js (o equivalent) és la font única, i cada pàgina carrega el que necessita (PEOPLE+EVENTS per al joc, tot per al cronograma). ERAS, MARCS, COLLECTIONS seguirien embedded a index.html perquè el joc no les necessita. Afecta: db_add_person escriu a data.js, index.html llegeix HB_DATA.PEOPLE via script src. Prerequisit: i18n real (les entrades de PEOPLE podrien tenir L() en data.js). Veure CLAUDE.md opció B.
@@ -71,11 +73,13 @@ Ara PD_PINNED només guarda data i QID, i el comentari de la línia és el nom +
 ## Categoria «arts» genèrica per a les especialitats no mapejades
 Desena categoria, paraigua per a tot el que ara cau a «sense categoria» perquè no hi encaixa: arquitectes, fotògrafs, ballarins, dissenyadors, il·lustradors, escultors que no siguin pintors, dramaturgs de teatre. No substitueix painting, music, literature ni cinema: recull el que queda fora. Cal decidir el nom visible (arts? altres arts?) i un color que aguanti la mesura — la família viu a L 61-71 i croma 31-65, i el parell més just actual (science/nocat) està a 19,8 de deltaE. Recordar que una categoria nova vol CINC llocs: CAT_COLORS i cat_<slug> a index.html, guessCats(), CAT_BY_P106 a _tools/dash.py i l opció del selector a dashboard.html. Veure CLAUDE.md.
 
-## Col·leccions: favorits i cercador (model Spotify complet)
+## [TANCAT] Col·leccions: favorits i cercador (model Spotify complet)
 Ara la barra lateral llista TOTES les col·leccions que existeixen, i això no escala: a Spotify una cosa són les playlists que existeixen i una altra les que tens a la teva biblioteca. Cal separar-ho: (1) un concepte de FAVORIT per a col·leccions —les teves i les d altri—, (2) que el menú lateral i el popup del mòbil només mostrin les que tens a favorits, (3) un cercador per trobar-ne d altres i afegir-les a favorits. Depèn de tenir el directori públic (i per tant servidor) per a les d altri, però el mecanisme de favorits i el cercador es poden fer abans, contra les pròpies i les de sèrie. Nota: el camp vis ja es desa a cada col·lecció des del #149, així que la part de public/privat no necessitarà migració.
 > Nota (2026-11-14): Aquesta entrada és per a favoritejar COL·LECCIONS, i no la tanca el que es va fer el 14/11/2026, que són favorits de PERSONES (secció pròpia al lateral + estrella a la fitxa i a «A la vista», a hb_favorits). Però ja deixa el patró fet: estrella buida/plena, i la secció al nivell de «Marcs històrics». Quan es faci això, que segueixi el mateix patró.
+> Nota (2026-11-17): Tancada com a duplicada: la idea continua, més detallada, a «Col·leccions com a playlists: catàleg, «Les meves» i compartir».
 
-## Posar un nom comercial al projecte, comprar el domini i publicar
+## [TANCAT] Posar un nom comercial al projecte, comprar el domini i publicar
+> Nota (2026-11-17): Fet el 17/11/2026: «Babilinia», domini www.babilinia.com (Cloudflare → GitHub Pages, HTTPS), logo amb la I-zigurat, icona, og.png i metadades a totes les pàgines.
 
 ## Reportar error: decidir qui rep el report
 El ⚠ de cada persona a «A la vista» i l'entrada del menú ⋮ criden WIP() i només treuen un toast de «En construcció». És l'últim placeholder que queda a la interfície. El que es vol és sense fricció: popup, descrius l'error, s'envia. Això no es pot fer només amb el navegador — hi ha d'haver algú escoltant a l'altra banda. mailto: envia des del correu de l'usuari i la meitat de la gent no té client configurat al mòbil; una incidència de GitHub prellenada demana compte de GitHub. Queda un servei de formularis: sense servidor propi i sense fricció. Cal decidir QUIN servei i QUÈ s'hi envia (el mínim: QID, camp que falla i text; mai res que identifiqui qui ho envia), i dir-ho a la pàgina, perquè són dades que van a un tercer.
@@ -97,3 +101,9 @@ Per decidir:
 1. Qui arriba de nou: barra lateral buida o amb una o dues col·leccions suggerides?
 2. Catàleg: només cercador, o també una llista per explorar? Amb 7 col·leccions un cercador sobra; amb 50, no.
 3. Qui obre un enllaç: veu només aquella col·lecció, o s'afegeix al que ja tenia?
+
+## Dates aproximades als esdeveniments
+Les persones tenen el camp `approx` (aprox / disputada) i els jocs no emparellen dues dates incertes a menys de 60 anys (`APX_GAP`). Els esdeveniments no en tenen: la Gran Piràmide o el Codi d'Hammurabi tenen data aproximada i un joc els podria comparar amb un altre esdeveniment a pocs anys. Cal: el camp a `EVENTS` (mateixos tres codis), que la fitxa de l'event ho mostri amb `~`, i que el guard dels jocs també el miri per als events.
+
+## Afegir esdeveniments des del dashboard
+Ara el dashboard només afegeix persones; els esdeveniments s'escriuen a mà a `db.js`. Un formulari que, a partir d'un QID de Wikidata, en tregui nom, any, article de la Viquipèdia, descripció i `sitelinks` (el motor de zoom els necessita), i deixi posar `imp` a mà. Compte amb les dates aC (veure CLAUDE.md, «Dates aC de Wikidata»).
