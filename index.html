@@ -3491,7 +3491,9 @@ function guiaColoca(){
   // Pas 1: el globus va FIX a l'esquerra del cercador, just sota la topbar. Així no salta quan
   // s'obren els resultats (que surten a sota del cercador i quedarien tapats).
   if(guiaPas===1){const rq=q.getBoundingClientRect();opcions.fix=()=>{const l=rq.left-bw-14;return l>=8&&{p:'esq',l,t:rq.bottom+10};};}
-  const lloc=guiaPas===1?['fix','baix']:(GUIA_LLOC[guiaPas]||['baix']);
+  // Pas 4: el globus a baix de tot, centrat, que el canvas és el protagonista; el halo marca «Vista global».
+  opcions.fons=()=>{const rs=scroll.getBoundingClientRect();return {p:'',l:cl(rs.left+(rs.width-bw)/2,8,W-bw-8),t:H-bh-56};};
+  const lloc=guiaPas===1?['fix','baix']:guiaPas===4?['fons']:(GUIA_LLOC[guiaPas]||['baix']);
   let o=null;for(const k of lloc){o=opcions[k]();if(o)break;}
   if(!o)o={p:'',l:cl(cx-bw/2,8,W-bw-8),t:cl(r.bottom+14,8,H-bh-8)};
   guiaEl.className='guia on'+(o.p?' p-'+o.p:'');
@@ -3520,6 +3522,9 @@ function guiaVes(n){
   guiaPas=n;guiaClau='';
   if(n===2&&guiaFocus&&!state.focus)setTimeout(()=>{if(guiaPas===2)guiaZoomA(guiaFocus);},60);
   if(n===3){guiaColFi=0;}
+  // Pas 4: la col·lecció ja està enquadrada, i «Vista global» no faria res. Ens acostem al triple
+  // sobre el centre perquè l'usuari tingui on moure's i el botó, alguna cosa a fer.
+  if(n===4)setTimeout(()=>{if(guiaPas===4){const r=scroll.getBoundingClientRect();zoomAt(r.left+r.width/2,3);}},150);
   if(n===1)guiaVist0=new Set(state.present);
   if(n!==2)guiaCtxFet=false;
   if(n===3){   // la col·lecció ha de ser a la vista: barra lateral oberta i secció desplegada
