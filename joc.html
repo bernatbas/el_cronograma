@@ -552,7 +552,7 @@
   /* «▲ més antic» a dalt i «▼ més nou» a BAIX de la llista (18/11/2026). Abans anaven les dues a
      dalt, una a cada banda, i «més nou ↓» quedava just on va el més antic: hi havia queixes. */
   .ordbar.ordbot{margin:8px 4px 0;}
-  .ordbar{font-size:13px;color:var(--text);}   /* a 11px i en gris no es veien (queixa d'en Bernat a l'escriptori) */
+  .ordbar{font-size:13px;color:var(--topbar-bg);font-weight:800;}   /* a 11px i en gris no es veien: ara grans, en terracota i ben negres */
   .ordlist{display:flex;flex-direction:column;gap:8px;}
   .orditem{display:flex;align-items:center;gap:12px;background:var(--canvas);border:1.5px solid var(--border-strong);border-radius:var(--r-card);padding:12px 14px;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none;box-shadow:0 2px 0 rgba(40,44,60,.05);transition:border-color .12s,box-shadow .12s,background .12s;}
   .orditem:hover{border-color:var(--topbar-bg);}
@@ -862,6 +862,7 @@
   @media (prefers-color-scheme:dark){
     .secnav.navcollapsed .modeswitch{background:var(--canvas);}
     .secnav.navcollapsed .mode.on{background:rgba(184,80,60,.22);color:#F0A493;}
+    .ordbar{color:#F0A493;}   /* «▲ més antic / ▼ més nou»: la terracota de fons clar, sobre fosc no es llegia */
     .badge,.err,.pchip,.pbtn.fav.on,.tagd{background:rgba(184,80,60,.22);color:#F0A493;}
     .tagd.done{background:rgba(46,155,91,.2);color:#7FD8A4;}
     .tagd.streak{background:rgba(199,154,58,.2);color:#E8C373;}
