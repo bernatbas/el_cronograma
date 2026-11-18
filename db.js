@@ -292,7 +292,7 @@ const COLLECTIONS=[
   // Filosofia de la ciència: els autors i els casos històrics de «Què és aquesta cosa anomenada
   // ciència?» (Chalmers), per a l'assignatura de la UNED. Q-ids resolts pel títol de l'article de la
   // Viquipèdia i verificats amb l'any esperat i la mateixa SPARQL que byIds() (16/11/2026).
-  {id:'ipcuned',name:'IPC - UNED 2026',wds:[
+  {id:'ipcuned',name:'UNED: IPC - 2026',wds:[
     'Q37388',   // Francis Bacon       1561–1626
     'Q37160',   // David Hume          1711–1776
     'Q81244',   // Karl Popper         1902–1994
