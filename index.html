@@ -854,6 +854,16 @@
   .guia.on{opacity:1;transform:none;}
   .guia.g0{width:400px;padding:24px 26px 18px;font-size:15.5px;line-height:1.6;border-radius:18px;}   /* la benvinguda, amb més presència */
   .guia.g0 h4{font-size:26px;margin-bottom:10px;}
+  /* Al mòbil, la TIRA: baixa i ampla, enganxada a dalt o a baix (on hi hagi lloc). Un globus no hi cap:
+     en horitzontal el canvas fa 300px i, amb el popup de configuració obert, als costats queden 160px. */
+  .guia.tira{display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:center;padding:9px 40px 9px 14px;font-size:13px;line-height:1.4;border-radius:12px;}
+  .guia.tira h4{grid-column:1;font-size:15px;margin:0 0 1px;}
+  .guia.tira p,.guia.tira .gchip{grid-column:1;}
+  .guia.tira .gchip{justify-self:start;margin-top:5px;}
+  .guia.tira .gft{grid-column:2;grid-row:1 / span 3;margin:0;flex-direction:column;gap:6px;}
+  .guia.tira .gdots span{margin-right:3px;}
+  .guia.amagada{opacity:0!important;pointer-events:none;}
+  @media (pointer:coarse){ .guia.g0{width:min(400px,calc(100vw - 32px));padding:18px 20px 14px;} .guia.g0 h4{font-size:22px;} }
   .guia h4{margin:0 22px 4px 0;font-family:'Oswald','Roboto Condensed','Arial Narrow',sans-serif;font-weight:500;font-size:17px;letter-spacing:.01em;color:#A8442F;}
   .guia p{margin:0;}
   .guia .gx{position:absolute;right:8px;top:8px;width:22px;height:22px;border:none;background:none;color:#A99089;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;border-radius:6px;}
@@ -1145,6 +1155,7 @@ const I18N={
     guia_p2_gen:"Aquí tens qui vivia alhora, de qualsevol àmbit: l’art, la ciència, la política… Segur que hi trobes alguna sorpresa.",
     guia_t3:"Col·leccions",
     guia_p3:"Aquí tens col·leccions de personatges per explorar. Prova «La Il·lustració» i els tindràs tots de cop. I quan vulguis, crea les teves.",
+    guia_p3_mob:"Toca aquest botó: hi ha col·leccions de personatges per explorar. Prova «La Il·lustració» i els tindràs tots de cop. I quan vulguis, crea les teves.",
     guia_p3_fet:"Aquí la tens, tota d’un cop d’ull. I si en vols una de teva, crea-la amb els personatges que vulguis.",
     guia_t4:"Viatja pel temps",
     guia_p4:"Fes zoom i arrossega per anar endavant i enrere en el temps. Si et perds, «Vista global» t’ho encaixa tot a la pantalla.",
@@ -3440,7 +3451,7 @@ q.placeholder=t('cro_search_ph');
 //   aquest bloc no s'hagi executat (una `let` aquí seria TDZ i aturaria tot l'script).
 // ============================================================
 var GUIA_LS='historiabasica.guia', GUIA_PERSONA='shakespeare', GUIA_COL='illustracio', GUIA_N=6;
-var guiaCol0=null, guiaColT=0, guiaColFi=0, guiaCtxFet=false, guiaPas=null, guiaEl=null, guiaHaloEl=null, guiaVeloEl=null, guiaRaf=0, guiaVist0=null, guiaFocus=null, guiaClau='';
+var guiaTabFet=false, guiaCol0=null, guiaColT=0, guiaColFi=0, guiaCtxFet=false, guiaPas=null, guiaEl=null, guiaHaloEl=null, guiaVeloEl=null, guiaRaf=0, guiaVist0=null, guiaFocus=null, guiaClau='';
 var GUIA_LLOC={1:['baix','dalt'],2:['baix','dalt','esq','dreta'],3:['dreta','baix'],4:['baix','esq'],5:['baix','dreta']};
 function guiaTick(){
   // Pas 2: un cop surt el context, la gràcia és VEURE'L. S'enquadra perquè es llegeixin els noms
@@ -3464,15 +3475,45 @@ function guiaObjectiu(){
     if(guiaFocus&&d.classList.contains('open')&&state.selected===guiaFocus){const b=d.querySelector('[data-act="context"]');if(b)return b;}
     return guiaFocus?barsLayer.querySelector(`.bar[data-id="${guiaFocus}"]`):null;
   }
-  if(guiaPas===3)return document.querySelector(`.sidebar .colitem[data-col="${GUIA_COL}"]`);
+  if(guiaPas===3){   // al mòbil les seccions viuen dins del popup: primer el botó, i amb el popup obert, la fila
+    if(guiaMob()&&$('#cfgwrap').hidden)return $('#cfgBtn');
+    return document.querySelector(`#collections .colitem[data-col="${GUIA_COL}"]`);
+  }
   if(guiaPas===4)return $('#fitAll');
   if(guiaPas===5){const a=document.querySelector('.modeswitch a[href="joc.html"]');if(a&&a.getBoundingClientRect().width)return a;return document.querySelector('.secnav .brand');}
   return null;
 }
+function guiaMob(){return matchMedia('(pointer:coarse)').matches;}
+// Mòbil: la tira, a dalt o a baix. Va a dalt si el que assenyala és a la meitat de baix (botó de
+// configuració, «Mostra context» dins la fitxa) o si la fitxa és oberta; si no, a baix.
+function guiaColocaTira(W,H){
+  const cfgObert=!$('#cfgwrap').hidden;
+  if(guiaPas===3&&cfgObert){   // el popup ocupa el centre: la tira s'amaga (ja s'ha llegit) i només queda l'halo
+    if(!guiaTabFet){guiaTabFet=true;const sec=$('#collections').closest('section'),i=CFG_SECS.indexOf(sec);if(i>=0)showCfgTab(i);}
+  }
+  const amaga=guiaPas===3&&cfgObert;   // també un cop activada: «Aquí la tens» s'ha de llegir amb la col·lecció a la vista
+  const cantonada=(guiaPas===2&&guiaCtxFet)||(guiaPas===3&&guiaColNova()&&!cfgObert);
+  const el=cantonada?null:guiaObjectiu(),r=el&&el.getBoundingClientRect();
+  const visible=r&&r.width>0&&r.bottom>0&&r.top<H;
+  const tw=Math.min(640,W-24),bh=guiaEl.offsetHeight;
+  const dalt=(visible&&r.top+r.height/2>H/2)||$('#detail').classList.contains('open');
+  const tb=document.querySelector('.topbar').getBoundingClientRect().bottom;
+  const T=dalt?tb+8:H-bh-12;
+  const clau=[amaga,dalt,visible&&[r.left,r.top,r.width,r.height].map(Math.round).join(','),tw,bh,W,H].join('|');
+  if(clau===guiaClau)return;guiaClau=clau;
+  guiaEl.className='guia on tira'+(amaga?' amagada':'');
+  guiaEl.style.width=tw+'px';guiaEl.style.left=Math.round((W-tw)/2)+'px';guiaEl.style.top=Math.round(T)+'px';
+  if(visible){Object.assign(guiaHaloEl.style,{left:(r.left-3)+'px',top:(r.top-3)+'px',width:(r.width+6)+'px',height:(r.height+6)+'px'});guiaHaloEl.classList.add('on');}
+  else guiaHaloEl.classList.remove('on');
+}
 function guiaColoca(){
   if(guiaPas==null)return;
   guiaRaf=requestAnimationFrame(guiaColoca);
-  const W=window.innerWidth,H=window.innerHeight,bw=guiaEl.offsetWidth,bh=guiaEl.offsetHeight;
+  const W=window.innerWidth,H=window.innerHeight;
+  if(guiaMob()&&guiaPas!==0)return guiaColocaTira(W,H);
+  if(guiaEl.style.width&&!guiaMob())guiaEl.style.width='';
+  if(guiaMob())guiaEl.style.width='';
+  const bw=guiaEl.offsetWidth,bh=guiaEl.offsetHeight;
   if((guiaPas===2&&guiaCtxFet)||(guiaPas===3&&guiaColNova())){   // context fet / col·lecció activada: a la cantonada, que no tapi el que s'ha de veure
     const clau='ctx'+bw+','+bh+','+W+','+H;if(clau===guiaClau)return;guiaClau=clau;
     guiaEl.className='guia on';guiaEl.style.left=(W-bw-24)+'px';guiaEl.style.top=(H-bh-64)+'px';
@@ -3534,6 +3575,7 @@ function guiaColNova(){return !!guiaCol0&&[...state.collections].some(c=>!guiaCo
 function guiaText(n){
   if(n===2&&guiaCtxFet)return guiaFocus===GUIA_PERSONA?'guia_p2_sh':'guia_p2_gen';
   if(n===3&&guiaColNova())return 'guia_p3_fet';
+  if(n===3&&guiaMob())return 'guia_p3_mob';
   return 'guia_p'+n;
 }
 // `nomesText`: només torna a pintar el globus (el text ha canviat), sense els efectes d'entrar al pas.
@@ -3544,10 +3586,12 @@ function guiaVes(n,nomesText){
     if(n!==2)guiaCtxFet=false;
     if(n===2&&guiaFocus&&!state.focus)setTimeout(()=>{if(guiaPas===2)guiaZoomA(guiaFocus);},60);
     if(n===3){   // la col·lecció ha de ser a la vista: barra lateral oberta i secció desplegada
-      guiaColFi=0;if(!guiaCol0)guiaCol0=new Set(state.collections);   // només la 1a vegada: tornant enrere des del 4, la col·lecció ja activada compta
-      if($('.body').classList.contains('collapsed'))$('#sidebarToggle').click();
-      const sec=$('#collections')&&$('#collections').closest('section');
-      if(sec&&sec.classList.contains('plegada')){const h=sec.querySelector('h3.sech');if(h)h.click();}
+      guiaColFi=0;guiaTabFet=false;if(!guiaCol0)guiaCol0=new Set(state.collections);   // només la 1a vegada: tornant enrere des del 4, la col·lecció ja activada compta
+      if(!guiaMob()){   // al mòbil no hi ha barra lateral: les col·leccions són dins del popup
+        if($('.body').classList.contains('collapsed'))$('#sidebarToggle').click();
+        const sec=$('#collections')&&$('#collections').closest('section');
+        if(sec&&sec.classList.contains('plegada')){const h=sec.querySelector('h3.sech');if(h)h.click();}
+      }
     }
     // Pas 4: la col·lecció ja està enquadrada, i «Vista global» no faria res. Ens allunyem (×1/4 sobre
     // el centre): la col·lecció queda petita enmig de la història i el botó la torna a enquadrar.
@@ -3589,12 +3633,19 @@ function guiaObre(){
         if(state.present.has(GUIA_PERSONA)){guiaFocus=GUIA_PERSONA;revealPerson(GUIA_PERSONA);return guiaVes(2);}
         // Després del clic, no dins: el clic bombolleja fins al document, que tanca els resultats
         // perquè «s'ha clicat fora del cercador», i la cerca no es veia mai.
-        setTimeout(()=>{q.value='Shakespeare';q.focus();q.dispatchEvent(new Event('input'));},0);
+        setTimeout(()=>{q.value='Shakespeare';if(!guiaMob())q.focus();q.dispatchEvent(new Event('input'));},0);   // al mòbil sense focus: el teclat taparia mitja pantalla
       }
     });
   }
   if(typeof gtag!=='undefined')gtag('event','guia_oberta');
   guiaCol0=null;guiaVes(0);cancelAnimationFrame(guiaRaf);guiaColoca();
+}
+// En vertical surt primer l'avís de girar el mòbil: la guia l'espera (mai se solapen) i arrenca quan
+// l'usuari el tanca (continua en vertical) o gira el mòbil (continua en horitzontal).
+function guiaQuanLliure(){
+  const pw=document.getElementById('portraitWall');
+  if(pw&&pw.classList.contains('on'))return setTimeout(guiaQuanLliure,400);
+  guiaObre();
 }
 function guiaTanca(){
   if(typeof gtag!=='undefined')gtag('event','guia_tancada',{pas:guiaPas});
@@ -3614,7 +3665,7 @@ if(PERSON_QID){
 }else{
   restoreState();
   bootDefault(()=>{
-    if(_urlP.has('guia')||(GUIA_PRIMERA&&!matchMedia('(pointer:coarse)').matches))setTimeout(guiaObre,700);
+    if(_urlP.has('guia')||GUIA_PRIMERA)setTimeout(guiaQuanLliure,700);
   });
 }
 // floorH (el "terra" on s'ancoren l'any de l'event, la linia d'avui i la guia) es calcula DINS de

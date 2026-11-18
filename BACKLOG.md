@@ -52,7 +52,8 @@ Un tooltip o overlay que expliqui els gestos bàsics (zoom, cerca, col·leccions
 > - Pas 3: halo al botó de configuració; amb el popup obert la tira s'amaga i l'halo va a la fila «La Il·lustració». En tancar-lo, torna amb el text de «després».
 > - Passos 4 i 5: tira a baix; halo a la icona de Vista global i a la de Jocs.
 > - Vertical: opció A. Surt primer la targeta de «gira el mòbil» com ara; la guia espera i comença quan l'usuari gira el mòbil (continua en horitzontal) o tanca la targeta (continua en vertical). Mai se solapen.
-> - Pendent: si els textos del mòbil han de ser més curts que els d'escriptori.
+> - Textos: els mateixos que a l'escriptori; només el pas 3 en té un de propi («Toca aquest botó: …»).
+> Nota (2026-11-18): Feta en local, pendent que en Bernat la validi al mòbil de veritat.
 
 ## [TANCAT] Editar layout mòbil i replantejar funcions
 En mobil no m'acaba de convencer, crec que potser alguna funció simplement s'ha d'eliminar, com veure eres i marcs històrics. També la barra lateral crec que no funciona, suggereixo posar-hi un botó tipus a baix a la dreta de settings (o icone a definir) que permeti modificar la vista amb afegir coleccons, veure personatges de la vista actual, i aquesta interacció que en desktop sí que ofereix la lat bar.
