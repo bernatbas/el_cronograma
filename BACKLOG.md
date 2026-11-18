@@ -45,6 +45,14 @@ Eliminar el FOUT (flash de tipografia de marca) a la primera visita. La solució
 ## Guia de benvinguda: falta el mòbil
 Un tooltip o overlay que expliqui els gestos bàsics (zoom, cerca, col·leccions) a la primera visita.
 > Nota (2026-11-17): Feta per a escriptori (sis passos, Shakespeare + La Il·lustració; detall a CLAUDE.md). Falta adaptar-la al mòbil: les col·leccions viuen al popup de configuració, el canvas en horitzontal és baix, i en vertical ja surt l'avís de girar.
+> Nota (2026-11-18): Disseny decidit (encara no fet). En comptes de globus, una TIRA: targeta baixa (~60px) i ampla, enganxada a dalt o a baix segons on hi hagi lloc, i un halo sobre el que s'ha de tocar. Mesurat a 740×360: canvas de 300px, la fitxa puja des de baix i en fa 190, el popup de configuració ocupa el centre (420×330) i als costats només queden 160px.
+> - Pas 0: targeta centrada, més compacta.
+> - Pas 1: tira a baix, halo al cercador. El nom suggerit busca SENSE obrir el teclat (en horitzontal taparia mitja pantalla).
+> - Pas 2: tira a dalt mentre la fitxa és oberta (halo a «Mostra context»); després, a baix amb la sorpresa.
+> - Pas 3: halo al botó de configuració; amb el popup obert la tira s'amaga i l'halo va a la fila «La Il·lustració». En tancar-lo, torna amb el text de «després».
+> - Passos 4 i 5: tira a baix; halo a la icona de Vista global i a la de Jocs.
+> - Vertical: opció A. Surt primer la targeta de «gira el mòbil» com ara; la guia espera i comença quan l'usuari gira el mòbil (continua en horitzontal) o tanca la targeta (continua en vertical). Mai se solapen.
+> - Pendent: si els textos del mòbil han de ser més curts que els d'escriptori.
 
 ## [TANCAT] Editar layout mòbil i replantejar funcions
 En mobil no m'acaba de convencer, crec que potser alguna funció simplement s'ha d'eliminar, com veure eres i marcs històrics. També la barra lateral crec que no funciona, suggereixo posar-hi un botó tipus a baix a la dreta de settings (o icone a definir) que permeti modificar la vista amb afegir coleccons, veure personatges de la vista actual, i aquesta interacció que en desktop sí que ofereix la lat bar.
