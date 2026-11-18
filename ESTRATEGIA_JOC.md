@@ -85,8 +85,11 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
   llista i «▼ més nou» **a baix**. Abans anaven totes dues a dalt, una a cada banda, i «més nou ↓»
   quedava just on va el més antic. Sense guanyar scroll: en horitzontal «▲ més antic» comparteix fila
   amb el títol (la fila estalviada és la que fa servir la de baix), i a 320×460 s'amaga el subtítol,
-  que ara repetia el que diuen les etiquetes (de −58px a −33px). La llista en horitzontal ja tenia
-  25px de scroll intern a 568×320 i 5px a 740×340, i en continua tenint els mateixos.
+  que ara repetia el que diuen les etiquetes (de −58px a −39px). Etiquetes a 13px i en color de text
+  (a 11px i en gris no es veien a l'escriptori). En horitzontal la fila de la llista és
+  `minmax(0,max-content)` amb `align-content:start`: si s'estirava (`1fr`), «▼ més nou» quedava enganxada
+  a baix de tot, lluny de l'última carta. La llista en horitzontal ja tenia scroll intern (25px a
+  568×320, 5px a 740×340); ara en té 22 i 2.
 
 ## 3. Decisions (registre)
 - **2026-08-12 · Dades: snapshot provisional (`data.js`).** De moment **dupliquem** la DB en un

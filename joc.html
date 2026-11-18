@@ -552,6 +552,7 @@
   /* «▲ més antic» a dalt i «▼ més nou» a BAIX de la llista (18/11/2026). Abans anaven les dues a
      dalt, una a cada banda, i «més nou ↓» quedava just on va el més antic: hi havia queixes. */
   .ordbar.ordbot{margin:8px 4px 0;}
+  .ordbar{font-size:13px;color:var(--text);}   /* a 11px i en gris no es veien (queixa d'en Bernat a l'escriptori) */
   .ordlist{display:flex;flex-direction:column;gap:8px;}
   .orditem{display:flex;align-items:center;gap:12px;background:var(--canvas);border:1.5px solid var(--border-strong);border-radius:var(--r-card);padding:12px 14px;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none;box-shadow:0 2px 0 rgba(40,44,60,.05);transition:border-color .12s,box-shadow .12s,background .12s;}
   .orditem:hover{border-color:var(--topbar-bg);}
@@ -589,12 +590,12 @@
   }
   /* «Ordena la línia»: HORITZONTAL TACTIL = mateixa logica que els altres jocs (pila a l'esquerra, boto/resultat a la dreta) */
   @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
-    .ordwrap{max-width:none;height:100%;display:grid;grid-template-columns:1fr minmax(140px,190px);grid-template-areas:"head foot" "list foot" "bot foot";grid-template-rows:auto minmax(0,1fr) auto;column-gap:16px;row-gap:5px;align-items:start;}
+    .ordwrap{max-width:none;height:100%;display:grid;grid-template-columns:1fr minmax(140px,190px);grid-template-areas:"head foot" "list foot" "bot foot";grid-template-rows:auto minmax(0,max-content) auto;align-content:start;column-gap:16px;row-gap:5px;align-items:start;}
     .ordhead{grid-area:head;margin:0;text-align:left;}
     .ordhead h2{font-size:15px;} .ordhead .sub{display:none;}
     /* «▲ més antic» comparteix fila amb el títol (a la dreta, just a sobre de la llista): la fila que
        s'estalvia és la que fa servir «▼ més nou» a sota. Si no, la llista perdia 18px i feia scroll. */
-    .ordbar{grid-area:head;justify-self:end;align-self:end;margin:0;font-size:9px;}
+    .ordbar{grid-area:head;justify-self:end;align-self:end;margin:0;font-size:11px;line-height:1;}
     .ordbar.ordbot{grid-area:bot;justify-self:end;align-self:start;margin:0;}
     /* Llista centrada verticalment dins l'espai disponible => aire equilibrat a dalt i a baix (mes elegant que enganxada al footer). */
     .ordlist{grid-area:list;gap:6px;min-height:0;align-self:stretch;overflow-y:auto;-webkit-overflow-scrolling:touch;}
@@ -774,7 +775,7 @@
     .ordhead{margin:0 0 8px;}
     .ordhead h2{font-size:16px;}
     .ordhead .sub{font-size:11px;margin-top:2px;}
-    .ordbar{margin:0 4px 5px;font-size:10px;}
+    .ordbar{margin:0 4px 5px;font-size:12px;}
     .ordbar.ordbot{margin:5px 4px 0;}
     .ordlist{gap:5px;}
     .orditem{padding:6px 12px;gap:10px;}
