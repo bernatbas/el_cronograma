@@ -549,6 +549,9 @@
   .ordhead h2{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;font-weight:600;letter-spacing:.03em;font-size:20px;margin:0;}
   .ordhead .sub{color:var(--text2);font-size:12px;margin-top:3px;}
   .ordbar{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin:0 4px 8px;}
+  /* «▲ més antic» a dalt i «▼ més nou» a BAIX de la llista (18/11/2026). Abans anaven les dues a
+     dalt, una a cada banda, i «més nou ↓» quedava just on va el més antic: hi havia queixes. */
+  .ordbar.ordbot{margin:8px 4px 0;}
   .ordlist{display:flex;flex-direction:column;gap:8px;}
   .orditem{display:flex;align-items:center;gap:12px;background:var(--canvas);border:1.5px solid var(--border-strong);border-radius:var(--r-card);padding:12px 14px;touch-action:none;cursor:grab;-webkit-user-select:none;user-select:none;box-shadow:0 2px 0 rgba(40,44,60,.05);transition:border-color .12s,box-shadow .12s,background .12s;}
   .orditem:hover{border-color:var(--topbar-bg);}
@@ -586,10 +589,13 @@
   }
   /* «Ordena la línia»: HORITZONTAL TACTIL = mateixa logica que els altres jocs (pila a l'esquerra, boto/resultat a la dreta) */
   @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
-    .ordwrap{max-width:none;height:100%;display:grid;grid-template-columns:1fr minmax(140px,190px);grid-template-areas:"head head" "bar foot" "list foot";grid-template-rows:auto auto minmax(0,1fr);column-gap:16px;row-gap:5px;align-items:start;}
+    .ordwrap{max-width:none;height:100%;display:grid;grid-template-columns:1fr minmax(140px,190px);grid-template-areas:"head foot" "list foot" "bot foot";grid-template-rows:auto minmax(0,1fr) auto;column-gap:16px;row-gap:5px;align-items:start;}
     .ordhead{grid-area:head;margin:0;text-align:left;}
     .ordhead h2{font-size:15px;} .ordhead .sub{display:none;}
-    .ordbar{grid-area:bar;margin:0;font-size:9px;}
+    /* «▲ més antic» comparteix fila amb el títol (a la dreta, just a sobre de la llista): la fila que
+       s'estalvia és la que fa servir «▼ més nou» a sota. Si no, la llista perdia 18px i feia scroll. */
+    .ordbar{grid-area:head;justify-self:end;align-self:end;margin:0;font-size:9px;}
+    .ordbar.ordbot{grid-area:bot;justify-self:end;align-self:start;margin:0;}
     /* Llista centrada verticalment dins l'espai disponible => aire equilibrat a dalt i a baix (mes elegant que enganxada al footer). */
     .ordlist{grid-area:list;gap:6px;min-height:0;align-self:stretch;overflow-y:auto;-webkit-overflow-scrolling:touch;}
     .ordfoot{grid-area:foot;margin:0;align-self:center;text-align:center;}
@@ -756,12 +762,20 @@
     main:has(.pwrap){padding-top:10px;padding-bottom:10px;}
     .pimg{height:clamp(160px,34vh,320px);}
   }
+  /* «Ordena la línia»: VERTICAL MOLT baixa (320×460, l'iPhone SE de 1a generació amb la barra del navegador).
+     L'etiqueta «▼ més nou» a sota de la llista hi afegia 20px a una pantalla que ja feia scroll. Ara les
+     dues etiquetes diuen on va cada cosa, i el subtítol («de més antic (dalt) a més nou (baix)») sobra. */
+  @media (orientation:portrait) and (max-height:500px){
+    .ordhead .sub{display:none;}
+    .orditem{padding-top:5px!important;padding-bottom:5px!important;}
+  }
   /* «Ordena la línia»: VERTICAL en pantalles baixes (iPhone SE i similars) => lletra i marges més petits perquè el resultat càpiga sense scroll */
   @media (orientation:portrait) and (max-height:770px){
     .ordhead{margin:0 0 8px;}
     .ordhead h2{font-size:16px;}
     .ordhead .sub{font-size:11px;margin-top:2px;}
     .ordbar{margin:0 4px 5px;font-size:10px;}
+    .ordbar.ordbot{margin:5px 4px 0;}
     .ordlist{gap:5px;}
     .orditem{padding:6px 12px;gap:10px;}
     .onm{font-size:13px;line-height:1.15;}
@@ -1025,8 +1039,8 @@
       err_wikidata:"No s'ha pogut connectar amb Wikidata. Comprova la connexió i torna-ho a provar.",
       // -- Ordena la línia --
       ord_sub:'Arrossega per ordenar de més antic (dalt) a més nou (baix) · Repte diari',
-      oldest:'↑ més antic',
-      newest:'més nou ↓',
+      oldest:'▲ més antic',
+      newest:'▼ més nou',
       ord_submit:'Ho tinc!',
       ord_locked_win:'Encertat! 🎉',
       ord_locked_lose:'No encertat 😬',
@@ -1954,7 +1968,7 @@
 
     function render(){
       const subHTML = locked ? '' : '<div class="sub">'+t('ord_sub')+'</div>';
-      root.innerHTML='<div class="ordwrap"><div class="ordhead"><h2>🕰️ '+t('t_ordena')+'</h2>'+subHTML+'</div><div class="ordbar"><span>'+t('oldest')+'</span><span>'+t('newest')+'</span></div><div class="ordlist"></div><div class="ordfoot"><button class="cta" id="ordsubmit">'+t('ord_submit')+'</button></div></div>';
+      root.innerHTML='<div class="ordwrap"><div class="ordhead"><h2>🕰️ '+t('t_ordena')+'</h2>'+subHTML+'</div><div class="ordbar"><span>'+t('oldest')+'</span></div><div class="ordlist"></div><div class="ordbar ordbot"><span>'+t('newest')+'</span></div><div class="ordfoot"><button class="cta" id="ordsubmit">'+t('ord_submit')+'</button></div></div>';
       const list=root.querySelector('.ordlist');
       list.innerHTML=order.map(rowHTML).join('');
       list.querySelectorAll('.orditem').forEach(el=>{ el.addEventListener('pointerdown',function(e){ startDrag(e,el); }); });

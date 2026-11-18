@@ -81,6 +81,12 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
   mira a 12 mides i ho converteix en **avisos grocs** al CI, no en errors. Pendents coneguts (i
   aparcats): Memory en horitzontal, resultat de l'«Abans o després?» en horitzontal, «Abans o
   després?» a 1366×657, Ordena a 320×460.
+- **Ordena la línia, on va cada cosa** (18/11/2026, per una queixa): «▲ més antic» **a dalt** de la
+  llista i «▼ més nou» **a baix**. Abans anaven totes dues a dalt, una a cada banda, i «més nou ↓»
+  quedava just on va el més antic. Sense guanyar scroll: en horitzontal «▲ més antic» comparteix fila
+  amb el títol (la fila estalviada és la que fa servir la de baix), i a 320×460 s'amaga el subtítol,
+  que ara repetia el que diuen les etiquetes (de −58px a −33px). La llista en horitzontal ja tenia
+  25px de scroll intern a 568×320 i 5px a 740×340, i en continua tenint els mateixos.
 
 ## 3. Decisions (registre)
 - **2026-08-12 · Dades: snapshot provisional (`data.js`).** De moment **dupliquem** la DB en un
