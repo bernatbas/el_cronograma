@@ -1159,6 +1159,7 @@ const I18N={
     guia_p3_fet:"Aquí la tens, tota d’un cop d’ull. I si en vols una de teva, crea-la amb els personatges que vulguis.",
     guia_t4:"Viatja pel temps",
     guia_p4:"Fes zoom i arrossega per anar endavant i enrere en el temps. Si et perds, «Vista global» t’ho encaixa tot a la pantalla.",
+    guia_p4_mob:"Fes zoom i arrossega per anar endavant i enrere en el temps. Si et perds, aquest botó t’ho encaixa tot a la pantalla.",
     guia_t5:"Una cosa més",
     guia_p5:"Si et ve de gust posar-te a prova, a Jocs hi ha un repte nou cada dia.",
     guia_prev:"Enrere",
@@ -3579,6 +3580,7 @@ function guiaText(n){
   if(n===2&&guiaCtxFet)return guiaFocus===GUIA_PERSONA?'guia_p2_sh':'guia_p2_gen';
   if(n===3&&guiaColNova())return 'guia_p3_fet';
   if(n===3&&guiaMob())return 'guia_p3_mob';
+  if(n===4&&guiaMob())return 'guia_p4_mob';   // al mòbil «Vista global» és només una icona: «aquest botó», i l'halo el marca
   return 'guia_p'+n;
 }
 // `nomesText`: només torna a pintar el globus (el text ha canviat), sense els efectes d'entrar al pas.
