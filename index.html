@@ -3460,7 +3460,10 @@ function guiaTick(){
   // Pas 3: activar la col·lecció no fa zoom (decisió general de l'app), però a la guia la gràcia
   // és veure-la sencera. Les persones arriben de Wikidata a poc a poc: s'enquadra quan para.
   if(guiaPas===3&&guiaColNova()&&state.present.size){
-    if(!guiaColFi){guiaColFi=Date.now()+4000;guiaClau='';setTimeout(()=>{if(guiaPas===3)guiaVes(3,true);},0);}   // canvia el text: ja l'ha activada
+    if(!guiaColFi){guiaColFi=Date.now()+4000;guiaClau='';setTimeout(()=>{if(guiaPas===3)guiaVes(3,true);},0);   // canvia el text: ja l'ha activada
+      // Al mòbil la col·lecció s'activa dins del popup, que la tapa: el tanquem sol (després de mig
+      // segon, que es vegi que s'ha marcat) i així apareix la tira de «després».
+      if(guiaMob()&&!$('#cfgwrap').hidden)setTimeout(()=>{if(guiaPas===3)closeCfg();},500);}
     if(Date.now()<guiaColFi){clearTimeout(guiaColT);guiaColT=setTimeout(()=>{if(guiaPas===3)fitToPresent();},500);}
     return;
   }
