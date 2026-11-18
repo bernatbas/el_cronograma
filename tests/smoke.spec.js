@@ -911,8 +911,8 @@ test('Guia: sis passos amb fletxes i la X la tanca per sempre', async ({ page })
     if (i === 2) await expect(page.locator('.bar[data-id="shakespeare"]')).toHaveCount(1);
     if (i === 3) await expect(page.locator('.bar[data-id="shakespeare"]')).toHaveCount(0);
   }
-  await expect(g.locator('.gnext')).toHaveCount(0);       // l'últim pas només té l'enrere
-  await g.locator('.gx').click();
+  await expect(g.locator('.gnext')).toHaveCount(0);       // l'últim pas: enrere i «Finalitza»
+  await g.locator('.gfi').click();                         // fa el mateix que la X
   await expect(page.locator('.guia.on')).toHaveCount(0);
   expect(await page.evaluate(() => localStorage.getItem('historiabasica.guia'))).toBe('vista');
 });

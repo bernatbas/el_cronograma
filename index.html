@@ -876,6 +876,8 @@
   .guia .gar{width:30px;height:30px;margin-left:6px;border-radius:50%;border:1px solid #E3B6A8;background:#fff;color:#B8503C;cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;}
   .guia .gar:hover{background:#FBE6DE;}
   .guia .gar[disabled]{opacity:.3;cursor:default;background:#fff;}
+  .guia .gfi{height:30px;margin-left:6px;padding:0 14px;border-radius:999px;border:none;background:#B8503C;color:#fff;font:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+  .guia .gfi:hover{background:#A8442F;}
   .guia::after{content:"";position:absolute;width:12px;height:12px;background:#FFF7F2;transform:rotate(45deg);display:none;}
   .guia.p-baix::after{display:block;top:-7px;left:var(--gx,30px);border-left:1px solid #EDCFC4;border-top:1px solid #EDCFC4;}
   .guia.p-dalt::after{display:block;bottom:-7px;left:var(--gx,30px);border-right:1px solid #EDCFC4;border-bottom:1px solid #EDCFC4;}
@@ -925,6 +927,7 @@
     .guia .gar,.guia .gar[disabled]{background:#3A302D;border-color:#6A4338;color:#F0A493;}
     .guia .gar:hover{background:#4A3A35;}
     .guia-velo{background:rgba(0,0,0,.35);}
+    .guia .gfi{background:#C9634D;}
   }
 </style>
 </head>
@@ -1164,6 +1167,7 @@ const I18N={
     guia_p5:"Si et ve de gust posar-te a prova, a Jocs hi ha un repte nou cada dia.",
     guia_prev:"Enrere",
     guia_next:"Endavant",
+    guia_fi:"Finalitza",
     cro_empty_canvas:"Clica una col·lecció a l'esquerra o cerca un personatge — o estudia només els períodes.",
     cro_rotate:'Gira el mòbil per veure millor el cronograma',
     cro_rotate_close:"Tanca l'avís",
@@ -3610,7 +3614,7 @@ function guiaVes(n,nomesText){
     ${n===1&&p?`<button class="gchip" type="button">${esc(L(p.name))}</button>`:''}
     <div class="gft"><span class="gdots">${dots}</span><span>
       <button class="gar gprev" type="button" aria-label="${esc(t('guia_prev'))}" ${n===0?'disabled':''}><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3M7 4L3 8l4 4"/></svg></button>
-      ${n<GUIA_N-1?`<button class="gar gnext" type="button" aria-label="${esc(t('guia_next'))}"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>`:''}
+      ${n<GUIA_N-1?`<button class="gar gnext" type="button" aria-label="${esc(t('guia_next'))}"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>`:`<button class="gfi" type="button">${esc(t('guia_fi'))}</button>`}
     </span></div>`;
   guiaVeloEl.classList.toggle('on',n===0);
 }
@@ -3631,7 +3635,7 @@ function guiaObre(){
     guiaEl=document.createElement('div');guiaEl.className='guia';guiaEl.setAttribute('role','dialog');
     document.body.append(guiaVeloEl,guiaHaloEl,guiaEl);
     guiaEl.addEventListener('click',e=>{
-      if(e.target.closest('.gx'))return guiaTanca();
+      if(e.target.closest('.gx')||e.target.closest('.gfi'))return guiaTanca();   // «Finalitza» = la X, però menys brusc
       if(e.target.closest('.gprev'))return guiaVes(Math.max(0,guiaPas-1));
       if(e.target.closest('.gnext'))return guiaSeguent();
       if(e.target.closest('.gchip')){   // escriu el nom i busca; AFEGIR-LO ho fa l'usuari clicant el resultat (guiaTick ho detecta)
