@@ -3,8 +3,17 @@
 <head>
 <meta charset="utf-8" />
 <link rel="icon" href="img/icona.svg" type="image/svg+xml">
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-0L1N4BT3QQ"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-0L1N4BT3QQ');</script>
+<script>
+// Google Analytics NOMÉS al domini (19/11/2026). Fora d'aquí (el CI, que corre a localhost en servidors
+// dels EUA, les proves locals, el doble clic) no es carrega: el CI sol sumava ~100 «usuaris» per execució.
+// `gtag` queda sense definir, i totes les crides de la pàgina ja comproven `typeof gtag`.
+if(/(^|\.)babilinia\.com$/.test(location.hostname)){
+  window.dataLayer=window.dataLayer||[];
+  window.gtag=function(){dataLayer.push(arguments);};
+  gtag('js',new Date());gtag('config','G-0L1N4BT3QQ');
+  var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-0L1N4BT3QQ';document.head.appendChild(s);
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=swap" media="print" onload="this.media='all'">
