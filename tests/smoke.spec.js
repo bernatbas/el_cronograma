@@ -475,7 +475,8 @@ test.describe('Col·leccions pròpies', () => {
     const fila = page.locator('#collres [data-addq]').first();
     await fila.click();
     await expect(page.locator('#detail .collrm')).toHaveCount(1);
-    await expect(fila).toHaveClass(/in/);                     // el + passa a ✓
+    await expect(camp).toHaveValue('');                       // la cerca es buida per afegir el següent
+    await expect(page.locator('#collres [data-addq]')).toHaveCount(0);
     await expect(camp).toBeFocused();                         // el camp no s'ha refet (al mòbil, el teclat)
     expect((await mevesDesades(page))[0].wds).toHaveLength(1);
   });

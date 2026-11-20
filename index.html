@@ -2165,7 +2165,13 @@ function bindCollAdd(d,c){
     if(r&&!r.classList.contains('in')){
       ev.stopPropagation();
       const w=collWdRes.find(x=>x.qid===r.dataset.addq);if(w)wdAPersona(w);   // de Wikidata: que tingui nom a la llista
-      if(setMember(c.id,r.dataset.addq,true))refrescaCollCard(c);
+      if(setMember(c.id,r.dataset.addq,true)){
+        // Afegit: la cerca es buida per començar el següent (decisió d'en Bernat). El camp NO es refà,
+        // només se'n buida el valor: així conserva el focus i, al mòbil, el teclat.
+        clearTimeout(collWdTimer);collWdSeq++;collCercaTxt='';collWdRes=[];collWdStatus='idle';
+        const i=$('#collq');if(i){i.value='';i.focus();}
+        refrescaCollCard(c);
+      }
     }
   };
   const i=$('#collq');
