@@ -917,3 +917,23 @@ test('Guia: sis passos amb fletxes i la X la tanca per sempre', async ({ page })
   expect(await page.evaluate(() => localStorage.getItem('historiabasica.guia'))).toBe('vista');
 });
 
+// ─── Compartir col·leccions (?col=) ─────────────────────────────────────────
+// L'enllaç que es comparteix és /?col=<id>. Ha d'activar la col·lecció, deixar l'adreça neta (si no,
+// en recarregar la tornaria a activar/desactivar) i no posar-hi la guia de benvinguda.
+test('?col= activa la col·lecció compartida i neteja l\'adreça', async ({ page }) => {
+  await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"results":{"bindings":[]}}', contentType: 'application/json' }));
+  await page.goto(INDEX + '?col=filosofs');
+  await expect.poll(() => page.evaluate(() => [...state.collections].includes('filosofs')), { timeout: 8000 }).toBe(true);
+  expect(await page.evaluate(() => location.search)).toBe('');
+  await expect(page.locator('.guia.on')).toHaveCount(0);
+});
+
+test('el botó de compartir copia l\'enllaç i no activa la col·lecció', async ({ page }) => {
+  test.skip(await (async () => { await page.goto(INDEX); return isCoarse(page); })(), 'al mòbil obre el menú de compartir del sistema');
+  await page.evaluate(() => { window.__copiat = null; navigator.clipboard.writeText = async t => { window.__copiat = t; }; });
+  await openCollectionsSection(page);
+  await page.locator('[data-collshare="filosofs"]').click();
+  await expect.poll(() => page.evaluate(() => window.__copiat)).toMatch(/\/\?col=filosofs$/);
+  expect(await page.evaluate(() => [...state.collections].includes('filosofs'))).toBe(false);
+});
+

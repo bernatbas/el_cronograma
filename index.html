@@ -1148,6 +1148,8 @@ const I18N={
     cro_coll_saved: v => '«'+v.name+'» desada amb '+v.n+(v.n===1?' personatge':' personatges'),
     cro_coll_saved_empty: v => '«'+v.name+'» creada, encara buida',
     cro_open_site:'Obre el lloc web',
+    cro_coll_share:'Comparteix la col·lecció',
+    cro_coll_link_copied:'Enllaç copiat',
     cro_center:'Mostra’l',
     cro_remove:'Treu',
     cro_empty_people:"Cap personatge encara. Cerca'n un a dalt.",
@@ -1783,6 +1785,7 @@ function renderSidebar(){
   const extIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3H3a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1v-3"/><path d="M10 2h4v4M14 2L8 8"/></svg>';
   // Les colleccions propies porten un ⋮ que obre la seva fitxa (reanomenar, veure i treure
   // gent, esborrar). Les de serie no en porten: s'editen al dashboard.
+  const shareIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10V2.5M5 5.2 8 2.2l3 3"/><path d="M4.5 7.5H3.8a.8.8 0 0 0-.8.8v5a.8.8 0 0 0 .8.8h8.4a.8.8 0 0 0 .8-.8v-5a.8.8 0 0 0-.8-.8h-.7"/></svg>';
   const optIco='<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="8" cy="13" r="1.4"/></svg>';
   // ⚠️ El camp del nom NO es pot tornar a crear a cada render. Al mobil, obrir el teclat
   // canvia el viewport, el resize dispara scheduleSettle() → render(), i un innerHTML nou
@@ -1791,7 +1794,7 @@ function renderSidebar(){
   // altre. Per aixo, si la caixa ja hi es, aqui nomes es refan els BOTONS i no es toca.
   const _cont=$('#collections');
   const _viu=newCollOpen?_cont.querySelector('.newcolbox'):null;
-  const _botons=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}<span class="cname">${esc(c.name)}</span><span class="cnt">${c.wds.length}</span>${c._mine?`<span class="colx" role="button" tabindex="0" data-collopt="${c.id}" title="${t('cro_coll_opts')}">${optIco}</span>`:''}${c.url?`<a class="extlink" href="${c.url}" target="_blank" rel="noopener" title="${t('cro_open_site')}" onclick="event.stopPropagation()">${extIco}</a>`:''}</button>`).join('')
+  const _botons=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}<span class="cname">${esc(c.name)}</span><span class="cnt">${c.wds.length}</span>${c._mine?`<span class="colx" role="button" tabindex="0" data-collopt="${c.id}" title="${t('cro_coll_opts')}">${optIco}</span>`:`<span class="extlink colshare" role="button" tabindex="0" data-collshare="${c.id}" title="${t('cro_coll_share')}" aria-label="${t('cro_coll_share')}">${shareIco}</span>`}${c.url?`<a class="extlink" href="${c.url}" target="_blank" rel="noopener" title="${t('cro_open_site')}" onclick="event.stopPropagation()">${extIco}</a>`:''}</button>`).join('')
   if(_viu){
     _cont.querySelectorAll('.colitem, .newcol').forEach(n=>n.remove());
     _viu.insertAdjacentHTML('beforebegin',_botons);
@@ -2519,6 +2522,8 @@ barmenu.addEventListener('click',e=>{
 $('#collections').addEventListener('click',e=>{
   const x=e.target.closest('[data-collopt]');
   if(x){e.stopPropagation();openCollDetail(x.getAttribute('data-collopt'));return;}   // el ⋮ va DINS del boto de toggle
+  const sh=e.target.closest('[data-collshare]');
+  if(sh){e.stopPropagation();compartirColleccio(sh.getAttribute('data-collshare'));return;}   // la icona de compartir, igual
   if(e.target.closest('[data-newcol]')){openNewColl();return;}
   if(e.target.closest('.newcolbox'))return;                                    // el camp i la casella son zona propia
   const b=e.target.closest('[data-col]');if(b)toggleCollection(b.getAttribute('data-col'));
@@ -3674,6 +3679,29 @@ function guiaTanca(){
 // Primera visita = res desat encara. S'ha de llegir ABANS del boot, que desa l'estat de seguida.
 const GUIA_PRIMERA=(function(){try{return !localStorage.getItem(LS_KEY)&&!localStorage.getItem(GUIA_LS);}catch(ex){return false;}})();
 
+// ============================================================
+// [13] COMPARTIR COL·LECCIONS (20/11/2026) — només les del catàleg (`db.js`)
+// L'enllaç és `/?col=<id>`. Qui l'obre la veu activada i enquadrada; el que ja tenia a la línia es
+// queda (decisió d'en Bernat) i ho pot desfer amb «Desfés». Les col·leccions pròpies NO tenen botó:
+// viuen al navegador de qui les ha fet, i l'enllaç no les trobaria (per a això caldria posar-hi els Q-ids).
+// ============================================================
+function compartirColleccio(cid){
+  const c=COLLECTIONS.find(x=>x.id===cid);if(!c)return;
+  const url=location.origin+location.pathname.replace(/index\.html$/,'')+'?col='+encodeURIComponent(cid);
+  if(typeof gtag!=='undefined')gtag('event','colleccio_compartida',{colleccio:c.name});
+  // Al mòbil, el menú de compartir del sistema (WhatsApp, correu…); a l'escriptori, al porta-retalls.
+  if(matchMedia('(pointer:coarse)').matches&&navigator.share){navigator.share({title:c.name,url}).catch(()=>{});return;}
+  const fet=()=>showToast(t('cro_coll_link_copied'));
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(fet,()=>copiaVella(url,fet));}
+  else copiaVella(url,fet);
+}
+function copiaVella(text,fet){   // navegadors sense l'API del porta-retalls (o sense permís)
+  const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');fet();}catch(ex){}
+  ta.remove();
+}
+const COL_URL=(function(){const id=new URLSearchParams(location.search).get('col');return COLLECTIONS.some(c=>c.id===id&&!c._mine)?id:null;})();
+
 const _urlP=new URLSearchParams(location.search);
 const PERSON_QID=_urlP.get('person');
 if(PERSON_QID){
@@ -3683,6 +3711,12 @@ if(PERSON_QID){
 }else{
   restoreState();
   bootDefault(()=>{
+    if(COL_URL){   // ve d'un enllaç de col·lecció: activar-la (si no ho estava) i enquadrar. Sense guia: ja ve amb una intenció.
+      history.replaceState(null,'',location.pathname);
+      if(typeof gtag!=='undefined')gtag('event','colleccio_enllac',{colleccio:COL_URL});
+      if(state.collections.has(COL_URL)){clearFitLatch();fitToPresent();}else toggleCollection(COL_URL);
+      return;
+    }
     if(_urlP.has('guia')||GUIA_PRIMERA)setTimeout(guiaQuanLliure,700);
   });
 }

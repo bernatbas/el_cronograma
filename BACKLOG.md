@@ -112,6 +112,7 @@ Per decidir:
 1. Qui arriba de nou: barra lateral buida o amb una o dues col·leccions suggerides?
 2. Catàleg: només cercador, o també una llista per explorar? Amb 7 col·leccions un cercador sobra; amb 50, no.
 3. Qui obre un enllaç: veu només aquella col·lecció, o s'afegeix al que ja tenia?
+> Nota (2026-11-20): Fet el primer tros: compartir les col·leccions del catàleg amb `/?col=<id>` (icona a cada fila). Qui obre l'enllaç conserva el que ja tenia. Falta compartir les pròpies (amb els Q-ids a l'enllaç) i la resta del model.
 
 ## Dates aproximades als esdeveniments
 Les persones tenen el camp `approx` (aprox / disputada) i els jocs no emparellen dues dates incertes a menys de 60 anys (`APX_GAP`). Els esdeveniments no en tenen: la Gran Piràmide o el Codi d'Hammurabi tenen data aproximada i un joc els podria comparar amb un altre esdeveniment a pocs anys. Cal: el camp a `EVENTS` (mateixos tres codis), que la fitxa de l'event ho mostri amb `~`, i que el guard dels jocs també el miri per als events.
