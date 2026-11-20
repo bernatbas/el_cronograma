@@ -448,7 +448,13 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .detail.collcard>*{flex:0 0 auto;}
   .detail.collcard .collmembers{flex:1 1 auto;min-height:72px;overflow-y:auto;overscroll-behavior:contain;}
   @media (pointer:coarse) and (max-height:560px){ .detail.collcard{max-height:88dvh;} }   /* mòbil horitzontal: la safata puja més, que la llista hi càpiga */
-  @media (max-height:560px){ .detail.collcard .collmembers{min-height:48px;} .detail.collcard .colldesc{margin-bottom:6px;} .detail.collcard .collfoot{margin-top:8px;} }
+  @media (max-height:560px){   /* pantalla baixa (mòbil en horitzontal): tot el que no és la llista, més apretat */
+    .detail.collcard .collmembers{min-height:48px;margin-top:4px;}
+    .detail.collcard .collbar{margin:4px 0 6px;}
+    .detail.collcard .colldesc{font-size:13px;line-height:1.4;margin:0 0 4px;}
+    .detail.collcard .collfoot{margin-top:4px;font-size:11px;}
+    .detail.collcard .collrow{padding:5px 0;}
+  }
   .detail.collcard .collhead{padding-right:40px;}   /* el llapis no ha de quedar sota la ✕ */
   .colldescin{width:100%;margin:10px 0 2px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-card);background:var(--soft);color:var(--text);font:inherit;font-size:14px;line-height:1.45;resize:vertical;}
   .colldescin:focus{outline:none;border-color:var(--border-strong);background:var(--canvas);}
