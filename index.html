@@ -408,7 +408,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   /* El nom i el llapis van en fila, amb aire a la dreta per a la ✕ del panell (absoluta a
      16px): sense aquest padding, el camp li passava per sota i se solapaven. */
   .collhead{display:flex;align-items:center;gap:4px;padding-right:34px;margin:0 0 2px -6px;}
-  .collname{flex:1 1 auto;min-width:0;font-size:17px;font-weight:600;line-height:1.25;color:var(--text);border:1px solid transparent;margin-left:-7px;
+  .collname{flex:1 1 auto;min-width:0;font-size:17px;font-weight:600;line-height:1.25;color:var(--text);border:1px solid transparent;
             background:none;border-radius:var(--r-card);padding:3px 6px;font-family:inherit;}
   /* ⚠️ Abans era `font:600 20px/1.25 inherit`: `inherit` dins del shorthand no és vàlid i el navegador
      llençava TOTA la declaració (el nom sortia a 13px). Igual que el títol de la fitxa del catàleg. */
@@ -426,14 +426,30 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .collyr{flex:0 0 auto;font-size:12px;color:var(--text2);font-variant-numeric:tabular-nums;}
   .collrow.more{color:var(--text2);font-size:13px;}
   .colldesc a{color:var(--topbar-bg);text-decoration:underline;text-underline-offset:2px;}
-  .collacts{margin:12px 0 4px;}
-  .collacts .dbtn{min-width:120px;}
-  .collchips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px;}
+  /* Pastilles a l'esquerra i «Activa» a la dreta, a la mateixa fila: en horitzontal al mòbil (360px d'alt)
+     el botó en una fila pròpia deixava la llista amb 70px i el peu fora. */
+  .collbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 10px;}
+  .collbar .dbtn{flex:0 0 auto;min-width:110px;}
+  .collchips{display:flex;flex-wrap:wrap;gap:6px;min-width:0;}
   .collfoot{margin-top:12px;font-size:12px;color:var(--text2);line-height:1.5;}
-  .detail .collshare{position:absolute;top:14px;right:52px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:none;background:none;color:var(--text2);border-radius:6px;cursor:pointer;padding:0;}
-  .detail .collshare:hover{background:var(--surface);color:var(--text);}
+  /* Compartir i la ✕: mateixa caixa, mateixa alçada, una al costat de l'altra. */
+  .detail .collshare,.detail .close.cclose{position:absolute;top:16px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:none;background:none;color:var(--text2);border-radius:8px;cursor:pointer;padding:0;line-height:1;}
+  .detail .close.cclose{right:16px;font-size:24px;}
+  .detail .collshare{right:52px;}
+  .detail .collshare:hover,.detail .close.cclose:hover{background:var(--surface);color:var(--text);}
   .detail h2.collh2{margin-right:84px;}   /* que el títol no passi per sota de compartir i la ✕ */
-  @media (pointer:coarse){ .detail .collshare{top:12px;right:56px;width:40px;height:40px;} .detail h2.collh2{margin-right:96px;} }
+  @media (pointer:coarse){
+    .detail .collshare,.detail .close.cclose{top:12px;width:40px;height:40px;min-width:40px;min-height:40px;}
+    .detail .close.cclose{right:12px;font-size:26px;} .detail .collshare{right:56px;}
+    .detail h2.collh2{margin-right:96px;}
+  }
+  /* Scroll NOMÉS a la llista de personatges: títol, botons i peu (dates i autor) sempre a la vista. */
+  .detail.collcard{display:flex;flex-direction:column;overflow:hidden;}
+  .detail.collcard>*{flex:0 0 auto;}
+  .detail.collcard .collmembers{flex:1 1 auto;min-height:72px;overflow-y:auto;overscroll-behavior:contain;}
+  @media (pointer:coarse) and (max-height:560px){ .detail.collcard{max-height:88dvh;} }   /* mòbil horitzontal: la safata puja més, que la llista hi càpiga */
+  @media (max-height:560px){ .detail.collcard .collmembers{min-height:48px;} .detail.collcard .colldesc{margin-bottom:6px;} .detail.collcard .collfoot{margin-top:8px;} }
+  .detail.collcard .collhead{padding-right:40px;}   /* el llapis no ha de quedar sota la ✕ */
   .colldescin{width:100%;margin:10px 0 2px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-card);background:var(--soft);color:var(--text);font:inherit;font-size:14px;line-height:1.45;resize:vertical;}
   .colldescin:focus{outline:none;border-color:var(--border-strong);background:var(--canvas);}
   .collnm.unknown{color:var(--text2);font-family:var(--mono,ui-monospace,Menlo,monospace);font-size:12.5px;}
@@ -1849,6 +1865,7 @@ function eraLabel(year){
 }
 
 function openDetail(p){
+  $('#detail').classList.remove('collcard');   // la fitxa d'una col·lecció la deixa en columna (scroll només a la llista)
   if(typeof gtag!=='undefined')gtag('event','fitxa_oberta',{personatge:L(p.name)});
   state.selected=p.id;state.selectedEvent=null;
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
@@ -1915,7 +1932,7 @@ function collChips(wds){
   const pp=wds.map(q=>PEOPLE.find(x=>x.wd===q)).filter(p=>p&&p.birth!=null);
   let h=`<span class="chip">${t('cro_coll_people',{n:wds.length})}</span>`;
   if(pp.length>1)h+=`<span class="chip">${fmtY(Math.min(...pp.map(p=>p.birth)))} – ${pp.some(isAlive)?t('cro_present'):fmtY(Math.max(...pp.map(deathOf)))}</span>`;   // algú viu → «avui», com a la fitxa
-  return `<div class="collchips">${h}</div>`;
+  return h;
 }
 // Els membres que encara no tenim (col·lecció mai activada, gent de Wikidata) no tenen nom: en obrir la
 // fitxa se'ls demana a Wikidata (una consulta, sense activar res) i es torna a pintar en arribar.
@@ -1928,7 +1945,9 @@ function collNomsQueFalten(c){
     got.forEach(w=>{if(w.birth==null)return;const id='wd_'+w.qid;
       if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:w.qid,name:w.name,birth:w.birth,death:w.death,cats:guessCats(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_session:true,_ts:Date.now()});});
     if(state.selectedColl===c.id&&$('#detail').classList.contains('open'))openCollDetail(c.id);
-  }).catch(()=>{});
+  }).catch(()=>{   // Wikidata no respon: que no quedi «Carregant…» per sempre; torna a «… i N més»
+    if(state.selectedColl===c.id&&$('#detail').classList.contains('open'))openCollDetail(c.id);
+  });
   return true;
 }
 const shareIcoSvg='<svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10V2.5M5 5.2 8 2.2l3 3"/><path d="M4.5 7.5H3.8a.8.8 0 0 0-.8.8v5a.8.8 0 0 0 .8.8h8.4a.8.8 0 0 0 .8-.8v-5a.8.8 0 0 0-.8-.8h-.7"/></svg>';
@@ -1945,12 +1964,12 @@ function drawCatalogCard(c){
       +`<span class="collnm">${esc(L(p.name))}</span><span class="collyr">${fmtY(p.birth)}–${isAlive(p)?'':fmtY(p.death)}</span></div>`).join('')
     +(resta?`<div class="collrow more">${carregant?t('cro_loading'):t('cro_coll_more',{n:resta})}</div>`:'');
   const on=state.collections.has(c.id);
-  d.innerHTML=`<button class="close" id="closeDetail" aria-label="${t('close')}">×</button>
+  d.classList.add('collcard');
+  d.innerHTML=`<button class="close cclose" id="closeDetail" aria-label="${t('close')}">×</button>
     <button class="collshare" data-act="share" title="${t('cro_coll_share')}" aria-label="${t('cro_coll_share')}">${shareIcoSvg}</button>
     <h2 class="collh2">${esc(c.name)}</h2>
-    ${collChips(c.wds)}
+    <div class="collbar"><div class="collchips">${collChips(c.wds)}</div><button class="dbtn${on?'':' primary'}" data-act="toggle">${t(on?'cro_coll_deactivate':'cro_coll_activate')}</button></div>
     ${c.desc?`<div class="desc colldesc">${c.desc}</div>`:''}
-    <div class="collacts"><button class="dbtn${on?'':' primary'}" data-act="toggle">${t(on?'cro_coll_deactivate':'cro_coll_activate')}</button></div>
     <div class="collmembers">${files}</div>
     <div class="collfoot">${esc(collFoot(c))}</div>`;
   const tanca=()=>{hideDetail();state.selectedColl=null;render();};
@@ -1991,14 +2010,14 @@ function drawCollCard(nom,wds,cid,url){
       + (p?`<span class="collyr">${fmtY(p.birth)}–${isAlive(p)?'':fmtY(p.death)}</span>`:'')
       + `<button class="collrm" data-q="${q}" title="${t('cro_coll_rm_member')}">×</button></div>`;
   }).join('');
-  d.innerHTML=`<button class="close" id="closeDetail" aria-label="${t('close')}">×</button>
+  d.classList.add('collcard');
+  d.innerHTML=`<button class="close cclose" id="closeDetail" aria-label="${t('close')}">×</button>
     <div class="collhead">
       <input class="collname" id="collname" type="text" maxlength="60" value="${esc(nom)}" placeholder="${t('cro_coll_name_ph')}" aria-label="${t('cro_coll_name_ph')}">
       <button class="collpen" id="collpen" type="button" title="${t('cro_coll_rename')}" aria-label="${t('cro_coll_rename')}">${penIco}</button>
     </div>
-    ${collChips(wds)}
+    <div class="collbar"><div class="collchips">${collChips(wds)}</div>${cc&&wds.length?`<button class="dbtn${state.collections.has(cid)?'':' primary'}" data-act="toggle">${t(state.collections.has(cid)?'cro_coll_deactivate':'cro_coll_activate')}</button>`:''}</div>
     ${cc?`<textarea class="colldescin" id="colldescin" rows="2" maxlength="300" placeholder="${t('cro_coll_desc_ph')}">${esc(cc.desc||'')}</textarea>`:''}
-    ${cc&&wds.length?`<div class="collacts"><button class="dbtn${state.collections.has(cid)?'':' primary'}" data-act="toggle">${t(state.collections.has(cid)?'cro_coll_deactivate':'cro_coll_activate')}</button></div>`:''}
     <div class="collmembers">${files||`<div class="empty">${t('cro_coll_empty_members')}</div>`}</div>
     ${cc?`<div class="collfoot">${esc(collFoot(cc))}</div>`:''}
     <div class="actions${draft?' confirm':''}">${draft
@@ -2145,6 +2164,7 @@ function openAddToColl(pid,anchorEl){
 function newCollWith(q){ closeBarMenu();openNewCollCard(q); }
 
 function openEvent(ev){
+  $('#detail').classList.remove('collcard');
   state.selected=null;state.selectedEvent=ev.id;
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   d.innerHTML=`<button class="close" id="closeDetail" aria-label="${t('close')}">×</button>
