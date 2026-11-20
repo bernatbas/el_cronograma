@@ -438,7 +438,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .detail .close.cclose{right:16px;font-size:24px;}
   .detail .collshare{right:52px;}
   .detail .collshare:hover,.detail .close.cclose:hover{background:var(--surface);color:var(--text);}
-  .detail h2.collh2{margin-right:84px;}   /* que el títol no passi per sota de compartir i la ✕ */
+  .detail h2.collh2{margin-right:84px;margin-top:-5px;}   /* que no passi per sota de compartir i la ✕, i centrat amb elles */
   @media (pointer:coarse){
     .detail .collshare,.detail .close.cclose{top:12px;width:40px;height:40px;min-width:40px;min-height:40px;}
     .detail .close.cclose{right:12px;font-size:26px;} .detail .collshare{right:56px;}
@@ -456,10 +456,26 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .detail.collcard .collfoot{margin-top:4px;font-size:11px;}
     .detail.collcard .collrow{padding:5px 0;}
   }
-  .detail.collcard .collhead{padding-right:40px;}   /* el llapis no ha de quedar sota la ✕ */
+  /* Títol, llapis (o compartir) i ✕ a la MATEIXA línia: el llapis surt del flux i va com la icona de
+     compartir (caixa de 32/40px al costat de la ✕), i el títol puja perquè el seu centre coincideixi
+     amb el de les icones (l'input té 3px de padding i vora: queia 6px més avall que un h2). */
+  .detail.collcard .collhead{padding-right:84px;margin-top:-6px;}
+  .detail.collcard .collpen{position:absolute;top:16px;right:52px;width:32px;height:32px;min-width:0;min-height:0;padding:0;justify-content:center;border-radius:8px;}
+  .detail.collcard .collpen svg{width:16px;height:16px;}
+  @media (pointer:coarse){
+    .detail.collcard .collhead{padding-right:96px;margin-top:2px;}
+    .detail h2.collh2{margin-top:2px;}   /* al mòbil les icones fan 40px: el títol baixa per quedar-hi centrat */
+    .detail.collcard .collpen{top:12px;right:56px;width:40px;height:40px;}
+    .detail.collcard .collpen svg{width:17px;height:17px;}
+  }
   /* Afegir des de la fitxa: botons discontinus com «+ Nova col·lecció», i el cercador amb la seva llista. */
-  .colladd{display:flex;flex-direction:column;gap:6px;margin:8px 0 4px;}
+  .colladd{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px;}
+  .colladd .newcol{flex:1 1 180px;width:auto;}   /* els dos botons un al costat de l'altre si hi caben */
+  .colladd .collq,.colladd .collres{flex:1 1 100%;}
   .colladd .collq{margin:0;}
+  .collfoot.propia{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .collfoot.propia .collfoottx{min-width:0;}
+  .detail .dbtn.colldel{flex:0 0 auto;padding:4px 10px;font-size:12px;min-height:0;}
   .collres{max-height:184px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r-card);background:var(--canvas);}
   .collres:empty{display:none;}
   .collresrow{display:flex;align-items:center;gap:9px;padding:7px 10px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border);}
@@ -471,7 +487,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .collresrow.muted:hover{background:none;}
   .colladdmark{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:1px solid var(--topbar-bg);color:var(--topbar-bg);display:inline-flex;align-items:center;justify-content:center;font-size:14px;line-height:1;}
   .collresrow.in .colladdmark{background:var(--topbar-bg);color:#fff;}
-  @media (max-height:560px){ .collres{max-height:120px;} }
+  @media (max-height:600px){ .collres{max-height:120px;} .colldescin{min-height:0;height:34px;padding:6px 10px;} }   /* pantalla baixa: la descripció, una línia */
+  @media (pointer:coarse) and (max-height:600px){ .detail .collbar .dbtn{min-height:36px;padding:7px 14px;} .detail.collcard .colladd .newcol{padding:6px 9px;} }
+  @media (pointer:coarse){ .detail .dbtn.colldel{min-height:36px;} }   /* «Elimina» al peu: petit, però tocable */
   .colldescin{width:100%;margin:10px 0 2px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-card);background:var(--soft);color:var(--text);font:inherit;font-size:14px;line-height:1.45;resize:vertical;}
   .colldescin:focus{outline:none;border-color:var(--border-strong);background:var(--canvas);}
   .collnm.unknown{color:var(--text2);font-family:var(--mono,ui-monospace,Menlo,monospace);font-size:12.5px;}
@@ -2033,12 +2051,9 @@ function drawCollCard(nom,wds,cid,url){
     ${cc?`<textarea class="colldescin" id="colldescin" rows="2" maxlength="300" placeholder="${t('cro_coll_desc_ph')}">${esc(cc.desc||'')}</textarea>`:''}
     ${cc?collAddHTML(cc):''}
     <div class="collmembers">${collMembresHTML(wds)}</div>
-    ${cc?`<div class="collfoot">${esc(collFoot(cc))}</div>`:''}
-    <div class="actions${draft?' confirm':''}">${draft
-      ? `<button class="dbtn quiet" data-act="cancel">${t('cro_coll_cancel')}</button>`
-        +`<button class="dbtn primary" data-act="save" ${nom.trim()?'':'disabled'}>${t('cro_coll_savebtn')}</button>`
-      : `<button class="dbtn danger" data-act="del">${t('cro_coll_del_btn')}</button>`}
-    </div>`;
+    ${cc?`<div class="collfoot propia"><span class="collfoottx">${esc(collFoot(cc))}</span><button class="dbtn danger colldel" data-act="del">${t('cro_coll_del_btn')}</button></div>`:''}
+    ${draft?`<div class="actions confirm"><button class="dbtn quiet" data-act="cancel">${t('cro_coll_cancel')}</button>`
+        +`<button class="dbtn primary" data-act="save" ${nom.trim()?'':'disabled'}>${t('cro_coll_savebtn')}</button></div>`:''}`;   // «Elimina» al peu (20/11/2026): la fitxa pròpia no hi cabia en horitzontal
   const tanca=()=>{hideDetail();state.selectedColl=null;collDraft=null;collCercaCid=null;collCercaTxt='';render();};
   $('#closeDetail').onclick=tanca;
   const inp=$('#collname');
@@ -2146,7 +2161,7 @@ function refrescaCollCard(c){
   const m=d.querySelector('.collmembers');if(m){m.innerHTML=collMembresHTML(c.wds);bindCollRm(d,c.id);}
   const av=d.querySelector('[data-act="addview"]'),nv=collNView(c);
   if(av){if(nv)av.textContent=t('cro_coll_add_view',{n:nv});else av.remove();}
-  const f=d.querySelector('.collfoot');if(f)f.textContent=collFoot(c);
+  const f=d.querySelector('.collfoottx');if(f)f.textContent=collFoot(c);
   pintaCollRes(c);
   render();   // el comptador de la col·lecció al lateral (render() no toca la fitxa)
 }
