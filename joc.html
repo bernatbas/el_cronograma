@@ -2218,11 +2218,20 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
           if(!list.length) return null;
           const rng=mulberry32(seedFromStr('mem:'+today));
           let batchStart=Math.floor(rng()*list.length);
+          // Des del 21/11/2026 les 30 posicions es trien A L'ATZAR (mateixa llavor del dia: el tauler és
+          // el mateix per a tothom). Abans eren 30 de SEGUIDES: la llista va per QID, els QIDs veïns són
+          // remeses creades alhora, i de tant en tant sortien cinc «Dimitri» (20/11/2026). Els dies d'abans
+          // es generen com sempre, perquè el tauler d'un dia no canviï a mitja jornada.
+          const barreja=today>='2026-11-21', vistos=new Set();
           const results=[];
           for(let attempt=0;attempt<6&&results.length<5;attempt++){
             const ids=[];
-            for(let i=0;i<BATCH;i++) ids.push('Q'+list[(batchStart+i)%list.length]);
-            batchStart=(batchStart+BATCH)%list.length;
+            if(barreja){
+              while(ids.length<BATCH){ const q='Q'+list[Math.floor(rng()*list.length)]; if(!vistos.has(q)){ vistos.add(q); ids.push(q); } }
+            }else{
+              for(let i=0;i<BATCH;i++) ids.push('Q'+list[(batchStart+i)%list.length]);
+              batchStart=(batchStart+BATCH)%list.length;
+            }
             try{
               const data=await wd({action:'wbgetentities',ids:ids.join('|'),props:'labels|descriptions|claims|sitelinks',languages:wdLangs()});
               const ents=data.entities||{};

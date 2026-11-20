@@ -915,8 +915,14 @@ Jourdan, Émile Maggi, Émile Michelet i Éric Dupond-Moretti. Feia tota la pint
 trencat el generador d'atzar. **No s'havia trencat**, i el comportament **es deixa tal com
 està**: en Bernat el prefereix així.
 
-⚠️ **Per tant això NO és un bug i no s'ha d'«arreglar».** El codi ho sembla, i qui hi passi
-veurà «agafa 30 entrades seguides» i voldrà tocar-ho. És una decisió presa.
+> **Superat el 20/11/2026** (efectiu des del **21/11/2026**): en Bernat va veure un dia amb cinc «Dimitri»
+> (Dimitri De Fauw, Dimitrie Pompeiu, Dimitri Verhulst, Dimitri Claeys…) i va preferir la mostra
+> barrejada. Ara les 30 posicions es trien amb el mateix `rng()` del dia (sense repetir), com proposava
+> el paràgraf «Si algun dia es vol treure» de sota. Els dies anteriors al 21/11 es continuen generant
+> com abans, perquè cap tauler canviï a mitja jornada. El que segueix és la història de la decisió antiga.
+
+⚠️ ~~**Per tant això NO és un bug i no s'ha d'«arreglar».** El codi ho sembla, i qui hi passi
+veurà «agafa 30 entrades seguides» i voldrà tocar-ho. És una decisió presa.~~
 
 **Com funciona.** `ensurePool()` tira **un sol** número a l'atzar (sembrat amb `mem:<data>`)
 per triar on comença, i després agafa **30 entrades consecutives** de `HB_PERSONATGES`:
