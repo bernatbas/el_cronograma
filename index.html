@@ -408,8 +408,10 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   /* El nom i el llapis van en fila, amb aire a la dreta per a la ✕ del panell (absoluta a
      16px): sense aquest padding, el camp li passava per sota i se solapaven. */
   .collhead{display:flex;align-items:center;gap:4px;padding-right:34px;margin:0 0 2px -6px;}
-  .collname{flex:1 1 auto;min-width:0;font:600 20px/1.25 inherit;color:var(--text);border:1px solid transparent;
+  .collname{flex:1 1 auto;min-width:0;font-size:17px;font-weight:600;line-height:1.25;color:var(--text);border:1px solid transparent;margin-left:-7px;
             background:none;border-radius:var(--r-card);padding:3px 6px;font-family:inherit;}
+  /* ⚠️ Abans era `font:600 20px/1.25 inherit`: `inherit` dins del shorthand no és vàlid i el navegador
+     llençava TOTA la declaració (el nom sortia a 13px). Igual que el títol de la fitxa del catàleg. */
   .collpen{flex:0 0 auto;border:none;background:none;cursor:pointer;color:var(--text2);
            padding:5px;border-radius:6px;display:inline-flex;align-items:center;}
   .collpen svg{width:15px;height:15px;}
@@ -424,7 +426,14 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .collyr{flex:0 0 auto;font-size:12px;color:var(--text2);font-variant-numeric:tabular-nums;}
   .collrow.more{color:var(--text2);font-size:13px;}
   .colldesc a{color:var(--topbar-bg);text-decoration:underline;text-underline-offset:2px;}
-  .detail .actions.collacts{margin-top:12px;}
+  .collacts{margin:12px 0 4px;}
+  .collacts .dbtn{min-width:120px;}
+  .collchips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px;}
+  .collfoot{margin-top:12px;font-size:12px;color:var(--text2);line-height:1.5;}
+  .detail .collshare{position:absolute;top:14px;right:52px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:none;background:none;color:var(--text2);border-radius:6px;cursor:pointer;padding:0;}
+  .detail .collshare:hover{background:var(--surface);color:var(--text);}
+  .detail h2.collh2{margin-right:84px;}   /* que el títol no passi per sota de compartir i la ✕ */
+  @media (pointer:coarse){ .detail .collshare{top:12px;right:56px;width:40px;height:40px;} .detail h2.collh2{margin-right:96px;} }
   .colldescin{width:100%;margin:10px 0 2px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-card);background:var(--soft);color:var(--text);font:inherit;font-size:14px;line-height:1.45;resize:vertical;}
   .colldescin:focus{outline:none;border-color:var(--border-strong);background:var(--canvas);}
   .collnm.unknown{color:var(--text2);font-family:var(--mono,ui-monospace,Menlo,monospace);font-size:12.5px;}
@@ -1160,6 +1169,7 @@ const I18N={
     cro_coll_share:'Comparteix la col·lecció',
     cro_coll_link_copied:'Enllaç copiat',
     cro_coll_by: v => 'per '+v.a,
+    cro_coll_people: v => v.n===1 ? '1 personatge' : v.n+' personatges',
     cro_coll_created: v => 'creada el '+v.d,
     cro_coll_updated: v => 'actualitzada el '+v.d,
     cro_coll_more: v => '… i '+v.n+' més',
@@ -1892,34 +1902,57 @@ function openCollDetail(cid){
 // en Bernat a db.js; les pròpies, created/updated sols (avui) i la desc des de la fitxa.
 const avuiISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const fmtData=iso=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||'');return m?m[3]+'/'+m[2]+'/'+m[1]:'';};
-function collMeta(c,n){
-  const p=[t('cro_coll_n',{n})];
-  if(c.author)p.push(t('cro_coll_by',{a:c.author}));
+// Peu de la fitxa: qui l'ha feta i quan. Va al PEU, petit: a dalt ocupava molt i és el que menys interessa.
+function collFoot(c){
+  const p=[c._mine?t('cro_coll_private'):(c.author?t('cro_coll_by',{a:c.author}):'')];
   if(c.created)p.push(t('cro_coll_created',{d:fmtData(c.created)}));
   if(c.updated&&c.updated!==c.created)p.push(t('cro_coll_updated',{d:fmtData(c.updated)}));   // si és el mateix dia, sobra
-  return p.join(' · ');
+  const txt=p.filter(Boolean).join(' · ');
+  return txt?txt[0].toUpperCase()+txt.slice(1):'';
 }
+// Capçalera: quantes persones i de quin any a quin any (dels que ja coneixem).
+function collChips(wds){
+  const pp=wds.map(q=>PEOPLE.find(x=>x.wd===q)).filter(p=>p&&p.birth!=null);
+  let h=`<span class="chip">${t('cro_coll_people',{n:wds.length})}</span>`;
+  if(pp.length>1)h+=`<span class="chip">${fmtY(Math.min(...pp.map(p=>p.birth)))} – ${pp.some(isAlive)?t('cro_present'):fmtY(Math.max(...pp.map(deathOf)))}</span>`;   // algú viu → «avui», com a la fitxa
+  return `<div class="collchips">${h}</div>`;
+}
+// Els membres que encara no tenim (col·lecció mai activada, gent de Wikidata) no tenen nom: en obrir la
+// fitxa se'ls demana a Wikidata (una consulta, sense activar res) i es torna a pintar en arribar.
+var collNomsDemanats=new Set(), collNomsPendents=new Set();
+function collNomsQueFalten(c){
+  const falten=c.wds.filter(q=>!PEOPLE.some(x=>x.wd===q));
+  if(!falten.length||collNomsDemanats.has(c.id))return false;
+  collNomsDemanats.add(c.id);collNomsPendents.add(c.id);
+  byIds(falten,true).finally(()=>collNomsPendents.delete(c.id)).then(got=>{
+    got.forEach(w=>{if(w.birth==null)return;const id='wd_'+w.qid;
+      if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:w.qid,name:w.name,birth:w.birth,death:w.death,cats:guessCats(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_session:true,_ts:Date.now()});});
+    if(state.selectedColl===c.id&&$('#detail').classList.contains('open'))openCollDetail(c.id);
+  }).catch(()=>{});
+  return true;
+}
+const shareIcoSvg='<svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10V2.5M5 5.2 8 2.2l3 3"/><path d="M4.5 7.5H3.8a.8.8 0 0 0-.8.8v5a.8.8 0 0 0 .8.8h8.4a.8.8 0 0 0 .8-.8v-5a.8.8 0 0 0-.8-.8h-.7"/></svg>';
 // Fitxa d'una col·lecció del CATÀLEG: només lectura. Els membres que encara no tenim (no s'ha activat
 // mai i són de Wikidata) no tenen nom: es compten a «… i N més» en lloc d'ensenyar-ne el Q-id.
 function drawCatalogCard(c){
   closeCfg();   // al mòbil la fitxa (safata) quedaria darrere del popup de configuració
   state.selected=null;state.selectedEvent=null;state.selectedColl=c.id;
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
+  collNomsQueFalten(c);const carregant=collNomsPendents.has(c.id);
   const coneguts=c.wds.map(q=>PEOPLE.find(x=>x.wd===q)).filter(Boolean).sort((a,b)=>a.birth-b.birth);
   const resta=c.wds.length-coneguts.length;
   const files=coneguts.map(p=>`<div class="collrow"><span class="swatch" style="background:${swatchBg(p)}"></span>`
       +`<span class="collnm">${esc(L(p.name))}</span><span class="collyr">${fmtY(p.birth)}–${isAlive(p)?'':fmtY(p.death)}</span></div>`).join('')
-    +(resta?`<div class="collrow more">${t('cro_coll_more',{n:resta})}</div>`:'');
+    +(resta?`<div class="collrow more">${carregant?t('cro_loading'):t('cro_coll_more',{n:resta})}</div>`:'');
   const on=state.collections.has(c.id);
   d.innerHTML=`<button class="close" id="closeDetail" aria-label="${t('close')}">×</button>
-    <h2>${esc(c.name)}</h2>
-    <div class="dhead"><span class="life">${esc(collMeta(c,c.wds.length))}</span></div>
+    <button class="collshare" data-act="share" title="${t('cro_coll_share')}" aria-label="${t('cro_coll_share')}">${shareIcoSvg}</button>
+    <h2 class="collh2">${esc(c.name)}</h2>
+    ${collChips(c.wds)}
     ${c.desc?`<div class="desc colldesc">${c.desc}</div>`:''}
-    <div class="actions collacts">
-      <button class="dbtn${on?'':' primary'}" data-act="toggle">${t(on?'cro_coll_deactivate':'cro_coll_activate')}</button>
-      <button class="dbtn" data-act="share">${t('cro_coll_share_btn')}</button>
-    </div>
-    <div class="collmembers">${files}</div>`;   // botons ABANS de la llista: amb 27 persones, al mòbil quedaven a 900px de scroll
+    <div class="collacts"><button class="dbtn${on?'':' primary'}" data-act="toggle">${t(on?'cro_coll_deactivate':'cro_coll_activate')}</button></div>
+    <div class="collmembers">${files}</div>
+    <div class="collfoot">${esc(collFoot(c))}</div>`;
   const tanca=()=>{hideDetail();state.selectedColl=null;render();};
   $('#closeDetail').onclick=tanca;
   d.querySelector('[data-act="toggle"]').onclick=ev=>{ev.stopPropagation();tanca();toggleCollection(c.id);};   // es tanca: que es vegi la línia
@@ -1942,7 +1975,12 @@ function drawCollCard(nom,wds,cid,url){
   closeCfg();
   state.selected=null;state.selectedEvent=null;state.selectedColl=cid;
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
-  const files=wds.map(q=>{
+  const cc=cid?COLLECTIONS.find(x=>x.id===cid):null;
+  if(cc)collNomsQueFalten(cc);
+  // Per ordre de naixement; els que encara no tenim (sense nom) al final.
+  const ordre=[...wds].sort((a,b)=>{const pa=PEOPLE.find(x=>x.wd===a),pb=PEOPLE.find(x=>x.wd===b);
+    return (pa?pa.birth:Infinity)-(pb?pb.birth:Infinity);});
+  const files=ordre.map(q=>{
     const p=PEOPLE.find(x=>x.wd===q);
     // Si la colleccio no s'ha activat mai, el personatge encara no es a PEOPLE: es mostra el
     // QID en lloc d'inventar-se un nom.
@@ -1950,6 +1988,7 @@ function drawCollCard(nom,wds,cid,url){
     const color=p?swatchBg(p):'var(--border-strong)';
     return `<div class="collrow"><span class="swatch" style="background:${color}"></span>`
       + `<span class="collnm${p?'':' unknown'}">${t1}</span>`
+      + (p?`<span class="collyr">${fmtY(p.birth)}–${isAlive(p)?'':fmtY(p.death)}</span>`:'')
       + `<button class="collrm" data-q="${q}" title="${t('cro_coll_rm_member')}">×</button></div>`;
   }).join('');
   d.innerHTML=`<button class="close" id="closeDetail" aria-label="${t('close')}">×</button>
@@ -1957,14 +1996,15 @@ function drawCollCard(nom,wds,cid,url){
       <input class="collname" id="collname" type="text" maxlength="60" value="${esc(nom)}" placeholder="${t('cro_coll_name_ph')}" aria-label="${t('cro_coll_name_ph')}">
       <button class="collpen" id="collpen" type="button" title="${t('cro_coll_rename')}" aria-label="${t('cro_coll_rename')}">${penIco}</button>
     </div>
-    <div class="dhead"><span class="life">${esc(cid?collMeta(COLLECTIONS.find(x=>x.id===cid)||{},wds.length):t('cro_coll_n',{n:wds.length}))}</span>${cid?`<span class="chip">${t('cro_coll_private')}</span>`:''}</div>
-    ${cid?`<textarea class="colldescin" id="colldescin" rows="2" maxlength="300" placeholder="${t('cro_coll_desc_ph')}">${esc((COLLECTIONS.find(x=>x.id===cid)||{}).desc||'')}</textarea>`:''}
+    ${collChips(wds)}
+    ${cc?`<textarea class="colldescin" id="colldescin" rows="2" maxlength="300" placeholder="${t('cro_coll_desc_ph')}">${esc(cc.desc||'')}</textarea>`:''}
+    ${cc&&wds.length?`<div class="collacts"><button class="dbtn${state.collections.has(cid)?'':' primary'}" data-act="toggle">${t(state.collections.has(cid)?'cro_coll_deactivate':'cro_coll_activate')}</button></div>`:''}
     <div class="collmembers">${files||`<div class="empty">${t('cro_coll_empty_members')}</div>`}</div>
+    ${cc?`<div class="collfoot">${esc(collFoot(cc))}</div>`:''}
     <div class="actions${draft?' confirm':''}">${draft
       ? `<button class="dbtn quiet" data-act="cancel">${t('cro_coll_cancel')}</button>`
         +`<button class="dbtn primary" data-act="save" ${nom.trim()?'':'disabled'}>${t('cro_coll_savebtn')}</button>`
-      : (url?`<button class="dbtn" data-act="link">${linkLabel(url)} ↗</button>`:'')
-        +`<button class="dbtn danger" data-act="del">${t('cro_coll_del_btn')}</button>`}
+      : `<button class="dbtn danger" data-act="del">${t('cro_coll_del_btn')}</button>`}
     </div>`;
   const tanca=()=>{hideDetail();state.selectedColl=null;collDraft=null;render();};
   $('#closeDetail').onclick=tanca;
@@ -2003,7 +2043,7 @@ function drawCollCard(nom,wds,cid,url){
     if(act==='save')saveCollDraft();
     else if(act==='cancel')tanca();
     else if(act==='del'){hideDetail();state.selectedColl=null;deleteColl(cid);}
-    else if(url)window.open(url,'_blank','noopener,noreferrer');
+    else if(act==='toggle'){hideDetail();state.selectedColl=null;toggleCollection(cid);}   // es tanca: que es vegi la línia
   });
   render();
 }
