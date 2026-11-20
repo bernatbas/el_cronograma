@@ -53,7 +53,9 @@ const NOW_YEAR=new Date().getFullYear();
 const COLL_MAX=60, WD_IDS_MAX=350;
 const COLLECTIONS=[
   // La de la guia de benvinguda (pas 3): poca gent, ~110 anys, tots els noms llegibles a «Vista global».
-  {id:'illustracio',name:'La Il·lustració',wds:[
+  {id:'illustracio',name:'La Il·lustració',author:'Babilinia',created:'2026-11-17',updated:'2026-11-17',
+   desc:'Els pensadors del segle XVIII que van posar la raó al centre: filosofia, política i economia que encara ens marquen.',
+   wds:[
     'Q15975',   // Montesquieu         1689–1755
     'Q9068',    // Voltaire            1694–1778
     'Q37160',   // David Hume          1711–1776
@@ -63,7 +65,9 @@ const COLLECTIONS=[
     'Q9312',    // Immanuel Kant       1724–1804
     'Q101638',  // Mary Wollstonecraft 1759–1797
   ]},
-  {id:'filosofs',name:'Els meus filòsofs',wds:[
+  {id:'filosofs',name:'Els meus filòsofs',author:'Babilinia',created:'2026-08-01',updated:'2026-08-01',
+   desc:'De Sòcrates a Sartre: una tria personal de filòsofs de tots els temps.',
+   wds:[
     'Q913',   // Sòcrates      (local)
     'Q859',   // Plató         (local)
     'Q868',   // Aristòtil     (local)
@@ -83,7 +87,9 @@ const COLLECTIONS=[
     'Q34670', // Albert Camus  1913–1960
     'Q9364'   // Jean-Paul Sartre 1905–1980
   ]},
-  {id:'nobel',name:'Il·lustres premis Nobel',url:'https://www.nobelprize.org/prizes/lists/all-nobel-prizes/',wds:[
+  {id:'nobel',name:'Il·lustres premis Nobel',author:'Babilinia',created:'2026-09-07',updated:'2026-09-07',
+   desc:'Una selecció de guanyadors del Nobel de totes les disciplines. Llista completa a <a href="https://www.nobelprize.org/prizes/lists/all-nobel-prizes/" target="_blank" rel="noopener">nobelprize.org</a>.',
+   wds:[
     // Els 8 amb més presència a les Viquipèdies de cada categoria (el mateix senyal de
     // rellevància que fa servir el motor de zoom dels events), més el senyor Nobel obrint
     // la fila. Equilibrat a propòsit: per pur nombre de sitelinks sortien 22 de Literatura
@@ -146,7 +152,9 @@ const COLLECTIONS=[
     'Q131112'    // Paul Krugman               1953–avui 
   ]},
 
-  {id:'calbs',name:'Calbs il·lustres',wds:[
+  {id:'calbs',name:'Calbs il·lustres',author:'Babilinia',created:'2026-09-07',updated:'2026-09-21',
+   desc:'Personatges històrics que van passar a la història… sense cabell.',
+   wds:[
     // Curada A MA i a ull: Wikidata te la calvicie anotada (P1884) a QUATRE persones en
     // total, aixi que aqui no hi ha cap consulta al darrere ni cap check que la validi.
     //
@@ -189,7 +197,9 @@ const COLLECTIONS=[
     'Q164038',   // Josep Guardiola i Sala      1971–avui   
     'Q1835'      // Zinédine Zidane             1972–avui   
   ]},
-  {id:'religions',name:'Fundadors de religions',wds:[
+  {id:'religions',name:'Fundadors de religions',author:'Babilinia',created:'2026-09-21',updated:'2026-09-21',
+   desc:'Les persones que hi ha a l’origen de les grans religions i tradicions espirituals.',
+   wds:[
     // El contingut d’aquesta col·leccio NO es qui hi ha, es QUAN. Dues coses alhora:
     //
     // 1) EL NUS. Mahavira (-599), Laozi (-580), Confuci (-551) i el Buda (-501) neixen dins
@@ -233,7 +243,9 @@ const COLLECTIONS=[
     'Q313456',   // Charles Taze Russell        1852–1916             testimonis de Jehovà
     'Q216896'    // L. Ron Hubbard              1911–1986             cienciologia
   ]},
-  {id:'dones',name:'Dones a la història',wds:[
+  {id:'dones',name:'Dones a la història',author:'Babilinia',created:'2026-09-21',updated:'2026-09-21',
+   desc:'Dones que van marcar la seva època en la ciència, la política, l’art i la literatura.',
+   wds:[
     // Aqui el contingut tampoc es qui hi ha: es la DENSITAT, i sobretot el que falta.
     // Compta les barres per tram i miralestes d’esquerra a dreta —3 abans de Crist, 2 fins
     // l’any 1000, 4 fins al 1500, 6 fins al 1800 i 16 despres— i tens la forma de la
@@ -275,7 +287,9 @@ const COLLECTIONS=[
     'Q133054',   // Sylvia Plath                1932–1963           
     'Q1744'      // Madonna                     1958–avui    (local)
   ]},
-  {id:'maricashistoria',name:'Grandes Maricas de la Historia',url:'https://grandesmaricasdelahistoria.es/',wds:[
+  {id:'maricashistoria',name:'Grandes Maricas de la Historia',author:'Babilinia',created:'2026-08-01',updated:'2026-08-01',
+   desc:'Personatges LGTBI de la història, a partir del projecte <a href="https://grandesmaricasdelahistoria.es/" target="_blank" rel="noopener">Grandes Maricas de la Historia</a>.',
+   wds:[
     'Q1762',  // Heliogàbal          203–222
     'Q762',   // Leonardo da Vinci   1452–1519
     'Q5592',  // Miquel Àngel        1475–1564
@@ -292,7 +306,9 @@ const COLLECTIONS=[
   // Filosofia de la ciència: els autors i els casos històrics de «Què és aquesta cosa anomenada
   // ciència?» (Chalmers), per a l'assignatura de la UNED. Q-ids resolts pel títol de l'article de la
   // Viquipèdia i verificats amb l'any esperat i la mateixa SPARQL que byIds() (16/11/2026).
-  {id:'ipcuned',name:'UNED: IPC - 2026',wds:[
+  {id:'ipcuned',name:'UNED: IPC - 2026',author:'Babilinia',created:'2026-11-16',updated:'2026-11-18',
+   desc:'Els autors del temari d’Introducció al Pensament Científic de la UNED (curs 2026).',
+   wds:[
     'Q37388',   // Francis Bacon       1561–1626
     'Q37160',   // David Hume          1711–1776
     'Q81244',   // Karl Popper         1902–1994

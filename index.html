@@ -419,6 +419,14 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .collmembers{margin:12px 0 4px;border-top:1px solid var(--border);}
   .collrow{display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--border);font-size:14px;}
   .collnm{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  /* Fitxa de col·lecció (20/11/2026): anys a la dreta, «… i N més», descripció amb enllaços, i el camp
+     de descripció de les pròpies. */
+  .collyr{flex:0 0 auto;font-size:12px;color:var(--text2);font-variant-numeric:tabular-nums;}
+  .collrow.more{color:var(--text2);font-size:13px;}
+  .colldesc a{color:var(--topbar-bg);text-decoration:underline;text-underline-offset:2px;}
+  .detail .actions.collacts{margin-top:12px;}
+  .colldescin{width:100%;margin:10px 0 2px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-card);background:var(--soft);color:var(--text);font:inherit;font-size:14px;line-height:1.45;resize:vertical;}
+  .colldescin:focus{outline:none;border-color:var(--border-strong);background:var(--canvas);}
   .collnm.unknown{color:var(--text2);font-family:var(--mono,ui-monospace,Menlo,monospace);font-size:12.5px;}
   .collrm{flex:0 0 auto;border:none;background:none;color:var(--text2);font-size:17px;line-height:1;
           cursor:pointer;padding:2px 6px;border-radius:6px;}
@@ -936,6 +944,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .guia .gar,.guia .gar[disabled]{background:#3A302D;border-color:#6A4338;color:#F0A493;}
     .guia .gar:hover{background:#4A3A35;}
     .guia-velo{background:rgba(0,0,0,.35);}
+    .colldesc a{color:#F0A493;}   /* enllaços de la descripció d'una col·lecció: la terracota no es llegia sobre fosc */
     .guia .gfi{background:#C9634D;}
   }
 </style>
@@ -1150,6 +1159,15 @@ const I18N={
     cro_open_site:'Obre el lloc web',
     cro_coll_share:'Comparteix la col·lecció',
     cro_coll_link_copied:'Enllaç copiat',
+    cro_coll_by: v => 'per '+v.a,
+    cro_coll_created: v => 'creada el '+v.d,
+    cro_coll_updated: v => 'actualitzada el '+v.d,
+    cro_coll_more: v => '… i '+v.n+' més',
+    cro_coll_activate:'Activa',
+    cro_coll_deactivate:'Desactiva',
+    cro_coll_share_btn:'Comparteix',
+    cro_coll_desc_ph:'Afegeix-hi una descripció…',
+    cro_coll_private:'Només tu la veus',
     cro_center:'Mostra’l',
     cro_remove:'Treu',
     cro_empty_people:"Cap personatge encara. Cerca'n un a dalt.",
@@ -1380,7 +1398,7 @@ function undoSnap(){
           // ⚠️ Les DEFINICIONS de les colleccions propies tambe hi han d'anar. Sense aixo,
           // desfer un esborrat tornava l'id a state.collections pero no la colleccio a
           // COLLECTIONS: quedava un id actiu apuntant a res (comprovat, no es teoric).
-          mine:COLLECTIONS.filter(c=>c._mine).map(c=>({id:c.id,name:c.name,wds:[...c.wds],vis:c.vis}))};
+          mine:COLLECTIONS.filter(c=>c._mine).map(c=>({id:c.id,name:c.name,wds:[...c.wds],vis:c.vis,desc:c.desc,created:c.created,updated:c.updated}))};   // desc i dates també: si no, desfer les esborrava
 }
 // labelKey/vars es resolen al MOSTRAR el títol, no aquí: així el text del botó
 // segueix l'idioma actiu encara que l'accio s'hagi fet abans de canviar-lo.
@@ -1405,7 +1423,7 @@ function doUndo(){
   // Restaura les colleccions propies tal com eren: les de serie no es toquen mai.
   if(e.snap.mine){
     for(let i=COLLECTIONS.length-1;i>=0;i--)if(COLLECTIONS[i]._mine)COLLECTIONS.splice(i,1);
-    e.snap.mine.forEach(c=>COLLECTIONS.push({id:c.id,name:c.name,wds:[...c.wds],vis:c.vis||'private',_mine:true}));
+    e.snap.mine.forEach(c=>COLLECTIONS.push({id:c.id,name:c.name,wds:[...c.wds],vis:c.vis||'private',_mine:true,desc:c.desc||'',created:c.created||'',updated:c.updated||''}));
     saveMyColls();
   }
   recomputePresent();
@@ -1784,7 +1802,6 @@ function renderSidebar(){
   const colIco='<svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.8 14.4 5 8 8.2 1.6 5z"/><path d="m1.6 8.4 6.4 3.2 6.4-3.2"/><path d="m1.6 11.6 6.4 3.2 6.4-3.2"/></svg>';
   // Les colleccions propies porten un ⋮ que obre la seva fitxa (reanomenar, veure i treure
   // gent, esborrar). Les de serie no en porten: s'editen al dashboard.
-  const shareIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10V2.5M5 5.2 8 2.2l3 3"/><path d="M4.5 7.5H3.8a.8.8 0 0 0-.8.8v5a.8.8 0 0 0 .8.8h8.4a.8.8 0 0 0 .8-.8v-5a.8.8 0 0 0-.8-.8h-.7"/></svg>';
   const optIco='<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="8" cy="13" r="1.4"/></svg>';
   // ⚠️ El camp del nom NO es pot tornar a crear a cada render. Al mobil, obrir el teclat
   // canvia el viewport, el resize dispara scheduleSettle() → render(), i un innerHTML nou
@@ -1793,7 +1810,7 @@ function renderSidebar(){
   // altre. Per aixo, si la caixa ja hi es, aqui nomes es refan els BOTONS i no es toca.
   const _cont=$('#collections');
   const _viu=newCollOpen?_cont.querySelector('.newcolbox'):null;
-  const _botons=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}<span class="cname">${esc(c.name)}</span><span class="cnt">${c.wds.length}</span>${c._mine?`<span class="colx" role="button" tabindex="0" data-collopt="${c.id}" title="${t('cro_coll_opts')}">${optIco}</span>`:`<span class="extlink colshare" role="button" tabindex="0" data-collshare="${c.id}" title="${t('cro_coll_share')}" aria-label="${t('cro_coll_share')}">${shareIco}</span>`}</button>`).join('')   // la ↗ cap a la web de la font s'ha tret (20/11/2026): el camp `url` es queda a db.js per passar-lo a la futura descripció
+  const _botons=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}<span class="cname">${esc(c.name)}</span><span class="cnt">${c.wds.length}</span><span class="colx" role="button" tabindex="0" data-collopt="${c.id}" title="${t('cro_coll_opts')}" aria-label="${t('cro_coll_opts')}">${optIco}</span></button>`).join('')   // la ↗ cap a la web de la font s'ha tret (20/11/2026): el camp `url` es queda a db.js per passar-lo a la futura descripció
   if(_viu){
     _cont.querySelectorAll('.colitem, .newcol').forEach(n=>n.remove());
     _viu.insertAdjacentHTML('afterend',_botons);   // la caixa de nova col·lecció va A DALT (20/11/2026): a baix de tot ni es veia
@@ -1865,10 +1882,49 @@ let collDraft=null;   // colleccio que s'esta creant i encara NO existeix: {name
 const penIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11.2 2.6l2.2 2.2L5.6 12.6 2.8 13.2l.6-2.8z"/></svg>';
 
 function openCollDetail(cid){
-  const c=COLLECTIONS.find(x=>x.id===cid&&x._mine);
+  const c=COLLECTIONS.find(x=>x.id===cid);
   if(!c){hideDetail();state.selectedColl=null;return;}
   collDraft=null;
-  drawCollCard(c.name,c.wds,cid,c.url);
+  if(!c._mine)return drawCatalogCard(c);
+  drawCollCard(c.name,c.wds,cid,null);
+}
+// ── Dades d'una col·lecció (20/11/2026): desc, author, created, updated. Les del catàleg les posa
+// en Bernat a db.js; les pròpies, created/updated sols (avui) i la desc des de la fitxa.
+const avuiISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const fmtData=iso=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||'');return m?m[3]+'/'+m[2]+'/'+m[1]:'';};
+function collMeta(c,n){
+  const p=[t('cro_coll_n',{n})];
+  if(c.author)p.push(t('cro_coll_by',{a:c.author}));
+  if(c.created)p.push(t('cro_coll_created',{d:fmtData(c.created)}));
+  if(c.updated&&c.updated!==c.created)p.push(t('cro_coll_updated',{d:fmtData(c.updated)}));   // si és el mateix dia, sobra
+  return p.join(' · ');
+}
+// Fitxa d'una col·lecció del CATÀLEG: només lectura. Els membres que encara no tenim (no s'ha activat
+// mai i són de Wikidata) no tenen nom: es compten a «… i N més» en lloc d'ensenyar-ne el Q-id.
+function drawCatalogCard(c){
+  closeCfg();   // al mòbil la fitxa (safata) quedaria darrere del popup de configuració
+  state.selected=null;state.selectedEvent=null;state.selectedColl=c.id;
+  const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
+  const coneguts=c.wds.map(q=>PEOPLE.find(x=>x.wd===q)).filter(Boolean).sort((a,b)=>a.birth-b.birth);
+  const resta=c.wds.length-coneguts.length;
+  const files=coneguts.map(p=>`<div class="collrow"><span class="swatch" style="background:${swatchBg(p)}"></span>`
+      +`<span class="collnm">${esc(L(p.name))}</span><span class="collyr">${fmtY(p.birth)}–${isAlive(p)?'':fmtY(p.death)}</span></div>`).join('')
+    +(resta?`<div class="collrow more">${t('cro_coll_more',{n:resta})}</div>`:'');
+  const on=state.collections.has(c.id);
+  d.innerHTML=`<button class="close" id="closeDetail" aria-label="${t('close')}">×</button>
+    <h2>${esc(c.name)}</h2>
+    <div class="dhead"><span class="life">${esc(collMeta(c,c.wds.length))}</span></div>
+    ${c.desc?`<div class="desc colldesc">${c.desc}</div>`:''}
+    <div class="actions collacts">
+      <button class="dbtn${on?'':' primary'}" data-act="toggle">${t(on?'cro_coll_deactivate':'cro_coll_activate')}</button>
+      <button class="dbtn" data-act="share">${t('cro_coll_share_btn')}</button>
+    </div>
+    <div class="collmembers">${files}</div>`;   // botons ABANS de la llista: amb 27 persones, al mòbil quedaven a 900px de scroll
+  const tanca=()=>{hideDetail();state.selectedColl=null;render();};
+  $('#closeDetail').onclick=tanca;
+  d.querySelector('[data-act="toggle"]').onclick=ev=>{ev.stopPropagation();tanca();toggleCollection(c.id);};   // es tanca: que es vegi la línia
+  d.querySelector('[data-act="share"]').onclick=ev=>{ev.stopPropagation();compartirColleccio(c.id);};
+  render();
 }
 // Una colleccio nova NO es crea en obrir la fitxa: es queda en esborrany fins que prems Desa.
 // Aixi pots posar-li nom, treure'n algu o cancelar sense deixar restes a la llista.
@@ -1901,7 +1957,8 @@ function drawCollCard(nom,wds,cid,url){
       <input class="collname" id="collname" type="text" maxlength="60" value="${esc(nom)}" placeholder="${t('cro_coll_name_ph')}" aria-label="${t('cro_coll_name_ph')}">
       <button class="collpen" id="collpen" type="button" title="${t('cro_coll_rename')}" aria-label="${t('cro_coll_rename')}">${penIco}</button>
     </div>
-    <div class="dhead"><span class="life">${t('cro_coll_n',{n:wds.length})}</span></div>
+    <div class="dhead"><span class="life">${esc(cid?collMeta(COLLECTIONS.find(x=>x.id===cid)||{},wds.length):t('cro_coll_n',{n:wds.length}))}</span>${cid?`<span class="chip">${t('cro_coll_private')}</span>`:''}</div>
+    ${cid?`<textarea class="colldescin" id="colldescin" rows="2" maxlength="300" placeholder="${t('cro_coll_desc_ph')}">${esc((COLLECTIONS.find(x=>x.id===cid)||{}).desc||'')}</textarea>`:''}
     <div class="collmembers">${files||`<div class="empty">${t('cro_coll_empty_members')}</div>`}</div>
     <div class="actions${draft?' confirm':''}">${draft
       ? `<button class="dbtn quiet" data-act="cancel">${t('cro_coll_cancel')}</button>`
@@ -1928,6 +1985,12 @@ function drawCollCard(nom,wds,cid,url){
     inp.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();inp.blur();}
                        else if(ev.key==='Escape'){inp.value=nom;inp.blur();}};
   }
+  const dsc=$('#colldescin');
+  if(dsc)dsc.onchange=()=>{   // la descripció d'una pròpia: es desa en sortir del camp. No passa pel Desfés (com els favorits).
+    const c=COLLECTIONS.find(x=>x.id===cid&&x._mine);if(!c)return;
+    const v=dsc.value.trim().slice(0,300);if(v===(c.desc||''))return;
+    c.desc=v;c.updated=avuiISO();saveMyColls();
+  };
   d.querySelectorAll('.collrm').forEach(b=>b.onclick=()=>{
     const q=b.getAttribute('data-q');
     if(draft){ collDraft.wds=collDraft.wds.filter(x=>x!==q);
@@ -1952,7 +2015,7 @@ function saveCollDraft(){
   const wds=[...collDraft.wds];
   let i=1,id;do{id='my'+(i++);}while(COLLECTIONS.some(c=>c.id===id));
   pushUndo('undo_coll_new',{name});
-  COLLECTIONS.push({id,name,wds,vis:'private',_mine:true});
+  COLLECTIONS.push({id,name,wds,vis:'private',_mine:true,desc:'',created:avuiISO(),updated:avuiISO()});
   collDraft=null;
   saveMyColls();scheduleSave();hideDetail();state.selectedColl=null;render();
   showToast(wds.length?t('cro_coll_saved',{name,n:wds.length}):t('cro_coll_saved_empty',{name}));
@@ -1963,7 +2026,7 @@ function renameColl(cid,nom){
   const name=(nom||'').trim().slice(0,60);
   if(!name||name===c.name){openCollDetail(cid);return;}   // buit o igual: es deixa com estava
   pushUndo('undo_coll_rename',{name:c.name});
-  c.name=name;saveMyColls();scheduleSave();openCollDetail(cid);
+  c.name=name;c.updated=avuiISO();saveMyColls();scheduleSave();openCollDetail(cid);
   showToast(t('cro_coll_renamed',{name}));
 }
 
@@ -1984,6 +2047,7 @@ function setMember(cid,qid,on){
     // algu d'una colleccio no ha de fer-lo desapareixer de sota els peus. Qui el vulgui fora de
     // la vista te la ✕ d'«A la vista». (Desactivar la colleccio SENCERA si que se l'emporta.)
   }
+  c.updated=avuiISO();
   saveMyColls();recomputePresent();clearFitLatch();scheduleSave();
   return true;
 }
@@ -2521,8 +2585,6 @@ barmenu.addEventListener('click',e=>{
 $('#collections').addEventListener('click',e=>{
   const x=e.target.closest('[data-collopt]');
   if(x){e.stopPropagation();openCollDetail(x.getAttribute('data-collopt'));return;}   // el ⋮ va DINS del boto de toggle
-  const sh=e.target.closest('[data-collshare]');
-  if(sh){e.stopPropagation();compartirColleccio(sh.getAttribute('data-collshare'));return;}   // la icona de compartir, igual
   if(e.target.closest('[data-newcol]')){openNewColl();return;}
   if(e.target.closest('.newcolbox'))return;                                    // el camp i la casella son zona propia
   const b=e.target.closest('[data-col]');if(b)toggleCollection(b.getAttribute('data-col'));
@@ -2595,12 +2657,13 @@ function loadMyColls(){
     if(!c||typeof c.name!=='string'||!Array.isArray(c.wds))return;
     if(COLLECTIONS.some(x=>x.id===c.id))return;                       // no trepitgem les de serie
     const wds=c.wds.filter(q=>typeof q==='string'&&/^Q\d+$/.test(q));
-    COLLECTIONS.push({id:c.id,name:c.name,wds,vis:c.vis==='public'?'public':'private',_mine:true});   // ara tambe n'accepta de buides
+    COLLECTIONS.push({id:c.id,name:c.name,wds,vis:c.vis==='public'?'public':'private',_mine:true,   // ara tambe n'accepta de buides
+      desc:typeof c.desc==='string'?c.desc:'',created:c.created||'',updated:c.updated||''});
   });
 }
 function saveMyColls(){
   try{ localStorage.setItem(MYCOLL_LS,JSON.stringify(
-    COLLECTIONS.filter(c=>c._mine).map(c=>({id:c.id,name:c.name,wds:c.wds,vis:c.vis||'private'})))); }catch(ex){}
+    COLLECTIONS.filter(c=>c._mine).map(c=>({id:c.id,name:c.name,wds:c.wds,vis:c.vis||'private',desc:c.desc||'',created:c.created||'',updated:c.updated||''})))); }catch(ex){}
 }
 
 // Els Q-ids de qui tens ara a la vista. Una colleccio guarda Q-ids i prou, com les de serie:
@@ -2618,7 +2681,7 @@ function createColl(nom,incloure){
   pushUndo('undo_coll_new',{name});
   // `vis` es guarda des d'ara encara que no hi hagi cap interruptor: el dia que hi hagi
   // servidor, les colleccions ja desades no necessitaran migracio.
-  COLLECTIONS.push({id,name,wds,vis:'private',_mine:true});
+  COLLECTIONS.push({id,name,wds,vis:'private',_mine:true,desc:'',created:avuiISO(),updated:avuiISO()});
   // Nomes s'activa si porta gent: una colleccio buida i «encesa» no vol dir res.
   if(wds.length)state.collections.add(id);
   saveMyColls();scheduleSave();render();

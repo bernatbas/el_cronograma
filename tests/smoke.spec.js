@@ -928,11 +928,13 @@ test('?col= activa la col·lecció compartida i neteja l\'adreça', async ({ pag
   await expect(page.locator('.guia.on')).toHaveCount(0);
 });
 
-test('el botó de compartir copia l\'enllaç i no activa la col·lecció', async ({ page }) => {
+test('la fitxa d\'una col·lecció del catàleg comparteix l\'enllaç sense activar-la', async ({ page }) => {
   test.skip(await (async () => { await page.goto(INDEX); return isCoarse(page); })(), 'al mòbil obre el menú de compartir del sistema');
   await page.evaluate(() => { window.__copiat = null; navigator.clipboard.writeText = async t => { window.__copiat = t; }; });
   await openCollectionsSection(page);
-  await page.locator('[data-collshare="filosofs"]').click();
+  await page.locator('[data-collopt="filosofs"]').click();                 // el ⋮ obre la fitxa (ara a TOTES)
+  await expect(page.locator('#detail.open .colldesc')).toBeVisible();       // la del catàleg porta descripció
+  await page.locator('#detail [data-act="share"]').click();
   await expect.poll(() => page.evaluate(() => window.__copiat)).toMatch(/\/\?col=filosofs$/);
   expect(await page.evaluate(() => [...state.collections].includes('filosofs'))).toBe(false);
 });
