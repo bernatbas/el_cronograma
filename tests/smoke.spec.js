@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import fs from 'fs';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -964,5 +965,67 @@ test('la fitxa d\'una col·lecció del catàleg comparteix l\'enllaç sense acti
   await page.locator('#detail [data-act="share"]').click();
   await expect.poll(() => page.evaluate(() => window.__copiat)).toMatch(/\/\?col=filosofs$/);
   expect(await page.evaluate(() => [...state.collections].includes('filosofs'))).toBe(false);
+});
+
+// ─── Guia de benvinguda: que cada globus apunti on toca ─────────────────────
+// Recorre els sis passos com ho faria algú (clicant de debò) als TRES dispositius del CI i, a cada
+// pas, comprova la geometria amb tests/guia-geo.js: globus/tira dins la pantalla i sense tapar res,
+// halo envoltant l'element, punta sobre l'element. Si un dia es mou un botó o canvia la BD i la guia
+// queda desfasada, aquest test peta (en vermell, a posta: és un error, no un avís).
+const GUIA_GEO = fs.readFileSync('tests/guia-geo.js', 'utf8');   // relatiu a l'arrel: el CI hi corre «npx playwright test»
+
+test('Guia: a cada pas, globus i halo apunten on toquen', async ({ page }) => {
+  test.setTimeout(60_000);
+  await page.route(WIKIDATA, route => route.fulfill({ status: 200, contentType: 'application/json',
+    body: '{"search":[],"query":{"search":[]},"results":{"bindings":[]},"entities":{}}' }));
+  await page.goto(INDEX + '?guia');
+  await dismissRotateHint(page);                                 // en vertical, la guia espera l'avís de girar
+  const g = page.locator('.guia.on');
+  await expect(g).toBeVisible({ timeout: 6000 });
+  await page.addScriptTag({ content: GUIA_GEO });
+  const ok = async (on) => expect.poll(() => page.evaluate(() => guiaGeo()), { message: on, timeout: 4000 }).toEqual([]);
+  const mobil = await isCoarse(page);
+
+  await ok('benvinguda');
+  await g.locator('.gnext').click();
+  await ok('pas 1: el cercador');
+  await g.locator('.gchip').click();
+  await expect(page.locator('#results.open')).toBeVisible();
+  await ok('pas 1: amb els resultats oberts');
+  await page.locator('#results .row[data-add="shakespeare"]').click();
+  await expect(g.locator('.gdots span').nth(2)).toHaveClass(/on/);
+  await ok('pas 2: la barra de Shakespeare');
+  await page.locator('#barsLayer .bar[data-id="shakespeare"]').click();
+  await expect(page.locator('#detail.open [data-act="context"]')).toBeVisible();
+  await ok('pas 2: «Mostra context» a la fitxa');
+  await page.locator('#detail [data-act="context"]').click();
+  await ok('pas 2: amb el context fet');
+  await g.locator('.gnext').click();
+  await ok('pas 3: col·leccions');
+  if (mobil) {
+    await page.locator('#cfgBtn').click();
+    await ok('pas 3: el popup de configuració obert');
+  }
+  await page.locator('#collections .colitem[data-col="illustracio"]').click();
+  await expect(page.locator('#collections .colitem[data-col="illustracio"]')).toHaveClass(/on/);
+  await ok('pas 3: amb La Il·lustració activada');
+  await g.locator('.gnext').click();
+  await ok('pas 4: moure\'s');
+  await g.locator('.gnext').click();
+  await ok('pas 5: jocs');
+});
+
+// El text del pas 2 diu que Galileu i Cervantes vivien alhora que Shakespeare. Si algun dia el seu
+// context (que surt de la BD) ja no els porta, el text mentiria.
+test('Guia: el context de Shakespeare continua portant Galileu i Cervantes', async ({ page }) => {
+  await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"results":{"bindings":[]}}', contentType: 'application/json' }));
+  await freshIndex(page);
+  const noms = await page.evaluate(() => {
+    state.pinned.add('shakespeare'); recomputePresent(); showContext('shakespeare');
+    return PEOPLE.filter(p => state.present.has(p.id)).map(p => L(p.name));
+  });
+  expect(noms.some(n => /Galil/.test(n))).toBe(true);
+  expect(noms.some(n => /Cervantes/.test(n))).toBe(true);
+  expect(noms.length).toBeLessThanOrEqual(15);                    // un context petit: es llegeix d'una mirada
 });
 
