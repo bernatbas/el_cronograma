@@ -1782,7 +1782,6 @@ function renderSidebar(){
   // ⠿ com a nansa de debo, o sigui que la confusio era interna. Ara son capes superposades:
   // diuen «un munt de coses» sense prometre cap gest.
   const colIco='<svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.8 14.4 5 8 8.2 1.6 5z"/><path d="m1.6 8.4 6.4 3.2 6.4-3.2"/><path d="m1.6 11.6 6.4 3.2 6.4-3.2"/></svg>';
-  const extIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3H3a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1v-3"/><path d="M10 2h4v4M14 2L8 8"/></svg>';
   // Les colleccions propies porten un ⋮ que obre la seva fitxa (reanomenar, veure i treure
   // gent, esborrar). Les de serie no en porten: s'editen al dashboard.
   const shareIco='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10V2.5M5 5.2 8 2.2l3 3"/><path d="M4.5 7.5H3.8a.8.8 0 0 0-.8.8v5a.8.8 0 0 0 .8.8h8.4a.8.8 0 0 0 .8-.8v-5a.8.8 0 0 0-.8-.8h-.7"/></svg>';
@@ -1794,13 +1793,13 @@ function renderSidebar(){
   // altre. Per aixo, si la caixa ja hi es, aqui nomes es refan els BOTONS i no es toca.
   const _cont=$('#collections');
   const _viu=newCollOpen?_cont.querySelector('.newcolbox'):null;
-  const _botons=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}<span class="cname">${esc(c.name)}</span><span class="cnt">${c.wds.length}</span>${c._mine?`<span class="colx" role="button" tabindex="0" data-collopt="${c.id}" title="${t('cro_coll_opts')}">${optIco}</span>`:`<span class="extlink colshare" role="button" tabindex="0" data-collshare="${c.id}" title="${t('cro_coll_share')}" aria-label="${t('cro_coll_share')}">${shareIco}</span>`}${c.url?`<a class="extlink" href="${c.url}" target="_blank" rel="noopener" title="${t('cro_open_site')}" onclick="event.stopPropagation()">${extIco}</a>`:''}</button>`).join('')
+  const _botons=COLLECTIONS.map(c=>`<button class="colitem ${state.collections.has(c.id)?'on':''}" data-col="${c.id}">${colIco}<span class="cname">${esc(c.name)}</span><span class="cnt">${c.wds.length}</span>${c._mine?`<span class="colx" role="button" tabindex="0" data-collopt="${c.id}" title="${t('cro_coll_opts')}">${optIco}</span>`:`<span class="extlink colshare" role="button" tabindex="0" data-collshare="${c.id}" title="${t('cro_coll_share')}" aria-label="${t('cro_coll_share')}">${shareIco}</span>`}</button>`).join('')   // la ↗ cap a la web de la font s'ha tret (20/11/2026): el camp `url` es queda a db.js per passar-lo a la futura descripció
   if(_viu){
     _cont.querySelectorAll('.colitem, .newcol').forEach(n=>n.remove());
-    _viu.insertAdjacentHTML('beforebegin',_botons);
+    _viu.insertAdjacentHTML('afterend',_botons);   // la caixa de nova col·lecció va A DALT (20/11/2026): a baix de tot ni es veia
     syncNewCollLabel(_viu);
   }else{
-    _cont.innerHTML=_botons+(newCollOpen?newCollBoxHTML():newCollBtnHTML());
+    _cont.innerHTML=(newCollOpen?newCollBoxHTML():newCollBtnHTML())+_botons;
   }
   renderFavorits();
   const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>L(a.name).localeCompare(L(b.name),LANG));   // always alphabetical, en l'idioma actiu
@@ -2674,7 +2673,7 @@ function openNewColl(){
   newCollOpen=true;newCollDraft='';newCollInc=false;
   const cont=$('#collections'), btn=cont.querySelector('.newcol');
   if(btn){btn.insertAdjacentHTML('beforebegin',newCollBoxHTML());btn.remove();}
-  else if(!cont.querySelector('.newcolbox'))cont.insertAdjacentHTML('beforeend',newCollBoxHTML());
+  else if(!cont.querySelector('.newcolbox'))cont.insertAdjacentHTML('afterbegin',newCollBoxHTML());
   const el=$('#newcolin'); if(el){el.focus();}
 }
 function closeNewColl(){ newCollOpen=false;newCollDraft='';newCollInc=false;render(); }
