@@ -396,7 +396,8 @@ test.describe('Col·leccions', () => {
 // ─── Col·leccions pròpies (les que crea l'usuari) ───────────────────────────
 // Aquesta part no tenia cap test: es va publicar el 27/09/2026 despres de tres setmanes en
 // una branca que el CI no mirava. Els selectors son els de debo, compro­vats al navegador.
-//   panell:  [data-newcol] · #newcolin (Enter desa) · #newcolinc (inclou els de la vista)
+//   panell:  [data-newcol] · #newcolin (Enter o [data-newcolok] la crea i n'obre la fitxa)
+//   fitxa:   [data-act="addopen"] obre el cercador #collq · [data-addq=QID] afegeix · [data-act="addview"]
 //            [data-col="myN"] · [data-collopt="myN"] (obre la fitxa)
 //   fitxa:   #collname (nom) · .collrm[data-q=QID] (treu un membre) · [data-act="del"]
 //   desades: localStorage['historiabasica.mycolls'] = [{id,name,vis,wds}]
@@ -406,14 +407,20 @@ async function mevesDesades(page) {
   return page.evaluate((k) => JSON.parse(localStorage.getItem(k) || '[]'), MYCOLL);
 }
 
-// Obre el formulari i crea una col·leccio. `inclou` marca el checkbox dels de la vista.
+// Obre el formulari i crea una col·leccio. En crear-la s'obre la seva fitxa (20/11/2026): `inclou` hi
+// prem la drecera «Afegeix els N de la vista» (abans era una casella al formulari). Després la tanca i
+// torna a obrir la secció de col·leccions, que és on els tests continuen.
 async function creaColleccio(page, nom, inclou = false) {
   await page.locator('[data-newcol]').click();
   const inp = page.locator('#newcolin');
   await expect(inp).toBeVisible();
-  if (inclou) await page.locator('#newcolinc').click();   // clic de debo: .checked=true no dispara el handler
   await inp.fill(nom);
   await inp.press('Enter');
+  if (!nom.trim()) return;                                  // sense nom no es crea: no hi ha fitxa
+  await expect(page.locator('#detail.open #collname')).toBeVisible();
+  if (inclou) await page.locator('#detail [data-act="addview"]').click();
+  await page.locator('#closeDetail').click();
+  await openCollectionsSection(page);
 }
 
 test.describe('Col·leccions pròpies', () => {
@@ -441,7 +448,7 @@ test.describe('Col·leccions pròpies', () => {
     expect(await mevesDesades(page)).toHaveLength(0);
   });
 
-  test('«inclou els de la vista» hi posa els que hi ha', async ({ page }) => {
+  test('la drecera «afegeix els de la vista» hi posa els que hi ha', async ({ page }) => {
     await freshIndex(page);
     await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"entities":{}}', contentType: 'application/json' }));
     await addFirstPerson(page);
@@ -452,6 +459,25 @@ test.describe('Col·leccions pròpies', () => {
     await expect(page.locator('[data-col^="my"] .cnt')).toHaveText('1');
     const desades = await mevesDesades(page);
     expect(desades[0].wds).toHaveLength(1);
+  });
+
+  test('el cercador de la fitxa hi afegeix gent i es queda obert', async ({ page }) => {
+    await freshIndex(page);
+    await page.route(WIKIDATA, route => route.fulfill({ status: 200, body: '{"results":{"bindings":[]}}', contentType: 'application/json' }));
+    await openCollectionsSection(page);
+    await page.locator('[data-newcol]').click();
+    await page.locator('#newcolin').fill('Amb cercador');
+    await page.locator('#newcolin').press('Enter');
+    await page.locator('#detail.open [data-act="addopen"]').click();
+    const camp = page.locator('#collq');
+    await expect(camp).toBeFocused();
+    await camp.pressSequentially('Plat');                     // Plató és a la BD local
+    const fila = page.locator('#collres [data-addq]').first();
+    await fila.click();
+    await expect(page.locator('#detail .collrm')).toHaveCount(1);
+    await expect(fila).toHaveClass(/in/);                     // el + passa a ✓
+    await expect(camp).toBeFocused();                         // el camp no s'ha refet (al mòbil, el teclat)
+    expect((await mevesDesades(page))[0].wds).toHaveLength(1);
   });
 
   test('sobreviu a una recàrrega', async ({ page }) => {

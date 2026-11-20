@@ -396,8 +396,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
             box-shadow:0 0 0 3px var(--blueSoft);}
   .newcolin:focus{outline:none;}
   .newcolbox{display:flex;flex-direction:column;gap:6px;}
-  .newcolinc{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);cursor:pointer;padding:0 2px;}
-  .newcolinc input{width:15px;height:15px;accent-color:var(--blue);flex:0 0 auto;}
+  .newcolrow{display:flex;gap:6px;align-items:stretch;}
+  .newcolrow .newcolin{flex:1 1 auto;min-width:0;}
+  .newcolrow .newcolok{flex:0 0 auto;padding:4px 12px;min-height:0;}
   /* La ✕ nomes surt a les colleccions propies. Va dins del boto de toggle, d'aqui el
      stopPropagation del handler. */
   .colx{flex:0 0 auto;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;
@@ -456,6 +457,21 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .detail.collcard .collrow{padding:5px 0;}
   }
   .detail.collcard .collhead{padding-right:40px;}   /* el llapis no ha de quedar sota la ✕ */
+  /* Afegir des de la fitxa: botons discontinus com «+ Nova col·lecció», i el cercador amb la seva llista. */
+  .colladd{display:flex;flex-direction:column;gap:6px;margin:8px 0 4px;}
+  .colladd .collq{margin:0;}
+  .collres{max-height:184px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r-card);background:var(--canvas);}
+  .collres:empty{display:none;}
+  .collresrow{display:flex;align-items:center;gap:9px;padding:7px 10px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border);}
+  .collresrow:last-child{border-bottom:none;}
+  .collresrow:hover{background:var(--surface);}
+  .collresrow.in{cursor:default;color:var(--text2);}
+  .collresrow.in:hover{background:none;}
+  .collresrow.muted{cursor:default;color:var(--text2);font-size:13px;}
+  .collresrow.muted:hover{background:none;}
+  .colladdmark{flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:1px solid var(--topbar-bg);color:var(--topbar-bg);display:inline-flex;align-items:center;justify-content:center;font-size:14px;line-height:1;}
+  .collresrow.in .colladdmark{background:var(--topbar-bg);color:#fff;}
+  @media (max-height:560px){ .collres{max-height:120px;} }
   .colldescin{width:100%;margin:10px 0 2px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-card);background:var(--soft);color:var(--text);font:inherit;font-size:14px;line-height:1.45;resize:vertical;}
   .colldescin:focus{outline:none;border-color:var(--border-strong);background:var(--canvas);}
   .collnm.unknown{color:var(--text2);font-family:var(--mono,ui-monospace,Menlo,monospace);font-size:12.5px;}
@@ -975,7 +991,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .guia .gar,.guia .gar[disabled]{background:#3A302D;border-color:#6A4338;color:#F0A493;}
     .guia .gar:hover{background:#4A3A35;}
     .guia-velo{background:rgba(0,0,0,.35);}
-    .colldesc a{color:#F0A493;}   /* enllaços de la descripció d'una col·lecció: la terracota no es llegia sobre fosc */
+    .colldesc a{color:#F0A493;}
+    .colladdmark{border-color:#E5887A;color:#F0A493;}
+    .collresrow.in .colladdmark{background:#C9634D;color:#fff;}   /* enllaços de la descripció d'una col·lecció: la terracota no es llegia sobre fosc */
     .guia .gfi{background:#C9634D;}
   }
 </style>
@@ -1167,7 +1185,9 @@ const I18N={
     cro_newcol:'+ Nova col·lecció',
     // Crear una col·lecció NO depèn de tenir ningú a la vista: pots començar-la buida. Incloure
     // els que ja hi tens és una casella opcional, i només surt quan n'hi ha algun.
-    cro_coll_include: v => 'Inclou ' + (v.n===1 ? 'el de la vista' : 'els '+v.n+' de la vista'),
+    cro_coll_add_people:'+ Afegeix personatges',
+    cro_coll_add_view: v => '+ Afegeix ' + (v.n===1 ? 'el de la vista' : 'els '+v.n+' de la vista'),
+    cro_coll_create:'Crea',
     cro_coll_name_ph:'Nom de la col·lecció',
     cro_coll_del:'Elimina aquesta col·lecció',
     cro_coll_rename:'Canvia-li el nom',
@@ -1467,6 +1487,8 @@ function doUndo(){
     _pbarId=null;pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;
   }
   closeDetailIfGone();clearFitLatch();render();scheduleSave();syncUndo();
+  // La fitxa d'una col·lecció oberta no se n'assabentava: després de desfer seguia mostrant la llista vella.
+  if(state.selectedColl&&$('#detail').classList.contains('open')&&COLLECTIONS.some(c=>c.id===state.selectedColl))openCollDetail(state.selectedColl);
 }
 
 let toastTimer=null;
@@ -1846,7 +1868,6 @@ function renderSidebar(){
   if(_viu){
     _cont.querySelectorAll('.colitem, .newcol').forEach(n=>n.remove());
     _viu.insertAdjacentHTML('afterend',_botons);   // la caixa de nova col·lecció va A DALT (20/11/2026): a baix de tot ni es veia
-    syncNewCollLabel(_viu);
   }else{
     _cont.innerHTML=(newCollOpen?newCollBoxHTML():newCollBtnHTML())+_botons;
   }
@@ -1918,6 +1939,7 @@ function openCollDetail(cid){
   const c=COLLECTIONS.find(x=>x.id===cid);
   if(!c){hideDetail();state.selectedColl=null;return;}
   collDraft=null;
+  if(collCercaCid!==cid){collCercaCid=null;collCercaTxt='';}
   if(!c._mine)return drawCatalogCard(c);
   drawCollCard(c.name,c.wds,cid,null);
 }
@@ -1948,8 +1970,7 @@ function collNomsQueFalten(c){
   if(!falten.length||collNomsDemanats.has(c.id))return false;
   collNomsDemanats.add(c.id);collNomsPendents.add(c.id);
   byIds(falten,true).finally(()=>collNomsPendents.delete(c.id)).then(got=>{
-    got.forEach(w=>{if(w.birth==null)return;const id='wd_'+w.qid;
-      if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:w.qid,name:w.name,birth:w.birth,death:w.death,cats:guessCats(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_session:true,_ts:Date.now()});});
+    got.forEach(w=>{if(w.birth!=null)wdAPersona(w);});
     if(state.selectedColl===c.id&&$('#detail').classList.contains('open'))openCollDetail(c.id);
   }).catch(()=>{   // Wikidata no respon: que no quedi «Carregant…» per sempre; torna a «… i N més»
     if(state.selectedColl===c.id&&$('#detail').classList.contains('open'))openCollDetail(c.id);
@@ -2002,36 +2023,23 @@ function drawCollCard(nom,wds,cid,url){
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   const cc=cid?COLLECTIONS.find(x=>x.id===cid):null;
   if(cc)collNomsQueFalten(cc);
-  // Per ordre de naixement; els que encara no tenim (sense nom) al final.
-  const ordre=[...wds].sort((a,b)=>{const pa=PEOPLE.find(x=>x.wd===a),pb=PEOPLE.find(x=>x.wd===b);
-    return (pa?pa.birth:Infinity)-(pb?pb.birth:Infinity);});
-  const files=ordre.map(q=>{
-    const p=PEOPLE.find(x=>x.wd===q);
-    // Si la colleccio no s'ha activat mai, el personatge encara no es a PEOPLE: es mostra el
-    // QID en lloc d'inventar-se un nom.
-    const t1=p?esc(L(p.name)):q;
-    const color=p?swatchBg(p):'var(--border-strong)';
-    return `<div class="collrow"><span class="swatch" style="background:${color}"></span>`
-      + `<span class="collnm${p?'':' unknown'}">${t1}</span>`
-      + (p?`<span class="collyr">${fmtY(p.birth)}–${isAlive(p)?'':fmtY(p.death)}</span>`:'')
-      + `<button class="collrm" data-q="${q}" title="${t('cro_coll_rm_member')}">×</button></div>`;
-  }).join('');
   d.classList.add('collcard');
   d.innerHTML=`<button class="close cclose" id="closeDetail" aria-label="${t('close')}">×</button>
     <div class="collhead">
       <input class="collname" id="collname" type="text" maxlength="60" value="${esc(nom)}" placeholder="${t('cro_coll_name_ph')}" aria-label="${t('cro_coll_name_ph')}">
       <button class="collpen" id="collpen" type="button" title="${t('cro_coll_rename')}" aria-label="${t('cro_coll_rename')}">${penIco}</button>
     </div>
-    <div class="collbar"><div class="collchips">${collChips(wds)}</div>${cc&&wds.length?`<button class="dbtn${state.collections.has(cid)?'':' primary'}" data-act="toggle">${t(state.collections.has(cid)?'cro_coll_deactivate':'cro_coll_activate')}</button>`:''}</div>
+    <div class="collbar">${cc?collBarInner(cc):`<div class="collchips">${collChips(wds)}</div>`}</div>
     ${cc?`<textarea class="colldescin" id="colldescin" rows="2" maxlength="300" placeholder="${t('cro_coll_desc_ph')}">${esc(cc.desc||'')}</textarea>`:''}
-    <div class="collmembers">${files||`<div class="empty">${t('cro_coll_empty_members')}</div>`}</div>
+    ${cc?collAddHTML(cc):''}
+    <div class="collmembers">${collMembresHTML(wds)}</div>
     ${cc?`<div class="collfoot">${esc(collFoot(cc))}</div>`:''}
     <div class="actions${draft?' confirm':''}">${draft
       ? `<button class="dbtn quiet" data-act="cancel">${t('cro_coll_cancel')}</button>`
         +`<button class="dbtn primary" data-act="save" ${nom.trim()?'':'disabled'}>${t('cro_coll_savebtn')}</button>`
       : `<button class="dbtn danger" data-act="del">${t('cro_coll_del_btn')}</button>`}
     </div>`;
-  const tanca=()=>{hideDetail();state.selectedColl=null;collDraft=null;render();};
+  const tanca=()=>{hideDetail();state.selectedColl=null;collDraft=null;collCercaCid=null;collCercaTxt='';render();};
   $('#closeDetail').onclick=tanca;
   const inp=$('#collname');
   $('#collpen').onclick=()=>{inp.focus();inp.select();};
@@ -2056,12 +2064,8 @@ function drawCollCard(nom,wds,cid,url){
     const v=dsc.value.trim().slice(0,300);if(v===(c.desc||''))return;
     c.desc=v;c.updated=avuiISO();saveMyColls();
   };
-  d.querySelectorAll('.collrm').forEach(b=>b.onclick=()=>{
-    const q=b.getAttribute('data-q');
-    if(draft){ collDraft.wds=collDraft.wds.filter(x=>x!==q);
-               drawCollCard(collDraft.name,collDraft.wds,null,null); }
-    else removeFromColl(cid,q);
-  });
+  bindCollRm(d,cid);
+  if(cc)bindCollAdd(d,cc);
   d.querySelectorAll('.dbtn').forEach(b=>b.onclick=ev=>{
     ev.stopPropagation();
     const act=b.getAttribute('data-act');
@@ -2071,6 +2075,114 @@ function drawCollCard(nom,wds,cid,url){
     else if(act==='toggle'){hideDetail();state.selectedColl=null;toggleCollection(cid);}   // es tanca: que es vegi la línia
   });
   render();
+}
+
+// ── Afegir gent a una col·lecció PRÒPIA des de la seva fitxa (20/11/2026) ─────────────────────
+// Membres per ordre de naixement; els que encara no tenim (sense nom) al final, amb el Q-id.
+function collMembresHTML(wds){
+  const ordre=[...wds].sort((a,b)=>{const pa=PEOPLE.find(x=>x.wd===a),pb=PEOPLE.find(x=>x.wd===b);
+    return (pa?pa.birth:Infinity)-(pb?pb.birth:Infinity);});
+  return ordre.map(q=>{
+    const p=PEOPLE.find(x=>x.wd===q);
+    return `<div class="collrow"><span class="swatch" style="background:${p?swatchBg(p):'var(--border-strong)'}"></span>`
+      + `<span class="collnm${p?'':' unknown'}">${p?esc(L(p.name)):q}</span>`
+      + (p?`<span class="collyr">${fmtY(p.birth)}–${isAlive(p)?'':fmtY(p.death)}</span>`:'')
+      + `<button class="collrm" data-q="${q}" title="${t('cro_coll_rm_member')}">×</button></div>`;
+  }).join('')||`<div class="empty">${t('cro_coll_empty_members')}</div>`;
+}
+function collBarInner(c){
+  const on=state.collections.has(c.id);
+  return `<div class="collchips">${collChips(c.wds)}</div>`
+    +(c.wds.length?`<button class="dbtn${on?'':' primary'}" data-act="toggle">${t(on?'cro_coll_deactivate':'cro_coll_activate')}</button>`:'');
+}
+function bindCollRm(d,cid){
+  d.querySelectorAll('.collrm').forEach(b=>b.onclick=()=>{
+    const q=b.getAttribute('data-q');
+    if(!cid){collDraft.wds=collDraft.wds.filter(x=>x!==q);drawCollCard(collDraft.name,collDraft.wds,null,null);}
+    else removeFromColl(cid,q);
+  });
+}
+// El cercador de la fitxa: mateix motor que el de dalt (cercaLocal + wdBusca), però el que tries va a la
+// COL·LECCIÓ, no a la línia. Queda obert per anar afegint, i un + es torna ✓ quan la persona ja hi és.
+var collCercaCid=null, collCercaTxt='', collWdRes=[], collWdStatus='idle', collWdSeq=0, collWdTimer=null;
+const collNView=c=>viewQids().filter(q=>!c.wds.includes(q)).length;
+function collAddHTML(c){
+  const nv=collNView(c);
+  return `<div class="colladd">${collCercaCid===c.id
+      ?`<input class="newcolin collq" id="collq" type="text" autocomplete="off" placeholder="${t('cro_search_ph')}" value="${esc(collCercaTxt)}"><div class="collres" id="collres"></div>`
+      :`<button class="newcol" type="button" data-act="addopen">${t('cro_coll_add_people')}</button>`}`
+    +(nv?`<button class="newcol" type="button" data-act="addview">${t('cro_coll_add_view',{n:nv})}</button>`:'')+`</div>`;
+}
+function collResHTML(c){
+  const term=collCercaTxt.trim();if(!term)return '';
+  const fila=(qid,nom,b,dth,color)=>{const dins=c.wds.includes(qid);
+    return `<div class="collresrow${dins?' in':''}" data-addq="${esc(qid)}"><span class="swatch" style="background:${color}"></span>`
+      +`<span class="collnm">${esc(nom)}</span><span class="collyr">${b!=null?fmtY(b)+'–'+(dth!=null?fmtY(dth):''):''}</span>`
+      +`<span class="colladdmark" aria-hidden="true">${dins?'✓':'+'}</span></div>`;};
+  // Només qui té Q-id: una col·lecció guarda Q-ids (el «bernat» de la BD no s'hi pot posar).
+  let h=cercaLocal(term).filter(p=>/^Q\d+$/.test(p.wd||'')).slice(0,8).map(p=>fila(p.wd,L(p.name),p.birth,p.death,swatchBg(p))).join('');
+  if(collWdStatus==='loading')h+=`<div class="collresrow muted">${t('searching_wikidata')}</div>`;
+  else if(collWdStatus==='error')h+=`<div class="collresrow muted">${t('cro_wd_fail')}</div>`;
+  else if(collWdStatus==='done')h+=collWdRes.filter(w=>!w.nodate&&w.birth!=null).slice(0,8).map(w=>fila(w.qid,w.name,w.birth,w.death,NOCAT_COLOR)).join('');
+  return h||`<div class="collresrow muted">${t('cro_no_match')}</div>`;
+}
+function pintaCollRes(c){const r=$('#collres');if(r)r.innerHTML=collResHTML(c);}
+function cercaColl(c){
+  const term=collCercaTxt.trim();
+  clearTimeout(collWdTimer);collWdRes=[];collWdStatus=term.length>=2?'loading':'idle';
+  const seq=++collWdSeq;
+  pintaCollRes(c);
+  if(term.length<2)return;
+  collWdTimer=setTimeout(()=>{
+    wdBusca(term).then(out=>{if(seq!==collWdSeq)return;collWdRes=out;collWdStatus='done';pintaCollRes(c);})
+      .catch(()=>{if(seq!==collWdSeq)return;collWdStatus='error';pintaCollRes(c);});
+  },300);
+}
+// Després d'afegir: es refà el que ha canviat (xips, botó, membres, drecera, ✓) SENSE tocar el camp de
+// cerca. Tornar-lo a crear li prendria el focus i, al mòbil, tancaria el teclat (veure «Paranys»).
+function refrescaCollCard(c){
+  const d=$('#detail');if(state.selectedColl!==c.id)return;
+  const bar=d.querySelector('.collbar');if(bar){bar.innerHTML=collBarInner(c);bindCollToggle(d,c.id);}
+  const m=d.querySelector('.collmembers');if(m){m.innerHTML=collMembresHTML(c.wds);bindCollRm(d,c.id);}
+  const av=d.querySelector('[data-act="addview"]'),nv=collNView(c);
+  if(av){if(nv)av.textContent=t('cro_coll_add_view',{n:nv});else av.remove();}
+  const f=d.querySelector('.collfoot');if(f)f.textContent=collFoot(c);
+  pintaCollRes(c);
+  render();   // el comptador de la col·lecció al lateral (render() no toca la fitxa)
+}
+function bindCollToggle(d,cid){
+  const b=d.querySelector('.collbar [data-act="toggle"]');
+  if(b)b.onclick=ev=>{ev.stopPropagation();hideDetail();state.selectedColl=null;toggleCollection(cid);};
+}
+function bindCollAdd(d,c){
+  const box=d.querySelector('.colladd');if(!box)return;
+  box.onclick=ev=>{
+    const b=ev.target.closest('[data-act]');
+    if(b&&b.dataset.act==='addopen'){ev.stopPropagation();collCercaCid=c.id;collCercaTxt='';collWdStatus='idle';
+      box.outerHTML=collAddHTML(c);bindCollAdd(d,c);const i=$('#collq');if(i)i.focus();return;}
+    if(b&&b.dataset.act==='addview'){ev.stopPropagation();if(addMembers(c.id,viewQids()))refrescaCollCard(c);return;}
+    const r=ev.target.closest('[data-addq]');
+    if(r&&!r.classList.contains('in')){
+      ev.stopPropagation();
+      const w=collWdRes.find(x=>x.qid===r.dataset.addq);if(w)wdAPersona(w);   // de Wikidata: que tingui nom a la llista
+      if(setMember(c.id,r.dataset.addq,true))refrescaCollCard(c);
+    }
+  };
+  const i=$('#collq');
+  if(i){
+    i.oninput=()=>{collCercaTxt=i.value;cercaColl(c);};
+    i.onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();collCercaCid=null;collCercaTxt='';const bx=d.querySelector('.colladd');bx.outerHTML=collAddHTML(c);bindCollAdd(d,c);}};
+    if(collCercaTxt)pintaCollRes(c);   // la fitxa s'ha redibuixat sencera (p. ex. en treure algú): els resultats hi tornen
+  }
+}
+// Afegir-ne uns quants d'un cop (la drecera «els N de la vista»): UN sol pas al Desfés.
+function addMembers(cid,qids){
+  const c=COLLECTIONS.find(x=>x.id===cid&&x._mine);if(!c)return false;
+  const nous=[...new Set(qids)].filter(q=>!c.wds.includes(q));if(!nous.length)return false;
+  pushUndo('undo_coll_add',{name:c.name});
+  c.wds.push(...nous);c.updated=avuiISO();
+  saveMyColls();recomputePresent();clearFitLatch();scheduleSave();
+  return true;
 }
 
 function saveCollDraft(){
@@ -2205,6 +2317,23 @@ const deaccent=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(
 let searchIdx=-1, wdTerm='', wdResults=[], wdStatus='idle', wdTimer=null, wdSeq=0;
 const wdCache=new Map();   // cau de resultats de cerca per terme normalitzat (només memòria): repetir una cerca és instantani, sense xarxa
 const dropKnown=arr=>{const inDB=new Set(PEOPLE.map(p=>p.wd).filter(Boolean));return arr.filter(w=>!inDB.has(w.qid));};   // del cau, treu qui ja tinguem/afegit
+// ── Peces COMPARTIDES entre el cercador de dalt i el de la fitxa d'una col·lecció (20/11/2026).
+// Cada cercador només posa la manera de pintar els resultats i què fa en triar-ne un.
+const cercaLocal=term=>{const tt=deaccent((term||'').trim());return tt?PEOPLE.filter(p=>deaccent(L(p.name)).includes(tt)):[];};
+// Wikidata: primer autocompletat (bon rànquing) i, si no troba res, text complet. Amb cau per terme.
+// Els errors NO es guarden a la cau: la propera vegada es torna a provar.
+function wdBusca(term){
+  const key=deaccent(term.trim());
+  if(wdCache.has(key))return Promise.resolve(dropKnown(wdCache.get(key)));
+  if(typeof gtag!=='undefined')gtag('event','cerca_wikidata',{text:term.trim()});
+  return entitySearch(term).then(out=>out.length?out:fulltextSearch(term)).then(out=>{wdCache.set(key,out);return out;});
+}
+// Un resultat de Wikidata passa a ser una persona de PEOPLE (de sessió). Torna l'id.
+function wdAPersona(w){
+  const id='wd_'+w.qid;
+  if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:w.qid,name:w.name,birth:w.birth,death:w.death,cats:guessCats(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_session:true,_ts:Date.now()});
+  return id;
+}
 
 const localRow=p=>{const added=state.present.has(p.id);return `<div class="row ${added?'disabled':''}" data-add="${p.id}"><span class="swatch" style="background:${swatchBg(p)}"></span>${esc(L(p.name))}<span class="yr">${added?t('cro_already_added'):p.birth+'\u2013'+(p.death==null?'':p.death)}</span></div>`;};
 // Igual que localRow/#onview/la fitxa: el nom ve de Wikidata (public i editable) i va a
@@ -2222,7 +2351,7 @@ const evSearchRow=ev=>`<div class="row evrow" data-evsearch="${ev.id}"><span cla
 function renderDropdown(){
   const term=deaccent(q.value.trim());
   if(!term){results.classList.remove('open');return;}
-  const local=PEOPLE.filter(p=>deaccent(L(p.name)).includes(term));
+  const local=cercaLocal(q.value);
   const localEv=EVENTS.filter(ev=>deaccent(L(ev.name)).includes(term));
   let html=local.map(localRow).join('');
   if(localEv.length)html+=`<div class="rowsep">${t('cro_events')}</div>`+localEv.map(evSearchRow).join('');
@@ -2271,9 +2400,7 @@ function addFromSearch(id){
 function addWikidataPerson(qid){
   const w=wdResults.find(x=>x.qid===qid);if(!w||w.birth==null)return;
   if(typeof gtag!=='undefined')gtag('event','personatge_afegit',{nom:w.name,qid});
-  const id='wd_'+qid;
-  if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:qid,name:w.name,birth:w.birth,death:w.death,cats:guessCats(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_session:true,_ts:Date.now()});
-  addFromSearch(id);
+  addFromSearch(wdAPersona(w));
 }
 
 // --- Wikidata live search: humans only (P31=Q5), Catalan labels with es/en fallback ---
@@ -2349,14 +2476,9 @@ function fulltextSearch(term){
   return wdFetch(url).then(d=>byIds((((d.query&&d.query.search)||[]).map(x=>x.title).filter(t=>/^Q\d+$/.test(t))),false));
 }
 function fetchWikidata(term){
-  if(typeof gtag!=='undefined')gtag('event','cerca_wikidata',{text:term.trim()});
-  const key=deaccent(term.trim());
   const seq=++wdSeq;
-  entitySearch(term).then(out=>{
-    if(seq!==wdSeq)return;   // a newer search superseded this one
-    if(out.length){wdResults=out;wdStatus='done';wdCache.set(key,out);renderDropdown();return;}
-    return fulltextSearch(term).then(out2=>{if(seq!==wdSeq)return;wdResults=out2;wdStatus='done';wdCache.set(key,out2);renderDropdown();});
-  }).catch(()=>{if(seq!==wdSeq)return;wdResults=[];wdStatus='error';renderDropdown();});   // els errors NO es cachegen: torna a intentar-ho la propera vegada
+  wdBusca(term).then(out=>{if(seq!==wdSeq)return;wdResults=out;wdStatus='done';renderDropdown();})   // seq: una cerca més nova la substitueix
+    .catch(()=>{if(seq!==wdSeq)return;wdResults=[];wdStatus='error';renderDropdown();});
 }
 
 q.addEventListener('input',runSearch);
@@ -2652,6 +2774,7 @@ $('#collections').addEventListener('click',e=>{
   const x=e.target.closest('[data-collopt]');
   if(x){e.stopPropagation();openCollDetail(x.getAttribute('data-collopt'));return;}   // el ⋮ va DINS del boto de toggle
   if(e.target.closest('[data-newcol]')){openNewColl();return;}
+  if(e.target.closest('[data-newcolok]')){creaDesDeLaCaixa();return;}
   if(e.target.closest('.newcolbox'))return;                                    // el camp i la casella son zona propia
   const b=e.target.closest('[data-col]');if(b)toggleCollection(b.getAttribute('data-col'));
 });
@@ -2659,16 +2782,9 @@ $('#collections').addEventListener('click',e=>{
 $('#collections').addEventListener('input',e=>{
   if(e.target.id==='newcolin')newCollDraft=e.target.value;
 });
-$('#collections').addEventListener('change',e=>{
-  if(e.target.id==='newcolinc')newCollInc=e.target.checked;   // el render la reconstrueix: cal recordar-ho
-});
 $('#collections').addEventListener('keydown',e=>{
   if(e.target.id!=='newcolin')return;
-  if(e.key==='Enter'){
-    const v=e.target.value,inc=newCollInc;
-    if(!v.trim()){showToast(t('cro_coll_needname'));return;}   // el camp es queda obert
-    newCollOpen=false;newCollDraft='';newCollInc=false;createColl(v,inc);
-  }
+  if(e.key==='Enter'){e.preventDefault();creaDesDeLaCaixa();}
   else if(e.key==='Escape'){closeNewColl();}
 });
 // A collection is a list of Q-ids: resolve each against the local DB first, fetch the rest from
@@ -2711,7 +2827,7 @@ function refreshStale(qids){
 // desen a part i s'afegeixen a la MATEIXA llista amb `_mine:true`, aixi tota la resta del codi
 // —render, toggle, TTL de refresc— les tracta igual sense saber d'on venen.
 const MYCOLL_LS='historiabasica.mycolls';
-let newCollOpen=false, newCollDraft='', newCollInc=false;   // newCollInc: incloure els de la vista
+let newCollOpen=false, newCollDraft='';
 // ⚠️ La casella arrenca DESMARCADA: crear-la buida ha de ser el cami curt, i incloure gent
 // una decisio explicita. Si es vol al contrari, es aquest false.
 
@@ -2739,10 +2855,10 @@ function viewQids(){
   return PEOPLE.filter(p=>state.present.has(p.id)&&/^Q\d+$/.test(p.wd||'')).map(p=>p.wd);
 }
 
-function createColl(nom,incloure){
+function createColl(nom){
   const name=(nom||'').trim().slice(0,60);
-  if(!name){showToast(t('cro_coll_needname'));return false;}   // sense nom no es desa
-  const wds=incloure?viewQids():[];
+  if(!name){showToast(t('cro_coll_needname'));return null;}   // sense nom no es desa
+  const wds=[];
   let i=1,id;do{id='my'+(i++);}while(COLLECTIONS.some(c=>c.id===id));
   pushUndo('undo_coll_new',{name});
   // `vis` es guarda des d'ara encara que no hi hagi cap interruptor: el dia que hi hagi
@@ -2752,7 +2868,7 @@ function createColl(nom,incloure){
   if(wds.length)state.collections.add(id);
   saveMyColls();scheduleSave();render();
   showToast(wds.length?t('cro_coll_saved',{name,n:wds.length}):t('cro_coll_saved_empty',{name}));
-  return true;
+  return id;
 }
 
 function deleteColl(cid){
@@ -2770,42 +2886,34 @@ function deleteColl(cid){
 
 // La caixa del nom i el boto que la substitueix. Separats perque els fan servir tant el
 // render com openNewColl(), i han de sortir exactament iguals pels dos camins.
+// Nom i «Crea». La casella «inclou els de la vista» es va treure el 20/11/2026: ara, en crear-la, s'obre la
+// fitxa, i allà hi ha la drecera «Afegeix els N de la vista» i el cercador.
 function newCollBoxHTML(){
-  const n=viewQids().length;
-  return `<div class="newcolbox" data-nview="${n}"><input class="newcolin" id="newcolin" type="text" maxlength="60" placeholder="${t('cro_coll_name_ph')}" value="${esc(newCollDraft)}">`
-    + newCollIncHTML(n) + `</div>`;
+  return `<div class="newcolbox"><div class="newcolrow"><input class="newcolin" id="newcolin" type="text" maxlength="60" placeholder="${t('cro_coll_name_ph')}" value="${esc(newCollDraft)}">`
+    + `<button class="dbtn primary newcolok" type="button" data-newcolok>${t('cro_coll_create')}</button></div></div>`;
 }
-// Sempre actiu: una colleccio es pot comencar buida. Si hi ha gent a la vista, s'ofereix
-// d'incloure-la amb una casella —opcio, no cami unic.
-function newCollIncHTML(n){
-  return n?`<label class="newcolinc"><input type="checkbox" id="newcolinc" ${newCollInc?'checked':''}>${t('cro_coll_include',{n})}</label>`:'';
+function creaDesDeLaCaixa(){
+  const el=$('#newcolin');const v=el?el.value:'';
+  if(!v.trim()){showToast(t('cro_coll_needname'));if(el)el.focus();return;}   // el camp es queda obert
+  newCollOpen=false;newCollDraft='';
+  const id=createColl(v);
+  if(id)openCollDetail(id);   // la fitxa, directament: és on s'hi afegeix gent
 }
 function newCollBtnHTML(){ return `<button class="newcol" data-newcol>${t('cro_newcol')}</button>`; }
 
-// Si el nombre de gent a la vista canvia mentre s'escriu el nom (una colleccio que acaba de
-// carregar, per exemple), es refa NOMES l'etiqueta de la casella. L'input no es toca mai:
-// tornar-lo a crear li pren el focus i, al mobil, tanca el teclat.
-function syncNewCollLabel(box){
-  const n=viewQids().length;
-  if(+box.dataset.nview===n)return;
-  box.dataset.nview=n;
-  const vella=box.querySelector('.newcolinc');
-  if(vella)vella.remove();
-  box.insertAdjacentHTML('beforeend',newCollIncHTML(n));
-}
 
 // NO es fa un render() sencer: entre el toc i el focus() hi ha d'haver la MINIMA feina
 // possible. render() refa el canvas sencer, i al mobil una tasca llarga pot deixar el
 // focus() fora de la finestra del gest — i llavors iOS no obre el teclat. Aqui nomes es
 // canvia el boto per la caixa.
 function openNewColl(){
-  newCollOpen=true;newCollDraft='';newCollInc=false;
+  newCollOpen=true;newCollDraft='';
   const cont=$('#collections'), btn=cont.querySelector('.newcol');
   if(btn){btn.insertAdjacentHTML('beforebegin',newCollBoxHTML());btn.remove();}
   else if(!cont.querySelector('.newcolbox'))cont.insertAdjacentHTML('afterbegin',newCollBoxHTML());
   const el=$('#newcolin'); if(el){el.focus();}
 }
-function closeNewColl(){ newCollOpen=false;newCollDraft='';newCollInc=false;render(); }
+function closeNewColl(){ newCollOpen=false;newCollDraft='';render(); }
 
 async function toggleCollection(cid){
   const c=COLLECTIONS.find(x=>x.id===cid);if(!c)return;
@@ -2844,9 +2952,7 @@ async function toggleCollection(cid){
   if(failed){recomputePresent();clearFitLatch();render();fitToPresent();showToast(t('cro_coll_fail',{name:c.name}));return;}
   got.forEach(w=>{
     if(w.birth==null)return;                        // no birth year → nowhere to place the bar
-    const id='wd_'+w.qid;
-    if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:w.qid,name:w.name,birth:w.birth,death:w.death,cats:guessCats(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_session:true,_ts:Date.now()});
-    state.pinned.add(id);
+    state.pinned.add(wdAPersona(w));
   });
   recomputePresent();
   clearFitLatch();
