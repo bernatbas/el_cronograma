@@ -517,7 +517,7 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
     <div class="shead"><h2>Cronograma ↔ Jocs</h2></div>
     <div class="stats" id="gapagstats"></div>
     <div class="card pad" style="margin-top:12px">
-      <div class="gsub">% d’usuaris que obren els jocs<span class="hint">sobre el total del dia</span></div>
+      <div class="gsub">% d’usuaris<span class="gleg"><span><i style="background:var(--terracota)"></i>Obren els jocs</span><span><i style="background:var(--terracota-dark)"></i>Comencen un joc</span></span><span class="hint">sobre el total del dia</span></div>
       <div id="gapcjoc"></div>
     </div>
   </section>
@@ -1344,9 +1344,9 @@ function gaBarres(dies, series, tip, max){
    de cada columna caigui exactament a (i+½)/30). Les línies són un SVG estirat amb
    non-scaling-stroke; els punts són HTML perquè no es deformin. El darrer tram (avui, dia
    a mig fer) va puntejat. */
-function gaLinia(dies, series, tip){
+function gaLinia(dies, series, tip, maxFix){
   const N=GA_FINESTRA, buit=Math.max(0,N-dies.length);
-  const max=Math.max.apply(null, [].concat.apply([1], series.map(function(s){ return s.v; })));
+  const max=maxFix || Math.max.apply(null, [].concat.apply([1], series.map(function(s){ return s.v; })));
   const X=function(i){ return (buit+i+0.5)*1000/N; }, Y=function(v){ return 100-100*v/max; };
   let svg='<svg viewBox="0 0 1000 100" preserveAspectRatio="none">';
   series.slice().reverse().forEach(function(s){
@@ -1412,11 +1412,13 @@ function renderGA(d){
   el("gapagstats").innerHTML =
     stat("Obren el cronograma", P.crono, pct(P.crono,g.usuaris)+"% dels usuaris") +
     stat("Obren els jocs", P.joc, pct(P.joc,g.usuaris)+"% dels usuaris") +
+    stat("Comencen un joc", P.juguen, pct(P.juguen,g.usuaris)+"% dels usuaris") +
     stat("Del cronograma als jocs", P.crono_a_joc, "usuaris") +
     stat("Dels jocs al cronograma", P.joc_a_crono, "usuaris");
   const pcs=D.map(function(_,i){ return pct(P.joc_dia[i], g.per_dia[i]); });
-  el("gapcjoc").innerHTML = gaBarres(D, [{v:pcs}], function(i){
-    return "<b>"+dmy(D[i])+"</b><br>"+pcs[i]+"% · "+P.joc_dia[i]+" de "+g.per_dia[i]+" usuaris";
+  const pcj=D.map(function(_,i){ return pct(P.juguen_dia[i], g.per_dia[i]); });
+  el("gapcjoc").innerHTML = gaLinia(D, [{v:pcs},{v:pcj,cls:"b"}], function(i){
+    return "<b>"+dmy(D[i])+(i===D.length-1?" (avui, a mig fer)":"")+"</b><br>Obren els jocs: "+pcs[i]+"% ("+P.joc_dia[i]+")<br>Comencen un joc: "+pcj[i]+"% ("+P.juguen_dia[i]+")<br><span style=\"opacity:.7\">de "+g.per_dia[i]+" usuaris</span>";
   }, 100);
 
   el("gaaccions").innerHTML = '<table class="gtab"><tbody>'+d.crono.accions.map(function(a){

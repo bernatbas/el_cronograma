@@ -210,6 +210,11 @@ def overview(n=30):
         path = "/" + ref.split("babilinia.com", 1)[1].lstrip("/").split("?")[0].split("#")[0]
         return path in pags
 
+    # Usuaris que han COMENÇAT algun joc (qualsevol): obrir joc.html no vol dir jugar.
+    juguen_dia = report(["date"], ["totalUsers"], S, E, filtre=igual("eventName", "joc_iniciat"))
+    juguen = report([], ["totalUsers"], S, E, filtre=igual("eventName", "joc_iniciat"))
+    juguen = juguen[0]["totalUsers"] if juguen else 0
+
     crono_a_joc = sum(r["activeUsers"] for r in refs if r["pagePath"] in PAG_JOC and ve_de(r, PAG_CRONO))
     joc_a_crono = sum(r["activeUsers"] for r in refs if r["pagePath"] in PAG_CRONO and ve_de(r, PAG_JOC))
 
@@ -256,6 +261,7 @@ def overview(n=30):
             "crono": usuaris_pag(pag_tot, PAG_CRONO), "joc": usuaris_pag(pag_tot, PAG_JOC),
             "crono_dia": dia_pag(PAG_CRONO), "joc_dia": dia_pag(PAG_JOC),
             "crono_a_joc": crono_a_joc, "joc_a_crono": joc_a_crono,
+            "juguen": juguen, "juguen_dia": _per_dia(juguen_dia, dies, "totalUsers"),
         },
         "crono": {
             "accions": [{"ev": e, "dia": _per_dia(ev, dies, "eventCount", "eventName", e)} for e in EV_CRONO],
