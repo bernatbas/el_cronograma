@@ -37,6 +37,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&display=swap"></noscript>
 <style>
+  /* L'atribut hidden ha de guanyar sempre: el botó «Tots els jocs» de la topbar porta display
+     inline i sortia també a la portada (21/11/2026). Mateixa regla que a l'index. */
+  [hidden]{display:none!important}
   /* Paleta idèntica a index.html (mantenir sincronitzada) */
   :root{
     --text:#2C2C2B; --text2:#7D7A75; --canvas:#FFFFFF; --soft:#F9F8F7;
