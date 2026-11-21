@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-HB · Control — servidor local del dashboard.
+Babilinia · Control — servidor local del dashboard.
 
     python3 _tools/dash.py        ->  http://127.0.0.1:7777
 
@@ -2007,7 +2007,7 @@ def main():
     if not os.path.isdir(os.path.join(REPO, ".git")):
         sys.exit("ERROR: %s no sembla un repo git." % REPO)
     srv = ThreadingHTTPServer((HOST, PORT), Handler)
-    print("HB · Control  ->  http://%s:%d" % (HOST, PORT))
+    print("Babilinia · Control  ->  http://%s:%d" % (HOST, PORT))
     print("repo: %s" % REPO)
     print("Ctrl+C per aturar.")
     try:
