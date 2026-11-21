@@ -102,7 +102,9 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
     Mesurat a 8 mides de mòbil: cap fila surt de l'ample.
   - Al **Personatge del dia**: casa + Següent (no té compartir), sota la targeta. Per fer-hi lloc, la foto
     s'encongeix en vertical baix i en horitzontal la targeta cedeix l'alçada. Al cronograma s'hi va **tocant
-    el nom o la foto** (com als resultats dels jocs); a la targeta queden **estrella · «Llegeix-ne més»**. Fora el «Has descobert n personatges» (no
+    el nom o la foto** (com als resultats dels jocs); a la targeta queden **«☆ Favorits» i «Llegeix-ne més»**,
+    iguals de mida (mitja fila cadascun; en horitzontal, un sota l'altre) i sense salt de línia. El text de
+    Favorits no canvia en marcar-lo: l'estat el diu l'estrella. Fora el «Has descobert n personatges» (no
     aportava); l'àlbum es continua desant a `hb_personatge_album`.
   - **Fora el botó «Tots els jocs» de la topbar**: ja hi porta la casa del final i «Jocs» del commutador.
     L'`id="back"` ja no existeix.
