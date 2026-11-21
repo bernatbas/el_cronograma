@@ -2488,8 +2488,12 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         wa.addEventListener('click',function(){ track('memory_wiki',{}); });
         btns.appendChild(wa);
       }
-      ov.querySelector('.mem-pclose').addEventListener('click',function(){ ov.remove(); });
-      ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+      // Es tanca amb la ✕, tocant fora o amb Esc (21/11/2026). Un sol tancar() perquè l'Esc no quedi escoltant.
+      const onEsc=function(e){ if(e.key==='Escape') tancar(); };
+      const tancar=function(){ ov.remove(); document.removeEventListener('keydown',onEsc); };
+      ov.querySelector('.mem-pclose').addEventListener('click',tancar);
+      ov.addEventListener('click',function(e){ if(e.target===ov) tancar(); });
+      document.addEventListener('keydown',onEsc);
       document.body.appendChild(ov);
     }
 
