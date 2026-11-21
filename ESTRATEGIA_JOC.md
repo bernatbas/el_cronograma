@@ -108,9 +108,11 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
     L'`id="back"` ja no existeix.
 - **Tocar algú al resultat = directe al cronograma, a tots els jocs** (21/11/2026, decisió d'en Bernat).
   Abans o després (cartes per repassar), Contemporanis (parelles), **Ordena** (les 5 cartes, ja no l'enllaç
-  «🏛️ A veure, ensenyam-ho», que s'ha tret) i **Memory** (les cartes del taulell; el panell amb la descripció
-  només queda per a qui no té any de naixement). **L'únic lloc on es mostra la descripció és DURANT
+  «🏛️ A veure, ensenyam-ho», que s'ha tret). Fora de la partida, la descripció només surt **DURANT
   l'Abans o després** (el globus amb els anys tapats).
+  - **Excepció: el Memory.** Al taulell només hi ha cares, sense nom: anar directe al cronograma et treia
+    del joc sense saber qui era. Tocar una carta obre el **panell** (foto, nom, dates, descripció) amb el
+    botó cap al cronograma. Es va provar l'altra manera i es va desfer el mateix dia.
   - «Copiat!» canvia només l'etiqueta (`copiatAlBoto`): `textContent=` s'enduia la icona.
 - **Ordre del hub** (21/11/2026): el **Personatge del dia, a l'última** (menú i «Següent joc»).
 - **Compte enrere, un sol component** (21/11/2026): `compteHTML(id)` → xip (píndola) amb rellotge SVG i

@@ -2511,12 +2511,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         }); }
         wireEndBtns(root);
         root.querySelectorAll('.mem-grid-done .mem-card').forEach(function(card){
-          // Directe al cronograma, com als altres jocs (21/11/2026). El panell amb la descripció només
-          // queda per a qui no té any de naixement, que el cronograma no pot pintar.
-          card.addEventListener('click',function(){
-            const i=parseInt(this.dataset.person), p=currentPool&&currentPool[i];
-            if(p && p.birth!=null) goToCronograma('memory',[p]); else showPersonPanel(i);
-          });
+          // Excepció a «tocar algú = cronograma» (21/11/2026): al taulell només hi ha CARES, sense nom.
+          // El panell (foto, nom, dates, descripció) et diu qui és, i des d'allà ja es va al cronograma.
+          card.addEventListener('click',function(){ showPersonPanel(parseInt(this.dataset.person)); });
         });
       } else {
         root.innerHTML=head+renderToggle()
