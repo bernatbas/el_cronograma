@@ -396,13 +396,14 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   /* Botons del final (endBtnsHTML): iguals a tots els jocs. Classes pròpies a posta: les regles
      .btnrow/.cta/.hubbtn de cada joc i del landscape no els toquen. */
   .endbtns{display:flex;justify-content:center;gap:8px;flex-wrap:nowrap;max-width:100%;margin:0 auto;}
-  .endbtn{display:inline-flex;align-items:center;justify-content:center;gap:7px;flex:0 0 auto;min-height:40px;background:var(--topbar-bg);color:#fff;border:none;border-radius:var(--r-pill);padding:9px 18px;font:inherit;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer;}
+  /* Cantonades i alçada com els botons de la topbar (8px, no píndola), una mica més fins. */
+  .endbtn{display:inline-flex;align-items:center;justify-content:center;gap:7px;flex:0 0 auto;min-height:34px;background:var(--topbar-bg);color:#fff;border:none;border-radius:var(--r-card);padding:5px 14px;font:inherit;font-size:14px;font-weight:600;line-height:1.2;white-space:nowrap;cursor:pointer;}
   .endbtn:hover{filter:brightness(1.06);}
   .endbtn svg{width:16px;height:16px;flex:0 0 auto;display:block;}
-  .endbtns.compacte .casa{padding-left:12px;padding-right:12px;}
+  .endbtns.compacte .casa{padding-left:10px;padding-right:10px;}
   .endbtns.compacte .casa .lbl{display:none;}
   .endbtns.compacte2{gap:5px;}
-  .endbtns.compacte2 .endbtn{padding:6px 10px;font-size:13px;gap:4px;min-height:34px;}
+  .endbtns.compacte2 .endbtn{padding:4px 10px;font-size:13px;gap:4px;min-height:30px;}
   .endbtns.compacte2 .endbtn svg{width:14px;height:14px;}
   .endbtns.compacte2 .casa{padding-left:9px;padding-right:9px;}
   .endbtn .seg2{display:none;}
@@ -613,7 +614,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .ordbanner .rtitle.perfect{color:#2E8B57;}
   .ordbanner .streak{font-size:14px;font-weight:600;margin:6px 0 2px;}
   .ordbanner .locknote{color:var(--text2);font-size:13px;margin:8px 0 2px;line-height:1.4;}
-  .ordbanner .countdown{color:var(--text2);font-size:13px;margin:2px 0 0;}
+  .ordbanner .countdown{color:var(--text2);font-size:13px;margin:2px 0 10px;}   /* 10px: aire fins als botons del final */
   .ordbanner .countdown b{font-family:'Oswald','Roboto Condensed',Arial,sans-serif;color:var(--text);letter-spacing:.05em;font-weight:600;font-size:15px;}
   /* «Ordena la línia»: DESKTOP/TABLET amb finestra baixa (barra de pestanyes+marcadors menja alcada) => compactem perque no aparegui mai la barra de scroll */
   @media (min-width:861px) and (max-height:820px){

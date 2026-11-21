@@ -96,6 +96,7 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
   els toquin.
   - **Següent joc** = el proper que **no has fet avui**, en l'ordre del hub i fent la volta. Si ja els has
     fet tots, no surt. Event GA `joc_seguent` amb el joc de destí.
+  - Cantonades de 8px i alçada de 34px, com els botons de la topbar (no píndola).
   - **Si no hi caben** (mai scroll), tres graons: 1) la casa només amb la icona; 2) botons més petits;
     3) «Següent joc» passa a **»** (doble fletxa, decisió d'en Bernat). «Comparteix» sempre porta text.
     Mesurat a 8 mides de mòbil: cap fila surt de l'ample.
