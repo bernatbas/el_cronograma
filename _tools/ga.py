@@ -228,23 +228,44 @@ def overview(n=30):
                    filtre=en_llista("eventName", ["joc_vist", "joc_iniciat", "joc_completat"]))
     notes = report(["customEvent:joc"], ["averageCustomEvent:encerts", "averageCustomEvent:errors",
                                          "averageCustomEvent:ratxa"], S, E, filtre=igual("eventName", "joc_completat"))
-    err_dia = report(["date", "customEvent:joc"], ["averageCustomEvent:errors"], S, E,
-                     filtre=igual("eventName", "joc_completat"))
+    nota_dia = report(["date", "customEvent:joc"], ["averageCustomEvent:encerts", "averageCustomEvent:errors"], S, E,
+                      filtre=igual("eventName", "joc_completat"))
+    jug_dia = report(["date", "customEvent:joc"], ["totalUsers"], S, E, filtre=igual("eventName", "joc_iniciat"))
+    extres = {r["eventName"]: r for r in report(["eventName"], ["eventCount", "totalUsers"], S, E,
+                                                 filtre=en_llista("eventName", ["joc_comodin_usat", "memory_wiki"]))}
+    partides = {r["customEvent:joc"]: r["eventCount"] for r in report(["customEvent:joc"], ["eventCount"], S, E,
+                                                                       filtre=igual("eventName", "joc_iniciat"))}
 
     jocs = []
     for j in JOCS:
         f = {r["eventName"]: r["totalUsers"] for r in embut if r["customEvent:joc"] == j}
         nt = next((r for r in notes if r["customEvent:joc"] == j), {})
-        md = {d: None for d in dies}
-        for r in err_dia:
-            if r["customEvent:joc"] == j and _ga_dia(r["date"]) in md:
-                md[_ga_dia(r["date"])] = round(r["averageCustomEvent:errors"], 2)
+        enc = {d: None for d in dies}
+        err = {d: None for d in dies}
+        jug = {d: 0 for d in dies}
+        for r in nota_dia:
+            d = _ga_dia(r["date"])
+            if r["customEvent:joc"] == j and d in enc:
+                enc[d] = round(r["averageCustomEvent:encerts"], 2)
+                err[d] = round(r["averageCustomEvent:errors"], 2)
+        for r in jug_dia:
+            d = _ga_dia(r["date"])
+            if r["customEvent:joc"] == j and d in jug:
+                jug[d] = r["totalUsers"]
+        # Extres propis de cada joc (el comodí només existeix a «Abans o després?»)
+        extra = {}
+        if j == "abansdespres":
+            extra["comodi"] = extres.get("joc_comodin_usat", {}).get("eventCount", 0)
+        if j == "memory":
+            extra["wiki"] = extres.get("memory_wiki", {}).get("eventCount", 0)
         jocs.append({"id": j, "vist": f.get("joc_vist", 0), "iniciat": f.get("joc_iniciat", 0),
                      "completat": f.get("joc_completat", 0),
                      "encerts": round(nt.get("averageCustomEvent:encerts", 0), 1) if nt else None,
                      "errors": round(nt.get("averageCustomEvent:errors", 0), 1) if nt else None,
                      "ratxa": round(nt.get("averageCustomEvent:ratxa", 0), 1) if nt else None,
-                     "errors_dia": [md[d] for d in dies]})
+                     "partides": partides.get(j, 0), "extra": extra,
+                     "encerts_dia": [enc[d] for d in dies], "errors_dia": [err[d] for d in dies],
+                     "jugadors_dia": [jug[d] for d in dies]})
 
     return {
         "dies": dies,

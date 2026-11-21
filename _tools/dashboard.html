@@ -266,6 +266,14 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
 .gtab td .pc{color:var(--text3);font-size:11px;margin-left:3px}
 .gtab .fun{color:var(--text3)}
 .gtab .fun b{color:var(--text);font-weight:600}
+.gjoc .gsub{margin-bottom:6px}
+.gjoc h3{margin:0 0 10px;font-size:13px;font-weight:600;display:flex;align-items:baseline;gap:8px}
+.gjoc h3 .hint{margin-left:auto;font-weight:400;font-size:11.5px;color:var(--text3)}
+.gmini{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:14px}
+.gmini div{background:var(--surface);border-radius:8px;padding:7px 9px}
+.gmini b{display:block;font-size:16px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}
+.gmini span{font-size:11px;color:var(--text2)}
+.gjoc .chart{height:96px;margin-top:14px}
 .gerr{padding:12px 14px;border-radius:var(--r);background:var(--bad-bg);color:var(--bad);font-size:12.5px}
 .gerr code{font-family:var(--mono);font-size:11.5px}
 </style>
@@ -533,8 +541,8 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
 
   <section id="ga-jocs">
     <div class="shead"><h2>Jocs</h2>
-      <span class="hint sub" title="Usuaris únics de cada pas. Errors per dia: com més alta la barra, més difícil va ser el repte d’aquell dia.">vist → començat → acabat</span></div>
-    <div class="card pad" style="overflow-x:auto"><div id="gajocs"></div></div>
+      <span class="hint sub" title="Mitjanes de les partides acabades. Cada línia és un dia: diu com de difícil va ser el repte d’aquell dia.">un repte per dia: com de difícil va ser cada un</span></div>
+    <div class="ga2" id="gajocs"></div>
   </section>
   </div><!-- /tab-analytics -->
 
@@ -1344,26 +1352,39 @@ function gaBarres(dies, series, tip, max){
    de cada columna caigui exactament a (i+½)/30). Les línies són un SVG estirat amb
    non-scaling-stroke; els punts són HTML perquè no es deformin. El darrer tram (avui, dia
    a mig fer) va puntejat. */
-function gaLinia(dies, series, tip, maxFix){
+function gaLinia(dies, series, tip, maxFix, opt){
+  opt=opt||{};
   const N=GA_FINESTRA, buit=Math.max(0,N-dies.length);
-  const max=maxFix || Math.max.apply(null, [].concat.apply([1], series.map(function(s){ return s.v; })));
+  const vals=[].concat.apply([], series.map(function(s){ return s.v.filter(function(x){ return x!=null; }); }));
+  const max=maxFix || Math.max.apply(null, vals.concat([1]));
   const X=function(i){ return (buit+i+0.5)*1000/N; }, Y=function(v){ return 100-100*v/max; };
+  const P=function(i,v){ return X(i).toFixed(1)+","+Y(v).toFixed(2); };
   let svg='<svg viewBox="0 0 1000 100" preserveAspectRatio="none">';
   series.slice().reverse().forEach(function(s){
     const col=s.cls==="b"?"var(--terracota-dark)":"var(--terracota)";
-    const pts=s.v.map(function(v,i){ return X(i).toFixed(1)+","+Y(v).toFixed(2); });
-    if(s.area && pts.length>1) svg+='<path d="M'+X(0)+',100 L'+pts.join(" L")+' L'+X(s.v.length-1)+',100Z" fill="var(--terracota)" opacity=".08"/>';
-    const fins=pts.length>1 ? pts.slice(0,-1) : pts;
-    svg+='<polyline points="'+fins.join(" ")+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>';
-    if(pts.length>1) svg+='<polyline points="'+pts.slice(-2).join(" ")+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-dasharray="4 4" stroke-linecap="round" vector-effect="non-scaling-stroke"/>';
+    const linia=function(pts,dash){ return '<polyline points="'+pts.join(" ")+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"'+(dash?' stroke-dasharray="4 4"':'')+' vector-effect="non-scaling-stroke"/>'; };
+    // Trams seguits sense forats. Un dia sense dada (null) talla la línia.
+    let tram=[], trams=[];
+    s.v.forEach(function(v,i){ if(v==null){ if(tram.length) trams.push(tram); tram=[]; } else tram.push(i); });
+    if(tram.length) trams.push(tram);
+    const ult=s.v.length-1;
+    trams.forEach(function(t){
+      if(s.area && t.length>1) svg+='<path d="M'+X(t[0])+',100 L'+t.map(function(i){ return P(i,s.v[i]); }).join(" L")+' L'+X(t[t.length-1])+',100Z" fill="var(--terracota)" opacity=".08"/>';
+      const fiAvui = t[t.length-1]===ult && t.length>1;   // l'últim tram (avui, a mig fer) va puntejat
+      const ple = fiAvui ? t.slice(0,-1) : t;
+      if(ple.length>1) svg+=linia(ple.map(function(i){ return P(i,s.v[i]); }));
+      if(fiAvui) svg+=linia(t.slice(-2).map(function(i){ return P(i,s.v[i]); }), true);
+    });
   });
   svg+='</svg>';
-  let h='<div class="chart line"><div class="grid1" style="bottom:100%"><span>'+max+'</span></div>'+
-        '<div class="grid1" style="bottom:50%"><span>'+num(max/2)+'</span></div>'+svg;
+  const fmt=function(x){ return opt.pct ? x+"%" : num(x); };
+  let h='<div class="chart line"'+(opt.h?' style="height:'+opt.h+'px"':'')+'><div class="grid1" style="bottom:100%"><span>'+fmt(max)+'</span></div>'+
+        '<div class="grid1" style="bottom:50%"><span>'+fmt(max/2)+'</span></div>'+svg;
   for(let k=0;k<buit;k++) h+='<div class="col buit"></div>';
   dies.forEach(function(d,i){
-    h+='<div class="col'+(i===dies.length-1?" ult":"")+'" data-t="'+esc(tip(i))+'">'+
-      series.map(function(s){ return '<i class="dot '+(s.cls||"")+'" style="bottom:'+(100*s.v[i]/max)+'%"></i>'; }).join("")+'</div>';
+    const sola = series.some(function(s){ return s.v[i]!=null && s.v[i-1]==null && s.v[i+1]==null; });   // punt aïllat: sense línia no es veuria
+    h+='<div class="col'+(i===dies.length-1||sola?" ult":"")+'" data-t="'+esc(tip(i))+'">'+
+      series.map(function(s){ return s.v[i]==null ? "" : '<i class="dot '+(s.cls||"")+'" style="bottom:'+(100*s.v[i]/max)+'%"></i>'; }).join("")+'</div>';
   });
   h+='</div><div class="xlab">';
   for(let k=0;k<buit;k++) h+='<span></span>';
@@ -1428,14 +1449,31 @@ function renderGA(d){
   el("gaguia").innerHTML = gaLlista([{l:"L’han vista", n:d.crono.guia_oberta},{l:"L’han tancat", n:d.crono.guia_tancada}]) +
     '<div class="gnote">Encara no sabem fins a quin pas arriben: la guia no envia res en canviar de pas.</div>';
 
-  el("gajocs").innerHTML = '<table class="gtab"><thead><tr><th>Joc</th><th>Embut</th><th>Acaben</th><th>Encerts</th><th>Errors</th><th>Ratxa</th><th>Errors per dia</th></tr></thead><tbody>'+
-    d.jocs.map(function(j){
-      return '<tr><td>'+esc(JOC_NOM[j.id]||j.id)+'</td>'+
-        '<td class="fun"><b>'+j.vist+'</b> → <b>'+j.iniciat+'</b> → <b>'+j.completat+'</b></td>'+
-        '<td>'+pct(j.completat,j.vist)+'%</td><td>'+num(j.encerts)+'</td><td>'+num(j.errors)+'</td><td>'+num(j.ratxa)+'</td>'+
-        '<td class="sp">'+gaSpark(j.errors_dia, D, function(x){ return x==null?"ningú l’ha acabat":num(x)+" errors de mitjana"; })+'</td></tr>';
-    }).join("")+'</tbody></table>'+
-    '<div class="gnote">Encerts, errors i ratxa: mitjanes de les partides acabades. Al Memory els encerts sempre són 5; el que diu alguna cosa són els errors.</div>';
+  // Cada joc té la seva mètrica: la que diu com de difícil va ser el repte del dia.
+  const JOC_METRICA = {
+    abansdespres:  {k:"encerts_dia", nom:"Encerts seguits de mitjana", unit:"encerts"},
+    ordena:        {k:"encerts_dia", nom:"Encerts de mitjana", unit:"de 5", max:5},
+    memory:        {k:"errors_dia",  nom:"Errors de mitjana", unit:"errors"},
+    contemporanis: {k:"encerts_dia", nom:"Encerts de mitjana", unit:"de 5", max:5}
+  };
+  el("gajocs").innerHTML = d.jocs.map(function(j){
+    const m=JOC_METRICA[j.id]||{k:"errors_dia", nom:"Errors de mitjana", unit:"errors"};
+    const v=j[m.k];
+    const mini='<div><b>'+j.iniciat+'</b><span>jugadors</span></div>'+
+             '<div><b>'+j.partides+'</b><span>partides</span></div>'+
+             '<div><b>'+Math.min(100,pct(j.completat,j.iniciat))+'%</b><span>acaben</span></div>'+
+             '<div><b>'+num(j.ratxa)+'</b><span>ratxa mitjana</span></div>';
+    // L'extra propi del joc va a la capçalera: així totes les targetes tenen les mateixes quatre xifres.
+    let extra='';
+    if(j.extra && j.extra.comodi!=null) extra=Math.min(100,pct(j.extra.comodi,j.partides))+'% usen el comodí';
+    if(j.extra && j.extra.wiki!=null) extra=j.extra.wiki+(j.extra.wiki===1?' clic':' clics')+' a la Viquipèdia';
+    return '<div class="card pad gjoc"><h3>'+esc(JOC_NOM[j.id]||j.id)+'<span class="hint">'+extra+'</span></h3>'+
+      '<div class="gmini">'+mini+'</div>'+
+      '<div class="gsub">'+m.nom+'<span class="hint">per dia</span></div>'+
+      gaLinia(D, [{v:v}], function(i){
+        return "<b>"+dmy(D[i])+"</b><br>"+(v[i]==null ? "Ningú l’ha acabat" : num(v[i])+" "+m.unit)+" · "+j.jugadors_dia[i]+(j.jugadors_dia[i]===1?" jugador":" jugadors");
+      }, m.max, {h:96})+'</div>';
+  }).join("");
 }
 
 let gaCarregant=false;
