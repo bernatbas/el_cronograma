@@ -142,6 +142,24 @@ perquè «Refresca» no les repeteixi. Es carrega **a part del boot** (Google ta
   rànquing. Per això la llista és de **personatges afegits** (`personatge_afegit`, paràmetre `nom`).
 - ⚠️ WhatsApp no passa origen: surt com a «Directe».
 
+**Què hi ha**, de dalt a baix:
+
+| Bloc | Què mostra |
+|---|---|
+| Visió global | Usuaris, avui, % recurrents, % mòbil · línia d'usuaris per dia (tots i recurrents) · d'on venen · dispositiu |
+| Cronograma ↔ Jocs | Qui obre cada pàgina i qui passa de l'una a l'altra (pel `pageReferrer`) · línia del % que **obre** `joc.html` i del % que **comença** un joc (`joc_iniciat`): obrir no és jugar |
+| Cronograma | Accions per dia · personatges afegits · guia (vista / tancada) |
+| Jocs | **Una targeta per joc**, no un embut comú: cada joc té la seva idiosincràsia. Quatre xifres iguals a totes (jugadors, partides, % acaben, ratxa) + un extra propi a la capçalera (comodí, clics a la Viquipèdia) + una línia de 30 dies amb **la mètrica que diu com de difícil va ser el repte del dia** (`JOC_METRICA` al JS) |
+
+- **Gràfiques**: `gaLinia()` (línies) i `gaBarres()` (barres), sempre de 30 columnes. Les línies són un SVG
+  estirat amb `non-scaling-stroke` i els punts són HTML (no es deformen). Un dia sense dada (`null`) **talla**
+  la línia; el darrer tram (avui, a mig fer) va **puntejat**.
+- ⚠️ A la gràfica de línies, la columna **no** pot fer de capa (`z-index`): el seu hover tapava les línies.
+  Ordre: guia vertical (1) < línies (2) < punts (3).
+- ⚠️ «Acaben» pot passar del 100% (més usuaris amb `joc_completat` que amb `joc_iniciat`): es talla a 100.
+- Pendent: la gràfica del **Personatge del dia** (a la seva pestanya, amb el nom reconstruït per data) i un
+  event per **pas de la guia** (avui només sabem que 23 l'han vista i ningú l'ha tancada).
+
 ## Mode demo
 
 Si el servidor no respon, la interfície es pinta igual amb les dades de `DEMO` i un avís a
