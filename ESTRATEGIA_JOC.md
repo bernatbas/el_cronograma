@@ -109,6 +109,12 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
   - A l'**Ordena**, «🏛️ A veure, ensenyam-ho» és un **enllaç a sobre** de la fila, no un quart botó.
   - «Copiat!» canvia només l'etiqueta (`copiatAlBoto`): `textContent=` s'enduia la icona.
 - **Ordre del hub** (21/11/2026): el **Personatge del dia, a l'última** (menú i «Següent joc»).
+- **Compte enrere, un sol component** (21/11/2026): `compteHTML(id)` → xip (píndola) amb rellotge SVG i
+  **«Nou repte en hh:mm:ss»**, el mateix a la portada (abans «⏳ Es reinicia en») i al final dels 4 jocs (abans
+  text solt amb mida i marges diferents per joc). Fora totes les regles `.countdown`. A les pantalles justes
+  (`max-height:660px` o `max-width:400px`) el xip és més baix: no ha de sumar scroll.
+- **Ratxa: flama de línia** (`ICO_FLAMA`, 21/11/2026) en lloc de l'emoji 🔥, al marcador i a les etiquetes del
+  hub. Al **text de compartir es queda el 🔥** (allà només hi van emojis, i tothom l'entén com a ratxa).
 
 ## 3. Decisions (registre)
 - **2026-08-12 · Dades: snapshot provisional (`data.js`).** De moment **dupliquem** la DB en un
