@@ -288,6 +288,10 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .pchip{font-size:12px;padding:3px 9px;}
     .pacts{flex-direction:column;flex-wrap:nowrap;justify-content:center;padding:0;gap:8px;min-height:0;}
     .pacts .pbtn{flex:0 0 auto;width:100%;padding:10px;font-size:13px;}
+    /* Estrella i calendari (només icona) en una fila; «Llegeix-ne més» a sota, sencer. */
+    .pacts{flex-direction:row;flex-wrap:wrap;align-content:center;}
+    .pacts .pbtn.favonly{flex:1 1 0;width:auto;}
+    .pacts a.pbtn{flex:1 1 100%;}
     .palbum{display:none;}
     .pinvite{margin:6px 0 0;font-size:11px;line-height:1.35;}
     /* Els botons del final van sota la targeta: la targeta cedeix l'alçada que ocupen. */
@@ -1068,6 +1072,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       fav_on:'★ Als favorits',
       fav_off:'☆ Afegeix a favorits',
       see_crono:'📅 Veure al cronograma',
+      see_crono_lbl:'Veure al cronograma',
       album_count: v => '📇 Has descobert '+v.n+' '+(v.n===1?'personatge':'personatges'),
       inv_who_f:'aquesta mossa',
       inv_who_m:'aquest nano',
@@ -1972,7 +1977,11 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         fb.setAttribute('aria-pressed', String(on));
       });
       acts.appendChild(fb);
-      const cb=el('button','pbtn',t('see_crono')); cb.addEventListener('click',function(){ viewInCronograma(p); }); acts.appendChild(cb);
+      // Només la icona (21/11/2026): estrella · calendari · «Llegeix-ne més», tots tres en una fila.
+      const cb=el('button','pbtn favonly crono');
+      cb.innerHTML='<svg class="favi" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>';
+      cb.setAttribute('aria-label', t('see_crono_lbl')); cb.title=t('see_crono_lbl');
+      cb.addEventListener('click',function(){ viewInCronograma(p); }); acts.appendChild(cb);
       if(p.wiki){ const a=el('a','pbtn',t('read_more')); a.href=p.wiki; a.target='_blank'; a.rel='noopener'; a.addEventListener('click',function(){ track('personatge_dia_wiki',{}); }); acts.appendChild(a); }
       card.appendChild(body); card.appendChild(acts); w.appendChild(card);
       const album=readLS(ALBUM_KEY)||[];
