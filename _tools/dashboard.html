@@ -231,6 +231,13 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
 .chart .seg.b{background:var(--terracota-dark)}
 .chart .seg.z{background:var(--border)}
 .chart .seg:last-child{border-radius:4px 4px 0 0}
+.chart.line{gap:0}
+.chart.line svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.chart.line .col{border-radius:0}
+.chart.line .dot{position:absolute;left:50%;width:8px;height:8px;margin:0 0 -4px -4px;border-radius:50%;background:var(--terracota);box-shadow:0 0 0 2px var(--canvas);display:none;z-index:2}
+.chart.line .dot.b{background:var(--terracota-dark)}
+.chart.line .col:hover .dot,.chart.line .col.ult .dot{display:block}
+.chart.line + .xlab{gap:0}
 .xlab{display:flex;gap:3px;margin-top:5px;font-size:10.5px;color:var(--text3);font-variant-numeric:tabular-nums}
 .xlab span{flex:1;text-align:center;white-space:nowrap;overflow:visible}
 .gtip{position:fixed;z-index:50;background:var(--text);color:#fff;font-size:11.5px;line-height:1.45;padding:5px 9px;border-radius:6px;pointer-events:none;white-space:nowrap;transform:translate(-50%,-100%);margin-top:-8px}
@@ -490,7 +497,7 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
       <span class="hint" id="garang">—</span></div>
     <div class="stats" id="gastats"></div>
     <div class="card pad" style="margin-top:12px">
-      <div class="gsub">Usuaris per dia<span class="gleg"><span><i style="background:var(--terracota)"></i>Nous</span><span><i style="background:var(--terracota-dark)"></i>Recurrents</span></span></div>
+      <div class="gsub">Usuaris per dia<span class="gleg"><span><i style="background:var(--terracota)"></i>Tots</span><span><i style="background:var(--terracota-dark)"></i>Recurrents</span></span></div>
       <div id="gausers"></div>
     </div>
     <div class="ga2" style="margin-top:12px">
@@ -1327,6 +1334,36 @@ function gaBarres(dies, series, tip, max){
   dies.forEach(function(d,i){ const j=dies.length-1-i; h+='<span>'+(j%7===0?dm(d):"")+'</span>'; });   // l'últim dia i cada setmana enrere
   return h+'</div>';
 }
+/* Línies per dia (mateixa graella que gaBarres: 30 columnes, sense gap, perquè el centre
+   de cada columna caigui exactament a (i+½)/30). Les línies són un SVG estirat amb
+   non-scaling-stroke; els punts són HTML perquè no es deformin. El darrer tram (avui, dia
+   a mig fer) va puntejat. */
+function gaLinia(dies, series, tip){
+  const N=GA_FINESTRA, buit=Math.max(0,N-dies.length);
+  const max=Math.max.apply(null, [].concat.apply([1], series.map(function(s){ return s.v; })));
+  const X=function(i){ return (buit+i+0.5)*1000/N; }, Y=function(v){ return 100-100*v/max; };
+  let svg='<svg viewBox="0 0 1000 100" preserveAspectRatio="none">';
+  series.slice().reverse().forEach(function(s){
+    const col=s.cls==="b"?"var(--terracota-dark)":"var(--terracota)";
+    const pts=s.v.map(function(v,i){ return X(i).toFixed(1)+","+Y(v).toFixed(2); });
+    if(s.area && pts.length>1) svg+='<path d="M'+X(0)+',100 L'+pts.join(" L")+' L'+X(s.v.length-1)+',100Z" fill="var(--terracota)" opacity=".08"/>';
+    const fins=pts.length>1 ? pts.slice(0,-1) : pts;
+    svg+='<polyline points="'+fins.join(" ")+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>';
+    if(pts.length>1) svg+='<polyline points="'+pts.slice(-2).join(" ")+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-dasharray="4 4" stroke-linecap="round" vector-effect="non-scaling-stroke"/>';
+  });
+  svg+='</svg>';
+  let h='<div class="chart line"><div class="grid1" style="bottom:100%"><span>'+max+'</span></div>'+
+        '<div class="grid1" style="bottom:50%"><span>'+num(max/2)+'</span></div>'+svg;
+  for(let k=0;k<buit;k++) h+='<div class="col buit"></div>';
+  dies.forEach(function(d,i){
+    h+='<div class="col'+(i===dies.length-1?" ult":"")+'" data-t="'+esc(tip(i))+'">'+
+      series.map(function(s){ return '<i class="dot '+(s.cls||"")+'" style="bottom:'+(100*s.v[i]/max)+'%"></i>'; }).join("")+'</div>';
+  });
+  h+='</div><div class="xlab">';
+  for(let k=0;k<buit;k++) h+='<span></span>';
+  dies.forEach(function(d,i){ const j=dies.length-1-i; h+='<span>'+(j%7===0?dm(d):"")+'</span>'; });
+  return h+'</div>';
+}
 function gaLlista(items, buit){
   if(!items.length) return '<div class="empty">'+(buit||"Encara res")+'</div>';
   const max=Math.max.apply(null, items.map(function(x){ return x.n; }).concat([1]));
@@ -1360,8 +1397,8 @@ function renderGA(d){
     stat("Recurrents", pct(g.recurrents, g.usuaris)+"%", g.recurrents+" han tornat") +
     stat("Des del mòbil", pct(mob, dtot)+"%", mob+" de "+dtot);
 
-  el("gausers").innerHTML = gaBarres(D, [{v:g.nous_dia},{v:g.recurrents_dia,cls:"b"}], function(i){
-    return "<b>"+dmy(D[i])+"</b><br>"+g.per_dia[i]+" usuaris · "+g.nous_dia[i]+" nous, "+g.recurrents_dia[i]+" recurrents";
+  el("gausers").innerHTML = gaLinia(D, [{v:g.per_dia, area:true},{v:g.recurrents_dia,cls:"b"}], function(i){
+    return "<b>"+dmy(D[i])+(i===D.length-1?" (avui, a mig fer)":"")+"</b><br>"+g.per_dia[i]+" usuaris · "+g.nous_dia[i]+" nous, "+g.recurrents_dia[i]+" recurrents";
   });
   el("gafonts").innerHTML = gaLlista(g.fonts.map(function(f){ return {l:esc(fontNom(f)), n:f.n}; }));
   el("gadisp").innerHTML = gaLlista(g.dispositius.map(function(x){ return {l:esc(DISP_NOM[x.d]||x.d)+'<small>'+pct(x.n,dtot)+'%</small>', n:x.n}; }));
