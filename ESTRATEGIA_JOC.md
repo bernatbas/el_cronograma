@@ -90,6 +90,20 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
   `minmax(0,max-content)` amb `align-content:start`: si s'estirava (`1fr`), «▼ més nou» quedava enganxada
   a baix de tot, lluny de l'última carta. La llista en horitzontal ja tenia scroll intern (25px a
   568×320, 5px a 740×340); ara en té 22 i 2.
+- **Botons del final, iguals als 5** (21/11/2026): **casa · Comparteix · Següent joc**, per aquest ordre,
+  tots tres del **mateix color** (terracota ple) i amb icona + text. Helper `endBtnsHTML(joc, attrsShare)`
+  + `wireEndBtns(scope)`; classes pròpies (`.endbtns`, `.endbtn`) perquè les regles velles de cada joc no
+  els toquin.
+  - **Següent joc** = el proper que **no has fet avui**, en l'ordre del hub i fent la volta. Si ja els has
+    fet tots, no surt. Event GA `joc_seguent` amb el joc de destí.
+  - **Si no hi caben** (mai scroll), tres graons: 1) la casa només amb la icona; 2) botons més petits;
+    3) «Següent joc» passa a **»** (doble fletxa, decisió d'en Bernat). «Comparteix» sempre porta text.
+    Mesurat a 8 mides de mòbil: cap fila surt de l'ample.
+  - Al **Personatge del dia**: casa + Següent (no té compartir), sota la targeta. Per fer-hi lloc, la foto
+    s'encongeix en vertical baix i en horitzontal la targeta cedeix l'alçada.
+  - A l'**Ordena**, «🏛️ A veure, ensenyam-ho» és un **enllaç a sobre** de la fila, no un quart botó.
+  - «Copiat!» canvia només l'etiqueta (`copiatAlBoto`): `textContent=` s'enduia la icona.
+- **Ordre del hub** (21/11/2026): el **Personatge del dia, a l'última** (menú i «Següent joc»).
 
 ## 3. Decisions (registre)
 - **2026-08-12 · Dades: snapshot provisional (`data.js`).** De moment **dupliquem** la DB en un

@@ -261,8 +261,11 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .pacts{gap:8px;padding:0 16px 12px;}
     .pbtn{flex:1 1 44%;padding:9px 10px;font-size:13px;}
     .palbum{margin-top:8px;font-size:12px;}
+    .pfi{margin-top:8px;}
     .pinvite{margin:6px 0 0;font-size:11.5px;}
   }
+  /* Mòbil vertical baixet (iPhone SE 1a gen): la foto cedeix el lloc dels botons del final. */
+  @media (max-width:600px) and (max-height:600px){ .pimg{height:clamp(130px,25vh,250px);} }
   /* Personatge del dia: HORITZONTAL TACTIL (des del cronograma) = foto esq | info centre | botons dreta, sense scroll */
   /* Enfocament robust: body en columna flexible (barra a dalt auto + main omple la resta), i la */
   /* targeta ocupa el 100% d'aquest espai, sense endevinar l'alcada de la topbar. Aixi no es talla. */
@@ -284,6 +287,10 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .pacts .pbtn{flex:0 0 auto;width:100%;padding:10px;font-size:13px;}
     .palbum{display:none;}
     .pinvite{margin:6px 0 0;font-size:11px;line-height:1.35;}
+    /* Els botons del final van sota la targeta: la targeta cedeix l'alçada que ocupen. */
+    .pwrap{display:flex;flex-direction:column;}
+    .pcard{flex:1 1 auto;min-height:0;height:auto;}
+    .pfi{margin-top:8px;flex:0 0 auto;}
   }
 
   /* ===== Joc: «Abans o després?» ===== */
@@ -383,6 +390,24 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   /* Botó terciari discret "Tots els jocs" (torna al hub des del resultat). Sense classe .cta => no li afecta el width:100% del landscape, per evitar scroll. */
   .hubbtn{background:var(--canvas);border:2px solid var(--topbar-bg);color:var(--topbar-bg);font:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:10px 24px;border-radius:var(--r-pill);transition:color .12s,background .12s;}
   .hubbtn:hover{background:rgba(184,80,60,.08);}
+  /* Botons del final (endBtnsHTML): iguals a tots els jocs. Classes pròpies a posta: les regles
+     .btnrow/.cta/.hubbtn de cada joc i del landscape no els toquen. */
+  .endbtns{display:flex;justify-content:center;gap:8px;flex-wrap:nowrap;max-width:100%;margin:0 auto;}
+  .endbtn{display:inline-flex;align-items:center;justify-content:center;gap:7px;flex:0 0 auto;min-height:40px;background:var(--topbar-bg);color:#fff;border:none;border-radius:var(--r-pill);padding:9px 18px;font:inherit;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer;}
+  .endbtn:hover{filter:brightness(1.06);}
+  .endbtn svg{width:16px;height:16px;flex:0 0 auto;display:block;}
+  .endbtns.compacte .casa{padding-left:12px;padding-right:12px;}
+  .endbtns.compacte .casa .lbl{display:none;}
+  .endbtns.compacte2{gap:5px;}
+  .endbtns.compacte2 .endbtn{padding:6px 10px;font-size:13px;gap:4px;min-height:34px;}
+  .endbtns.compacte2 .endbtn svg{width:14px;height:14px;}
+  .endbtns.compacte2 .casa{padding-left:9px;padding-right:9px;}
+  .endbtn .seg2{display:none;}
+  .endbtns.compacte3 .seg .lbl,.endbtns.compacte3 .seg .seg1{display:none;}
+  .endbtns.compacte3 .seg .seg2{display:block;}
+  .endbtns.compacte3 .seg{padding-left:10px;padding-right:10px;}
+  .pfi{margin-top:14px;}
+  .endlink{display:block;margin:0 auto 8px;background:none;border:none;padding:2px 4px;color:var(--topbar-bg);font:inherit;font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
   .tagd{align-self:flex-start;margin-top:auto;background:#F7E5E0;color:#B23A2E;font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);}
   .tagd.done{background:#E7F4EC;color:#2E7D4F;}
   .tagd.streak{background:#FBEFD6;color:#8A5A00;}
@@ -721,9 +746,10 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .gameover.con .concrono{padding:4px 8px;font-size:11px;line-height:1.25;}
     .gameover.con .countdown{font-size:12px;margin:0 0 6px;}
     .gameover.con .btnrow .cta,.gameover.con .hubbtn{padding:6px 14px;font-size:13px;}
-    .pimg{height:120px;}
+    .pimg{height:80px;}   /* 120 → 80 (21/11/2026): deixa lloc als botons del final */
     .pchips{margin-bottom:8px;}
     .palbum{margin-top:4px;}
+    .pfi{margin-top:6px;}
   }
   /* Resultat de Contemporanis en HORITZONTAL tactil i a l'ESCRIPTORI amb finestra baixa: dues
      columnes. A l'esquerra el resum (titol, punts, compte enrere, botons) i a la dreta les 5 parelles.
@@ -966,6 +992,8 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       locknote_played:"Ja has jugat el repte d'avui. Torna demà per un de nou!",
       locknote_solved:"Ja has resolt el repte d'avui. Torna demà per un de nou!",
       share_btn:'📤 Comparteix',
+      share_lbl:'Comparteix',
+      next_game:'Següent joc',
       show_crono:'🏛️ A veure, ensenyam-ho',
       copied:'Copiat! ✅',
       copied_short:'✓ Copiat!',
@@ -1123,9 +1151,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   const GAMES=[
     {id:'ordena',       ic:'🕰️', titleKey:'t_ordena',        descKey:'d_ordena'},
     {id:'abansdespres', ic:'⚖️', titleKey:'t_abansdespres',  descKey:'d_abansdespres'},
-    {id:'personatgedia',ic:'🎭', titleKey:'t_personatgedia', descKey:'d_personatgedia', discover:true},
     {id:'memory',       ic:'🃏', titleKey:'t_memory',        descKey:'d_memory'},
-    {id:'contemporanis',ic:'🤝', titleKey:'t_contemporanis', descKey:'d_contemporanis'}
+    {id:'contemporanis',ic:'🤝', titleKey:'t_contemporanis', descKey:'d_contemporanis'},
+    {id:'personatgedia',ic:'🎭', titleKey:'t_personatgedia', descKey:'d_personatgedia', discover:true}   // a l'última des del 21/11/2026 (menú i «Següent joc»)
   ];
   const app=document.getElementById('app');
   const back=document.getElementById('back');
@@ -1251,9 +1279,52 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     location.href='index.html?from=joc';
   }
 
-  // Botó compartit "Tots els jocs": torna al hub des de les pantalles de resultat dels jocs amb final.
-  function hubBtnHTML(){ return '<button class="hubbtn" type="button" data-x="hub">'+t('hub_all_games')+'</button>'; }
+  // La casa dels botons del final (data-x="hub"): torna al hub.
   function wireHubBtn(scope){ if(!scope) return; const b=scope.querySelector('[data-x="hub"]'); if(b) b.addEventListener('click',function(){ location.hash=''; }); }
+
+  // ===== Botons del final, iguals a tots els jocs (21/11/2026) =====
+  // Ordre: casa · comparteix · següent. Els tres del mateix color, icona + text. Si no caben en
+  // una fila (mai scroll), la casa es queda només amb la icona (.compacte).
+  // «Següent joc» = el proper que NO has fet avui, en l'ordre del hub i fent la volta. Si ja els
+  // has fet tots, no surt.
+  const ICO_CASA='<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.4 9 3.4l6 5"/><path d="M4.6 7.8V14.4h8.8V7.8"/></svg>';
+  const ICO_COMP='<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11.2V2.8"/><path d="M5.6 6.1 9 2.8l3.4 3.3"/><path d="M3.8 9.8v4.6h10.4V9.8"/></svg>';
+  const ICO_SEG='<svg class="seg1" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.8 3.8 12 9l-5.2 5.2"/></svg>'
+               +'<svg class="seg2" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3.8 9.2 9 4 14.2"/><path d="M9.2 3.8 14.4 9l-5.2 5.2"/></svg>';   // «»» per al 3r graó
+  function seguentJoc(actual){
+    const ids=GAMES.filter(function(g){ return MODULES[g.id]; }).map(function(g){ return g.id; });
+    const i=ids.indexOf(actual);
+    for(let k=1;k<ids.length;k++){ const id=ids[(i+k)%ids.length]; if(!doneToday(id)) return id; }
+    return null;
+  }
+  // share: els atributs del botó de compartir (cada joc l'enganxa a la seva funció), o null si no n'hi ha.
+  function endBtnsHTML(actual, share){
+    const seg=seguentJoc(actual);
+    return '<div class="endbtns">'
+      +'<button class="endbtn casa" type="button" data-x="hub" aria-label="'+t('back_all')+'">'+ICO_CASA+'<span class="lbl">'+t('back_all')+'</span></button>'
+      +(share?'<button class="endbtn" type="button" '+share+'>'+ICO_COMP+'<span class="lbl">'+t('share_lbl')+'</span></button>':'')
+      +(seg?'<button class="endbtn seg" type="button" data-x="next" data-next="'+seg+'" aria-label="'+t('next_game')+'"><span class="lbl">'+t('next_game')+'</span>'+ICO_SEG+'</button>':'')
+      +'</div>';
+  }
+  // Tres graons, per ordre: 1) la casa només amb la icona; 2) botons més petits; 3) «Següent joc»
+  // passa a «»» (decisió d'en Bernat, 21/11/2026). Comparteix sempre porta el text.
+  function encaixaEndBtns(r){
+    r.classList.remove('compacte','compacte2','compacte3');
+    const surt=function(){ return r.scrollWidth>r.clientWidth+1; };
+    if(surt()) r.classList.add('compacte');
+    if(surt()) r.classList.add('compacte2');
+    if(surt()) r.classList.add('compacte3');
+  }
+  function wireEndBtns(scope){
+    if(!scope) return;
+    wireHubBtn(scope);
+    const n=scope.querySelector('[data-x="next"]');
+    if(n) n.addEventListener('click',function(){ track('joc_seguent',{joc:n.getAttribute('data-next')}); location.hash='#/'+n.getAttribute('data-next'); });
+    scope.querySelectorAll('.endbtns').forEach(encaixaEndBtns);
+  }
+  window.addEventListener('resize',function(){ document.querySelectorAll('.endbtns').forEach(encaixaEndBtns); });
+  // «Copiat!» dins del botó sense esborrar-ne la icona (textContent= se l'enduia).
+  function copiatAlBoto(btn){ if(!btn) return; const l=btn.querySelector('.lbl')||btn; const o=l.textContent; l.textContent=t('copied'); setTimeout(function(){ l.textContent=o; },1800); }
 
   // ===== Mòdul: «Abans o després?» — REPTE DIARI (determinista per data + 1 intent/dia) =====
   const AbansDespres = (function(){
@@ -1607,7 +1678,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
           ${resMarcador('🎯 '+sc, t('hits_in_row'), days)}
           ${files.length?'<div class="adrows">'+files.map(filaHtml).join('')+'</div>':''}
           <div class="countdown">${t('new_challenge_in')} <b id="cd">--:--:--</b></div>
-          <div class="btnrow"><button class="cta" data-x="share">${t('share_btn')}</button>${hubBtnHTML()}</div>
+          ${endBtnsHTML('abansdespres','data-x="share"')}
         </div>`;
       root.querySelectorAll('.adrow').forEach(function(el){
         const f=files[[...root.querySelectorAll('.adrow')].indexOf(el)];
@@ -1616,7 +1687,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       });
       const sh=root.querySelector('[data-x="share"]');
       if(sh) sh.addEventListener('click',()=>doShare(sc,days,sh));
-      wireHubBtn(root);
+      wireEndBtns(root);
       startCountdown();
     }
 
@@ -1627,7 +1698,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       for(let i=0;i<q.length;i+=10) files.push(q.slice(i,i+10).join(''));
       const text=shareCard('abansdespres','',todayStr(),sc,t(sc===1?'res_k_hit1':'hits_in_row'),days,files.join('\n'));
       if(navigator.share){ navigator.share({text:text}).catch(()=>{}); return; }
-      const done=()=>{ if(btn){ const o=btn.textContent; btn.textContent=t('copied'); setTimeout(()=>{ btn.textContent=o; },1800); } };
+      const done=()=>copiatAlBoto(btn);
       if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(done); }
       else { done(); }
     }
@@ -1902,7 +1973,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       card.appendChild(body); card.appendChild(acts); w.appendChild(card);
       const album=readLS(ALBUM_KEY)||[];
       w.appendChild(el('div','palbum',t('album_count',{n:album.length})));
+      const fi=el('div','pfi'); fi.innerHTML=endBtnsHTML('personatgedia',null); w.appendChild(fi);
       root.appendChild(w);
+      wireEndBtns(fi);
       scheduleInvitePopup(p);
     }
 
@@ -2077,11 +2150,13 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         const cronoPeople=wrongItems.map(personFromItem).filter(Boolean);
         const cronoEvents=wrongItems.map(eventFromItem).filter(Boolean);
         const hasCrono=cronoPeople.length||cronoEvents.length;
-        br.innerHTML='<button class="cta ordshare" data-x="oshare">'+t('share_btn')+'</button>'+(hasCrono?'<button class="cta sec" data-x="crono">'+t('show_crono')+'</button>':'')+hubBtnHTML();
+        br.className='';
+        // «A veure, ensenyam-ho» és un enllaç a sobre, no un quart botó: la fila és la mateixa a tots els jocs.
+        br.innerHTML=(hasCrono?'<button class="endlink" type="button" data-x="crono">'+t('show_crono')+'</button>':'')+endBtnsHTML('ordena','data-x="oshare"');
         bn.appendChild(br);
         const sb=br.querySelector('[data-x="oshare"]'); if(sb) sb.addEventListener('click',()=>ordDoShare(marks,days,sb));
         if(hasCrono){const cb=br.querySelector('[data-x="crono"]');if(cb)cb.addEventListener('click',()=>goToCronograma('ordena',[...cronoPeople,...cronoEvents]));}
-        wireHubBtn(br);
+        wireEndBtns(br);
       }
     }
 
@@ -2093,7 +2168,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     function ordDoShare(marks, days, btn){
       const text=ordShareText(marks,days);
       if(navigator.share){ navigator.share({text:text}).catch(()=>{}); return; }
-      const done=()=>{ if(btn){ const o=btn.textContent; btn.textContent=t('copied'); setTimeout(()=>{ btn.textContent=o; },1800); } };
+      const done=()=>copiatAlBoto(btn);
       if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(done); }
       else { done(); }
     }
@@ -2423,7 +2498,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
           +resTitol(memNivell(ms.errors))
           +resMarcador('🎯 '+ms.errors, t('res_k_errors'), days)
           +'<div class="countdown">'+t('new_challenge_in')+' <b id="'+cdId+'">--:--:--</b></div>'
-          +'<div class="memshare"><button class="cta" id="'+shareId+'">'+t('share_btn')+'</button>'+hubBtnHTML()+'</div>'
+          +'<div class="memshare">'+endBtnsHTML('memory','id="'+shareId+'"')+'</div>'
           +'</div>';
         if(cdTimer){ clearTimeout(cdTimer); cdTimer=null; }
         (function tick(){ const el=document.getElementById(cdId); if(el){ el.textContent=fmtDur(msToMidnight()); cdTimer=setTimeout(tick,1000); } })();
@@ -2431,9 +2506,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         if(shareBtn){ shareBtn.addEventListener('click',function(){
           var txt=shareCard('memory',(mode==='easy'?t('easy'):t('hard')).toLowerCase(),state.date,ms.errors,t(ms.errors===1?'res_k_error1':'res_k_errors'),days,'');
           if(navigator.share){ navigator.share({text:txt}).catch(function(){}); return; }
-          if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ shareBtn.textContent=t('copied_short'); setTimeout(function(){ shareBtn.textContent=t('share_btn'); },2000); }); }
+          if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){ copiatAlBoto(shareBtn); }); }
         }); }
-        wireHubBtn(root);
+        wireEndBtns(root);
         root.querySelectorAll('.mem-grid-done .mem-card').forEach(function(card){
           card.addEventListener('click',function(){ showPersonPanel(parseInt(this.dataset.person)); });
         });
@@ -2707,7 +2782,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       const squares=marks.map(function(m){ return m?'🟩':'🟥'; }).join('');
       const out=shareCard('contemporanis','',todayStr(),score+'/5',t('con_hits'),days,squares);
       if(navigator.share){ navigator.share({text:out}).catch(function(){}); return; }
-      const done=function(){ if(btn){ const o=btn.textContent; btn.textContent=t('copied'); setTimeout(function(){ btn.textContent=o; },1800); } };
+      const done=function(){ copiatAlBoto(btn); };
       if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(out).then(done).catch(done); }
       else done();
     }
@@ -2746,13 +2821,13 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         +resMarcador('🎯 '+score+'/5', t('con_hits'), days)
         +failHTML
         +'<div class="countdown">'+t('new_challenge_in')+' <b id="ccd">--:--:--</b></div>'
-        +'<div class="btnrow"><button class="cta" data-x="share">'+t('share_btn')+'</button>'+hubBtnHTML()+'</div>'
+        +endBtnsHTML('contemporanis','data-x="share"')
         +'</div>';
       const sh=root.querySelector('[data-x="share"]'); if(sh) sh.addEventListener('click',function(){ doShare(days,sh); });
       root.querySelectorAll('.concrono[data-fi]').forEach(function(bt){
         bt.addEventListener('click',function(){ const i=parseInt(bt.getAttribute('data-fi'),10); const pr=round[i]; goToCronograma('contemporanis',[pr.a.crono,pr.b.crono].filter(Boolean)); });
       });
-      wireHubBtn(root);
+      wireEndBtns(root);
       startCountdown();
     }
 
