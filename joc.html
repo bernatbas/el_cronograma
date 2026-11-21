@@ -225,6 +225,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   /* Nomes icona: no reparteix amplada amb els botons de text. */
   .pbtn.favonly{flex:0 0 auto;padding:11px 13px;line-height:0;}
   .favi{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round;}
+  .ico-cal{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round;vertical-align:-.15em;margin-right:.35em;}
   .favi.on{fill:#D69A2D;stroke:#D69A2D;}
   /* Pop-up d'invitacio a contribuir (Personatge del dia) */
   .pinvov{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(30,30,29,.55);opacity:0;transition:opacity .2s ease;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);}
@@ -1020,7 +1021,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       footer_source:'Dades de',
       // -- menu de jocs --
       badge_discover:'🌟 Descobreix',
-      badge_daily:'📅 Repte diari',
+      badge_daily:'Repte diari',   // la icona del calendari la posa ICO_CAL (21/11/2026)
       badge_soon:'🚧 Pròximament',
       badge_done:'✓ Fet avui',
       badge_streak:v=>'🔥 '+v.n+(v.n===1?' dia':' dies'),
@@ -1067,7 +1068,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       no_desc:'Sense descripció disponible.',
       fav_on:'★ Als favorits',
       fav_off:'☆ Afegeix a favorits',
-      see_crono:'📅 Veure al cronograma',
       see_crono_lbl:'Veure al cronograma',
       inv_who_f:'aquesta mossa',
       inv_who_m:'aquest nano',
@@ -1290,6 +1290,8 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   // una fila (mai scroll), la casa es queda només amb la icona (.compacte).
   // «Següent joc» = el proper que NO has fet avui, en l'ordre del hub i fent la volta. Si ja els
   // has fet tots, no surt.
+  // El calendari del «Repte diari» i del botó del Personatge del dia: abans era l'emoji 📅.
+  const ICO_CAL='<svg class="ico-cal" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>';
   const ICO_CASA='<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.4 9 3.4l6 5"/><path d="M4.6 7.8V14.4h8.8V7.8"/></svg>';
   const ICO_COMP='<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11.2V2.8"/><path d="M5.6 6.1 9 2.8l3.4 3.3"/><path d="M3.8 9.8v4.6h10.4V9.8"/></svg>';
   const ICO_SEG='<svg class="seg1" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.8 3.8 12 9l-5.2 5.2"/></svg>'
@@ -1539,7 +1541,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
             <button class="pass" data-x="skip"${skipUsed?' disabled':''} title="${skipUsed?t('joker_used_title'):t('joker_title')}"><span class="jk">🃏</span><span class="jt">${skipUsed?t('joker_spent'):t('joker')}</span><span class="jn">${skipUsed?0:1}</span></button>
             <button class="choice" data-a="despres"><span class="big">→</span>${t('after')}</button>
           </div>
-          <div class="gamefoot">📅 ${t('daily_challenge')} · ${ddmm(todayStr())}</div>
+          <div class="gamefoot">${ICO_CAL}${t('daily_challenge')} · ${ddmm(todayStr())}</div>
         </div>`;
       root.querySelectorAll('.choice').forEach(b=>{
         b.addEventListener('click',()=>guess(b.getAttribute('data-a')));
@@ -1973,7 +1975,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       acts.appendChild(fb);
       // Només la icona (21/11/2026): estrella · calendari · «Llegeix-ne més», tots tres en una fila.
       const cb=el('button','pbtn favonly crono');
-      cb.innerHTML='<svg class="favi" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>';
+      cb.innerHTML=ICO_CAL.replace('ico-cal','favi');   // mida i traç de l'estrella del costat
       cb.setAttribute('aria-label', t('see_crono_lbl')); cb.title=t('see_crono_lbl');
       cb.addEventListener('click',function(){ viewInCronograma(p); }); acts.appendChild(cb);
       if(p.wiki){ const a=el('a','pbtn',t('read_more')); a.href=p.wiki; a.target='_blank'; a.rel='noopener'; a.addEventListener('click',function(){ track('personatge_dia_wiki',{}); }); acts.appendChild(a); }
@@ -2752,7 +2754,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         +'<div class="concards">'+barra(idx)+card(pair.a,false,null,pairYrClass(pair))+card(pair.b,false,null,pairYrClass(pair))+'</div>'
         +'<div class="conq">'+q(pair)+'</div>'
         +'<div class="conchoices"><button class="choice conyes" data-a="yes"><span class="big">✓</span>'+t('con_yes')+'</button><button class="choice conno" data-a="no"><span class="big">✗</span>'+t('con_no')+'</button></div>'
-        +'<div class="gamefoot">📅 '+t('daily_challenge')+' · '+ddmm(todayStr())+'</div>'
+        +'<div class="gamefoot">'+ICO_CAL+t('daily_challenge')+' · '+ddmm(todayStr())+'</div>'
         +'</div>';
       root.querySelectorAll('.conchoices .choice').forEach(function(b){ b.addEventListener('click',function(){ answer(b.getAttribute('data-a')); }); });
     }
@@ -2900,7 +2902,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     const done=doneToday(g.id); const days=STREAK_KEYS[g.id]?aliveDays(STREAK_KEYS[g.id]):0;
     if(done) return '<span class="tagd done">'+t('badge_done')+(days>0?' · 🔥'+days:'')+'</span>';
     if(days>0) return '<span class="tagd streak">'+t('badge_streak',{n:days})+'</span>';
-    return '<span class="tagd">'+(g.discover?t('badge_discover'):t('badge_daily'))+'</span>';
+    return '<span class="tagd">'+(g.discover?t('badge_discover'):ICO_CAL+t('badge_daily'))+'</span>';
   }
   function stopHubCd(){ if(hubCd){ clearInterval(hubCd); hubCd=null; } }
   function startHubCd(){
