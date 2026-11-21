@@ -23,6 +23,8 @@ import urllib.request
 from datetime import date, datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+import ga   # Google Analytics: _tools/ga.py
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 PORT = 7777
@@ -1979,6 +1981,19 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(200, anniv_state())
             except Exception as e:
                 self._json(500, {"error": str(e)})
+            return
+
+        if path == "/api/ga":
+            # Nomes llegeix. Sense clau no peta: la pestanya diu com posar-la.
+            if not ga.disponible():
+                self._json(200, {"disponible": False, "clau": ga.GA_KEY})
+                return
+            try:
+                d = ga.overview()
+                d["disponible"] = True
+                self._json(200, d)
+            except Exception as e:
+                self._json(200, {"disponible": True, "error": str(e)})
             return
 
         if path in NOT_YET:

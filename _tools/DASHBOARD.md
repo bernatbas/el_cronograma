@@ -122,6 +122,26 @@ carregada.
 només deixa la feina feta: res queda clavat fins que prems el botó. Si aquell dia ja té algú
 clavat, el suggeriment **no el trepitja**.
 
+## Analytics
+
+Pestanya de **només lectura** amb les xifres de Google Analytics (GA4 Data API). Tot surt d'un sol
+`/api/ga`, que crida `overview()` de **`_tools/ga.py`**; les consultes es desen 5 minuts en memòria
+perquè «Refresca» no les repeteixi. Es carrega **a part del boot** (Google tarda uns segons).
+
+- **La clau** és d'un compte de servei (`dashboard@babilinia-dashboard.iam.gserviceaccount.com`,
+  projecte de Google Cloud `babilinia-dashboard`, sense facturació) i viu a
+  **`~/.config/babilinia/ga-key.json`**, fora del repo. Té permís de **lector** a la propietat
+  `550219092`. Sense el fitxer, la pestanya ho diu i la resta del dashboard no se n'assabenta.
+- **Sense dependències**: el JWT es signa amb l'`openssl` del sistema (Python estàndard no té RSA).
+- **Les dades comencen el 19/11/2026** (`GA_DES_DE`): abans, el CI comptava com a ~1.000 usuaris al dia.
+  Les gràfiques sempre tenen 30 columnes (`GA_FINESTRA` al JS, `overview(n=30)` al Python: han de coincidir).
+- Els paràmetres dels events (`joc`, `encerts`, `errors`, `ratxa`, `nom`, `text`…) ja estan registrats
+  com a dimensions i mètriques personalitzades a GA. **Un paràmetre nou no es pot consultar fins que el
+  registres** (GA → Administrador → Definicions personalitzades), i només compta d'aquell dia endavant.
+- ⚠️ Les cerques (`cerca_wikidata`) s'envien mentre escrius («Sh», «Sha»…): no serveixen per a un
+  rànquing. Per això la llista és de **personatges afegits** (`personatge_afegit`, paràmetre `nom`).
+- ⚠️ WhatsApp no passa origen: surt com a «Directe».
+
 ## Mode demo
 
 Si el servidor no respon, la interfície es pinta igual amb les dades de `DEMO` i un avís a

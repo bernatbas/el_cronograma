@@ -213,6 +213,48 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
 .banner.off{background:var(--bad-bg);color:var(--bad);border:1px solid #EFCFC8}
 .banner code{font-family:var(--mono);font-size:12px;background:rgba(0,0,0,.06);padding:2px 6px;border-radius:4px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ===== analytics ===== */
+.ga2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media(max-width:760px){.ga2{grid-template-columns:1fr}}
+.gsub{font-size:12px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.gsub .hint{font-weight:400;font-size:11.5px;color:var(--text3);margin-left:auto}
+.gleg{display:flex;gap:12px;font-size:11.5px;color:var(--text2);font-weight:400}
+.gleg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.chart{position:relative;display:flex;align-items:flex-end;gap:3px;height:132px;border-bottom:1px solid var(--border-strong);margin-top:16px}
+.chart .grid1{position:absolute;left:0;right:0;border-top:1px dashed var(--border);pointer-events:none}
+.chart .grid1 span{position:absolute;right:0;top:-15px;font-size:10.5px;color:var(--text3);font-variant-numeric:tabular-nums}
+.chart .col{flex:1;height:100%;display:flex;flex-direction:column-reverse;gap:2px;border-radius:4px 4px 0 0;position:relative;z-index:1}
+.chart .col:hover{background:var(--soft)}
+.chart .col.buit:hover{background:none}
+.chart .seg{flex:0 0 auto;background:var(--terracota)}
+.chart .seg.b{background:var(--terracota-dark)}
+.chart .seg.z{background:var(--border)}
+.chart .seg:last-child{border-radius:4px 4px 0 0}
+.xlab{display:flex;gap:3px;margin-top:5px;font-size:10.5px;color:var(--text3);font-variant-numeric:tabular-nums}
+.xlab span{flex:1;text-align:center;white-space:nowrap;overflow:visible}
+.gtip{position:fixed;z-index:50;background:var(--text);color:#fff;font-size:11.5px;line-height:1.45;padding:5px 9px;border-radius:6px;pointer-events:none;white-space:nowrap;transform:translate(-50%,-100%);margin-top:-8px}
+.hb{display:grid;grid-template-columns:minmax(90px,38%) 1fr 34px;align-items:center;gap:10px;padding:5px 0;font-size:12.5px}
+.hb .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb .l small{color:var(--text3);font-size:11px;margin-left:4px}
+.hb .t{height:8px;background:var(--surface);border-radius:4px;overflow:hidden}
+.hb .t i{display:block;height:100%;background:var(--terracota);border-radius:4px}
+.hb .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--text2)}
+.gnote{font-size:11.5px;color:var(--text3);margin-top:9px;line-height:1.45}
+.spark{display:flex;align-items:flex-end;gap:1px;height:22px;width:150px;margin-left:auto}
+.spark i{flex:1;min-height:2px;background:var(--border);border-radius:2px 2px 0 0}
+.spark i.on{background:var(--terracota)}
+.spark i.buit{background:none}
+.gtab{width:100%;border-collapse:collapse;font-size:12.5px}
+.gtab th{font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);text-align:right;padding:0 8px 8px;white-space:nowrap}
+.gtab th:first-child,.gtab td:first-child{text-align:left;padding-left:0}
+.gtab td{padding:8px;border-top:1px solid var(--border);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.gtab td.sp{width:30%}
+.gtab td .pc{color:var(--text3);font-size:11px;margin-left:3px}
+.gtab .fun{color:var(--text3)}
+.gtab .fun b{color:var(--text);font-weight:600}
+.gerr{padding:12px 14px;border-radius:var(--r);background:var(--bad-bg);color:var(--bad);font-size:12.5px}
+.gerr code{font-family:var(--mono);font-size:11.5px}
 </style>
 </head>
 <body>
@@ -223,6 +265,7 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
     <a href="#general" data-tab="general">General</a>
     <a href="#personatgedia" data-tab="personatgedia">Personatge del dia</a>
     <a href="#contemporanis" data-tab="contemporanis">Contemporanis</a>
+    <a href="#analytics" data-tab="analytics">Analytics</a>
   </nav>
   <div class="tb-right">
     <span class="clock" id="stamp">—</span>
@@ -438,6 +481,49 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
     </div>
   </section>
   </div><!-- /tab-contemporanis -->
+
+  <div class="tabpane" id="tab-analytics" hidden>
+  <div id="gaoff" hidden></div>
+  <section id="ga-global">
+    <div class="shead"><h2>Visió global</h2>
+      <span class="hint sub" title="Dades de Google Analytics. Abans del 19/11/2026 hi comptaven els robots del CI, i per això no es mostren.">Google Analytics · des del 19/11</span>
+      <span class="hint" id="garang">—</span></div>
+    <div class="stats" id="gastats"></div>
+    <div class="card pad" style="margin-top:12px">
+      <div class="gsub">Usuaris per dia<span class="gleg"><span><i style="background:var(--terracota)"></i>Nous</span><span><i style="background:var(--terracota-dark)"></i>Recurrents</span></span></div>
+      <div id="gausers"></div>
+    </div>
+    <div class="ga2" style="margin-top:12px">
+      <div class="card pad"><div class="gsub">D’on venen<span class="hint">sessions</span></div><div id="gafonts"></div>
+        <div class="gnote">WhatsApp i els enllaços desats surten com a «directe»: no passen cap origen.</div></div>
+      <div class="card pad"><div class="gsub">Dispositiu<span class="hint">usuaris</span></div><div id="gadisp"></div></div>
+    </div>
+  </section>
+
+  <section id="ga-pagines">
+    <div class="shead"><h2>Cronograma ↔ Jocs</h2></div>
+    <div class="stats" id="gapagstats"></div>
+    <div class="card pad" style="margin-top:12px">
+      <div class="gsub">% d’usuaris que obren els jocs<span class="hint">sobre el total del dia</span></div>
+      <div id="gapcjoc"></div>
+    </div>
+  </section>
+
+  <section id="ga-crono">
+    <div class="shead"><h2>Cronograma</h2></div>
+    <div class="ga2">
+      <div class="card pad"><div class="gsub">Accions<span class="hint">per dia · total</span></div><div id="gaaccions"></div></div>
+      <div class="card pad"><div class="gsub">Personatges afegits des del cercador<span class="hint">vegades</span></div><div id="gaafegits"></div>
+        <div class="gsub" style="margin-top:18px">Guia de benvinguda<span class="hint">usuaris</span></div><div id="gaguia"></div></div>
+    </div>
+  </section>
+
+  <section id="ga-jocs">
+    <div class="shead"><h2>Jocs</h2>
+      <span class="hint sub" title="Usuaris únics de cada pas. Errors per dia: com més alta la barra, més difícil va ser el repte d’aquell dia.">vist → començat → acabat</span></div>
+    <div class="card pad" style="overflow-x:auto"><div id="gajocs"></div></div>
+  </section>
+  </div><!-- /tab-analytics -->
 
 </div>
 
@@ -1190,6 +1276,133 @@ async function dbCommit(){
   } catch(e){ showError("No s'ha pogut connectar al servidor."); btn.textContent="Afegeix a la BD i committeja"; }
 }
 
+/* ---------- analytics ----------
+   Tot ve d'un sol /api/ga (el servidor fa les consultes a Google i les desa 5 min).
+   Es carrega a part del boot: Google tarda uns segons i no ha de frenar la resta. */
+const JOC_NOM = {abansdespres:"Abans o després?", ordena:"Ordena la línia", memory:"Memory", contemporanis:"Contemporanis?"};
+const EV_NOM = {cerca_wikidata:"Cerques a Wikidata", personatge_afegit:"Personatges afegits", fitxa_oberta:"Fitxes obertes",
+  mostra_context:"Mostra context", colleccio_activada:"Col·leccions activades", vista_global:"Vista global", undo:"Desfés",
+  reset:"Reset", colleccio_compartida:"Col·leccions compartides", colleccio_enllac:"Obertes des d’un enllaç"};
+const DISP_NOM = {desktop:"Ordinador", mobile:"Mòbil", tablet:"Tauleta"};
+function fontNom(f){
+  if(f.font==="(direct)") return "Directe";
+  if(f.font==="(not set)") return "Desconegut";
+  if(f.font==="bernatbas.github.io") return "Adreça antiga";
+  if(f.mitja==="organic") return f.font.charAt(0).toUpperCase()+f.font.slice(1)+" (cerca)";
+  return f.font;
+}
+const GA_FINESTRA = 30;   // dies; ha de coincidir amb overview(n=30) de ga.py
+function dm(ds){ const p=ds.split("-"); return p[2]+"/"+p[1]; }
+function pct(a,b){ return b ? Math.round(100*a/b) : 0; }
+function num(x){ return x==null ? "—" : Number(x).toLocaleString("ca-ES",{maximumFractionDigits:1}); }
+function sum(a){ return a.reduce(function(x,y){ return x+(y||0); },0); }
+
+let gaTip=null;
+function gaTipOn(e){
+  const t=e.target.closest("[data-t]"); if(!t){ if(gaTip) gaTip.hidden=true; return; }
+  if(!gaTip){ gaTip=document.createElement("div"); gaTip.className="gtip"; document.body.appendChild(gaTip); }
+  gaTip.innerHTML=t.dataset.t; gaTip.hidden=false;
+  const r=t.getBoundingClientRect(); gaTip.style.left=(r.left+r.width/2)+"px"; gaTip.style.top=r.top+"px";
+}
+document.addEventListener("mouseover", gaTipOn);
+
+/* Barres per dia. series=[{v:[...], cls:""}] s'apilen de baix a dalt; tip(i) dona el globus. */
+function gaBarres(dies, series, tip, max){
+  const tots=dies.map(function(_,i){ return sum(series.map(function(s){ return s.v[i]; })); });
+  max = max || Math.max.apply(null, tots.concat([1]));
+  let h='<div class="chart"><div class="grid1" style="bottom:100%"><span>'+(max%1?max.toFixed(1):max)+'</span></div>'+
+        '<div class="grid1" style="bottom:50%"><span>'+(max/2%1?(max/2).toFixed(1):max/2)+'</span></div>';
+  // Sempre 30 columnes: amb pocs dies, les barres serien amples com taules. Els dies d'abans
+  // del 19/11 (o de la finestra) queden en blanc a l'esquerra.
+  const buit=Math.max(0, GA_FINESTRA-dies.length);
+  for(let k=0;k<buit;k++) h+='<div class="col buit"></div>';
+  dies.forEach(function(d,i){
+    h+='<div class="col" data-t="'+esc(tip(i))+'">';
+    if(!tots[i]) h+='<div class="seg z" style="height:2px"></div>';
+    series.forEach(function(s){ const v=s.v[i]||0; if(v) h+='<div class="seg '+(s.cls||"")+'" style="height:calc('+(100*v/max)+'% - 2px)"></div>'; });
+    h+='</div>';
+  });
+  h+='</div><div class="xlab">';
+  for(let k=0;k<buit;k++) h+='<span></span>';
+  dies.forEach(function(d,i){ const j=dies.length-1-i; h+='<span>'+(j%7===0?dm(d):"")+'</span>'; });   // l'últim dia i cada setmana enrere
+  return h+'</div>';
+}
+function gaLlista(items, buit){
+  if(!items.length) return '<div class="empty">'+(buit||"Encara res")+'</div>';
+  const max=Math.max.apply(null, items.map(function(x){ return x.n; }).concat([1]));
+  return items.map(function(x){
+    return '<div class="hb"><span class="l">'+x.l+'</span><span class="t"><i style="width:'+(100*x.n/max)+'%"></i></span><span class="v">'+x.n+'</span></div>';
+  }).join("");
+}
+function gaSpark(v, dies, fmt){
+  const max=Math.max.apply(null, v.map(function(x){ return x||0; }).concat([0.0001]));
+  return '<div class="spark">'+'<i class="buit"></i>'.repeat(Math.max(0,GA_FINESTRA-v.length))+v.map(function(x,i){
+    return '<i class="'+(x?"on":"")+'" style="height:'+(x?Math.max(8,100*x/max):8)+'%" data-t="'+esc(dm(dies[i])+" · "+fmt(x))+'"></i>';
+  }).join("")+'</div>';
+}
+function stat(lbl,val,sub){ return '<div class="stat"><div class="lbl">'+lbl+'</div><div class="val">'+val+'</div>'+(sub?'<div class="sub">'+sub+'</div>':'')+'</div>'; }
+
+function renderGA(d){
+  const off=el("gaoff");
+  document.querySelectorAll("#tab-analytics section").forEach(function(x){ x.hidden = !d || !d.dies; });
+  if(!d){ off.hidden=false; off.innerHTML='<div class="gerr">Backend aturat: sense dades de Google Analytics.</div>'; return; }
+  if(!d.disponible){ off.hidden=false; off.innerHTML='<div class="gerr">Falta la clau del compte de servei a <code>'+esc(d.clau)+'</code>. Veure DASHBOARD.md, «Analytics».</div>'; return; }
+  if(d.error){ off.hidden=false; off.innerHTML='<div class="gerr">Google Analytics ha dit que no: <code>'+esc(d.error)+'</code></div>'; return; }
+  off.hidden=true;
+  const D=d.dies, g=d.global, P=d.pagines;
+  el("garang").textContent = dmy(D[0])+" – "+dmy(D[D.length-1])+" · "+D.length+(D.length===1?" dia":" dies");
+
+  const avui=g.per_dia[D.length-1], mitjana=sum(g.per_dia.slice(0,-1))/Math.max(1,D.length-1);
+  const mob=(g.dispositius.find(function(x){ return x.d==="mobile"; })||{n:0}).n, dtot=sum(g.dispositius.map(function(x){ return x.n; }));
+  el("gastats").innerHTML =
+    stat("Usuaris", g.usuaris, g.sessions+" sessions") +
+    stat("Avui", avui, D.length>1 ? "mitjana dels dies d’abans: "+num(mitjana) : "") +
+    stat("Recurrents", pct(g.recurrents, g.usuaris)+"%", g.recurrents+" han tornat") +
+    stat("Des del mòbil", pct(mob, dtot)+"%", mob+" de "+dtot);
+
+  el("gausers").innerHTML = gaBarres(D, [{v:g.nous_dia},{v:g.recurrents_dia,cls:"b"}], function(i){
+    return "<b>"+dmy(D[i])+"</b><br>"+g.per_dia[i]+" usuaris · "+g.nous_dia[i]+" nous, "+g.recurrents_dia[i]+" recurrents";
+  });
+  el("gafonts").innerHTML = gaLlista(g.fonts.map(function(f){ return {l:esc(fontNom(f)), n:f.n}; }));
+  el("gadisp").innerHTML = gaLlista(g.dispositius.map(function(x){ return {l:esc(DISP_NOM[x.d]||x.d)+'<small>'+pct(x.n,dtot)+'%</small>', n:x.n}; }));
+
+  el("gapagstats").innerHTML =
+    stat("Obren el cronograma", P.crono, pct(P.crono,g.usuaris)+"% dels usuaris") +
+    stat("Obren els jocs", P.joc, pct(P.joc,g.usuaris)+"% dels usuaris") +
+    stat("Del cronograma als jocs", P.crono_a_joc, "usuaris") +
+    stat("Dels jocs al cronograma", P.joc_a_crono, "usuaris");
+  const pcs=D.map(function(_,i){ return pct(P.joc_dia[i], g.per_dia[i]); });
+  el("gapcjoc").innerHTML = gaBarres(D, [{v:pcs}], function(i){
+    return "<b>"+dmy(D[i])+"</b><br>"+pcs[i]+"% · "+P.joc_dia[i]+" de "+g.per_dia[i]+" usuaris";
+  }, 100);
+
+  el("gaaccions").innerHTML = '<table class="gtab"><tbody>'+d.crono.accions.map(function(a){
+    return '<tr><td>'+esc(EV_NOM[a.ev]||a.ev)+'</td><td class="sp">'+gaSpark(a.dia, D, function(x){ return (x||0)+" vegades"; })+'</td><td>'+sum(a.dia)+'</td></tr>';
+  }).join("")+'</tbody></table>';
+  el("gaafegits").innerHTML = gaLlista(d.crono.afegits.map(function(x){ return {l:esc(x.nom), n:x.n}; }), "Ningú ha afegit cap personatge");
+  el("gaguia").innerHTML = gaLlista([{l:"L’han vista", n:d.crono.guia_oberta},{l:"L’han tancat", n:d.crono.guia_tancada}]) +
+    '<div class="gnote">Encara no sabem fins a quin pas arriben: la guia no envia res en canviar de pas.</div>';
+
+  el("gajocs").innerHTML = '<table class="gtab"><thead><tr><th>Joc</th><th>Embut</th><th>Acaben</th><th>Encerts</th><th>Errors</th><th>Ratxa</th><th>Errors per dia</th></tr></thead><tbody>'+
+    d.jocs.map(function(j){
+      return '<tr><td>'+esc(JOC_NOM[j.id]||j.id)+'</td>'+
+        '<td class="fun"><b>'+j.vist+'</b> → <b>'+j.iniciat+'</b> → <b>'+j.completat+'</b></td>'+
+        '<td>'+pct(j.completat,j.vist)+'%</td><td>'+num(j.encerts)+'</td><td>'+num(j.errors)+'</td><td>'+num(j.ratxa)+'</td>'+
+        '<td class="sp">'+gaSpark(j.errors_dia, D, function(x){ return x==null?"ningú l’ha acabat":num(x)+" errors de mitjana"; })+'</td></tr>';
+    }).join("")+'</tbody></table>'+
+    '<div class="gnote">Encerts, errors i ratxa: mitjanes de les partides acabades. Al Memory els encerts sempre són 5; el que diu alguna cosa són els errors.</div>';
+}
+
+let gaCarregant=false;
+async function carregaGA(){
+  if(gaCarregant) return; gaCarregant=true;
+  const off=el("gaoff"); off.hidden=false; off.innerHTML='<div class="empty">Demanant les dades a Google…</div>';
+  document.querySelectorAll("#tab-analytics section").forEach(function(x){ x.hidden=true; });
+  const r = await api("/ga");
+  gaCarregant=false;
+  renderGA(r.live ? r.data : null);
+}
+
 /* ---------- boot ---------- */
 async function boot(){
   const [st, q, pn, lt, dn, an, cp] = await Promise.all([
@@ -1224,6 +1437,7 @@ async function boot(){
 
   el("stamp").textContent = new Date().toLocaleTimeString("ca-ES",{hour:"2-digit",minute:"2-digit"});
   showTab(tabFromHash());
+  carregaGA();   // sense await: Google tarda i no ha de frenar la resta
 }
 
 el("refresh").addEventListener("click", boot);
