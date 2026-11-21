@@ -78,9 +78,11 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
   mateixa alçada, sense descripcions. A dalt només el compte enrere: **fora la data i el
   comptador «n/5 fets avui»**.
 - **Sense scroll**: és la màxima dels jocs (el hub en queda fora). `tests/noscroll.spec.js` ho
-  mira a 12 mides i ho converteix en **avisos grocs** al CI, no en errors. Pendents coneguts (i
-  aparcats): Memory en horitzontal, resultat de l'«Abans o després?» en horitzontal, «Abans o
-  després?» a 1366×657, Ordena a 320×460.
+  mira a 12 mides i ho converteix en **avisos grocs** al CI, no en errors. **Criteri d'en Bernat (21/11/2026):**
+  si per fer-hi cabre tot s'hauria de fer malbé el joc (cartes massa petites per tocar-les, layouts estranys),
+  val més deixar **una mica de scroll residual** als mòbils vells o petits. Residuals coneguts: «Abans o
+  després?» jugant a 1366×657 (17px), Memory jugant a 568×320 (53px) i 740×340 (33px), Contemporanis
+  resultat a 568×320 (11px), Memory resultat a 568×320 (2px).
 - **Ordena la línia, on va cada cosa** (18/11/2026, per una queixa): «▲ més antic» **a dalt** de la
   llista i «▼ més nou» **a baix**. Abans anaven totes dues a dalt, una a cada banda, i «més nou ↓»
   quedava just on va el més antic. Sense guanyar scroll: en horitzontal «▲ més antic» comparteix fila
@@ -122,6 +124,15 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
 - **Sense subtítols** (21/11/2026): fora el «Repte diari · data» del títol dels resultats i del peu de l'Abans o
   després i el Contemporanis, el «Fàcil · Repte diari · data» del Memory i la instrucció de l'Ordena (ja la diuen
   «▲ més antic / ▼ més nou»). Que és diari ho diuen la portada i el compte enrere; la data, el text de compartir.
+- **Resultats de l'Ordena i el Memory sense scroll** (21/11/2026). Abans en feien 50–420px.
+  - **Ordena**: resolt ja no s'arrossega, així que fora la nansa ⠿ i «mort/naixement» va al costat del nom (una
+    línia per carta). En horitzontal, la columna del resultat té **amplada fixa** i la fila de la llista és `auto`
+    un cop resolt: amb `minmax` el resultat (que travessa les tres files) inflava el títol i la fila de baix.
+  - **Memory**: el resultat ja no va en caixa, i en horitzontal i a l'escriptori baix va **al costat** de la
+    graella. La graella **s'encongeix sola** (`encaixaGraella()`) fins que no hi ha scroll, amb un mínim:
+    300px jugant (les cartes s'han de poder tocar) i 220px acabat. Es refà en girar el mòbil.
+  - ⚠️ Es va provar una fila de 10 cartes en horitzontal: **descartat** (en Bernat). Si no hi cap, scroll residual.
+  - Al mòbil vertical, `main` tenia **48px buits a sota** (de quan el peu flotava): ara 18, com a dalt.
 - **Ordre del hub** (21/11/2026): el **Personatge del dia, a l'última** (menú i «Següent joc»).
 - **Compte enrere, un sol component** (21/11/2026): `compteHTML(id)` → xip (píndola) amb rellotge SVG i
   **«Nou repte en hh:mm:ss»**, el mateix a la portada (abans «⏳ Es reinicia en») i al final dels 4 jocs (abans

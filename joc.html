@@ -516,7 +516,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .topbar{padding:10px 14px;gap:10px;}
     .brand{font-size:16px;}
     .btn{min-width:32px;min-height:32px;padding:4px 8px;font-size:13px;}
-    main{padding:18px 14px 48px;}
+    main{padding:18px 14px 18px;}   /* abans 48 a sota: venia de quan el peu flotava a sobre; ara és al flux i sobrava */
   }
   @media (max-width:600px){
     .gtitle{font-size:18px;}
@@ -616,6 +616,15 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .orditem.ok{border:2.5px solid #2E9B5B;background:#E9F7EE;box-shadow:0 6px 18px rgba(45,150,90,.2);animation:okpulse .5s;}
   .orditem.no{border:2.5px solid #C43A2C;background:#FBECEA;box-shadow:0 6px 18px rgba(196,58,44,.2);animation:nopulse .5s;}
   .orditem.rev{border-color:var(--border);}
+  /* Resolt ja no s'arrossega: fora la nansa i «mort/naixement» al costat del nom, en una sola línia
+     (21/11/2026). Cada carta guanya una línia de text, i el resultat hi cap sense scroll. */
+  .ordwrap.resolved .ogrip{display:none;}
+  .ordwrap.resolved .omain{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:7px;min-width:0;}
+  .ordwrap.resolved .ometa{order:1;white-space:nowrap;}
+  .ordwrap.resolved .oyr{line-height:1.1;}   /* l'any marcava l'alçada de la carta (1,5 de línia) */
+  .ordfoot .ordbanner .stats{margin:4px 0 6px;}
+  .ordwrap.resolved .ordfoot{margin-top:6px;}
+  .ordwrap.resolved .orditem{padding-top:5px;padding-bottom:5px;}
   .orditem.crono:hover{filter:brightness(.97);}
   .orditem.ok .oyr{color:#238049;} .orditem.no .oyr{color:#B4321F;}
   .ordfoot{margin-top:14px;text-align:center;}
@@ -636,7 +645,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   }
   /* «Ordena la línia»: HORITZONTAL TACTIL = mateixa logica que els altres jocs (pila a l'esquerra, boto/resultat a la dreta) */
   @media (orientation:landscape) and (pointer:coarse) and (max-height:600px){
-    .ordwrap{max-width:none;height:100%;display:grid;grid-template-columns:1fr minmax(140px,190px);grid-template-areas:"head foot" "list foot" "bot foot";grid-template-rows:auto minmax(0,max-content) auto;align-content:start;column-gap:16px;row-gap:5px;align-items:start;}
+    .ordwrap{max-width:none;height:100%;display:grid;grid-template-columns:minmax(0,1fr) clamp(190px,32%,260px);grid-template-areas:"head foot" "list foot" "bot foot";grid-template-rows:auto minmax(0,max-content) auto;align-content:start;column-gap:16px;row-gap:5px;align-items:start;}
+    /* La columna del resultat té amplada FIXA (no minmax): amb minmax la graella la mesurava a 140px, el títol
+       i el marcador s'hi partien en moltes línies i inflaven les files (90px de forat sobre la llista). */
     .ordhead{grid-area:head;margin:0;text-align:left;}
     .ordhead h2{font-size:15px;} .ordhead .sub{display:none;}
     /* «▲ més antic» comparteix fila amb el títol (a la dreta, just a sobre de la llista): la fila que
@@ -655,7 +666,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .ordbanner .streak{font-size:11.5px;margin:4px 0 2px;}
     .ordbanner .locknote{font-size:10.5px;margin:4px 0 2px;line-height:1.3;}
     /* Estat RESOLT: deixem que el scroll el faci el contenidor exterior (main), que iOS Safari gestiona sempre be, en comptes de la llista imbricada dins el grid (que iOS sovint no deixa scrollar => quedava tallat sense scroll). */
-    .ordwrap.resolved{height:auto;}
+    /* Fila de la llista «auto» un cop resolt: amb minmax(0,…) la columna del resultat (que travessa les tres
+       files) repartia la seva alçada entre el títol i la fila de baix, i hi deixava 80px de forat. */
+    .ordwrap.resolved{height:auto;grid-template-rows:auto auto auto;}
     .ordwrap.resolved .ordlist{overflow:visible;-webkit-overflow-scrolling:auto;}
   }
   /* «Abans o després?»: VERTICAL en pantalles baixes. Amb la barra del navegador, un iPhone SE deixa
@@ -806,6 +819,23 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   @media (orientation:portrait) and (max-height:500px){
     .ordhead .sub{display:none;}
     .orditem{padding-top:5px!important;padding-bottom:5px!important;}
+    /* Resultat a 320×460: tot una mica més petit perquè hi càpiga sencer, sense amagar res. */
+    main:has(.ordwrap.resolved){padding-top:10px;padding-bottom:8px;}
+    .ordwrap.resolved .ordfoot{margin-top:2px;}
+    .ordwrap.resolved .ordhead{margin-bottom:4px;}
+    .ordwrap.resolved .ordbar{margin-bottom:3px;}
+    .ordwrap.resolved .ordbar.ordbot{margin-top:3px;margin-bottom:0;}
+    .ordwrap.resolved .orditem{padding-top:3px!important;padding-bottom:3px!important;}
+    .ordwrap.resolved .ordbanner .rtitle{font-size:16px;}
+    .ordwrap.resolved .ordbanner .stat .v{font-size:25px;}
+    .ordwrap.resolved .ordbanner .stats{margin:2px 0 4px;}
+    /* Memory acabat a 320×460: el mateix criteri (tot una mica més petit, res amagat). */
+    main#app:has(> .mem-grid-done){padding-top:10px;padding-bottom:8px;}
+    main#app:has(> .mem-grid-done) .mem-toggle{padding:2px 0 6px;}
+    main#app:has(> .mem-grid-done) .mbanner{margin-top:6px;}
+    main#app .mbanner .rtitle{font-size:16px;}
+    main#app .mbanner .stat .v{font-size:25px;}
+    main#app .mbanner .stats{margin:2px 0 4px;}
   }
   /* «Ordena la línia»: VERTICAL en pantalles baixes (iPhone SE i similars) => lletra i marges més petits perquè el resultat càpiga sense scroll */
   @media (orientation:portrait) and (max-height:770px){
@@ -853,7 +883,18 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .mem-errors .ico-flama{width:1.05em;height:1.05em;vertical-align:-.15em;margin-right:0;}
   .mem-loading{text-align:center;padding:48px 16px;color:var(--text2);font-size:15px;}
   .mem-grid-done .mem-card{cursor:pointer;}
-  .mbanner{max-width:440px;margin:16px auto 0;border-radius:var(--r-card);background:var(--soft);border:1px solid var(--border-strong);padding:20px;text-align:center;}
+  /* Resultat sense caixa (21/11/2026), com el de l'Ordena: la caixa menjava 40px i el resultat ja es llegeix sol. */
+  .mbanner{max-width:440px;margin:10px auto 0;text-align:center;}
+  .mem-grid-done{padding-bottom:4px;}
+  /* Horitzontal i escriptori baix: el resultat AL COSTAT de la graella, com al Contemporanis i l'Abans o després. */
+  @media (orientation:landscape) and (pointer:coarse) and (max-height:600px), (min-width:861px) and (max-height:820px){
+    #app:has(> .mem-grid-done){display:grid;grid-template-columns:minmax(0,560px) minmax(220px,300px);grid-template-areas:"head head" "tog ban" "err ban" "grid ban";justify-content:center;column-gap:28px;align-content:start;}
+    #app:has(> .mem-grid-done) > .gamehead{grid-area:head;}
+    #app:has(> .mem-grid-done) > .mem-toggle{grid-area:tog;}
+    #app:has(> .mem-grid-done) > .mem-errors{grid-area:err;}
+    #app:has(> .mem-grid-done) > .mem-grid-done{grid-area:grid;width:100%;}
+    #app:has(> .mem-grid-done) > .mbanner{grid-area:ban;align-self:center;margin:0;}
+  }
   .mbanner .rtitle{font-family:'Oswald',Arial,sans-serif;font-size:22px;font-weight:600;margin:2px 0;}
   .mbanner .rtitle.perfect{color:#2E8B57;}
   /* Marcador de dues xifres també a l'Ordena i al Memory (al Contemporanis i l'Abans o després ja hi era). */
@@ -889,7 +930,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .mem-pdesc{font-size:13px;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
     .mem-pbtns{margin-top:12px;gap:8px;}
   }
-  .mbanner .memshare{margin-top:14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+  .mbanner .memshare{margin-top:0;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}   /* l'aire ja el posa el compte enrere */
 
   /* ===== MODE FOSC: el que no surt dels tokens =====
      Rosats, verds i daurats pensats per a fons blanc. Els tints passen a translucids sobre el fosc i el
@@ -2531,7 +2572,29 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         bindCards();
       }
       bindToggle();
+      encaixaGraella();
     }
+
+    // La graella cedeix l'alçada que sobra (21/11/2026): si la pantalla fa scroll, s'encongeix just el que
+    // cal perquè no en faci. Les cartes tenen proporció fixa, així que l'alçada va amb l'amplada; dues o tres
+    // passades n'hi ha prou (el farciment no escala). Sense números per mida: val per a qualsevol pantalla.
+    // Hi ha un mínim, i per sota val més una mica de scroll (decisió d'en Bernat: és residual, mòbils vells
+    // o petits). Jugant, el mínim és més gran: les cartes s'han de poder tocar; acabat només es miren.
+    const GRAELLA_MIN_JOC=300, GRAELLA_MIN_RES=220;
+    function encaixaGraella(){
+      const g=root&&root.querySelector('.mem-grid'); if(!g) return;
+      const GRAELLA_MIN=g.classList.contains('mem-grid-done')?GRAELLA_MIN_RES:GRAELLA_MIN_JOC;
+      g.style.maxWidth='';
+      for(let i=0;i<3;i++){
+        const sobra=root.scrollHeight-root.clientHeight; if(sobra<=1) break;
+        const r=g.getBoundingClientRect(); if(!r.height) break;
+        const w=Math.max(GRAELLA_MIN, Math.floor(r.width*(r.height-sobra)/r.height));
+        if(w>=r.width) break;
+        g.style.maxWidth=w+'px';
+      }
+    }
+    let encaixRaf=0;
+    function onResizeMem(){ cancelAnimationFrame(encaixRaf); encaixRaf=requestAnimationFrame(encaixaGraella); }
 
     // Inicia la càrrega del pool en background quan es carrega la pàgina
     ensurePool();
@@ -2540,6 +2603,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       mount(container){
         root=container; flipped=[]; locked=false; gaStarted=false;
         track('joc_vist',{joc:'memory'});
+        window.addEventListener('resize',onResizeMem);
         mode=savedMode();
         state=loadState();
         currentPool=null;
@@ -2566,6 +2630,8 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       },
       unmount(){
         if(cdTimer){ clearTimeout(cdTimer); cdTimer=null; }
+        window.removeEventListener('resize',onResizeMem);
+        if(root) root.querySelectorAll('.mem-grid').forEach(function(g){ g.style.maxWidth=''; });
         root=null;
       }
     };
