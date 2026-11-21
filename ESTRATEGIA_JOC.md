@@ -101,8 +101,8 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
     3) «Següent joc» passa a **»** (doble fletxa, decisió d'en Bernat). «Comparteix» sempre porta text.
     Mesurat a 8 mides de mòbil: cap fila surt de l'ample.
   - Al **Personatge del dia**: casa + Següent (no té compartir), sota la targeta. Per fer-hi lloc, la foto
-    s'encongeix en vertical baix i en horitzontal la targeta cedeix l'alçada. A la targeta, **estrella ·
-    calendari (només icona) · «Llegeix-ne més»** en una fila. Fora el «Has descobert n personatges» (no
+    s'encongeix en vertical baix i en horitzontal la targeta cedeix l'alçada. Al cronograma s'hi va **tocant
+    el nom o la foto** (com als resultats dels jocs); a la targeta queden **estrella · «Llegeix-ne més»**. Fora el «Has descobert n personatges» (no
     aportava); l'àlbum es continua desant a `hb_personatge_album`.
   - **Fora el botó «Tots els jocs» de la topbar**: ja hi porta la casa del final i «Jocs» del commutador.
     L'`id="back"` ja no existeix.
@@ -113,6 +113,7 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
   - **Excepció: el Memory.** Al taulell només hi ha cares, sense nom: anar directe al cronograma et treia
     del joc sense saber qui era. Tocar una carta obre el **panell** (foto, nom, dates, descripció) amb el
     botó cap al cronograma. Es va provar l'altra manera i es va desfer el mateix dia.
+    Els dos botons del panell («Veure al cronograma», «Llegeix-ne més») fan servir l'estil `.endbtn`.
   - «Copiat!» canvia només l'etiqueta (`copiatAlBoto`): `textContent=` s'enduia la icona.
 - **Ordre del hub** (21/11/2026): el **Personatge del dia, a l'última** (menú i «Següent joc»).
 - **Compte enrere, un sol component** (21/11/2026): `compteHTML(id)` → xip (píndola) amb rellotge SVG i

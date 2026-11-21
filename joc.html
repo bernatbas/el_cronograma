@@ -214,6 +214,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .pimg.ph{display:flex;align-items:center;justify-content:center;font-size:66px;color:var(--border-strong);}
   .pbody{padding:20px 20px 0;}
   .pname{font-family:'Oswald',sans-serif;font-size:26px;font-weight:600;line-height:1.15;margin:0 0 4px;}
+  .pgo{cursor:pointer;}
+  .pbtn .ico-cal{width:16px;height:16px;margin:0;vertical-align:0;}
+  .pname.pgo:hover{color:var(--topbar-bg);text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:2px;}
   .pdesc{color:var(--text2);font-size:15px;line-height:1.5;margin:0 0 14px;}
   .pchips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
   .pchip{background:#F7E5E0;color:#B23A2E;font-size:13px;font-weight:600;padding:4px 11px;border-radius:var(--r-pill);}
@@ -287,10 +290,10 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .pchip{font-size:12px;padding:3px 9px;}
     .pacts{flex-direction:column;flex-wrap:nowrap;justify-content:center;padding:0;gap:8px;min-height:0;}
     .pacts .pbtn{flex:0 0 auto;width:100%;padding:10px;font-size:13px;}
-    /* Estrella i calendari (només icona) en una fila; «Llegeix-ne més» a sota, sencer. */
+    /* Estrella (només icona) i «Llegeix-ne més» en una fila. */
     .pacts{flex-direction:row;flex-wrap:wrap;align-content:center;}
-    .pacts .pbtn.favonly{flex:1 1 0;width:auto;}
-    .pacts a.pbtn{flex:1 1 100%;}
+    .pacts .pbtn.favonly{flex:0 0 auto;width:auto;}
+    .pacts a.pbtn{flex:1 1 0;width:auto;min-width:0;white-space:nowrap;padding:10px 6px;gap:5px;font-size:12.5px;}
     .pinvite{margin:6px 0 0;font-size:11px;line-height:1.35;}
     /* Els botons del final van sota la targeta: la targeta cedeix l'alçada que ocupen. */
     .pwrap{display:flex;flex-direction:column;}
@@ -408,7 +411,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .endbtns{display:flex;justify-content:center;gap:8px;flex-wrap:nowrap;max-width:100%;margin:0 auto;}
   /* Cantonades i alçada com els botons de la topbar (8px, no píndola), una mica més fins. */
   .endbtn{display:inline-flex;align-items:center;justify-content:center;gap:7px;flex:0 0 auto;min-height:34px;background:var(--topbar-bg);color:#fff;border:none;border-radius:var(--r-card);padding:5px 14px;font:inherit;font-size:14px;font-weight:600;line-height:1.2;white-space:nowrap;cursor:pointer;}
-  .endbtn:hover{filter:brightness(1.06);}
+  .endbtn:hover:not(:disabled){filter:brightness(1.06);}
+  .endbtn:disabled{opacity:.45;cursor:default;}
+  .endbtn .ico-cal{width:16px;height:16px;margin:0;vertical-align:0;}
   .endbtn svg{width:16px;height:16px;flex:0 0 auto;display:block;}
   .endbtns.compacte .casa{padding-left:10px;padding-right:10px;}
   .endbtns.compacte .casa .lbl{display:none;}
@@ -875,8 +880,8 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .mem-pname{font-family:'Oswald','Roboto Condensed','Arial Narrow',Arial,sans-serif;font-size:20px;font-weight:700;margin-bottom:4px;color:var(--text);}
   .mem-pdates{font-size:13px;color:var(--text2);margin-bottom:0;}
   .mem-pdesc{font-size:14px;line-height:1.45;color:var(--text2);margin:6px 0 0;}
-  .mem-pbtns{display:flex;flex-direction:column;gap:10px;margin-top:16px;}
-  .mem-pbtns .cta{width:100%;}
+  .mem-pbtns{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:16px;}
+  .mem-pbtns .endbtn{flex:1 1 auto;text-decoration:none;}
   /* Landscape baix: la fitxa no hi cap sencera, es compacta */
   @media(max-height:560px){
     .mem-panel{padding:14px 16px 14px;}
@@ -998,7 +1003,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       // a Wikidata (és d'on venen); la d'esdeveniments no, perquè aquests els escrivim nosaltres.
       desc_none_person:'Em sap greu, encara no en tenim descripció. Quan acabis la partida pots col·laborar amb Wikidata i afegir-ne una tu.',
       desc_none:'Em sap greu, encara no en tenim descripció.',
-      read_more:'🔗 Llegeix-ne més',
+      read_more_lbl:'Llegeix-ne més',
       err_no_data:"Ens hem quedat sense història! N'estem fabricant de nova. Torna demà 🛠️",
       meta_birth:'🎂 naixement',
       meta_death:'🕯️ mort',
@@ -1092,8 +1097,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       // Al text de compartir, amb 1 va en singular (decisió d'en Bernat); al marcador de pantalla, no.
       res_k_hit1:'encert',
       res_k_error1:'error',
-      mem_see_crono:'🗺️ Veure al cronograma',
-      mem_no_crono:'🗺️ No disponible al cronograma',
+      mem_no_crono:'No disponible al cronograma',
       mem_no_crono_title:'Ja em sap greu, però a la Viquipèdia no hi surt l’any de naixement',
       mem_loading:'Buscant personatges…',
       mem_err_load:'No s’han pogut carregar els personatges. Comprova la connexió i torna-ho a provar.',
@@ -1285,6 +1289,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   const ICO_FLAMA='<svg class="ico-flama" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5C8.6 4 12 5.6 12 9.6a4 4 0 0 1-8 0c0-1.8.9-3 1.9-3.8 0 1.5.7 2.4 1.6 2.7C7 6.2 7 3.6 8 1.5z"/></svg>';
   // Resultat: diana de línia (21/11/2026, abans l'emoji 🎯). Al text de compartir es queda el 🎯.
   const ICO_DIANA='<svg class="ico-flama" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><circle cx="8" cy="8" r="3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor"/></svg>';
+  const ICO_ENLL='<svg class="ico-cal" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.6 9.4a3 3 0 0 0 4.2 0l2.1-2.1a3 3 0 0 0-4.2-4.2l-.9.9"/><path d="M9.4 6.6a3 3 0 0 0-4.2 0L3.1 8.7a3 3 0 0 0 4.2 4.2l.9-.9"/></svg>';
   const ICO_RELL='<svg class="ico-cal" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6V8l2.3 1.5"/></svg>';
   // Compte enrere fins al repte nou: UN sol component a la portada i al final dels 5 jocs (21/11/2026).
   // Cada lloc li posa el seu id i el seu tic; el text i l'aspecte són sempre els mateixos.
@@ -1970,12 +1975,12 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         fb.setAttribute('aria-pressed', String(on));
       });
       acts.appendChild(fb);
-      // Només la icona (21/11/2026): estrella · calendari · «Llegeix-ne més», tots tres en una fila.
-      const cb=el('button','pbtn favonly crono');
-      cb.innerHTML=ICO_CAL.replace('ico-cal','favi');   // mida i traç de l'estrella del costat
-      cb.setAttribute('aria-label', t('see_crono_lbl')); cb.title=t('see_crono_lbl');
-      cb.addEventListener('click',function(){ viewInCronograma(p); }); acts.appendChild(cb);
-      if(p.wiki){ const a=el('a','pbtn',t('read_more')); a.href=p.wiki; a.target='_blank'; a.rel='noopener'; a.addEventListener('click',function(){ track('personatge_dia_wiki',{}); }); acts.appendChild(a); }
+      // Al cronograma s'hi va tocant el nom o la foto (21/11/2026, com als resultats dels jocs): fora el botó.
+      card.querySelectorAll('.pimg').forEach(function(im){ im.classList.add('pgo'); im.addEventListener('click',function(){ viewInCronograma(p); }); });
+      const nm=body.querySelector('.pname'); nm.classList.add('pgo'); nm.setAttribute('role','link'); nm.tabIndex=0; nm.title=t('see_crono_lbl');
+      nm.addEventListener('click',function(){ viewInCronograma(p); });
+      nm.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); viewInCronograma(p); } });
+      if(p.wiki){ const a=el('a','pbtn'); a.innerHTML=ICO_ENLL+t('read_more_lbl'); a.href=p.wiki; a.target='_blank'; a.rel='noopener'; a.addEventListener('click',function(){ track('personatge_dia_wiki',{}); }); acts.appendChild(a); }
       card.appendChild(body); card.appendChild(acts); w.appendChild(card);
       const fi=el('div','pfi'); fi.innerHTML=endBtnsHTML('personatgedia',null); w.appendChild(fi);
       root.appendChild(w);
@@ -2460,20 +2465,20 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         +'<div class="mem-pname">'+esc(p.name)+'</div>'
         +(datesStr?'<div class="mem-pdates">'+datesStr+'</div>':'')
         +(p.desc?'<div class="mem-pdesc">'+esc(p.desc)+'</div>':'')
-        +'<div class="mem-pbtns"><button class="cta">'+t('mem_see_crono')+'</button></div>'
+        +'<div class="mem-pbtns"><button class="endbtn" type="button">'+ICO_CAL+'<span class="lbl">'+t('see_crono_lbl')+'</span></button></div>'
         +'</div>';
       const btns=ov.querySelector('.mem-pbtns');
-      const ctaEl=ov.querySelector('.cta');
+      const ctaEl=ov.querySelector('.endbtn');
       if(p.birth==null){
         ctaEl.disabled=true;
         ctaEl.title=t('mem_no_crono_title');
-        ctaEl.textContent=t('mem_no_crono');
+        ctaEl.querySelector('.lbl').textContent=t('mem_no_crono');
       }else{
         ctaEl.addEventListener('click',function(){ goToCronograma('memory',[p]); });
       }
       if(p.wiki){
         const wa=document.createElement('a');
-        wa.className='cta sec';wa.textContent=t('read_more');
+        wa.className='endbtn';wa.innerHTML=ICO_ENLL+'<span class="lbl">'+t('read_more_lbl')+'</span>';
         wa.href=p.wiki;wa.target='_blank';wa.rel='noopener';
         wa.addEventListener('click',function(){ track('memory_wiki',{}); });
         btns.appendChild(wa);
