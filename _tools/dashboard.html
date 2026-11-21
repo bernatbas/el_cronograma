@@ -234,9 +234,13 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
 .chart .seg.z{background:var(--border)}
 .chart .seg:last-child{border-radius:4px 4px 0 0}
 .chart.line{gap:0}
-.chart.line svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
-.chart.line .col{border-radius:0}
-.chart.line .dot{position:absolute;left:50%;width:8px;height:8px;margin:0 0 -4px -4px;border-radius:50%;background:var(--terracota);box-shadow:0 0 0 2px var(--canvas);display:none;z-index:2}
+/* Ordre de capes: guia vertical (1) < línies (2) < punts (3). La columna NO pot fer de
+   capa (z-index), o el seu fons de hover tapava les línies i quedaven tallades. */
+.chart.line svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:2}
+.chart.line .col{border-radius:0;z-index:auto}
+.chart.line .col:hover{background:none}
+.chart.line .col:not(.buit):hover::before{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:1px solid var(--border-strong);z-index:1}
+.chart.line .dot{position:absolute;left:50%;width:8px;height:8px;margin:0 0 -4px -4px;border-radius:50%;background:var(--terracota);box-shadow:0 0 0 2px var(--canvas);display:none;z-index:3}
 .chart.line .dot.b{background:var(--terracota-dark)}
 .chart.line .col:hover .dot,.chart.line .col.ult .dot{display:block}
 .chart.line + .xlab{gap:0}
