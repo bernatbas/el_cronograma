@@ -106,7 +106,11 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
     aportava); l'àlbum es continua desant a `hb_personatge_album`.
   - **Fora el botó «Tots els jocs» de la topbar**: ja hi porta la casa del final i «Jocs» del commutador.
     L'`id="back"` ja no existeix.
-  - A l'**Ordena**, «🏛️ A veure, ensenyam-ho» és un **enllaç a sobre** de la fila, no un quart botó.
+- **Tocar algú al resultat = directe al cronograma, a tots els jocs** (21/11/2026, decisió d'en Bernat).
+  Abans o després (cartes per repassar), Contemporanis (parelles), **Ordena** (les 5 cartes, ja no l'enllaç
+  «🏛️ A veure, ensenyam-ho», que s'ha tret) i **Memory** (les cartes del taulell; el panell amb la descripció
+  només queda per a qui no té any de naixement). **L'únic lloc on es mostra la descripció és DURANT
+  l'Abans o després** (el globus amb els anys tapats).
   - «Copiat!» canvia només l'etiqueta (`copiatAlBoto`): `textContent=` s'enduia la icona.
 - **Ordre del hub** (21/11/2026): el **Personatge del dia, a l'última** (menú i «Següent joc»).
 - **Compte enrere, un sol component** (21/11/2026): `compteHTML(id)` → xip (píndola) amb rellotge SVG i

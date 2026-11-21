@@ -421,7 +421,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .endbtns.compacte3 .seg .seg2{display:block;}
   .endbtns.compacte3 .seg{padding-left:10px;padding-right:10px;}
   .pfi{margin-top:14px;}
-  .endlink{display:block;margin:0 auto 8px;background:none;border:none;padding:2px 4px;color:var(--topbar-bg);font:inherit;font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
   .tagd{align-self:flex-start;margin-top:auto;background:#F7E5E0;color:#B23A2E;font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);}
   .tagd.done{background:#E7F4EC;color:#2E7D4F;}
   .tagd.streak{background:#FBEFD6;color:#8A5A00;}
@@ -612,6 +611,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .orditem.ok{border:2.5px solid #2E9B5B;background:#E9F7EE;box-shadow:0 6px 18px rgba(45,150,90,.2);animation:okpulse .5s;}
   .orditem.no{border:2.5px solid #C43A2C;background:#FBECEA;box-shadow:0 6px 18px rgba(196,58,44,.2);animation:nopulse .5s;}
   .orditem.rev{border-color:var(--border);}
+  .orditem.crono:hover{filter:brightness(.97);}
   .orditem.ok .oyr{color:#238049;} .orditem.no .oyr{color:#B4321F;}
   .ordfoot{margin-top:14px;text-align:center;}
   .ordbanner{margin-top:4px;}
@@ -990,7 +990,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       share_btn:'📤 Comparteix',
       share_lbl:'Comparteix',
       next_game:'Següent joc',
-      show_crono:'🏛️ A veure, ensenyam-ho',
       copied:'Copiat! ✅',
       copied_short:'✓ Copiat!',
       retry:'Torna-ho a provar',
@@ -2113,7 +2112,11 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       rows.forEach((el,i)=>{
         const it=byKey[el.dataset.key];
         const yr=el.querySelector('.oyr'); yr.textContent=fmtYear(it.year); if(animate) yr.classList.add('reveal');
-        el.style.cursor='default';
+        // Resolt, cada carta porta al cronograma amb aquella persona o esdeveniment (21/11/2026,
+        // igual que els altres jocs). Substitueix l'enllaç «A veure, ensenyam-ho».
+        const cr=personFromItem(it)||eventFromItem(it);
+        if(cr && !el.dataset.crono){ el.dataset.crono='1'; el.classList.add('crono'); el.addEventListener('click',function(){ goToCronograma('ordena',[cr]); }); }
+        el.style.cursor=cr?'pointer':'default';
         if(allCorrect) el.classList.add('ok');
         else if(ci[it.key]!==i) el.classList.add('no');   // NOMÉS vermell els mal col·locats
         else el.classList.add('rev');
@@ -2150,17 +2153,10 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       startCd();
       const bn=foot.querySelector('.ordbanner');
       if(bn){
-        const br=document.createElement('div'); br.className='btnrow';
-        const wrongItems=!correct?order.filter((_,i)=>!marks[i]):[];
-        const cronoPeople=wrongItems.map(personFromItem).filter(Boolean);
-        const cronoEvents=wrongItems.map(eventFromItem).filter(Boolean);
-        const hasCrono=cronoPeople.length||cronoEvents.length;
-        br.className='';
-        // «A veure, ensenyam-ho» és un enllaç a sobre, no un quart botó: la fila és la mateixa a tots els jocs.
-        br.innerHTML=(hasCrono?'<button class="endlink" type="button" data-x="crono">'+t('show_crono')+'</button>':'')+endBtnsHTML('ordena','data-x="oshare"');
+        const br=document.createElement('div');
+        br.innerHTML=endBtnsHTML('ordena','data-x="oshare"');   // al cronograma s'hi va tocant les cartes
         bn.appendChild(br);
         const sb=br.querySelector('[data-x="oshare"]'); if(sb) sb.addEventListener('click',()=>ordDoShare(marks,days,sb));
-        if(hasCrono){const cb=br.querySelector('[data-x="crono"]');if(cb)cb.addEventListener('click',()=>goToCronograma('ordena',[...cronoPeople,...cronoEvents]));}
         wireEndBtns(br);
       }
     }
@@ -2515,7 +2511,12 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         }); }
         wireEndBtns(root);
         root.querySelectorAll('.mem-grid-done .mem-card').forEach(function(card){
-          card.addEventListener('click',function(){ showPersonPanel(parseInt(this.dataset.person)); });
+          // Directe al cronograma, com als altres jocs (21/11/2026). El panell amb la descripció només
+          // queda per a qui no té any de naixement, que el cronograma no pot pintar.
+          card.addEventListener('click',function(){
+            const i=parseInt(this.dataset.person), p=currentPool&&currentPool[i];
+            if(p && p.birth!=null) goToCronograma('memory',[p]); else showPersonPanel(i);
+          });
         });
       } else {
         root.innerHTML=head+renderToggle()
