@@ -113,6 +113,7 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
   **«Nou repte en hh:mm:ss»**, el mateix a la portada (abans «⏳ Es reinicia en») i al final dels 4 jocs (abans
   text solt amb mida i marges diferents per joc). Fora totes les regles `.countdown`. A les pantalles justes
   (`max-height:660px` o `max-width:400px`) el xip és més baix: no ha de sumar scroll.
+- **Resultat: diana de línia** (`ICO_DIANA`, 21/11/2026) en lloc del 🎯, al marcador i al comptador de l’Abans o després; al text de compartir es queda el 🎯.
 - **Ratxa: flama de línia** (`ICO_FLAMA`, 21/11/2026) en lloc de l'emoji 🔥, al marcador i a les etiquetes del
   hub. Al **text de compartir es queda el 🔥** (allà només hi van emojis, i tothom l'entén com a ratxa).
 

@@ -1172,7 +1172,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   // + marcador de DUES xifres: el resultat del joc i la ratxa. Sense «Ja has jugat…»: ho diu el compte enrere.
   function resTitol(n,tag){ tag=tag||'div'; return '<'+tag+' class="rtitle'+(n===1?' perfect':'')+'">'+t('res_lvl'+n)+'</'+tag+'>'; }
   function resMarcador(v1,k1,days){
-    return '<div class="stats"><div class="stat"><div class="v">'+v1+'</div><div class="k">'+k1+'</div></div>'
+    return '<div class="stats"><div class="stat"><div class="v">'+ICO_DIANA+v1+'</div><div class="k">'+k1+'</div></div>'
       +'<div class="stat"><div class="v">'+ICO_FLAMA+days+'</div><div class="k">'+t('streak_days',{n:days})+'</div></div></div>';
   }
   // ===== Text de compartir, igual a tots els jocs (17/11/2026) =====
@@ -1284,6 +1284,8 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   const ICO_CAL='<svg class="ico-cal" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>';
   // Ratxa: flama de línia (21/11/2026, abans l'emoji 🔥). Al text de compartir es queda el 🔥: allà només hi van emojis.
   const ICO_FLAMA='<svg class="ico-flama" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5C8.6 4 12 5.6 12 9.6a4 4 0 0 1-8 0c0-1.8.9-3 1.9-3.8 0 1.5.7 2.4 1.6 2.7C7 6.2 7 3.6 8 1.5z"/></svg>';
+  // Resultat: diana de línia (21/11/2026, abans l'emoji 🎯). Al text de compartir es queda el 🎯.
+  const ICO_DIANA='<svg class="ico-flama" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><circle cx="8" cy="8" r="3.4"/><circle cx="8" cy="8" r=".9" fill="currentColor"/></svg>';
   const ICO_RELL='<svg class="ico-cal" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6V8l2.3 1.5"/></svg>';
   // Compte enrere fins al repte nou: UN sol component a la portada i al final dels 5 jocs (21/11/2026).
   // Cada lloc li posa el seu id i el seu tic; el text i l'aspecte són sempre els mateixos.
@@ -1524,7 +1526,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         <div class="game ad">
           <div class="gtop">
             <div class="gtitle">⚖️ ${t('t_abansdespres')}</div>
-            <div class="gscore">${livesHtml()}<div class="n" id="scoren"><span class="ic">🎯</span><span class="v">${score}</span></div></div>
+            <div class="gscore">${livesHtml()}<div class="n" id="scoren"><span class="ic">${ICO_DIANA}</span><span class="v">${score}</span></div></div>
           </div>
           <div class="cards2">
             <div class="gprog" aria-hidden="true"><i style="width:${answered/ROUND_N*100}%"></i></div>
@@ -1676,7 +1678,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         <div class="gameover ad">
           ${head()}
           ${resTitol(adNivell(sc),'h2')}
-          ${resMarcador('🎯 '+sc, t('hits_in_row'), days)}
+          ${resMarcador(sc, t('hits_in_row'), days)}
           ${files.length?'<div class="adrows">'+files.map(filaHtml).join('')+'</div>':''}
           <div class="cdn">${compteHTML('cd')}</div>
           ${endBtnsHTML('abansdespres','data-x="share"')}
@@ -2143,7 +2145,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       const be=(marks||[]).filter(Boolean).length;
       const nivell = be>=5?1:(be>=3?2:(be===2?3:4));
       foot.innerHTML = '<div class="ordbanner '+(correct?'ok':'no')+'">'+resTitol(nivell)
-        +resMarcador('🎯 '+be+'/5', t('res_k_placed'), days)
+        +resMarcador(be+'/5', t('res_k_placed'), days)
         +'<div class="cdn">'+compteHTML('ocd')+'</div></div>';
       startCd();
       const bn=foot.querySelector('.ordbanner');
@@ -2499,7 +2501,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
           +'<div class="mem-grid mem-grid-done">'+renderGrid(ms)+'</div>'
           +'<div class="mbanner">'
           +resTitol(memNivell(ms.errors))
-          +resMarcador('🎯 '+ms.errors, t('res_k_errors'), days)
+          +resMarcador(ms.errors, t('res_k_errors'), days)
           +'<div class="cdn">'+compteHTML(cdId)+'</div>'
           +'<div class="memshare">'+endBtnsHTML('memory','id="'+shareId+'"')+'</div>'
           +'</div>';
@@ -2821,7 +2823,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       }
       root.innerHTML='<div class="gameover con">'+head()
         +resTitol(nivell,'h2')
-        +resMarcador('🎯 '+score+'/5', t('con_hits'), days)
+        +resMarcador(score+'/5', t('con_hits'), days)
         +failHTML
         +'<div class="cdn">'+compteHTML('ccd')+'</div>'
         +endBtnsHTML('contemporanis','data-x="share"')
