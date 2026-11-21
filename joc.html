@@ -332,7 +332,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   @keyframes scorepop{0%{transform:scale(1);}40%{transform:scale(1.3);}100%{transform:scale(1);}}
   .gscore .n.pop{animation:scorepop .4s ease-out;}
   .ad-q{color:var(--text2);text-align:center;margin:10px 0 18px;font-size:14px;}
-  .gamefoot{text-align:center;color:var(--text2);font-size:12px;margin-top:22px;letter-spacing:.02em;}
   .cards2{display:grid;grid-template-columns:1fr;gap:10px;perspective:900px;}
   /* Progres de la ronda: preguntes respostes / ROUND_N. Dins de .cards2 i de punta a punta, aixi fa
      l'amplada de la carta en vertical i la de les dues cartes en horitzontal. */
@@ -575,7 +574,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .choice .big{display:inline;font-size:20px;margin:0 6px 0 0;}
     .pass{flex-direction:row;gap:8px;padding:8px 12px;}
     .pass .jk{font-size:20px;}
-    .gamefoot{display:none;}
     /* --- Pantalla de RESULTAT compacta i centrada (abans demanava scroll en horitzontal) --- */
     /* Centrat vertical nomes a la pantalla de resultat: main:has(.gameover). Si el navegador no
        suporta :has(), la regla s'ignora i la targeta queda a dalt (pero ja compacta, sense scroll). */
@@ -673,7 +671,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .game.ad .choices{margin-top:12px;}
     .game.ad .choice{padding:12px 14px;}
     .game.ad .choice .big{font-size:24px;}
-    .game.ad .gamefoot{margin-top:12px;}
     /* Pantalla de resultat: tambe feia scroll (566px de 493 a l'SE), i ja venia d'abans. */
     main:has(.gameover.ad){padding-top:12px;padding-bottom:12px;}
     .gameover.ad{padding:16px 18px;}
@@ -706,7 +703,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .game.ad .choices{margin-top:8px;}
     .game.ad .choice{padding:8px 12px;}
     .game.ad .choice .big{font-size:20px;margin-bottom:2px;}
-    .game.ad .gamefoot{margin-top:4px;}
     main:has(.gameover.ad){padding-top:6px;padding-bottom:6px;}
     .gameover.ad{padding:12px 14px;}
     .gameover.ad .gamehead h2{font-size:17px;}
@@ -990,7 +986,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     ca:{
       // -- comu --
       bce:'aC',
-      daily_challenge:'Repte diari',
       new_challenge_in:'Nou repte en',
       streak_days: v => 'dies seguits',   // sempre en plural, també amb 1 (decisió d'en Bernat): és l'etiqueta del marcador
       locknote_played:"Ja has jugat el repte d'avui. Torna demà per un de nou!",
@@ -1079,7 +1074,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       err_list_missing:'Falta la llista de personatges (personatges.js). Cal generar-la amb gen_personatges.py.',
       err_wikidata:"No s'ha pogut connectar amb Wikidata. Comprova la connexió i torna-ho a provar.",
       // -- Ordena la línia --
-      ord_sub:'Arrossega per ordenar de més antic (dalt) a més nou (baix) · Repte diari',
       oldest:'▲ més antic',
       newest:'▼ més nou',
       ord_submit:'Ho tinc!',
@@ -1425,7 +1419,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       });
     }
 
-    function head(){ return `<div class="gamehead"><h2>⚖️ ${t('t_abansdespres')}</h2><div class="sub">${t('daily_challenge')} · ${ddmm(todayStr())}</div></div>`; }
+    function head(){ return `<div class="gamehead"><h2>⚖️ ${t('t_abansdespres')}</h2></div>`; }
 
     // Següent candidat de la baralla FINITA (sense rebarreig). Salta empats d'any (determinista).
     function nextCandidate(){
@@ -1547,7 +1541,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
             <button class="pass" data-x="skip"${skipUsed?' disabled':''} title="${skipUsed?t('joker_used_title'):t('joker_title')}"><span class="jk">🃏</span><span class="jt">${skipUsed?t('joker_spent'):t('joker')}</span><span class="jn">${skipUsed?0:1}</span></button>
             <button class="choice" data-a="despres"><span class="big">→</span>${t('after')}</button>
           </div>
-          <div class="gamefoot">${ICO_CAL}${t('daily_challenge')} · ${ddmm(todayStr())}</div>
         </div>`;
       root.querySelectorAll('.choice').forEach(b=>{
         b.addEventListener('click',()=>guess(b.getAttribute('data-a')));
@@ -2067,8 +2060,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     function rowHTML(it){ const m=meta(it); const metaHTML=m?'<div class="ometa">'+m+'</div>':''; return '<div class="orditem" data-key="'+it.key+'"><span class="ogrip" aria-hidden="true">⠿</span><div class="omain">'+metaHTML+'<div class="onm">'+it.name+'</div></div><div class="oyr"><span class="q">?</span></div></div>'; }
 
     function render(){
-      const subHTML = locked ? '' : '<div class="sub">'+t('ord_sub')+'</div>';
-      root.innerHTML='<div class="ordwrap"><div class="ordhead"><h2>🕰️ '+t('t_ordena')+'</h2>'+subHTML+'</div><div class="ordbar"><span>'+t('oldest')+'</span></div><div class="ordlist"></div><div class="ordbar ordbot"><span>'+t('newest')+'</span></div><div class="ordfoot"><button class="cta" id="ordsubmit">'+t('ord_submit')+'</button></div></div>';
+      root.innerHTML='<div class="ordwrap"><div class="ordhead"><h2>🕰️ '+t('t_ordena')+'</h2></div><div class="ordbar"><span>'+t('oldest')+'</span></div><div class="ordlist"></div><div class="ordbar ordbot"><span>'+t('newest')+'</span></div><div class="ordfoot"><button class="cta" id="ordsubmit">'+t('ord_submit')+'</button></div></div>';
       const list=root.querySelector('.ordlist');
       list.innerHTML=order.map(rowHTML).join('');
       list.querySelectorAll('.orditem').forEach(el=>{ el.addEventListener('pointerdown',function(e){ startDrag(e,el); }); });
@@ -2505,9 +2497,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     function render(){
       if(!root||!currentPool) return;
       const ms=modeState();
-      const modeLbl=mode==='easy'?t('easy'):t('hard');
-      const head='<div class="gamehead"><h2>🃏 '+t('t_memory')+'</h2>'
-        +'<div class="sub">'+modeLbl+' · '+t('daily_challenge')+' · '+ddmm(state.date)+'</div></div>';
+      const head='<div class="gamehead"><h2>🃏 '+t('t_memory')+'</h2></div>';   // sense subtítol (21/11/2026)
       if(ms.done){
         const st=readLS(STREAK_KEY)||{days:1};
         const days=st.days||1;
@@ -2756,7 +2746,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       for(let i=0;i<5;i++){ let c='condot'; if(i<marks.length){ c+=marks[i]?' ok':' no'; } else if(i===idx){ c+=' cur'; } h+='<span class="'+c+'"></span>'; }
       return h;
     }
-    function head(){ return '<div class="gamehead"><h2>🤝 '+t('t_contemporanis')+'</h2><div class="sub">'+t('daily_challenge')+' · '+ddmm(todayStr())+'</div></div>'; }
+    function head(){ return '<div class="gamehead"><h2>🤝 '+t('t_contemporanis')+'</h2></div>'; }
 
     // Barra de progres, la mateixa que a «Abans o despres?»: n tirades respostes de 5. Va DINS de
     // .concards (grid-column:1/-1), aixi fa l'amplada de les dues cartes.
@@ -2769,7 +2759,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         +'<div class="concards">'+barra(idx)+card(pair.a,false,null,pairYrClass(pair))+card(pair.b,false,null,pairYrClass(pair))+'</div>'
         +'<div class="conq">'+q(pair)+'</div>'
         +'<div class="conchoices"><button class="choice conyes" data-a="yes"><span class="big">✓</span>'+t('con_yes')+'</button><button class="choice conno" data-a="no"><span class="big">✗</span>'+t('con_no')+'</button></div>'
-        +'<div class="gamefoot">'+ICO_CAL+t('daily_challenge')+' · '+ddmm(todayStr())+'</div>'
         +'</div>';
       root.querySelectorAll('.conchoices .choice').forEach(function(b){ b.addEventListener('click',function(){ answer(b.getAttribute('data-a')); }); });
     }

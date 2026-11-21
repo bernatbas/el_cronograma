@@ -119,6 +119,9 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
   - «Copiat!» canvia només l'etiqueta (`copiatAlBoto`): `textContent=` s'enduia la icona.
 - **Memory, comptador d'errors sempre al mateix lloc** (21/11/2026): píndola «◎ n errors» entre Fàcil/Difícil i
   les cartes, jugant (en viu) i acabat (el final). Abans només sortia jugant i la graella saltava en canviar de mode.
+- **Sense subtítols** (21/11/2026): fora el «Repte diari · data» del títol dels resultats i del peu de l'Abans o
+  després i el Contemporanis, el «Fàcil · Repte diari · data» del Memory i la instrucció de l'Ordena (ja la diuen
+  «▲ més antic / ▼ més nou»). Que és diari ho diuen la portada i el compte enrere; la data, el text de compartir.
 - **Ordre del hub** (21/11/2026): el **Personatge del dia, a l'última** (menú i «Següent joc»).
 - **Compte enrere, un sol component** (21/11/2026): `compteHTML(id)` → xip (píndola) amb rellotge SVG i
   **«Nou repte en hh:mm:ss»**, el mateix a la portada (abans «⏳ Es reinicia en») i al final dels 4 jocs (abans
