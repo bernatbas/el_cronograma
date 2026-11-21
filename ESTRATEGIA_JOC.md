@@ -117,6 +117,8 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
     botó cap al cronograma. Es va provar l'altra manera i es va desfer el mateix dia.
     Els dos botons del panell («Veure al cronograma», «Llegeix-ne més») fan servir l'estil `.endbtn`.
   - «Copiat!» canvia només l'etiqueta (`copiatAlBoto`): `textContent=` s'enduia la icona.
+- **Memory, comptador d'errors sempre al mateix lloc** (21/11/2026): píndola «◎ n errors» entre Fàcil/Difícil i
+  les cartes, jugant (en viu) i acabat (el final). Abans només sortia jugant i la graella saltava en canviar de mode.
 - **Ordre del hub** (21/11/2026): el **Personatge del dia, a l'última** (menú i «Següent joc»).
 - **Compte enrere, un sol component** (21/11/2026): `compteHTML(id)` → xip (píndola) amb rellotge SVG i
   **«Nou repte en hh:mm:ss»**, el mateix a la portada (abans «⏳ Es reinicia en») i al final dels 4 jocs (abans

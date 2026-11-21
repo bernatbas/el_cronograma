@@ -853,7 +853,8 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .mem-card.no-match .mem-front{border:3px solid #e57373;background:#fff5f5;}
   .mem-img{width:100%;height:100%;object-fit:cover;display:block;}
   .mem-name{display:flex;align-items:center;justify-content:center;height:100%;padding:10px;font-family:'Oswald','Roboto Condensed','Arial Narrow',Arial,sans-serif;font-size:15px;font-weight:600;letter-spacing:.02em;text-align:center;color:var(--text);line-height:1.25;}
-  .mem-errors{text-align:center;font-size:13px;color:var(--text2);padding:2px 0 6px;}
+  .mem-errors{display:flex;justify-content:center;padding:0 0 8px;}
+  .mem-errors .ico-flama{width:1.05em;height:1.05em;vertical-align:-.15em;margin-right:0;}
   .mem-loading{text-align:center;padding:48px 16px;color:var(--text2);font-size:15px;}
   .mem-grid-done .mem-card{cursor:pointer;}
   .mbanner{max-width:440px;margin:16px auto 0;border-radius:var(--r-card);background:var(--soft);border:1px solid var(--border-strong);padding:20px;text-align:center;}
@@ -2390,6 +2391,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       }).join('');
     }
 
+    // Comptador d'errors: SEMPRE al mateix lloc (entre Fàcil/Difícil i les cartes), jugant i acabat, perquè la
+    // graella no salti en canviar de mode (21/11/2026). Jugant s'actualitza en viu; acabat mostra el final.
+    function errorsHTML(n){ return '<div class="mem-errors"><span class="cdchip">'+ICO_DIANA+'<span class="n">'+t('errors_count',{n:n})+'</span></span></div>'; }
     function renderToggle(){
       return '<div class="mem-toggle">'
         +'<button class="mem-tbtn'+(mode==='easy'?' on':'')+'" data-mmode="easy">'+t('mem_easy')+'</button>'
@@ -2442,7 +2446,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
               flipped=[]; locked=false;
               // Actualitza l'error counter sense re-renderitzar tota la graella
               const errEl=root.querySelector('.mem-errors');
-              if(errEl) errEl.textContent=t('errors_count',{n:ms.errors});
+              if(errEl) errEl.querySelector('.n').textContent=t('errors_count',{n:ms.errors});
               saveState();
             },900);
           }
@@ -2508,7 +2512,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         const st=readLS(STREAK_KEY)||{days:1};
         const days=st.days||1;
         const cdId='mcd'+Date.now(); const shareId='msh'+Date.now();
-        root.innerHTML=head+renderToggle()
+        root.innerHTML=head+renderToggle()+errorsHTML(ms.errors)
           +'<div class="mem-grid mem-grid-done">'+renderGrid(ms)+'</div>'
           +'<div class="mbanner">'
           +resTitol(memNivell(ms.errors))
@@ -2532,7 +2536,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         });
       } else {
         root.innerHTML=head+renderToggle()
-          +'<div class="mem-errors">'+t('errors_count',{n:ms.errors})+'</div>'
+          +errorsHTML(ms.errors)
           +'<div class="mem-grid">'+renderGrid(ms)+'</div>';
         bindCards();
       }
