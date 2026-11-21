@@ -101,7 +101,11 @@ El registre de sota és **cronològic** i hi ha decisions que en substitueixen d
     3) «Següent joc» passa a **»** (doble fletxa, decisió d'en Bernat). «Comparteix» sempre porta text.
     Mesurat a 8 mides de mòbil: cap fila surt de l'ample.
   - Al **Personatge del dia**: casa + Següent (no té compartir), sota la targeta. Per fer-hi lloc, la foto
-    s'encongeix en vertical baix i en horitzontal la targeta cedeix l'alçada.
+    s'encongeix en vertical baix i en horitzontal la targeta cedeix l'alçada. A la targeta, **estrella ·
+    calendari (només icona) · «Llegeix-ne més»** en una fila. Fora el «Has descobert n personatges» (no
+    aportava); l'àlbum es continua desant a `hb_personatge_album`.
+  - **Fora el botó «Tots els jocs» de la topbar**: ja hi porta la casa del final i «Jocs» del commutador.
+    L'`id="back"` ja no existeix.
   - A l'**Ordena**, «🏛️ A veure, ensenyam-ho» és un **enllaç a sobre** de la fila, no un quart botó.
   - «Copiat!» canvia només l'etiqueta (`copiatAlBoto`): `textContent=` s'enduia la icona.
 - **Ordre del hub** (21/11/2026): el **Personatge del dia, a l'última** (menú i «Següent joc»).

@@ -37,8 +37,8 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&display=swap"></noscript>
 <style>
-  /* L'atribut hidden ha de guanyar sempre: el botó «Tots els jocs» de la topbar porta display
-     inline i sortia també a la portada (21/11/2026). Mateixa regla que a l'index. */
+  /* L'atribut hidden ha de guanyar sempre: qualsevol display: d'una classe o inline li passa per
+     davant (va passar amb el botó «Tots els jocs» de la topbar, ja tret). Mateixa regla que a l'index. */
   [hidden]{display:none!important}
   /* Paleta idèntica a index.html (mantenir sincronitzada) */
   :root{
@@ -226,7 +226,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .pbtn.favonly{flex:0 0 auto;padding:11px 13px;line-height:0;}
   .favi{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round;}
   .favi.on{fill:#D69A2D;stroke:#D69A2D;}
-  .palbum{text-align:center;color:var(--text2);font-size:13px;margin-top:16px;}
   /* Pop-up d'invitacio a contribuir (Personatge del dia) */
   .pinvov{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(30,30,29,.55);opacity:0;transition:opacity .2s ease;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);}
   .pinvov.show{opacity:1;}
@@ -263,7 +262,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .pchip{font-size:12px;padding:3px 9px;}
     .pacts{gap:8px;padding:0 16px 12px;}
     .pbtn{flex:1 1 44%;padding:9px 10px;font-size:13px;}
-    .palbum{margin-top:8px;font-size:12px;}
     .pfi{margin-top:8px;}
     .pinvite{margin:6px 0 0;font-size:11.5px;}
   }
@@ -292,7 +290,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .pacts{flex-direction:row;flex-wrap:wrap;align-content:center;}
     .pacts .pbtn.favonly{flex:1 1 0;width:auto;}
     .pacts a.pbtn{flex:1 1 100%;}
-    .palbum{display:none;}
     .pinvite{margin:6px 0 0;font-size:11px;line-height:1.35;}
     /* Els botons del final van sota la targeta: la targeta cedeix l'alçada que ocupen. */
     .pwrap{display:flex;flex-direction:column;}
@@ -756,7 +753,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     .gameover.con .btnrow .cta,.gameover.con .hubbtn{padding:6px 14px;font-size:13px;}
     .pimg{height:80px;}   /* 120 → 80 (21/11/2026): deixa lloc als botons del final */
     .pchips{margin-bottom:8px;}
-    .palbum{margin-top:4px;}
     .pfi{margin-top:6px;}
   }
   /* Resultat de Contemporanis en HORITZONTAL tactil i a l'ESCRIPTORI amb finestra baixa: dues
@@ -959,7 +955,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     </div>
   </div>
   <div class="topbar-right">
-    <button id="back" class="btn" hidden style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.4 9 3.4l6 5"/><path d="M4.6 7.8V14.4h8.8V7.8"/></svg><span data-i18n="back_all">Tots els jocs</span></button>
+    <!-- Aquí hi havia «Tots els jocs». Tret el 21/11/2026: ja hi porta la casa del final de cada joc, i «Jocs» del commutador. -->
   </div>
 </header>
 <main id="app"></main>
@@ -1073,7 +1069,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       fav_off:'☆ Afegeix a favorits',
       see_crono:'📅 Veure al cronograma',
       see_crono_lbl:'Veure al cronograma',
-      album_count: v => '📇 Has descobert '+v.n+' '+(v.n===1?'personatge':'personatges'),
       inv_who_f:'aquesta mossa',
       inv_who_m:'aquest nano',
       inv_who_n:'aquesta persona',
@@ -1165,7 +1160,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     {id:'personatgedia',ic:'🎭', titleKey:'t_personatgedia', descKey:'d_personatgedia', discover:true}   // a l'última des del 21/11/2026 (menú i «Següent joc»)
   ];
   const app=document.getElementById('app');
-  const back=document.getElementById('back');
   let activeModule=null;
   let hubCd=null;
 
@@ -1984,8 +1978,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       cb.addEventListener('click',function(){ viewInCronograma(p); }); acts.appendChild(cb);
       if(p.wiki){ const a=el('a','pbtn',t('read_more')); a.href=p.wiki; a.target='_blank'; a.rel='noopener'; a.addEventListener('click',function(){ track('personatge_dia_wiki',{}); }); acts.appendChild(a); }
       card.appendChild(body); card.appendChild(acts); w.appendChild(card);
-      const album=readLS(ALBUM_KEY)||[];
-      w.appendChild(el('div','palbum',t('album_count',{n:album.length})));
       const fi=el('div','pfi'); fi.innerHTML=endBtnsHTML('personatgedia',null); w.appendChild(fi);
       root.appendChild(w);
       wireEndBtns(fi);
@@ -2917,7 +2909,6 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     tick(); hubCd=setInterval(tick,1000);
   }
   function renderMenu(){
-    back.hidden=true;
     if(!dataOk()){
       app.innerHTML=`<div class="err">${t('err_no_data')}</div>`;
       return;
@@ -2948,14 +2939,13 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       const g=GAMES.find(x=>x.id===m[1]);
       if(g){
         const mod=MODULES[g.id];
-        if(mod){ back.hidden=false; app.innerHTML=''; activeModule=mod; mod.mount(app); return; }
+        if(mod){ app.innerHTML=''; activeModule=mod; mod.mount(app); return; }
         // Joc sense mòdul (pròximament): no obrim pagina buida; tornem al menu (l'avis surt al clic).
       }
     }
     renderMenu();
   }
 
-  back.addEventListener('click',()=>{location.hash='';});
   window.addEventListener('hashchange',router);
   applyI18nStatic();
   router();
