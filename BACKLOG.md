@@ -42,7 +42,8 @@ Pla acordat el 22/11/2026, **per fases** (cadascuna validada abans de la següen
    - `PD_PINNED` del joc: les descripcions estan escrites en català.
    - Als jocs els noms no passen per cap `L()`: el joc no en té, caldrà portar-l’hi.
    - Si no hi ha descripció en castellà: l’anglesa (decisió d’en Bernat, 22/11/2026).
-4. **Selector i idioma per defecte** (en curs). ✅ (22/11/2026) «CA ▾» a la topbar (bloc compartit),
+4. **Selector i idioma per defecte** ✅ (validat per en Bernat el 22/11/2026: selector, lupa i tots els
+   textos en castellà, previsualitzacions incloses). ✅ (22/11/2026) «CA ▾» a la topbar (bloc compartit),
    `es` actiu, idioma: `?lang` (recordat a la sessió) → `hb_lang` → idioma principal del navegador → català.
    Falta: comprovar el disseny dels jocs en castellà (avisos de scroll), la guia en castellà, i decidir
    les metadades/previsualitzacions (WhatsApp no executa JS), l’`og.png` i si es registra l’idioma a GA.
