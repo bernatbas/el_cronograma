@@ -16,14 +16,15 @@ const WIKIDATA = /wikidata\.org|wikimedia\.org|wikipedia\.org/;
 // El que es veu igual a totes les llengües: marca, noms propis de les fonts i símbols.
 const PROPIS = /^(\[aria-label\] )?(BABIL|NIA|Babilinia|© 2026 Babilinia|Wikidata|CC0|VS|Wikipedia ↗|🔗 Wikipedia)$/;
 
-// ⚠️ FASE 3 (contingut): els noms i descripcions de db.js (persones, events, col·leccions del
-// catàleg) i els que venen de Wikidata encara no passen per L(). Quan ho facin, aquesta llista
-// s'ha d'anar BUIDANT: el que hi quedi han de ser només dades de Wikidata, que ja arriben en
-// l'idioma actiu.
+// Text que NO passa pel diccionari a posta, i per tant sense marca:
+//  - col·leccions: no es tradueixen MAI (són com playlists: es respecta el nom de qui les crea);
+//  - Personatge del dia i Memory: el nom, la descripció, les ocupacions i el país arriben de
+//    Wikidata en temps real, ja en l'idioma actiu (wdLangs()).
+// La resta del contingut (db.js i els homenatges del Contemporanis) surt entre ⟪ ⟫ i ja no és aquí:
+// si un nom dels jocs apareix sense marca, és que s'ha saltat localitza().
 const CONTINGUT = [
-  '.cname', 'h2.collh2', '.colldesc',                  // col·leccions: NO es tradueixen MAI (són com playlists)
-  '.onm', '.nm', '.adnm', '.concrono',                 // noms als jocs
-  'img.mem-img', '.pname', '.pdesc', '.pchip', 'img.pimg',
+  '.cname', 'h2.collh2', '.colldesc',                  // col·leccions
+  'img.mem-img', '.pname', '.pdesc', '.pchip', 'img.pimg',   // Wikidata en temps real
 ];
 // Es mira l'element que conté el text (l'últim tram de `on`, «tag#id.classe1.classe2»).
 const esContingut = on => {

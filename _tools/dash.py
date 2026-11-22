@@ -1074,6 +1074,8 @@ def parse_con_pinned():
             "dy": _con_num(body, "dy"),
             "approx": _con_field(body, "approx"),
             "desc": _con_field(body, "desc"),
+            "name_es": _con_field(body, "name_es"),
+            "desc_es": _con_field(body, "desc_es"),
         })
     out.sort(key=lambda p: p["date"])
     return out
@@ -1092,8 +1094,11 @@ def _con_line(e, coma):
         extra += ",approx:'%s'" % _js_str(e["approx"])
     if e.get("desc"):
         extra += ",desc:'%s'" % _js_str(e["desc"])
-    return "      '%s':{qid:'%s',name:'%s',by:%d,dy:%s%s}%s" % (
-        e["date"], e["qid"], _js_str(e["name"]), int(e["by"]), dy, extra, coma)
+    # Castella, com a PEOPLE (veure _es_fields): sempre present, buit si no n'hi ha
+    extra += ",desc_es:'%s'" % _js_str(e.get("desc_es"))
+    return "      '%s':{qid:'%s',name:'%s',name_es:'%s',by:%d,dy:%s%s}%s" % (
+        e["date"], e["qid"], _js_str(e["name"]), _js_str(e.get("name_es") or e["name"]),
+        int(e["by"]), dy, extra, coma)
 
 
 def _con_write(entries, commit_msg):
@@ -1154,7 +1159,8 @@ def con_pinned_set(d):
     entries = [p for p in parse_con_pinned() if p["date"] != ds]
     entries.append({"date": ds, "qid": qid, "name": r.get("name") or qid,
                     "by": r["birth"], "dy": r.get("death"),
-                    "approx": r.get("approx") or "", "desc": r.get("desc") or ""})
+                    "approx": r.get("approx") or "", "desc": r.get("desc") or "",
+                    "name_es": r.get("name_es") or "", "desc_es": r.get("desc_es") or ""})
     return _con_write(entries, "Joc: clava %s al Contemporanis del %s"
                       % (r.get("name") or qid, ds))
 

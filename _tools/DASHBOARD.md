@@ -139,6 +139,10 @@ carregada.
 només deixa la feina feta: res queda clavat fins que prems el botó. Si aquell dia ja té algú
 clavat, el suggeriment **no el trepitja**.
 
+⚠️ Els homenatges del **Contemporanis** porten nom i descripció a dins (no van a Wikidata en temps real):
+`_con_line()` hi escriu també `name_es` i `desc_es` (de `resolve_person`, la mateixa norma que a
+`PEOPLE`), i el check del CI «Contingut en castellà» els exigeix.
+
 ## Analytics
 
 Pestanya de **només lectura** amb les xifres de Google Analytics (GA4 Data API). Tot surt d'un sol

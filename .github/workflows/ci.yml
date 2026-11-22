@@ -308,6 +308,17 @@ jobs:
                       fail.append("%s · %s: falta %s" % (nom, qui, ', '.join(falten(o))))
           # Les COLLECTIONS no hi son a posta: son com playlists, es respecta el nom i la
           # descripcio que els va posar qui les va crear, en el seu idioma (decisio d'en Bernat).
+          # Els homenatges del Contemporanis (CON_PINNED, a joc.html) porten nom i descripcio propis:
+          # el dashboard els escriu amb el castella, pero un d'escrit a ma se'n podria escapar.
+          joc = open('joc.html', encoding='utf-8').read()
+          mc = re.search(r"const\s+CON_PINNED\s*=\s*\{(.*?)\n[ \t]*\};", joc, re.S)
+          if not mc:
+              sys.exit("ERROR: no trobo CON_PINNED a joc.html")
+          pins = [l for l in mc.group(1).split('\n') if re.search(r"\bname:'", l)]
+          compte['CON_PINNED'] = len(pins)
+          for o in pins:
+              if falten(o):
+                  fail.append("CON_PINNED · %s: falta %s" % (re.search(r"'(\d{4}-\d{2}-\d{2})'", o).group(1), ', '.join(falten(o))))
           if compte['PEOPLE'] < 50 or compte['EVENTS'] < 20 or compte['ERAS'] < 3:
               sys.exit("ERROR: el parser s'ha quedat cec: %r" % compte)
           if fail:

@@ -26,7 +26,12 @@ Pla acordat el 22/11/2026, **per fases** (cadascuna validada abans de la següen
 3. **Contingut** (en curs). ✅ Persones (22/11/2026): camps germans `name_es`/`desc_es`/`wiki_es`
    a les 128, el dashboard els omple sols, check del CI «Contingut en castellà», i les persones de
    Wikidata desades al navegador es refresquen si eren d’un altre idioma. ✅ Events, eres, marcs i
-   blocs (22/11/2026), amb el check del CI estès a tot. Falten els jocs.
+   blocs (22/11/2026), amb el check del CI estès a tot. ✅ Jocs (22/11/2026): `localitza()` a HB_DATA i
+   als homenatges del Contemporanis (que el dashboard escriu amb castellà); Personatge del dia i
+   Memory trien nom, descripció i article en l’ordre de `wdLangs()` (abans, català primer a pinyó) i
+   el que desen per al dia porta `lang` (si no coincideix, es torna a demanar la MATEIXA persona);
+   `tapaAnys()` també amaga «siglo»/«milenio». El test de pseudotraducció ja només exceptua les
+   col·leccions i el que arriba de Wikidata en temps real. **Fase 3 tancada.**
    El que l’auditoria deixa a la llista de `CONTINGUT` de `tests/i18n.spec.js`, que
    s’ha d’anar buidant:
    - `PEOPLE`: noms i descripcions → `{ca,es}`, baixats de Wikidata pel dashboard (desats, no en viu).

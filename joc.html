@@ -1301,6 +1301,10 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   // idioma, despres ve l'ANGLES i el catala queda per al final. Si una persona no te descripcio en
   // castella, millor l'anglesa que la catalana dins d'una pagina en castella.
   function wdLangs(){ const base=LANG==='ca'?['ca','es','en','mul']:[LANG,'en','es','ca','mul']; return [LANG].concat(base.filter(function(l){return l!==LANG;})).join('|'); }
+  // Tria de Wikidata en l'ordre de wdLangs(): etiquetes/descripcions ({ca:{value},es:{value}…}) i
+  // articles de la Viquipedia ({cawiki:{title,url},…}). Abans el catala anava escrit a pinyó primer.
+  function wdPick(o){ if(!o) return null; const ls=wdLangs().split('|'); for(let i=0;i<ls.length;i++){ const v=o[ls[i]]; if(v&&v.value) return v.value; } return null; }
+  function wikiSite(sl){ if(!sl) return null; const ls=wdLangs().split('|'); for(let i=0;i<ls.length;i++){ const s=sl[ls[i]+'wiki']; if(s&&s.title) return {lang:ls[i],title:s.title,url:s.url||('https://'+ls[i]+'.wikipedia.org/wiki/'+encodeURIComponent(s.title.replace(/ /g,'_')))}; } return null; }
   // Aplica els textos estatics marcats amb data-i18n / data-i18n-title / data-i18n-aria.
   function applyI18nStatic(scope){
     const s=scope||document;
@@ -1316,7 +1320,10 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   // (name:'...'), i un objecte n'hauria trencat la meitat. Un germa BUIT ('') vol dir «no n'hi
   // ha» i guanya igualment: millor sense descripcio que en catala dins d'una pagina en castella.
   function localitza(o){ if(!o||LANG===I18N_DEFAULT) return o; ['name','desc','wiki'].forEach(function(k){ const v=o[k+'_'+LANG]; if(v!=null) o[k]=v; }); return o; }
-  if(window.HB_DATA){ (HB_DATA.PEOPLE||[]).forEach(localitza); (HB_DATA.EVENTS||[]).forEach(localitza); }
+  // ?lang=xx: el contingut de db.js surt entre ⟪ ⟫, com el que passa per L() al cronograma. Aixi el
+  // test de pseudotraduccio veu si un nom dels jocs ve de les dades (i per tant es tradueix) o no.
+  function marcaPseudo(o){ if(I18N_PSEUDO&&o){ if(o.name) o.name='⟪'+o.name+'⟫'; if(o.desc) o.desc='⟪'+o.desc+'⟫'; } return o; }
+  if(window.HB_DATA){ (HB_DATA.PEOPLE||[]).forEach(function(o){ marcaPseudo(localitza(o)); }); (HB_DATA.EVENTS||[]).forEach(function(o){ marcaPseudo(localitza(o)); }); }
 
   // --- Catàleg de jocs ---
   // Només hi ha d'haver jocs que FUNCIONIN. Una targeta que no fa res no crea expectativa,
@@ -1551,14 +1558,14 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     //   1. qualsevol número -> ····   (1547, 800, 33, 1.480)
     //   2. un romà NOMÉS darrere de «segle», «s.» o «mil·lenni» -> ···   («Felip II» no es toca)
     // Quan s'equivoca, tapa de més (edats, ordinals), mai de menys. ⚠️ En traduir, la regla 2
-    // s'ha d'ampliar amb les paraules de cada idioma («siglo», «century»…).
+    // s'ha d'ampliar amb les paraules de cada idioma (el castella ja hi es: «siglo», «milenio», «y»).
     function descText(it){
       const d=it&&it.desc; if(!d) return '';
       return typeof d==='object' ? (d[LANG]||d.ca||'') : String(d);
     }
     function tapaAnys(txt){
       return txt
-        .replace(/\b(segles?|s\.|mil·lennis?)(\s+)[IVXLC]+\b(?:\s*(?:i|-|–|al?)\s*[IVXLC]+\b)?/gi, (m,w,sp)=>w+sp+'···')
+        .replace(/\b(segles?|siglos?|s\.|mil·lennis?|milenios?)(\s+)[IVXLC]+\b(?:\s*(?:i|y|-|–|al?)\s*[IVXLC]+\b)?/gi, (m,w,sp)=>w+sp+'···')
         .replace(/\d[\d.,]*\d|\d/g, '····');
     }
     // Text pla escapat; només es deixa passar el <br> (com descHtml() al cronograma).
@@ -1967,7 +1974,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     function yearFrom(e,prop){ const c=e.claims&&e.claims[prop]; if(!c||!c.length) return null; const dv=c[0].mainsnak&&c[0].mainsnak.datavalue&&c[0].mainsnak.datavalue.value; const t=dv&&dv.time; if(!t) return null; const m=t.match(/^([+-])0*(\d+)-/); if(!m) return null; const y=parseInt(m[2],10); return m[1]==='-'?-y:y; }
     function imgUrl(e){ const c=e.claims&&e.claims.P18; if(!c||!c.length) return null; const dv=c[0].mainsnak&&c[0].mainsnak.datavalue; if(!dv) return null; return COMMONS+encodeURIComponent(String(dv.value).replace(/ /g,'_'))+'?width=500'; }
     function itemQids(e,prop,max){ const c=e.claims&&e.claims[prop]; if(!c) return []; const out=[]; for(let i=0;i<c.length;i++){ const v=c[i].mainsnak&&c[i].mainsnak.datavalue&&c[i].mainsnak.datavalue.value; if(v&&v.id){ out.push(v.id); if(out.length>=max) break; } } return out; }
-    function lbl(o){ return o?((o.ca||o.es||o.en||o.mul||{}).value||null):null; }   // o.mul: veure wdLangs()
+    function lbl(o){ return wdPick(o); }   // en l'ordre de wdLangs() (o.mul inclos)
     // trusted=true per als homenatges de PD_PINNED: la tria l'ha fet una persona, no la llavor, i
     // el filtre de sitelinks (ca I es I en) tombaria justament les perles locals que volem destacar.
     // El que NO es relaxa mai: humà, any de naixement i etiqueta — sense això la fitxa no es pot pintar.
@@ -2006,7 +2013,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       const occQ=itemQids(e,'P106',3), couQ=itemQids(e,'P27',2);
       const female=isFemale(e), gender=genderCode(e);
       const names=await labelsFor(occQ.concat(couQ));
-      const s=e.sitelinks||{}, site=s.cawiki||s.eswiki||s.enwiki||{};
+      const site=wikiSite(e.sitelinks)||{};   // la Viquipedia de l'idioma actiu primer
       // Opcio A: P18 (Wikidata) es l'UNICA font de retrat. La imatge principal de l'article de la
       // Viquipedia NO es fiable (p.ex. en un pintor sol ser una obra seva, no un retrat d'ell), no la fem servir.
       const img=imgUrl(e), imgSource=img?'wikidata':null;
@@ -2051,12 +2058,17 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       // servia de res (va passar amb en Josep Pla el 31/08/2026). Si el dia està clavat i el
       // que hi ha desat no és qui toca, el cau es descarta.
       const cache=readLS(CACHE_KEY);
-      if(cache && cache.date===ds && cache.person && (!forced || cache.person.qid===forced))
+      if(cache && cache.date===ds && cache.person && (!forced || cache.person.qid===forced)){
+        // Desat en un altre idioma (22/11/2026): es torna a demanar LA MATEIXA persona, no se'n tria
+        // una altra. Si Wikidata no respon, millor la d'abans en l'altre idioma que res.
+        if((cache.lang||'ca')===LANG) return cache.person;
+        try{ const fp=await fetchPerson(cache.person.qid,true); if(fp){ writeLS(CACHE_KEY,{date:ds,lang:LANG,person:fp}); return fp; } }catch(_){}
         return cache.person;
+      }
       if(forced){
         try{
           const fp=await fetchPerson(forced,true);
-          if(fp){ writeLS(CACHE_KEY,{date:ds,person:fp}); return fp; }
+          if(fp){ writeLS(CACHE_KEY,{date:ds,lang:LANG,person:fp}); return fp; }
         }catch(_){}
       }
       const list=pool();
@@ -2067,7 +2079,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         const idx=(base+k)%list.length;
         const qid='Q'+list[idx];
         const p=await fetchPerson(qid);
-        if(p){ writeLS(CACHE_KEY,{date:ds,person:p}); return p; }
+        if(p){ writeLS(CACHE_KEY,{date:ds,lang:LANG,person:p}); return p; }
       }
       return null;
     }
@@ -2438,8 +2450,8 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       throw lastErr||new Error('fetch failed');
     }
     function imgUrl(e){ const c=e.claims&&e.claims.P18; if(!c||!c.length) return null; const dv=c[0].mainsnak&&c[0].mainsnak.datavalue; if(!dv) return null; return COMMONS+encodeURIComponent(String(dv.value).replace(/ /g,'_'))+'?width=400'; }
-    function wikiUrl(e){ const sl=e.sitelinks&&(e.sitelinks.cawiki||e.sitelinks.eswiki||e.sitelinks.enwiki); if(!sl) return null; return 'https://'+((e.sitelinks.cawiki&&'ca')||(e.sitelinks.eswiki&&'es')||'en')+'.wikipedia.org/wiki/'+encodeURIComponent(sl.title.replace(/ /g,'_')); }
-    function wdLbl(o){ return o?((o.ca||o.es||o.en||o.mul||{}).value||null):null; }   // o.mul: veure wdLangs(), igual que lbl() del Personatge del dia
+    function wikiUrl(e){ const w=wikiSite(e.sitelinks); return w?('https://'+w.lang+'.wikipedia.org/wiki/'+encodeURIComponent(w.title.replace(/ /g,'_'))):null; }
+    function wdLbl(o){ return wdPick(o); }   // igual que lbl() del Personatge del dia
     function wdYear(claims,prop){ const cl=claims&&claims[prop]; if(!cl||!cl.length) return null; const dv=cl[0].mainsnak&&cl[0].mainsnak.datavalue; if(!dv||!dv.value||!dv.value.time) return null; const m=/^([+-])0*(\d+)-/.exec(dv.value.time); if(!m) return null; const y=parseInt(m[2],10); return m[1]==='-'?-y:y; }
 
     // Precarrega les fotos del pool. Si alguna no es pot descarregar, reintenta 1 cop; si tampoc, retorna false.
@@ -2473,7 +2485,8 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
         const cached=readLS(POOL_KEY);
         let pool=null;
         if(cached&&cached.date===today&&Array.isArray(cached.pool)&&cached.pool.length>=5
-           &&cached.pool[0]&&'desc' in cached.pool[0]){      // v3: descarta caches sense birth/wiki/desc
+           &&cached.pool[0]&&'desc' in cached.pool[0]        // v3: descarta caches sense birth/wiki/desc
+           &&(cached.lang||'ca')===LANG){                    // en un altre idioma, es refà (mateixa llavor: mateix tauler)
           pool=cached.pool;                                   // cache fresc d'avui
         } else {
           const list=(typeof window!=='undefined'&&Array.isArray(window.HB_PERSONATGES))?window.HB_PERSONATGES:[];
@@ -2509,7 +2522,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
           }
           if(results.length>=5){
             pool=results.slice(0,5);
-            writeLS(POOL_KEY,{date:today,pool:pool});          // nomes desem builds frescos
+            writeLS(POOL_KEY,{date:today,lang:LANG,pool:pool});          // nomes desem builds frescos
           } else if(cached&&Array.isArray(cached.pool)&&cached.pool.length>=5){
             pool=cached.pool;                                  // fallback: ultim pool bo
           }
@@ -2805,14 +2818,16 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     //   by = any de naixement · dy = any de mort, o null si es viu
     //   approx:true si la data no es fiable a l'any (veure APX_GAP); per a figures actuals, no cal
     const CON_PINNED={
-      '2026-10-27':{qid:'Q37181',name:'Luiz Inácio Lula da Silva',by:1945,dy:null,desc:'35è i 39è president del Brasil'},
-      '2026-10-28':{qid:'Q210735',name:'Tomás de Torquemada',by:1420,dy:1498,desc:'Frare dominic i inquisidor castellà'},
-      '2026-11-13':{qid:'Q464300',name:'Eva Gonzalès',by:1849,dy:1883,desc:'Pintora francesa'},
-      '2026-11-27':{qid:'Q969423',name:'Keylor Navas',by:1986,dy:null,desc:'Futbolista costa-riqueny'}
+      '2026-10-27':{qid:'Q37181',name:'Luiz Inácio Lula da Silva',name_es:'Luiz Inácio Lula da Silva',by:1945,dy:null,desc:'35è i 39è president del Brasil',desc_es:'35.º y 39.º presidente de la República Federativa del Brasil'},
+      '2026-10-28':{qid:'Q210735',name:'Tomás de Torquemada',name_es:'Tomás de Torquemada',by:1420,dy:1498,desc:'Frare dominic i inquisidor castellà',desc_es:'Fraile dominico e inquisidor general castellano'},
+      '2026-11-13':{qid:'Q464300',name:'Eva Gonzalès',name_es:'Eva Gonzalès',by:1849,dy:1883,desc:'Pintora francesa',desc_es:'Pintora francesa'},
+      '2026-11-27':{qid:'Q969423',name:'Keylor Navas',name_es:'Keylor Navas',by:1986,dy:null,desc:'Futbolista costa-riqueny',desc_es:'Futbolista costarricense'}
     };
     // Entitat jugable a partir d'una entrada del calendari, amb la mateixa forma que les de beings().
     function pinnedBeing(ds){
-      const q=CON_PINNED[ds]; if(!q||typeof q.by!=='number') return null;
+      // localitza: name_es/desc_es al seu lloc si la pagina va en castella (com HB_DATA). Sobre una
+      // COPIA: el calendari es consulta cada dia i no s'ha de quedar modificat.
+      const q=CON_PINNED[ds]&&marcaPseudo(localitza(Object.assign({},CON_PINNED[ds]))); if(!q||typeof q.by!=='number') return null;
       const NOW=nowYear(), viu=(q.dy==null);
       return {uid:'pin:'+q.qid, type:'person', id:'pin_'+q.qid, name:q.name, by:q.by, dy:viu?NOW:q.dy,
         alive:viu, approx:!!q.approx,
