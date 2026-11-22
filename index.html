@@ -995,6 +995,24 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .guia.p-dreta::after{display:block;left:-7px;top:var(--gy,20px);border-left:1px solid #EDCFC4;border-bottom:1px solid #EDCFC4;}
   .guia.p-esq::after{display:block;right:-7px;top:var(--gy,20px);border-right:1px solid #EDCFC4;border-top:1px solid #EDCFC4;}
 
+  /* ===== Cerca compacta (22/11/2026): mòbil en vertical i finestres estretes (≤440px) =====
+     A 360px el cercador feia ~100px i els resultats, el mateix. Tancada, el MATEIX <input> fa de lupa:
+     un quadrat com els botons d'acció (sense botó nou: la guia i els tests hi segueixen escrivint igual).
+     Oberta (amb focus o amb text: la guia hi escriu sense focus al mòbil), la topbar passa a .qmode:
+     s'amaguen la marca, els botons i l'idioma, i la cerca ocupa tota l'amplada, resultats inclosos.
+     La topbar NO canvia d'alçada: navegar als jocs no fa saltet. La classe la posa syncQmode() [7]. */
+  @media (max-width:440px){
+    .topbar .topbar-right .search{flex:0 0 34px;width:34px;min-width:34px;max-width:none;}
+    .topbar .search input{padding-left:0;padding-right:0;color:transparent;caret-color:transparent;cursor:pointer;background:rgba(255,255,255,.12) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='white' stroke-width='1.9' stroke-linecap='round'%3E%3Ccircle cx='8.5' cy='8.5' r='5.5'/%3E%3Cpath d='M12.6 12.6 16.5 16.5'/%3E%3C/svg%3E") center/17px no-repeat;}
+    .topbar .search input::placeholder{color:transparent;}
+    .topbar.qmode .topbar-left,.topbar.qmode .controls,.topbar.qmode .langsel{display:none;}
+    .topbar.qmode .topbar-right .search{flex:1 1 auto;width:auto;}
+    .topbar.qmode .search input{padding-left:12px;padding-right:38px;color:#fff;caret-color:auto;cursor:text;background-image:none;background-color:rgba(255,255,255,.22);}
+    .topbar.qmode .search input::placeholder{color:rgba(255,255,255,.55);}
+    .topbar.qmode .qclear{display:flex;}
+  }
+  @media (max-width:440px) and (pointer:coarse){ .topbar .topbar-right .search{flex-basis:36px;width:36px;min-width:36px;} }   /* en tàctil els d'icona fan 36 */
+
   /* ===== MODE FOSC: el que no surt dels tokens =====
      Colors escrits a ma pensats per a fons blanc. La regla: superficies -> var(--canvas); els rosats de
      "seleccionat" -> terracota translucida; el text blanc sobre terracota es queda igual. */
@@ -2675,7 +2693,7 @@ function activateRow(r){if(!r)return;if(r.dataset.add)addFromSearch(r.dataset.ad
 function addFromSearch(id){
   if(!id||state.present.has(id))return;
   pushUndo('cro_act_add',{name:L((PEOPLE.find(p=>p.id===id)||{}).name)});
-  state.selectedEvent=null;state.pinned.add(id);q.value='';results.classList.remove('open');wdTerm='';wdResults=[];clearFitLatch();render();revealPerson(id);
+  state.selectedEvent=null;state.pinned.add(id);q.value='';syncQClear();qTancaCompacta();results.classList.remove('open');wdTerm='';wdResults=[];clearFitLatch();render();revealPerson(id);
 }
 // Wikidata person -> session-only entry in PEOPLE (no category; lost on reload)
 function addWikidataPerson(qid){
@@ -2774,9 +2792,20 @@ q.addEventListener('keydown',e=>{
 results.addEventListener('click',e=>{if(e.target.closest('[data-retry]')){const t=q.value.trim();if(t.length>=2){wdStatus='loading';renderDropdown();fetchWikidata(t);}return;}const row=e.target.closest('[data-add],[data-evsearch],[data-wd]');if(row)activateRow(row);});
 document.addEventListener('click',e=>{if(!e.target.closest('.search'))results.classList.remove('open');});
 // Botó ✕ per esborrar i tancar la cerca (sobretot a mòbil, on l'input és ample)
-function syncQClear(){document.querySelector('.search').classList.toggle('has-text',q.value.length>0);}
+function syncQClear(){document.querySelector('.search').classList.toggle('has-text',q.value.length>0);syncQmode();}
 q.addEventListener('input',syncQClear);
-$('#qclear').addEventListener('click',()=>{q.value='';syncQClear();results.classList.remove('open');q.blur();});
+// Cerca compacta (≤440px, veure el CSS): oberta mentre té focus o text. Sense const a dalt de tot a
+// posta: syncQClear la crida i una const aquí seria TDZ si mai s'hi arribés abans.
+function syncQmode(){const tb=document.querySelector('.topbar');if(!tb)return;tb.classList.toggle('qmode',window.matchMedia('(max-width:440px)').matches&&(document.activeElement===q||q.value.length>0));}
+q.addEventListener('focus',syncQmode);
+// Al blur, activeElement ja no és el camp. Tancar-se en perdre el focus és segur: mentre hi ha TEXT la
+// cerca es queda oberta, i per això tocar un resultat (que treu el focus ABANS del clic) no la plega
+// sota el dit.
+q.addEventListener('blur',syncQmode);
+window.addEventListener('resize',syncQmode);
+// En triar un resultat, la cerca compacta es tanca (treu el focus: amaga el teclat i torna la lupa).
+function qTancaCompacta(){if(window.matchMedia('(max-width:440px)').matches&&document.activeElement===q)q.blur();syncQmode();}   // syncQmode també a mà: sense focus a la finestra, el blur no dispara l'event
+$('#qclear').addEventListener('click',()=>{q.value='';syncQClear();results.classList.remove('open');q.blur();syncQmode();});
 
 // ============================================================
 // [8] EVENT LISTENERS (sidebar toggles · bar & event clicks)
@@ -2967,7 +2996,7 @@ function revealEvent(id){panToEvent(id);requestAnimationFrame(()=>flashEvent(id)
 function focusEvent(id){
   if(!EVENTS.some(ev=>ev.id===id))return;
   state.showEvents=true;state.selectedEvent=id;
-  q.value='';results.classList.remove('open');wdTerm='';wdResults=[];
+  q.value='';syncQClear();qTancaCompacta();results.classList.remove('open');wdTerm='';wdResults=[];
   render();revealEvent(id);
 }
 
