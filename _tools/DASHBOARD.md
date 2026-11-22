@@ -79,23 +79,32 @@ Dues coses les calcula el servidor i no el formulari, a posta:
 `db_add_person()` torna a validar-ho tot pel seu compte (QID, id, anys, categories) i, després
 d'escriure, comprova que l'array segueixi quadrant. No es refia del cos de la petició.
 
-### Actualitzar les descripcions
+### Revisar la BD (22/11/2026)
 
-Les descripcions de `PEOPLE` **venen totes de Wikidata** (en català), netejades amb les mateixes
-normes que en afegir algú: `_clean_desc()` (fora el parèntesi final amb anys, majúscula inicial) i
-`_js_str()` (apòstrof tipogràfic). Decisió del 16/11/2026: una sola font, més fàcil de mantenir i de
-traduir, tot i ser més curtes que les que hi havia escrites a mà.
+Abans era «Actualitza les descripcions» i només mirava la descripció catalana. Ara el botó
+**«Revisa la BD»** (`/api/db/review`, `db_review()`) torna a resoldre **totes** les persones amb Q-id
+**com si s'afegissin de nou**: fa servir `_person_fields()`, la mateixa funció que `resolve_person`,
+així que proposa exactament el que hi posaria afegir-la avui. Compara camp per camp (nom, anys,
+categories, gènere, `approx`, article i descripció en català i castellà) i **no escriu res**: ensenya
+les diferències i en Bernat decideix.
 
-`db.js` en guarda una **còpia**: si Wikidata canvia, la nostra no canvia sola. Per posar-les al dia hi
-ha el botó **«Actualitza les descripcions»** a la capçalera de l'editor (`/api/db/sync-desc`,
-`db_sync_descs()`): les torna a demanar totes, canvia només les diferents, desa la data a
-`DESC_SYNC` (a `db.js`, just abans de `PEOPLE`) i committeja `db.js` tot sol. Si no hi ha res a
-canviar i la data ja és la d'avui, no escriu ni committeja.
-
-El mateix botó posa al dia `desc_es`, amb la mateixa norma (castellà, i si no n'hi ha, anglès).
-
-⚠️ Les que **Wikidata no té en català** es queden com estan i el botó les llista. La solució de fons és
-escriure-les a Wikidata mateix.
+- **Marcat** = s'aplica. **Desmarcat** = es descarta i es desa a **`_tools/revisio_ignora.json`**: no
+  torna a sortir mentre Wikidata proposi **el mateix valor** (si en proposa un altre, sí).
+- **Marcats d'entrada**: anys, gènere, article, descripcions i `approx`. **Desmarcats**: nom i
+  categories, que solen ser decisions preses a mà («J.S. Bach», categories corregides). Els xips de
+  dalt marquen o desmarquen tots els d'un camp.
+- **No es proposa mai**: esborrar un camp que Wikidata no té (sense P570 no vol dir viu; sense
+  descripció, la nostra és millor que res), ni un any amb precisió pitjor que l'any (Àtila 406 →
+  1000 era una data de precisió de mil·lenni). Els enllaços es comparen normalitzats
+  (`Sòcrates` = `S%C3%B2crates`).
+- «Aplica i committeja» (`/api/db/review-apply`, `db_review_apply()`) escriu els marcats amb
+  `_set_field()`, comprova que el recompte de `PEOPLE` quadri i que no hi hagi U+FFFD, desa la data
+  a `DESC_SYNC` («Última revisió») i committeja `db.js` i `revisio_ignora.json`.
+- La primera revisió (22/11/2026) proposava 212 canvis en 117 persones: 83 gèneres que no hi eren,
+  73 categories (quasi tot soroll del P106), 21 descripcions en castellà amb els anys entre parèntesi
+  que la migració no havia netejat, 12 articles reanomenats, 4 dates disputades i 3 anys.
+- Mahavira surt com a error («no consta com a persona»): és a `PEOPLE` en local a posta (veure el
+  `CLAUDE.md`, «Tres maneres que algú desaparegui d'una col·lecció»).
 
 ## Els calendaris dels jocs
 

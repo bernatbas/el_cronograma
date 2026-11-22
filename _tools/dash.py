@@ -44,7 +44,7 @@ BRANCA_BD = "main"
 # Els POST que toquen fitxers del repo. /api/push i /api/shutdown no hi son: empenyer la
 # branca on ets es legitim, i aturar el servidor no escriu res.
 POST_QUE_ESCRIUEN = (
-    "/api/db/add", "/api/db/sync-desc",
+    "/api/db/add", "/api/db/review-apply",
     "/api/pinned/set", "/api/pinned/del",
     "/api/conpinned/set", "/api/conpinned/del",
     "/api/backlog/add", "/api/backlog/close",
@@ -306,32 +306,11 @@ def existing_people():
             set(re.findall(r"wd:'(Q\d+)'", seg)))
 
 
-def resolve_person(q, allow_existing=False):
-    """Enllac | QID | nom -> camps per omplir el formulari + avisos."""
-    q = (q or "").strip()
-    if not q:
-        return {"ok": False, "msg": "Escriu un enllac, un QID o un nom"}
-
-    wiki_url, title = "", ""
-    if q.startswith("http"):
-        if "wikipedia.org" not in q:
-            return {"ok": False, "msg": "Nomes enllaços de la Viquipedia"}
-        qid, title = _qid_from_wikipedia(q)
-        wiki_url = q
-        if not qid:
-            return {"ok": False, "msg": "Aquest article no te item de Wikidata"}
-    elif re.fullmatch(r"[Qq]\d+", q):
-        qid = "Q" + q[1:]
-    else:
-        qid = _qid_from_name(q)
-        if not qid:
-            return {"ok": False, "msg": "No he trobat res amb aquest nom"}
-
-    e = _wd_get(WD_API + "?action=wbgetentities&ids=%s&props=labels|descriptions|claims|sitelinks"
-                "&languages=ca|es|en|mul&format=json&origin=*" % qid)
-    ent = ((e or {}).get("entities") or {}).get(qid)
-    if not ent or "missing" in ent:
-        return {"ok": False, "msg": "Wikidata no retorna cap entitat per a " + qid}
+def _person_fields(ent, qid, title="", wiki_url="", q=""):
+    """Tots els camps d'una persona a partir de la seva entitat de Wikidata, igual en AFEGIR-la
+    (resolve_person) que en REVISAR la BD (db_review): una sola manera de llegir Wikidata, aixi
+    la revisio proposa exactament el que hi posaria afegir-la de nou. {"human": False} si no
+    es una persona."""
     claims = ent.get("claims") or {}
 
     def ids_of(pid):
@@ -346,7 +325,7 @@ def resolve_person(q, allow_existing=False):
 
     # VALIDACIO: nomes persones, igual que el cercador de l'index (humansOnly)
     if "Q5" not in ids_of("P31"):
-        return {"ok": False, "msg": "%s no es una persona (de moment nomes persones)" % qid}
+        return {"human": False}
 
     warnings = []   # [{field, msg}]
     ca_link = (ent.get("sitelinks") or {}).get("cawiki") or {}
@@ -410,13 +389,6 @@ def resolve_person(q, allow_existing=False):
         else:
             warnings.append({"field": "dwiki", "msg": "Aquesta entitat no te article a la Viquipedia catalana"})
 
-    # Ser ja a PEOPLE nomes es un problema si vols AFEGIR-lo. Per clavar-lo com a
-    # personatge del dia es indiferent (de fet es bon senyal), i per aixo qui crida
-    # pot demanar que no bloquegi.
-    ids_taken, qids_taken = existing_people()
-    if qid in qids_taken and not allow_existing:
-        return {"ok": False, "msg": "%s ja es a PEOPLE" % qid}
-
     # Nota d'incertesa per al camp `approx` de PEOPLE. Es construeix dels MATEIXOS fets que
     # ja alimenten els avisos de dalt, pero mentre que l'avis es per a qui afegeix la persona
     # (i desapareix), aixo queda desat i ho veu qui fa servir l'eina: la fitxa ensenya «~406»
@@ -451,11 +423,54 @@ def resolve_person(q, allow_existing=False):
     if es["wiki_es_src"] == "en":
         warnings.append({"field": "dwiki_es", "msg": "No hi ha article a la Viquipedia en castella: enllaç a l'anglesa"})
 
-    return {"ok": True, "qid": qid, "id": _slug_id(name or qid, ids_taken),
-            "name": name, "desc": desc, "birth": birth, "death": death,
-            "name_es": es["name_es"], "desc_es": es["desc_es"], "wiki_es": es["wiki_es"],
+    return {"human": True, "name": name, "desc": desc, "birth": birth, "death": death,
             "cats": cats, "gender": gender, "wiki": wiki_url, "approx": approx,
-            "sitelinks": len(ent.get("sitelinks") or {}), "warnings": warnings}
+            "name_es": es["name_es"], "desc_es": es["desc_es"], "wiki_es": es["wiki_es"],
+            "sitelinks": len(ent.get("sitelinks") or {}), "warnings": warnings,
+            "birth_prec": bp, "death_prec": dp}
+
+
+def resolve_person(q, allow_existing=False):
+    """Enllac | QID | nom -> camps per omplir el formulari + avisos."""
+    q = (q or "").strip()
+    if not q:
+        return {"ok": False, "msg": "Escriu un enllac, un QID o un nom"}
+
+    wiki_url, title = "", ""
+    if q.startswith("http"):
+        if "wikipedia.org" not in q:
+            return {"ok": False, "msg": "Nomes enllaços de la Viquipedia"}
+        qid, title = _qid_from_wikipedia(q)
+        wiki_url = q
+        if not qid:
+            return {"ok": False, "msg": "Aquest article no te item de Wikidata"}
+    elif re.fullmatch(r"[Qq]\d+", q):
+        qid = "Q" + q[1:]
+    else:
+        qid = _qid_from_name(q)
+        if not qid:
+            return {"ok": False, "msg": "No he trobat res amb aquest nom"}
+
+    e = _wd_get(WD_API + "?action=wbgetentities&ids=%s&props=labels|descriptions|claims|sitelinks"
+                "&languages=ca|es|en|mul&format=json&origin=*" % qid)
+    ent = ((e or {}).get("entities") or {}).get(qid)
+    if not ent or "missing" in ent:
+        return {"ok": False, "msg": "Wikidata no retorna cap entitat per a " + qid}
+    r = _person_fields(ent, qid, title=title, wiki_url=wiki_url, q=q)
+    if not r.get("human"):
+        return {"ok": False, "msg": "%s no es una persona (de moment nomes persones)" % qid}
+    name = r["name"]
+
+    # Ser ja a PEOPLE nomes es un problema si vols AFEGIR-lo. Per clavar-lo com a
+    # personatge del dia es indiferent (de fet es bon senyal), i per aixo qui crida
+    # pot demanar que no bloquegi.
+    ids_taken, qids_taken = existing_people()
+    if qid in qids_taken and not allow_existing:
+        return {"ok": False, "msg": "%s ja es a PEOPLE" % qid}
+
+    out = {"ok": True, "qid": qid, "id": _slug_id(name or qid, ids_taken)}
+    out.update({k: v for k, v in r.items() if k != "human"})
+    return out
 
 
 def _js_str(s):
@@ -890,95 +905,6 @@ def _desc_sync_date(src):
     return m.group(1) if m else None
 
 
-def db_sync_descs():
-    """Torna a demanar a Wikidata la descripcio en catala de TOTES les persones amb Q-id, hi
-    aplica les mateixes normes que en afegir-ne una (_clean_desc + _js_str) i canvia nomes les
-    que han canviat. Les que Wikidata no te en catala es queden com estan. Desa la data a
-    DESC_SYNC i committeja db.js tot sol. No toca res mes de cada objecte."""
-    src0 = read(DB_FILE)
-    m = re.search(r"const\s+PEOPLE\s*=\s*\[", src0)
-    if not m:
-        return {"ok": False, "msg": "No trobo PEOPLE a %s" % DB_FILE}
-    before, close = count_objects(src0, m.end())
-    head, block, tail = src0[:m.end()], src0[m.end():close], src0[close:]
-
-    objs = list(re.finditer(r"\{[^{}]*\}", block))
-    ids = []
-    for o in objs:
-        q = re.search(r"wd:'(Q\d+)'", o.group(0))
-        if q:
-            ids.append(q.group(1))
-    wd, wd_es = {}, {}
-    for k in range(0, len(ids), 50):
-        e = _wd_get(WD_API + "?action=wbgetentities&props=descriptions&languages=ca|es|en&format=json&ids="
-                    + "|".join(ids[k:k + 50]))
-        if not e or "entities" not in e:
-            return {"ok": False, "msg": "Wikidata no respon: no toco res"}
-        for q, v in e["entities"].items():
-            ds = v.get("descriptions") or {}
-            wd[q] = (ds.get("ca") or {}).get("value")
-            # Castella amb la mateixa norma que en afegir-la: es -> en (veure _es_fields)
-            wd_es[q] = (ds.get("es") or {}).get("value") or (ds.get("en") or {}).get("value")
-
-    changed, missing = [], []
-    out, last = [], 0
-    for o in objs:
-        txt = o.group(0)
-        q = re.search(r"wd:'(Q\d+)'", txt)
-        nm = re.search(r"name:'((?:[^'\\]|\\.)*)'", txt)
-        name = nm.group(1) if nm else "?"
-        new_txt = txt
-        if q:
-            w = wd.get(q.group(1))
-            if not w:
-                missing.append(name)
-            else:
-                new = _js_str(_clean_desc(w))
-                dm = re.search(r"desc:'((?:[^'\\]|\\.)*)'", txt)
-                if dm and dm.group(1) != new:
-                    new_txt = txt[:dm.start()] + "desc:'" + new + "'" + txt[dm.end():]
-                elif not dm and new:
-                    new_txt = txt[:-1].rstrip() + ",desc:'" + new + "'}"
-            w_es = wd_es.get(q.group(1))
-            if w_es:
-                new_es = _js_str(_clean_desc(w_es))
-                em = re.search(r"desc_es:'((?:[^'\\]|\\.)*)'", new_txt)
-                if em and em.group(1) != new_es:
-                    new_txt = new_txt[:em.start()] + "desc_es:'" + new_es + "'" + new_txt[em.end():]
-                elif not em:
-                    new_txt = new_txt[:-1].rstrip() + ",desc_es:'" + new_es + "'}"
-            if new_txt != txt:
-                changed.append(name)
-        out.append(block[last:o.start()])
-        out.append(new_txt)
-        last = o.end()
-    out.append(block[last:])
-    new_src = head + "".join(out) + tail
-
-    today = date.today().isoformat()
-    if DESC_SYNC_RE.search(new_src):
-        new_src = DESC_SYNC_RE.sub("const DESC_SYNC='%s';" % today, new_src, count=1)
-    else:
-        return {"ok": False, "msg": "No trobo DESC_SYNC a %s: no toco res" % DB_FILE}
-
-    m2 = re.search(r"const\s+PEOPLE\s*=\s*\[", new_src)
-    after, _ = count_objects(new_src, m2.end())
-    if after != before:
-        return {"ok": False, "msg": "El recompte no quadra (%d -> %d): no toco res" % (before, after)}
-    if "\ufffd" in new_src:
-        return {"ok": False, "msg": "S'han colat caracters corromputs: no toco res"}
-
-    if new_src == src0:
-        # Ni una descripcio diferent i la data ja era la d'avui: res a escriure ni a committejar.
-        return {"ok": True, "date": today, "changed": [], "missing": missing, "msg": "Cap canvi"}
-    with open(os.path.join(REPO, DB_FILE), "w", encoding="utf-8") as f:
-        f.write(new_src)
-    msg = "BD: actualitza descripcions des de Wikidata (%d canviades)" % len(changed)
-    ok, outc = run(["git", "commit", "-m", msg, "--", DB_FILE])
-    return {"ok": True, "date": today, "changed": changed, "missing": missing,
-            "msg": ("%d canviades" % len(changed)) + ("" if ok else " (el commit ha fallat: %s)" % outc[:120])}
-
-
 # --------------------------------------------------------------------------
 # Personatge del dia (PD_PINNED, dins joc.html)
 # --------------------------------------------------------------------------
@@ -1406,6 +1332,184 @@ def density_state():
 
 MAX_CATS = 2          # el disseny en permet 0-2 (2 = barra ratllada)
 MAX_AGE = 110         # longevitat per sobre de la qual val la pena mirar-s'ho
+
+
+
+# --------------------------------------------------------------------------
+# Revisio de la BD (22/11/2026): torna a resoldre TOTES les persones amb Q-id com si
+# s'afegissin de nou (_person_fields, el mateix que resolve_person) i ensenya les
+# diferencies camp per camp. NO escriu res: qui decideix es en Bernat, perque hi ha camps
+# triats a ma a posta («J.S. Bach», categories corregides, dates tradicionals) que Wikidata
+# contradiria cada vegada. El que rebutja es desa a REVISIO_IGNORA i no torna a sortir
+# mentre Wikidata proposi el MATEIX valor (si en proposa un altre, si).
+# --------------------------------------------------------------------------
+REVISIO_IGNORA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "revisio_ignora.json")
+REVISIO_CAMPS = ["name", "name_es", "birth", "death", "cats", "gender",
+                 "wiki", "wiki_es", "desc", "desc_es", "approx"]
+
+
+def _ignora_load():
+    try:
+        with open(REVISIO_IGNORA, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _obj_val(obj, field):
+    """Valor actual d'un camp dins del literal d'una persona, normalitzat per comparar."""
+    if field == "birth":
+        return _n(obj, field)
+    if field == "death":
+        m = re.search(r"\bdeath\s*:\s*(null|-?\d+)", obj)
+        return None if (not m or m.group(1) == "null") else int(m.group(1))
+    if field == "cats":
+        return _cats(obj)
+    v = _f(obj, field)
+    return v if v is not None else ""
+
+
+def _new_val(fields, field):
+    v = fields.get(field)
+    if field in ("birth", "death"):
+        return v
+    if field == "cats":
+        return list(v or [])
+    return _js_str(v or "")
+
+
+def _url_norm(u):
+    """El mateix enllaç s'escriu de moltes maneres (Sòcrates / S%C3%B2crates, d'Arc / d\\u0027Arc):
+    sense normalitzar, la revisio proposaria 22 canvis que no ho son."""
+    u = (u or "").replace("\\u0027", "'").replace("\u2019", "'")
+    return urllib.parse.unquote(u).replace(" ", "_")
+
+
+# Marcats d'entrada (es proposa aplicar-los): el que Wikidata sap millor que nosaltres.
+# Desmarcats: noms i categories, que solen ser decisions preses a ma.
+REVISIO_MARCATS = {"birth", "death", "gender", "wiki", "wiki_es", "desc", "desc_es", "approx"}
+
+
+def db_review():
+    src = read(DB_FILE)
+    persones = []
+    for o, _ in iter_objects(src, "PEOPLE"):
+        pid, q = _f(o, "id"), _f(o, "wd")
+        if pid and q and re.fullmatch(r"Q\d+", q):
+            persones.append((pid, q, o))
+    ents = {}
+    qids = [q for _, q, _ in persones]
+    for k in range(0, len(qids), 50):
+        e = _wd_get(WD_API + "?action=wbgetentities&props=labels|descriptions|claims|sitelinks"
+                    "&languages=ca|es|en|mul&format=json&origin=*&ids=" + "|".join(qids[k:k + 50]))
+        if not e or "entities" not in e:
+            return {"ok": False, "msg": "Wikidata no respon: torna-ho a provar"}
+        ents.update(e["entities"])
+    ign = _ignora_load()
+    out, errors = [], []
+    for pid, q, o in persones:
+        ent = ents.get(q)
+        if not ent or "missing" in ent:
+            errors.append("%s (%s): Wikidata no la troba" % (pid, q))
+            continue
+        fl = _person_fields(ent, q)
+        if not fl.get("human"):
+            errors.append("%s (%s): a Wikidata no consta com a persona" % (pid, q))
+            continue
+        canvis = []
+        for camp in REVISIO_CAMPS:
+            old, new = _obj_val(o, camp), _new_val(fl, camp)
+            # Wikidata no en sap res: el nostre es millor que res (no es proposa esborrar)
+            # (death tambe: sense P570 a Wikidata no vol dir que sigui viu)
+            if camp in ("birth", "death", "name", "name_es", "desc", "desc_es", "gender", "wiki") and new in (None, ""):
+                continue
+            # Una data amb precisio de segle o mil·lenni no es un any: Atila 406 -> 1000
+            prec = fl.get(camp + "_prec")
+            if camp in ("birth", "death") and prec is not None and prec < 9:
+                continue
+            if camp in ("wiki", "wiki_es") and _url_norm(old) == _url_norm(new):
+                continue
+            if old == new:
+                continue
+            if (ign.get(pid) or {}).get(camp) == new:
+                continue
+            canvis.append({"field": camp, "old": old, "new": new, "on": camp in REVISIO_MARCATS})
+        if canvis:
+            out.append({"id": pid, "qid": q, "name": _f(o, "name") or pid, "changes": canvis})
+    return {"ok": True, "people": out, "errors": errors, "total": len(persones)}
+
+
+def _set_field(obj, field, value):
+    """Escriu un camp dins del literal (d'una linia) d'una persona. '' o None esborra els
+    opcionals; birth/death/cats tenen format propi."""
+    if field == "birth":
+        return re.sub(r"\bbirth\s*:\s*-?\d+", "birth:%d" % int(value), obj, count=1)
+    if field == "death":
+        lit = "null" if value is None else str(int(value))
+        if re.search(r"\bdeath\s*:", obj):
+            return re.sub(r"\bdeath\s*:\s*(null|-?\d+)", "death:" + lit, obj, count=1)
+        return obj[:-1].rstrip() + ",death:" + lit + "}"
+    if field == "cats":
+        lit = "cats:[%s]" % ",".join("'%s'" % _js_str(c) for c in value if re.fullmatch(r"[a-z]+", c))
+        return re.sub(r"\bcats\s*:\s*\[[^\]]*\]", lit, obj, count=1)
+    pat = r",?\b" + field + r"\s*:\s*'(?:[^'\\]|\\.)*'"
+    if not value and field == "approx":
+        return re.sub(pat, "", obj, count=1)
+    lit = "%s:'%s'" % (field, _js_str(value))
+    if re.search(r"\b" + field + r"\s*:\s*'", obj):
+        return re.sub(r"\b" + field + r"\s*:\s*'(?:[^'\\]|\\.)*'", lambda m: lit, obj, count=1)
+    return obj[:-1].rstrip() + "," + lit + "}"
+
+
+def db_review_apply(data):
+    """data = {accept:[{id,field,new}], reject:[{id,field,new}]}. Escriu els acceptats a db.js,
+    desa els rebutjats a REVISIO_IGNORA (no tornaran a sortir mentre Wikidata proposi el
+    mateix) i ho committeja tot."""
+    acc, rej = data.get("accept") or [], data.get("reject") or []
+    for c in acc + rej:
+        if c.get("field") not in REVISIO_CAMPS:
+            return {"ok": False, "msg": "Camp desconegut: %r" % c.get("field")}
+    src0 = read(DB_FILE)
+    m = re.search(r"const\s+PEOPLE\s*=\s*\[", src0)
+    if not m:
+        return {"ok": False, "msg": "No trobo PEOPLE a %s" % DB_FILE}
+    before, close = count_objects(src0, m.end())
+    head, block, tail = src0[:m.end()], src0[m.end():close], src0[close:]
+    objs = {}
+    for o, _ in iter_objects(src0, "PEOPLE"):
+        objs[_f(o, "id")] = o
+    nous = dict(objs)
+    for c in acc:
+        pid = c.get("id")
+        if pid not in nous:
+            return {"ok": False, "msg": "No trobo %r a PEOPLE: no toco res" % pid}
+        nous[pid] = _set_field(nous[pid], c["field"], c.get("new"))
+    for pid, o in objs.items():
+        if nous[pid] != o:
+            assert block.count(o) == 1, pid
+            block = block.replace(o, nous[pid])
+    new_src = head + block + tail
+    today = date.today().isoformat()
+    if DESC_SYNC_RE.search(new_src):
+        new_src = DESC_SYNC_RE.sub("const DESC_SYNC='%s';" % today, new_src, count=1)
+    m2 = re.search(r"const\s+PEOPLE\s*=\s*\[", new_src)
+    after, _ = count_objects(new_src, m2.end())
+    if after != before:
+        return {"ok": False, "msg": "El recompte no quadra (%d -> %d): no toco res" % (before, after)}
+    if "\ufffd" in new_src:
+        return {"ok": False, "msg": "S'han colat caracters corromputs: no toco res"}
+    ign = _ignora_load()
+    for c in rej:
+        ign.setdefault(c["id"], {})[c["field"]] = c.get("new")
+    with open(os.path.join(REPO, DB_FILE), "w", encoding="utf-8") as f:
+        f.write(new_src)
+    with open(REVISIO_IGNORA, "w", encoding="utf-8") as f:
+        json.dump(ign, f, ensure_ascii=False, indent=1, sort_keys=True)
+    msg = "BD: revisió des de Wikidata (%d canvis aplicats, %d descartats)" % (len(acc), len(rej))
+    ok, outc = run(["git", "add", "--", DB_FILE, os.path.relpath(REVISIO_IGNORA, REPO)])
+    ok, outc = run(["git", "commit", "-m", msg, "--", DB_FILE, os.path.relpath(REVISIO_IGNORA, REPO)])
+    return {"ok": True, "date": today, "applied": len(acc), "ignored": len(rej),
+            "msg": ("%d aplicats, %d descartats" % (len(acc), len(rej))) + ("" if ok else " (el commit ha fallat: %s)" % outc[:120])}
 
 
 def iter_objects(src, const_name):
@@ -1926,8 +2030,12 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {"ok": ok, "msg": msg})
             return
 
-        if path == "/api/db/sync-desc":
-            self._json(200, db_sync_descs())
+        if path == "/api/db/review":
+            self._json(200, db_review())
+            return
+
+        if path == "/api/db/review-apply":
+            self._json(200, db_review_apply(data))
             return
 
         if path == "/api/pinned/set":

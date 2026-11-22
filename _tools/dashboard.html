@@ -74,6 +74,21 @@ section{margin-bottom:26px;scroll-margin-top:66px}
 #dsyncres{font-size:12px;line-height:1.5;margin:0 0 12px;padding:9px 11px;border-radius:var(--r);background:var(--soft,#F9F8F7);border:1px solid var(--border)}
 #dsyncres[hidden]{display:none}
 #dsyncres .e{color:#B23A2E}
+/* Revisio de la BD: llista de canvis proposats, camp per camp */
+.rev-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}
+.rev-top .sp{flex:1}
+.rev-chip{font:inherit;font-size:11.5px;padding:3px 9px;border-radius:var(--r-pill);border:1px solid var(--border);background:var(--bg,#fff);color:inherit;cursor:pointer}
+.rev-chip.on{background:var(--text);color:var(--bg,#fff);border-color:var(--text)}
+.rev-list{max-height:52vh;overflow:auto;border-top:1px solid var(--border);margin-top:6px}
+.rev-p{padding:8px 0;border-bottom:1px solid var(--border)}
+.rev-p h4{margin:0 0 4px;font-size:12.5px}
+.rev-p h4 a{font-weight:400;color:var(--text2);text-decoration:none;font-family:var(--mono);font-size:11px;margin-left:6px}
+.rev-c{display:grid;grid-template-columns:18px 150px 1fr;gap:6px;align-items:baseline;padding:2px 0}
+.rev-c .f{color:var(--text2);font-size:11.5px}
+.rev-c .v{min-width:0;overflow-wrap:anywhere}
+.rev-c .v s{color:var(--text2)}
+.rev-c .v b{font-weight:500}
+.rev-hint{color:var(--text2);font-size:11.5px}
 .pend{font-size:11px;color:var(--warn);background:var(--warn-bg);border:1px solid #EFD9AE;padding:2px 8px;border-radius:var(--r-pill);letter-spacing:.02em}
 .card{background:var(--canvas);border:1px solid var(--border);border-radius:12px}
 .pad{padding:14px 16px}
@@ -349,7 +364,7 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
     <div class="shead"><h2>Editor de la base de dades</h2>
       <span class="hint sub" title="Enganxa un enllaç de la Viquipèdia, un QID o un nom. Va a Wikidata i omple el que pot; el que quedi buit o malament, corregeix-ho a mà. Només persones, de moment.">enllaç, QID o nom → omple sol</span>
       <span class="dsync"><span class="hint" id="dsyncdate"></span>
-        <button class="btn" id="dsync" title="Torna a demanar a Wikidata la descripció en català de totes les persones i canvia les que siguin diferents. Les que Wikidata no té en català es queden com estan. Committeja db.js tot sol.">Actualitza les descripcions</button></span></div>
+        <button class="btn" id="dsync" title="Torna a resoldre totes les persones a Wikidata com si les afegissis de nou (nom, anys, categories, gènere, descripcions i articles en català i castellà) i t’ensenya les diferències. No escriu res fins que no ho aproves.">Revisa la BD</button></span></div>
     <div class="card pad">
       <div id="dsyncres" hidden></div>
       <div class="fields" style="grid-template-columns:1fr auto">
@@ -699,7 +714,7 @@ function ciLabel(c){ return c==="success" ? "Verd" : (c==="failure" ? "Vermell" 
 function renderStats(s, live){
   renderBranques(s, live);
   const ds = s.db && s.db.desc_sync;
-  el("dsyncdate").textContent = ds ? "Última actualització: " + dmy(ds) : "Mai actualitzades";
+  el("dsyncdate").textContent = ds ? "Última revisió: " + dmy(ds) : "Mai revisada";
   el("dsync").disabled = !live;
   el("push").disabled = !live || s.ahead === 0;
   const gitPend = s.dirty + s.ahead;
@@ -1698,27 +1713,83 @@ DF.forEach(function(f){
 el("dcommit").addEventListener("click", dbCommit);
 el("dsync").addEventListener("click", syncDescs);
 
-/* Actualitza les descripcions de PEOPLE des de Wikidata (totes, d'un cop). El servidor fa la
-   feina i el commit; aquí només s'ensenya què ha canviat i què s'ha quedat igual. */
+/* Revisio de la BD: el servidor torna a resoldre totes les persones a Wikidata i torna les
+   diferencies camp per camp. Aqui es decideix: marcat = s'aplica; desmarcat = es descarta i es
+   recorda (no tornara a sortir mentre Wikidata proposi el mateix). Res no s'escriu fins a «Aplica». */
+const REV_NOMS = {name:"Nom", name_es:"Nom (castellà)", birth:"Naixement", death:"Mort",
+  cats:"Categories", gender:"Gènere", wiki:"Viquipèdia", wiki_es:"Viquipèdia (castellà)",
+  desc:"Descripció", desc_es:"Descripció (castellà)", approx:"Data aprox./disputada"};
+let REV = null;
+function revFmt(f, v){
+  if(v===null || v===undefined || v==="") return "—";
+  if(f==="cats") return v.length ? v.join(", ") : "—";
+  if(f==="wiki"||f==="wiki_es"){ try{ return decodeURIComponent(String(v)).replace(/^https:\/\//,""); }catch(e){ return String(v); } }
+  return String(v);
+}
+function revRender(){
+  const box = el("dsyncres");
+  if(!REV.people.length){
+    box.innerHTML = "<b>Cap canvi:</b> les "+REV.total+" persones coincideixen amb Wikidata (o el que hi difereix ja ho havies descartat)."
+      + (REV.errors.length ? '<br><span class="e">'+REV.errors.map(esc).join("<br>")+"</span>" : "");
+    box.hidden = false; return;
+  }
+  const per = {}; let nOn = 0, nTot = 0;
+  REV.people.forEach(function(p){ p.changes.forEach(function(c){
+    per[c.field] = per[c.field] || {n:0, on:0}; per[c.field].n++; if(c.on){ per[c.field].on++; nOn++; } nTot++; }); });
+  let h = '<div class="rev-top"><b>'+REV.people.length+' persones · '+nTot+' canvis</b>';
+  Object.keys(REV_NOMS).forEach(function(f){ if(!per[f]) return;
+    h += '<button type="button" class="rev-chip'+(per[f].on===per[f].n?' on':'')+'" data-f="'+f+'" title="Marca o desmarca tots els canvis d’aquest camp">'+esc(REV_NOMS[f])+' '+per[f].n+'</button>'; });
+  h += '<span class="sp"></span><button class="btn" id="revno">Tanca</button><button class="btn primary" id="revok">Aplica i committeja ('+nOn+')</button></div>';
+  h += '<div class="rev-hint">Marcat: s’aplica. Desmarcat: es descarta i no tornarà a sortir mentre Wikidata digui el mateix.'
+     + (REV.errors.length ? ' <span class="e">'+REV.errors.map(esc).join(" · ")+'</span>' : '')+'</div>';
+  h += '<div class="rev-list">';
+  REV.people.forEach(function(p, i){
+    h += '<div class="rev-p"><h4>'+esc(p.name)+'<a href="https://www.wikidata.org/wiki/'+esc(p.qid)+'" target="_blank" rel="noopener">'+esc(p.qid)+'</a></h4>';
+    p.changes.forEach(function(c, j){
+      h += '<label class="rev-c"><input type="checkbox" data-i="'+i+'" data-j="'+j+'"'+(c.on?' checked':'')+'>'
+         + '<span class="f">'+esc(REV_NOMS[c.field]||c.field)+'</span>'
+         + '<span class="v"><s>'+esc(revFmt(c.field,c.old))+'</s> → <b>'+esc(revFmt(c.field,c.new))+'</b></span></label>';
+    });
+    h += '</div>';
+  });
+  box.innerHTML = h + '</div>'; box.hidden = false;
+  box.querySelectorAll('input[type=checkbox]').forEach(function(cb){ cb.addEventListener("change", function(){
+    REV.people[+cb.dataset.i].changes[+cb.dataset.j].on = cb.checked; revRender(); }); });
+  box.querySelectorAll('.rev-chip').forEach(function(b){ b.addEventListener("click", function(){
+    const f = b.dataset.f, tots = per[f].on===per[f].n;
+    REV.people.forEach(function(p){ p.changes.forEach(function(c){ if(c.field===f) c.on = !tots; }); }); revRender(); }); });
+  el("revno").addEventListener("click", function(){ REV=null; box.hidden=true; box.innerHTML=""; });
+  el("revok").addEventListener("click", revApply);
+}
 async function syncDescs(){
   const btn = el("dsync"), box = el("dsyncres");
   btn.disabled = true; btn.textContent = "Revisant…";
   box.hidden = true;
   try{
-    const r = await fetch("/api/db/sync-desc", {method:"POST", headers:{"Content-Type":"application/json"}, body:"{}"});
+    const r = await fetch("/api/db/review", {method:"POST", headers:{"Content-Type":"application/json"}, body:"{}"});
     const d = await r.json();
     if(!d.ok){ box.innerHTML = '<span class="e">'+esc(d.msg)+'</span>'; box.hidden = false; return; }
-    let h = d.changed.length
-      ? "<b>"+d.changed.length+" canviades:</b> "+d.changed.map(esc).join(", ")
-      : "<b>Cap canvi:</b> totes coincideixen amb Wikidata.";
-    if(d.missing.length) h += "<br>Sense descripció en català a Wikidata (es queden com estan): "+d.missing.map(esc).join(", ");
-    box.innerHTML = h; box.hidden = false;
-    el("dsyncdate").textContent = "Última actualització: " + dmy(d.date);
+    REV = d; revRender();
   }catch(e){
     box.innerHTML = '<span class="e">No s\'ha pogut connectar al servidor.</span>'; box.hidden = false;
   }finally{
-    btn.disabled = false; btn.textContent = "Actualitza les descripcions";
+    btn.disabled = false; btn.textContent = "Revisa la BD";
   }
+}
+async function revApply(){
+  const acc = [], rej = [];
+  REV.people.forEach(function(p){ p.changes.forEach(function(c){
+    (c.on ? acc : rej).push({id:p.id, field:c.field, new:c.new}); }); });
+  const btn = el("revok"); btn.disabled = true; btn.textContent = "Escrivint…";
+  try{
+    const r = await fetch("/api/db/review-apply", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({accept:acc, reject:rej})});
+    const d = await r.json();
+    const box = el("dsyncres");
+    if(!d.ok){ box.innerHTML = '<span class="e">'+esc(d.msg)+'</span>'; return; }
+    REV = null;
+    box.innerHTML = "<b>Fet:</b> "+esc(d.msg)+"."; el("dsyncdate").textContent = "Última revisió: " + dmy(d.date);
+    boot();
+  }catch(e){ btn.disabled=false; btn.textContent="Aplica i committeja"; }
 }
 el("branch").addEventListener("change", function(){ canviaBranca(this.value); });
 DF.forEach(function(id){
