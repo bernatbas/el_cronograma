@@ -1,0 +1,25 @@
+<!doctype html>
+<!-- Plantilla de img/og.png i img/og-<idioma>.png (la imatge de previsualització en compartir).
+     El lema arriba per l'adreça: og.html?lema=La%20web%20que…  Es renderitza amb Chrome sense finestra
+     a 1200×630: veure gen_og.sh. Si canvia el logo (el zigurat de .brand-i), copia'l aquí. -->
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=block" rel="stylesheet">
+<style>
+  html,body{margin:0;width:1200px;height:630px;overflow:hidden;}
+  body{position:relative;background:#B8503C;font-family:'Oswald',sans-serif;color:#fff;}
+  .line{position:absolute;left:90px;right:90px;top:84px;height:2px;background:rgba(255,255,255,.32);}
+  .dot{position:absolute;top:78px;width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.5);}
+  .logo{position:absolute;left:0;right:0;top:152px;text-align:center;font-weight:600;font-size:168px;letter-spacing:.06em;line-height:1;padding-left:.06em;}
+  .logo svg{height:1.127em;width:.563em;fill:currentColor;vertical-align:baseline;margin-right:.06em;}
+  .lema{position:absolute;left:0;right:0;top:394px;text-align:center;font-weight:600;font-size:47px;color:#F7D9D1;}
+  .web{position:absolute;left:0;right:0;top:540px;text-align:center;font-weight:600;font-size:28px;letter-spacing:.06em;color:#F2C9BE;}
+  .band{position:absolute;left:0;right:0;bottom:0;height:18px;background:#5E2D25;}
+</style></head><body>
+<div class="line"></div>
+<div class="dot" style="left:173px"></div><div class="dot" style="left:406px"></div><div class="dot" style="left:651px"></div><div class="dot" style="left:896px"></div>
+<div class="logo">BABIL<svg viewBox="2 0 16 32"><path d="M7 9h6v18.5h2.5V30H18v2H2v-2h2.5v-2.5H7z M5.5 9h9v2.5h-9z M8.25 3.2h3.5v3.5h-3.5z"/></svg>NIA</div>
+<div class="lema" id="lema"></div>
+<div class="web">BABILINIA.COM</div>
+<div class="band"></div>
+<script>document.getElementById('lema').textContent=new URLSearchParams(location.search).get('lema')||'La web que no es va fer en un dia';</script>
+</body></html>

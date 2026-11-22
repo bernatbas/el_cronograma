@@ -4235,7 +4235,9 @@ const GUIA_PRIMERA=(function(){try{return !localStorage.getItem(LS_KEY)&&!localS
 // ============================================================
 function compartirColleccio(cid){
   const c=COLLECTIONS.find(x=>x.id===cid);if(!c)return;
-  const url=location.origin+location.pathname.replace(/index\.html$/,'')+'?col='+encodeURIComponent(cid);
+  // /es/?col=… en castellà (22/11/2026): aquella pàgina porta les metadades en castellà per a WhatsApp i
+  // redirigeix aquí amb ?lang=es&col=…. Les fa _tools/gen_compartir.py: un idioma nou, primer allà.
+  const url=location.origin+location.pathname.replace(/index\.html$/,'')+(LANG==='ca'?'':LANG+'/')+'?col='+encodeURIComponent(cid);
   if(typeof gtag!=='undefined')gtag('event','colleccio_compartida',{colleccio:c.name});
   // Al mòbil, el menú de compartir del sistema (WhatsApp, correu…); a l'escriptori, al porta-retalls.
   if(matchMedia('(pointer:coarse)').matches&&navigator.share){navigator.share({title:c.name,url}).catch(()=>{});return;}

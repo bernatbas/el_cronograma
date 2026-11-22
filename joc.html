@@ -1430,7 +1430,10 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     const a=(ds||todayStr()).split('-');
     const cap=g.ic+' '+t(g.titleKey)+(extra?' ('+extra+')':'')+' · '+a[2]+'/'+a[1];
     const marc='🎯 '+v1+' '+k1+' · 🔥 '+days+' '+t('streak_days',{n:days});
-    return [cap, marc, quadrets||'', 'babilinia.com/jocs/'+id].filter(Boolean).join('\n');   // enllaç curt: carpeta /jocs/<joc>/ que redirigeix a joc.html#/<joc>
+    // L'enllaç de l'idioma actiu (22/11/2026): babilinia.com/es/jocs/<joc> porta metadades en castellà, i
+    // WhatsApp les ensenya. Les pàgines les fa _tools/gen_compartir.py: un idioma nou, primer allà.
+    const pref = LANG==='ca' ? '' : LANG+'/';
+    return [cap, marc, quadrets||'', 'babilinia.com/'+pref+'jocs/'+id].filter(Boolean).join('\n');   // enllaç curt: carpeta /jocs/<joc>/ que redirigeix a joc.html#/<joc>
   }
   function tocaRatxa(key){
     const today=todayStr(), st=readLS(key);
