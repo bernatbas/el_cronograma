@@ -43,6 +43,21 @@ function vigilaConsola(page, avisos) {
   page.on('console', m => { if (m.text().startsWith('[i18n]')) avisos.add(m.text()); });
 }
 
+// L'estat «ja jugat avui» (amb errors, que és quan surten més files), com a noscroll.spec.js.
+function desaJugat(tipus) {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  const avui = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  if (tipus === 'ad') {
+    const keys = window.__AD.pool(avui).slice(0, 3).map(it => it.key);
+    localStorage.setItem('hb_ad_daily', JSON.stringify({ date: avui, score: 7, perfect: false, failKeys: keys }));
+    localStorage.setItem('hb_ad_streak', JSON.stringify({ last: avui, days: 12 }));
+  }
+  if (tipus === 'con') {
+    localStorage.setItem('hb_con_daily', JSON.stringify({ date: avui, score: 2, marks: [true, false, true, false, false] }));
+    localStorage.setItem('hb_con_streak', JSON.stringify({ last: avui, days: 12 }));
+  }
+}
+
 test.beforeEach(async ({ page }) => {
   // Cap crida a fora: el que depengui de Wikidata mostrarà el seu estat d'error, que també
   // és text d'interfície i també s'ha d'escanejar.
@@ -102,6 +117,7 @@ test('guia: cap text fora del diccionari', async ({ page }) => {
 });
 
 test('jocs: cap text fora del diccionari', async ({ page }) => {
+  test.setTimeout(60_000);
   const trobats = new Set(), avisos = new Set();
   vigilaConsola(page, avisos);
   await page.goto('/joc.html?lang=xx');
@@ -115,41 +131,24 @@ test('jocs: cap text fora del diccionari', async ({ page }) => {
     await escaneja(page, g, trobats);
   }
 
-  // Pantalles de resultat: l'Ordena s'envia tal com surt; l'«Abans o després?» es juga fins
-  // a perdre; el «Contemporanis?» es respon sí a tot.
+  // Pantalles de resultat. L'Ordena s'envia tal com surt (és instantani). L'«Abans o després?» i
+  // el «Contemporanis?» NO es juguen: cada encert allarga la partida i, amb les animacions, no
+  // acabava dins del temps del test (22/11/2026, vermell als tres dispositius). Es desa l'estat
+  // de «ja jugat avui», com fa noscroll.spec.js, i es recarrega.
   await page.evaluate(() => { location.hash = '#/ordena'; });
   await page.waitForSelector('#ordsubmit');
   await page.evaluate(() => document.querySelector('#ordsubmit').click());
   await page.waitForTimeout(1200);
   await escaneja(page, 'ordena · resultat', trobats);
 
-  await page.evaluate(() => { location.hash = '#/abansdespres'; });
-  for (let i = 0; i < 40; i++) {
-    await page.waitForTimeout(700);
-    const seguir = await page.evaluate(() => {
-      if (document.querySelector('.gameover, .adrows')) return false;
-      const b = document.querySelector('button.choice:not([disabled])');
-      if (b) b.click();
-      return true;
-    });
-    if (!seguir) break;
+  for (const [joc, hash] of [['ad', '#/abansdespres'], ['con', '#/contemporanis']]) {
+    await page.goto('/joc.html?lang=xx' + hash);   // __AD viu dins del mòdul: cal haver-lo carregat
+    await page.waitForTimeout(500);
+    await page.evaluate(desaJugat, joc);
+    await page.goto('/joc.html?lang=xx&m=' + Date.now() + hash);
+    await page.waitForTimeout(1000);
+    await escaneja(page, joc + ' · resultat', trobats);
   }
-  await page.waitForTimeout(800);
-  await escaneja(page, 'abans o després · resultat', trobats);
-
-  await page.evaluate(() => { location.hash = '#/contemporanis'; });
-  for (let i = 0; i < 15; i++) {
-    await page.waitForTimeout(700);
-    const seguir = await page.evaluate(() => {
-      if (document.querySelector('.gameover')) return false;
-      const b = document.querySelector('button.conyes:not([disabled])');
-      if (b) b.click();
-      return true;
-    });
-    if (!seguir) break;
-  }
-  await page.waitForTimeout(800);
-  await escaneja(page, 'contemporanis · resultat', trobats);
 
   expect([...avisos], 'avisos de consola').toEqual([]);
   expect([...trobats], 'text fora del diccionari').toEqual([]);
