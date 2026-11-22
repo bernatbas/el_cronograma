@@ -393,6 +393,18 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
           <input type="text" id="ddesc"><div class="wmsg" id="m-ddesc" hidden></div></div>
       </div>
 
+      <!-- Castella: s'omple sol de Wikidata (veure _es_fields a dash.py). Es pot corregir. -->
+      <div class="fields dgrid" style="grid-template-columns:1fr 2fr">
+        <div class="f"><label for="dnom_es">Nom en castellà<button type="button" class="wm" id="w-dnom_es" hidden aria-label="Mostra l\'avís">⚠</button></label>
+          <input type="text" id="dnom_es"><div class="wmsg" id="m-dnom_es" hidden></div></div>
+        <div class="f"><label for="dwiki_es">Viquipèdia en castellà<button type="button" class="wm" id="w-dwiki_es" hidden aria-label="Mostra l\'avís">⚠</button></label>
+          <input type="text" id="dwiki_es"><div class="wmsg" id="m-dwiki_es" hidden></div></div>
+      </div>
+      <div class="fields dgrid" style="grid-template-columns:1fr">
+        <div class="f"><label for="ddesc_es">Descripció en castellà<button type="button" class="wm" id="w-ddesc_es" hidden aria-label="Mostra l\'avís">⚠</button></label>
+          <input type="text" id="ddesc_es"><div class="wmsg" id="m-ddesc_es" hidden></div></div>
+      </div>
+
       <div class="gate">
         <span class="seal" id="dseal">Falten camps obligatoris</span>
         <span class="spacer"></span>
@@ -1190,7 +1202,7 @@ function renderDensity(list){
 }
 
 /* ---------- editor (previsualització en viu) ---------- */
-const DF = ["did","dnom","dqid","dbirth","ddeath","dcat","dwiki","ddesc"];
+const DF = ["did","dnom","dqid","dbirth","ddeath","dcat","dwiki","ddesc","dnom_es","dwiki_es","ddesc_es"];
 function dval(id){ return el(id).value.trim(); }
 
 /* Obligatoris: sense aquests l'entrada no es pot pintar al cronograma.
@@ -1269,6 +1281,7 @@ async function resolveQ(){
     el("dbirth").value=(d.birth==null)?"":d.birth;
     el("ddeath").value=(d.death==null)?"":d.death;
     el("dwiki").value=d.wiki||""; el("ddesc").value=d.desc||"";
+    el("dnom_es").value=d.name_es||""; el("dwiki_es").value=d.wiki_es||""; el("ddesc_es").value=d.desc_es||"";
     // La nota d'incertesa la calcula el servidor a partir de la precisio de Wikidata. No es
     // editable: va amagada i viatja del resolve al commit. Si s'edita l'any a ma, la nota
     // segueix valent — una data aproximada no deixa de ser-ho perque en triis una de millor.
@@ -1289,7 +1302,8 @@ async function dbCommit(){
       headers:{"Content-Type":"application/json"}, body:JSON.stringify({
         id:dval("did"), qid:dval("dqid"), name:dval("dnom"),
         birth:dval("dbirth"), death:dval("ddeath"),
-        cats:cat?[cat]:[], wiki:dval("dwiki"), desc:dval("ddesc"), approx:DAPPROX})});
+        cats:cat?[cat]:[], wiki:dval("dwiki"), desc:dval("ddesc"), approx:DAPPROX,
+        name_es:dval("dnom_es"), wiki_es:dval("dwiki_es"), desc_es:dval("ddesc_es")})});
     const d = await r.json();
     if(!d.ok){ showError(d.msg); btn.textContent="Afegeix a la BD i committeja"; renderPreview(); return; }
     btn.textContent="✓ "+d.msg; clearFields(); el("dq").value="";

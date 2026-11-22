@@ -171,6 +171,33 @@ def _clean_desc(s):
     return (s[0].upper() + s[1:]) if s else s
 
 
+# Castella (22/11/2026). Cada persona porta name_es, desc_es i wiki_es al costat dels camps
+# catalans: index.html i joc.html els posen al seu lloc quan la pagina va en castella. Es
+# treuen de Wikidata en afegir-la, i el dashboard (que va en catala) no ho demana a ma.
+#   nom:  label es -> mul (els noms llatins iguals a tot arreu) -> en -> el catala
+#   desc: es -> en (decisio d'en Bernat: millor l'anglesa que la catalana) -> ''
+#   wiki: article es -> article en -> ''
+# '' vol dir «no n'hi ha»: la pagina en castella no ensenya res, en lloc del catala.
+def _es_fields(ent, name_ca):
+    lab = ent.get("labels") or {}
+    des = ent.get("descriptions") or {}
+    sl = ent.get("sitelinks") or {}
+    v = lambda d, k: (d.get(k) or {}).get("value") or ""
+    name = v(lab, "es") or v(lab, "mul") or v(lab, "en") or (name_ca or "")
+    desc, desc_src = v(des, "es"), "es"
+    if not desc:
+        desc, desc_src = v(des, "en"), ("en" if v(des, "en") else "")
+    wiki, wiki_src = "", ""
+    for site, lang in (("eswiki", "es"), ("enwiki", "en")):
+        t = (sl.get(site) or {}).get("title")
+        if t:
+            wiki = "https://%s.wikipedia.org/wiki/%s" % (lang, urllib.parse.quote(t.replace(" ", "_")))
+            wiki_src = lang
+            break
+    return {"name_es": name, "desc_es": _clean_desc(desc), "wiki_es": wiki,
+            "desc_es_src": desc_src, "wiki_es_src": wiki_src}
+
+
 def _wd_get(url):
     """GET + JSON contra una API de Wikimedia. None si falla."""
     try:
@@ -301,7 +328,7 @@ def resolve_person(q, allow_existing=False):
             return {"ok": False, "msg": "No he trobat res amb aquest nom"}
 
     e = _wd_get(WD_API + "?action=wbgetentities&ids=%s&props=labels|descriptions|claims|sitelinks"
-                "&languages=ca&format=json&origin=*" % qid)
+                "&languages=ca|es|en|mul&format=json&origin=*" % qid)
     ent = ((e or {}).get("entities") or {}).get(qid)
     if not ent or "missing" in ent:
         return {"ok": False, "msg": "Wikidata no retorna cap entitat per a " + qid}
@@ -416,8 +443,17 @@ def resolve_person(q, allow_existing=False):
               else "disputada" if disputada
               else "")
 
+    es = _es_fields(ent, name)
+    if es["desc_es_src"] == "en":
+        warnings.append({"field": "ddesc_es", "msg": "Wikidata no en te descripcio en castella: he posat l'anglesa"})
+    elif not es["desc_es"]:
+        warnings.append({"field": "ddesc_es", "msg": "Sense descripcio en castella ni en angles a Wikidata"})
+    if es["wiki_es_src"] == "en":
+        warnings.append({"field": "dwiki_es", "msg": "No hi ha article a la Viquipedia en castella: enllaç a l'anglesa"})
+
     return {"ok": True, "qid": qid, "id": _slug_id(name or qid, ids_taken),
             "name": name, "desc": desc, "birth": birth, "death": death,
+            "name_es": es["name_es"], "desc_es": es["desc_es"], "wiki_es": es["wiki_es"],
             "cats": cats, "gender": gender, "wiki": wiki_url, "approx": approx,
             "sitelinks": len(ent.get("sitelinks") or {}), "warnings": warnings}
 
@@ -444,12 +480,16 @@ def person_literal(d):
         "id:'%s'" % _js_str(d["id"]),
         ("wd:'%s'" % _js_str(d["qid"])) if d.get("qid") else None,
         "name:'%s'" % _js_str(d.get("name")),
+        # Castella: SEMPRE presents (buits si no n'hi ha), aixi el check del CI pot exigir-los.
+        "name_es:'%s'" % _js_str(d.get("name_es") or d.get("name")),
         "birth:%d" % int(d["birth"]),
         "death:%s" % ("null" if death in (None, "") else int(death)),
         "cats:[%s]" % cats,
         ("gender:'%s'" % _js_str(d["gender"])) if d.get("gender") else None,
         ("wiki:'%s'" % _js_str(d["wiki"])) if d.get("wiki") else None,
+        "wiki_es:'%s'" % _js_str(d.get("wiki_es")),
         ("desc:'%s'" % _js_str(d["desc"])) if d.get("desc") else None,
+        "desc_es:'%s'" % _js_str(d.get("desc_es")),
         ("approx:'%s'" % _js_str(d["approx"])) if d.get("approx") else None,
     ]
     return "  {" + ",".join(x for x in parts if x) + "},"
@@ -868,14 +908,17 @@ def db_sync_descs():
         q = re.search(r"wd:'(Q\d+)'", o.group(0))
         if q:
             ids.append(q.group(1))
-    wd = {}
+    wd, wd_es = {}, {}
     for k in range(0, len(ids), 50):
-        e = _wd_get(WD_API + "?action=wbgetentities&props=descriptions&languages=ca&format=json&ids="
+        e = _wd_get(WD_API + "?action=wbgetentities&props=descriptions&languages=ca|es|en&format=json&ids="
                     + "|".join(ids[k:k + 50]))
         if not e or "entities" not in e:
             return {"ok": False, "msg": "Wikidata no respon: no toco res"}
         for q, v in e["entities"].items():
-            wd[q] = ((v.get("descriptions") or {}).get("ca") or {}).get("value")
+            ds = v.get("descriptions") or {}
+            wd[q] = (ds.get("ca") or {}).get("value")
+            # Castella amb la mateixa norma que en afegir-la: es -> en (veure _es_fields)
+            wd_es[q] = (ds.get("es") or {}).get("value") or (ds.get("en") or {}).get("value")
 
     changed, missing = [], []
     out, last = [], 0
@@ -896,8 +939,16 @@ def db_sync_descs():
                     new_txt = txt[:dm.start()] + "desc:'" + new + "'" + txt[dm.end():]
                 elif not dm and new:
                     new_txt = txt[:-1].rstrip() + ",desc:'" + new + "'}"
-                if new_txt != txt:
-                    changed.append(name)
+            w_es = wd_es.get(q.group(1))
+            if w_es:
+                new_es = _js_str(_clean_desc(w_es))
+                em = re.search(r"desc_es:'((?:[^'\\]|\\.)*)'", new_txt)
+                if em and em.group(1) != new_es:
+                    new_txt = new_txt[:em.start()] + "desc_es:'" + new_es + "'" + new_txt[em.end():]
+                elif not em:
+                    new_txt = new_txt[:-1].rstrip() + ",desc_es:'" + new_es + "'}"
+            if new_txt != txt:
+                changed.append(name)
         out.append(block[last:o.start()])
         out.append(new_txt)
         last = o.end()

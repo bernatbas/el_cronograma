@@ -70,6 +70,12 @@ Dues coses les calcula el servidor i no el formulari, a posta:
   avisos. Es genera sol perquè si depengués de recordar-se'n quedaria a mitges, i el guard dels
   jocs cronològics (`APX_GAP`) seria fals.
 
+- **El castellà** (22/11/2026): `_es_fields()` omple `name_es`, `desc_es` i `wiki_es` de Wikidata.
+  Nom: `es` → `mul` → `en` → el català. Descripció: `es` → **`en`** (decisió d'en Bernat) → `''`.
+  Article: `eswiki` → `enwiki` → `''`. El formulari els ensenya (es poden corregir) i avisa quan la
+  descripció o l'article són els anglesos. `person_literal()` els escriu **sempre**, buits si cal: el
+  check del CI «Contingut en castellà» els exigeix a totes les persones.
+
 `db_add_person()` torna a validar-ho tot pel seu compte (QID, id, anys, categories) i, després
 d'escriure, comprova que l'array segueixi quadrant. No es refia del cos de la petició.
 
@@ -85,6 +91,8 @@ ha el botó **«Actualitza les descripcions»** a la capçalera de l'editor (`/a
 `db_sync_descs()`): les torna a demanar totes, canvia només les diferents, desa la data a
 `DESC_SYNC` (a `db.js`, just abans de `PEOPLE`) i committeja `db.js` tot sol. Si no hi ha res a
 canviar i la data ja és la d'avui, no escriu ni committeja.
+
+El mateix botó posa al dia `desc_es`, amb la mateixa norma (castellà, i si no n'hi ha, anglès).
 
 ⚠️ Les que **Wikidata no té en català** es queden com estan i el botó les llista. La solució de fons és
 escriure-les a Wikidata mateix.

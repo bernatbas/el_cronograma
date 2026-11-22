@@ -1214,6 +1214,7 @@ const I18N={
     cro_coll_needname:'Posa-li un nom abans de desar-la',
     cro_coll_opts:'Opcions de la col·lecció',
     cro_bar_opts:'Opcions',   // el ⋮ de cada barra
+    cro_chip_collapse:'Recollir',   // globus del xip «+N» dels marcs, obert
     cro_coll_n: v => v.n===1 ? 'Col·lecció · 1 personatge' : 'Col·lecció · '+v.n+' personatges',
     cro_coll_empty_members:'Encara no hi ha ningú.',
     cro_coll_rm_member:'Treu-lo de la col·lecció',
@@ -1384,6 +1385,7 @@ const I18N={
     cro_coll_needname:'Ponle un nombre antes de guardarla',
     cro_coll_opts:'Opciones de la colección',
     cro_bar_opts:'Opciones',   // el ⋮ de cada barra
+    cro_chip_collapse:'Recoger',   // globus del xip «+N» dels marcs, obert
     cro_coll_n: v => v.n===1 ? 'Colección · 1 personaje' : 'Colección · '+v.n+' personajes',
     cro_coll_empty_members:'Todavía no hay nadie.',
     cro_coll_rm_member:'Quitarlo de la colección',
@@ -1523,7 +1525,10 @@ function setLang(code){ if(I18N_SUPPORTED.indexOf(code)<0) return; LANG=code; tr
 // nomes s'agafa quan cap dels idiomes reals no hi es, aixi no canvia res del que ja anava.
 // Cal demanar-lo I llegir-lo: sense 'mul' aqui, wbgetentities no el retorna, i el
 // SERVICE wikibase:label de la SPARQL (que surt de wdFields) tampoc no hi cau.
-function wdLangs(){ const base=['ca','es','en','mul']; return [LANG].concat(base.filter(function(l){return l!==LANG;})).join('|'); }
+// Ordre (22/11/2026, decisio d'en Bernat): en catala, despres ve el castella; en qualsevol altre
+// idioma, despres ve l'ANGLES i el catala queda per al final. Si una persona no te descripcio en
+// castella, millor l'anglesa que la catalana dins d'una pagina en castella.
+function wdLangs(){ const base=LANG==='ca'?['ca','es','en','mul']:[LANG,'en','es','ca','mul']; return [LANG].concat(base.filter(function(l){return l!==LANG;})).join('|'); }
 // Aplica els textos estatics marcats amb data-i18n / data-i18n-title / data-i18n-aria.
 function applyI18nStatic(scope){
   const s=scope||document;
@@ -1547,6 +1552,18 @@ function Lcru(v){
   for(const k in v) if(v[k]!=null) return v[k];
   return '';
 }
+// Contingut de db.js en l'idioma actiu. Cada camp traduible te un GERMA amb sufix d'idioma
+// (name_es, desc_es, wiki_es): en arrencar, si l'idioma no es el catala i el germa hi es,
+// ocupa el lloc del camp. Un sol cop i en memoria: canviar d'idioma vol recarregar la pagina.
+// Germans i no objectes {ca,es} a posta: el dashboard llegeix db.js amb regex de camps plans
+// (name:'...'), i un objecte n'hauria trencat la meitat. Un germa BUIT ('') vol dir «no n'hi
+// ha» i guanya igualment: millor sense descripcio que en catala dins d'una pagina en castella.
+function localitza(o){ if(!o||LANG===I18N_DEFAULT) return o; ['name','desc','wiki'].forEach(function(k){ const v=o[k+'_'+LANG]; if(v!=null) o[k]=v; }); return o; }
+(function localitzaDades(){
+  if(LANG===I18N_DEFAULT) return;
+  [PEOPLE,EVENTS,ERAS,COLLECTIONS].forEach(function(a){ a.forEach(localitza); });
+  MARCS.forEach(function(m){ localitza(m); (m.blocks||[]).forEach(localitza); });
+})();
 
 // ============================================================
 // [1] DATA  —  ja no viu aqui: esta a db.js, que carreguen les DUES pagines.
@@ -1635,6 +1652,10 @@ function restoreState(){
   state.focus=(typeof d.focus==='string')?d.focus:null;
   if(d.view&&typeof d.view.px==='number')restoredView=d.view;
   recomputePresent();
+  // Persones de Wikidata baixades en un ALTRE idioma (_lang; les d'abans del 22/11/2026 no en
+  // porten i eren en catala): es tornen a demanar en segon pla, sense esperar els 30 dies del TTL.
+  const altres=PEOPLE.filter(p=>p._session&&/^Q\d+$/.test(p.wd||'')&&(p._lang||'ca')!==LANG).map(p=>p.wd);
+  if(altres.length)setTimeout(()=>refreshStale(altres),0);
 }
 scroll.addEventListener('scroll',scheduleSave);   // persist pan position (no-op until lsReady)
 
@@ -1747,23 +1768,23 @@ const linkLabel=url=>/wikipedia\.org/.test(url)?'Wikipedia':/wikidata\.org/.test
 const guessCats=desc=>{if(!desc)return[];const d=desc.toLowerCase(),a=[],pos={};
   const hit=(re,c)=>{const k=d.search(re);if(k>=0){pos[c]=k;a.push(c);}};   // pos: on surt a la descripció (per a «art», a sota)
   if(/filòsof|filósofo|philosopher/.test(d))a.push('philosophy');
-  hit(/compositor|composer|músic|music|cantant|cantante|singer|cantautor|songwriter|guitarr|pianist|violinist|violoncel|trompetist|trumpet|saxofon|saxophon|percussion|drummer|rapper|raper|jazz|òpera|soprano|orquestra|orchestra/,'music');   // només hi havia compositor: ni músic, ni cantant, ni cap instrumentista
-  hit(/escriptor|escritor|writer|poeta|poet|dramaturgo|dramaturg|novel·lista|novelist/,'literature');
+  hit(/compositor|composer|músic|music|cantant|cantante|singer|cantautor|songwriter|guitarr|pianist|violinist|violoncel|trompetist|trumpet|saxofon|saxophon|percussion|drummer|rapper|raper|jazz|òpera|soprano|orquestra|orchestra|ópera|orquesta/,'music');   // només hi havia compositor: ni músic, ni cantant, ni cap instrumentista
+  hit(/escriptor|escritor|writer|poeta|poet|dramaturgo|dramaturg|novel·lista|novelist|aede|aedo|ensayista|assagista|essayist/,'literature');
   // Hi havia nomes fisica, matematiques, astronomia i «cientific/naturalista»: ni quimica ni
   // res de biomedicina. Amb la col·leccio dels Nobel es va veure de cop —23 de 49 sortien
   // sense categoria, i entre ells sis quimics i set metges/biolegs. Mateix forat que el cas
   // Verdi: arreglat al dash.py i encara viu aqui.
-  if(/físic|physicist|matemàtic|mathematician|astrònom|astronomer|científic|scientist|naturalista|naturalist|químic|chemist|bioquímic|biochemist|metge|metgessa|physician|fisiòleg|physiologist|biòleg|biòloga|biologist|zoòleg|zoologist|bacteriòleg|bacteriologist|neuròleg|neurologist|neurocientífic|neuroscientist|genetista|geneticist|farmacòleg|pharmacologist|immunòleg|immunologist|geòleg|geologist|enginyer|engineer|informàtic|computer scientist/.test(d))a.push('science');
-  if(/polític|político|politician|politique|rei|king|emperador|emperor|dictador|dictator|militar|military|president|independentista|ministre|minister|activista|activist|estadista|statesman|diplomàtic|diplomat|líder|leader|canceller|chancellor|secretari general|secretary-general|politòleg|political scientist/.test(d))a.push('politics');
+  if(/físic|physicist|matemàtic|matemátic|astrónom|médic|fisiólog|biólog|zoólog|bacteriólog|neurólog|farmacólog|inmunólog|inventor|mathematician|astrònom|astronomer|científic|scientist|naturalista|naturalist|químic|chemist|bioquímic|biochemist|metge|metgessa|physician|fisiòleg|physiologist|biòleg|biòloga|biologist|zoòleg|zoologist|bacteriòleg|bacteriologist|neuròleg|neurologist|neurocientífic|neuroscientist|genetista|geneticist|farmacòleg|pharmacologist|immunòleg|immunologist|geòleg|geologist|enginyer|engineer|informàtic|computer scientist/.test(d))a.push('science');
+  if(/polític|político|politician|politique|rei|rey|reina|king|queen|faraó|faraón|faraona|pharaoh|emperador|emperor|dictador|dictator|militar|military|president|independentista|ministre|ministro|minister|activista|activist|estadista|statesman|diplomàtic|diplomat|líder|leader|canceller|canciller|chancellor|secretari general|secretario general|secretary-general|politòleg|political scientist/.test(d))a.push('politics');
   hit(/pintor|painter/,'painting');   // l’escultor ha passat a «art» (17/11/2026)
   // ⚠️ Aqui «actor» SOL sí que val, i al mapa de P106 (dash.py) NO: son dos senyals diferents.
   // A P106 en Shakespeare porta l’ocupacio «actor» (Q33999) i li encolomaria cinema; la seva
   // DESCRIPCIO, en canvi, diu «dramaturg i poeta angles» i no hi surt la paraula. Excloure-la
   // tambe aqui deixava fora tothom descrit nomes com a «actor»: en Tom Cruise sortia sense
   // categoria. El teatre s’aparta amb el guard de sota, no amagant la paraula.
-  if(!/teatre|teatral/.test(d))hit(/cineasta|director[a]? de cinema|film director|filmmaker|guionista|screenwriter|actor|actriu|film producer|productor[a]? de cinema|director[a]? de fotografia|cinematographer|cinema/,'cinema');
-  if(/profeta|prophet|religiós|religious|religiosa|sant|saint|monja|nun|monjo|monk|bisbe|bishop|papa |pope|rabí|rabbi|imam|teòleg|theologian|missioner|missionary/.test(d))a.push('religion');
-  if(/futbolista|jugador de futbol|footballer|football player|tennista|tenista|tennis player|jugador de tennis|basquetbol|bàsquet|baloncestista|basketball|boxejador|boxeador|boxer|atleta|athlete|track and field|velocista|sprinter|gimnasta|gymnast|nedador|nadador|swimmer|ciclista|cyclist|golfista|golfer|automobilista|racing driver|motorcycle racer/.test(d)
+  if(!/teatre|teatro|teatral/.test(d))hit(/cineasta|director[a]? de cinema|film director|filmmaker|guionista|screenwriter|actor|actriu|actriz|director[a]? de cine|productor[a]? de cine|de cine\b|film producer|productor[a]? de cinema|director[a]? de fotografia|cinematographer|cinema/,'cinema');
+  if(/profeta|prophet|religiós|religioso|religious|religiosa|sant|saint|monja|nun|monjo|monje|monk|bisbe|obispo|bishop|papa |pope|rabí|rabino|rabbi|imam|apòstol|apóstol|apostle|predicador|preacher|teòleg|teólogo|theologian|missioner|misionero|missionary/.test(d))a.push('religion');
+  if(/futbolista|jugador de futbol|jugador de fútbol|footballer|football player|tennista|tenista|tennis player|jugador de tennis|basquetbol|bàsquet|baloncesto|baloncestista|basketball|boxejador|boxeador|boxer|atleta|athlete|track and field|velocista|sprinter|gimnasta|gymnast|nedador|nadador|swimmer|ciclista|cyclist|golfista|golfer|automobilista|racing driver|motorcycle racer/.test(d)
      ||/(pilot|piloto)[^,;.]{0,18}(autom|motocicl)/.test(d))a.push('sport');   // "pilot" sol cauria sobre aviadors, així que exigim context de motor
   // ART: paraigua per a les arts que no són Pintura, Literatura, Música ni Cinema. Mana l’ORDRE de
   // la descripció, com a P106 al dash.py: si «escultor» va abans que «pintor», art i va davant
@@ -1926,7 +1947,7 @@ function render(){
     const chips=M.clusters.map(cl=>{
       const left=x(cl.start),w=Math.max(x(cl.end)-x(cl.start),26),top=blocksY+M.marcTop+M.chipTop;
       const lbl=cl.expanded?'−':('+'+cl.items.length);
-      return `<div class="marcchip${cl.expanded?' open':''}" data-cluster="${cl.ckey}" style="left:${left}px;width:${w}px;top:${top}px;height:${MCHIP_H}px;--mc:${hexA(c,.75)};color:${ink(c,.5)};background:${hexA(c,.12)};" title="${cl.expanded?'Recollir':cl.items.map(i=>i.name).join(', ')}">${lbl}</div>`;
+      return `<div class="marcchip${cl.expanded?' open':''}" data-cluster="${cl.ckey}" style="left:${left}px;width:${w}px;top:${top}px;height:${MCHIP_H}px;--mc:${hexA(c,.75)};color:${ink(c,.5)};background:${hexA(c,.12)};" title="${cl.expanded?t('cro_chip_collapse'):cl.items.map(i=>i.name).join(', ')}">${lbl}</div>`;
     }).join('');
     return bars+chips;
   }).join('');
@@ -2541,7 +2562,7 @@ function wdBusca(term){
 // Un resultat de Wikidata passa a ser una persona de PEOPLE (de sessió). Torna l'id.
 function wdAPersona(w){
   const id='wd_'+w.qid;
-  if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:w.qid,name:w.name,birth:w.birth,death:w.death,cats:guessCats(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_session:true,_ts:Date.now()});
+  if(!PEOPLE.some(p=>p.id===id))PEOPLE.push({id,wd:w.qid,name:w.name,birth:w.birth,death:w.death,cats:guessCats(w.desc),gender:'',wiki:w.article,desc:w.desc||'',_lang:LANG,_session:true,_ts:Date.now()});
   return id;
 }
 
@@ -3027,7 +3048,8 @@ function refreshStale(qids){
     list.forEach(w=>{
       if(w.birth==null)return;
       const p=PEOPLE.find(x=>x.wd===w.qid);if(!p)return;
-      p.name=w.name;p.birth=w.birth;p.death=w.death;p.wiki=w.article;p.desc=w.desc||p.desc;p.cats=guessCats(w.desc);p._ts=Date.now();changed=true;
+      const canviIdioma=(p._lang||'ca')!==LANG;   // la descripcio vella seria d'un altre idioma: no la conservis
+      p.name=w.name;p.birth=w.birth;p.death=w.death;p.wiki=w.article;p.desc=w.desc||(canviIdioma?'':p.desc);if(!canviIdioma)p.cats=guessCats(w.desc);   // canviar d'idioma no ha de canviar el color: la categoria es dedueix de la descripcio i cada idioma la redacta diferentp._lang=LANG;p._ts=Date.now();changed=true;
     });
     if(changed){recomputePresent();render();scheduleSave();}
   }).catch(()=>{});
@@ -3143,7 +3165,7 @@ async function toggleCollection(cid){
   const local=new Map(PEOPLE.filter(p=>p.wd).map(p=>[p.wd,p]));
   const localIds=c.wds.map(q=>local.get(q)).filter(Boolean).map(p=>p.id);
   const missing=c.wds.filter(q=>!local.has(q));
-  const stale=c.wds.filter(q=>{const p=local.get(q);return p&&p._session&&(!p._ts||Date.now()-p._ts>COLL_TTL);});   // membres del cau caducats → refresc silenciós
+  const stale=c.wds.filter(q=>{const p=local.get(q);return p&&p._session&&(!p._ts||Date.now()-p._ts>COLL_TTL||(p._lang||'ca')!==LANG);});   // membres del cau caducats → refresc silenciós
   if(!missing.length){                             // tot és local → mostrar-ho de cop, sense spinner
     localIds.forEach(id=>state.pinned.add(id));
     clearFitLatch();
@@ -3672,7 +3694,7 @@ function mostraPersonatge(p,opts){
   const id=existing?existing.id:'wd_'+p.qid;
   if(!existing){
     PEOPLE.push({id,wd:p.qid,name:p.name,birth:p.birth,death:p.death,cats:guessCats(p.desc),
-      gender:'',wiki:p.wiki,desc:p.desc||'',_session:true,_ts:Date.now()});
+      gender:'',wiki:p.wiki,desc:p.desc||'',_lang:LANG,_session:true,_ts:Date.now()});
   }else{
     // Una entrada desada d'abans pot venir sense anys: el traspas els aporta i s'han d'escriure.
     if(existing.birth==null&&p.birth!=null) existing.birth=p.birth;
@@ -3822,7 +3844,7 @@ function bootFromJoc(){
         const id=local?local.id:'wd_'+p.qid;
         if(!local){
           PEOPLE.push({id:'wd_'+p.qid,wd:p.qid,name:p.name,birth:p.birth,death:p.death,
-            cats:guessCats(p.desc),gender:'',wiki:p.wiki||'',desc:p.desc||'',_session:true,_ts:Date.now()});
+            cats:guessCats(p.desc),gender:'',wiki:p.wiki||'',desc:p.desc||'',_lang:LANG,_session:true,_ts:Date.now()});
         }else{
           if(local.birth==null&&p.birth!=null) local.birth=p.birth;
           if(local.death==null&&p.death!=null) local.death=p.death;

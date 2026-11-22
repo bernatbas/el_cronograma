@@ -275,6 +275,37 @@ jobs:
           print("OK: diccionaris complets i coherents")
           EOF
 
+      # Contingut de db.js en castella (fase 3 de l'i18n, 22/11/2026). Cada camp traduible porta
+      # un germa amb sufix (name_es, desc_es, wiki_es) que la pagina posa al seu lloc en castella.
+      # Si falta, la pagina en castella ensenya el catala sense dir res. El dashboard els escriu
+      # sols en afegir una persona; aqui es comprova que cap no se n'escapi (afegida a ma, p.ex.).
+      # '' es valid: vol dir «no n'hi ha» (desc sense castella ni angles, persona sense article).
+      - name: Contingut en castellà (db.js)
+        run: |
+          python3 - <<'EOF'
+          import re, sys
+          src = open('db.js', encoding='utf-8').read()
+          i = src.find('const PEOPLE=[')
+          if i < 0:
+              sys.exit("ERROR: no trobo 'const PEOPLE=[' a db.js")
+          j = src.find('\nconst ', i + 10)
+          blk = src[i:j if j > 0 else len(src)]
+          objs = re.findall(r"\{id:'[^']+'.*?\}(?=,?\s*(?:\n|$))", blk)
+          if len(objs) < 50:
+              sys.exit("ERROR: nomes trobo %d persones a PEOPLE; el parser s'ha quedat cec" % len(objs))
+          fail = []
+          for o in objs:
+              pid = re.search(r"\{id:'([^']+)'", o).group(1)
+              falten = [f + '_es' for f in ('name', 'desc', 'wiki')
+                        if re.search(r"\b" + f + r":'", o) and not re.search(r"\b" + f + r"_es:'", o)]
+              if falten:
+                  fail.append("%s: falta %s" % (pid, ', '.join(falten)))
+          if fail:
+              sys.exit("ERROR: persones sense castella (afegeix-les pel dashboard, que ho omple sol):\n- "
+                       + "\n- ".join(fail))
+          print("OK: %d persones, totes amb castella" % len(objs))
+          EOF
+
       - name: Sintaxi JS — claus equilibrades
         run: |
           python3 - <<'EOF'

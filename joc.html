@@ -1297,7 +1297,10 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   // 'mul' al final: Wikidata va migrar els noms en alfabet llati a UNA etiqueta multilingue
   // i va esborrar les per idioma. Sense aixo, isValid() descartava l'Einstein, la Marie
   // Curie i el Mozart —creia que no tenien nom— i no podien ser personatge del dia.
-  function wdLangs(){ const base=['ca','es','en','mul']; return [LANG].concat(base.filter(function(l){return l!==LANG;})).join('|'); }
+  // Ordre (22/11/2026, decisio d'en Bernat): en catala, despres ve el castella; en qualsevol altre
+  // idioma, despres ve l'ANGLES i el catala queda per al final. Si una persona no te descripcio en
+  // castella, millor l'anglesa que la catalana dins d'una pagina en castella.
+  function wdLangs(){ const base=LANG==='ca'?['ca','es','en','mul']:[LANG,'en','es','ca','mul']; return [LANG].concat(base.filter(function(l){return l!==LANG;})).join('|'); }
   // Aplica els textos estatics marcats amb data-i18n / data-i18n-title / data-i18n-aria.
   function applyI18nStatic(scope){
     const s=scope||document;
@@ -1306,6 +1309,14 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     s.querySelectorAll('[data-i18n-aria]').forEach(function(el){ el.setAttribute('aria-label',t(el.getAttribute('data-i18n-aria'))); });
     try{ document.title=t('doc_title'); }catch(_){}
   }
+  // Contingut de db.js en l'idioma actiu. Cada camp traduible te un GERMA amb sufix d'idioma
+  // (name_es, desc_es, wiki_es): en arrencar, si l'idioma no es el catala i el germa hi es,
+  // ocupa el lloc del camp. Un sol cop i en memoria: canviar d'idioma vol recarregar la pagina.
+  // Germans i no objectes {ca,es} a posta: el dashboard llegeix db.js amb regex de camps plans
+  // (name:'...'), i un objecte n'hauria trencat la meitat. Un germa BUIT ('') vol dir «no n'hi
+  // ha» i guanya igualment: millor sense descripcio que en catala dins d'una pagina en castella.
+  function localitza(o){ if(!o||LANG===I18N_DEFAULT) return o; ['name','desc','wiki'].forEach(function(k){ const v=o[k+'_'+LANG]; if(v!=null) o[k]=v; }); return o; }
+  if(window.HB_DATA){ (HB_DATA.PEOPLE||[]).forEach(localitza); (HB_DATA.EVENTS||[]).forEach(localitza); }
 
   // --- Catàleg de jocs ---
   // Només hi ha d'haver jocs que FUNCIONIN. Una targeta que no fa res no crea expectativa,
