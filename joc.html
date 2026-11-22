@@ -1154,13 +1154,26 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   let LANG=detectLang();
   try{ document.documentElement.lang=LANG; }catch(_){}
   // t(clau[,vars]): valor de l'idioma actiu amb fallback a I18N_DEFAULT. Accepta funcions i {var}.
+  // Si la clau falta a l'idioma actiu cau al catala, i si no hi es enlloc torna '' (alguns llocs
+  // hi compten). En tots dos casos AVISA per consola, un sol cop per clau: un text que cau al
+  // catala dins d'una pagina en castella no fa cap error i, sense l'avis, no es veuria.
+  // Pseudotraduccio (?lang=xx): l'idioma real segueix sent el catala (Wikidata, ordre alfabetic),
+  // pero tot el que passa per t() surt entre ⟦ ⟧ i el que passa per L() entre ⟪ ⟫. Qualsevol text
+  // de la pantalla sense marca no passa pel diccionari. Eina de revisio, no un idioma.
+  const I18N_PSEUDO=(function(){ try{ return /[?&]lang=xx(&|$)/.test(location.search); }catch(_){ return false; } })();
+  const I18N_AVISAT={};
+  function i18nAvisa(key,que){ if(I18N_AVISAT[key]) return; I18N_AVISAT[key]=1; try{ console.warn('[i18n] «'+key+'» '+que); }catch(_){} }
   function t(key,vars){
     const d=I18N[LANG]||I18N[I18N_DEFAULT];
-    let v=(d&&d[key]!=null)?d[key]:(I18N[I18N_DEFAULT]?I18N[I18N_DEFAULT][key]:null);
+    let v=(d&&d[key]!=null)?d[key]:null;
+    if(v==null){
+      v=I18N[I18N_DEFAULT]?I18N[I18N_DEFAULT][key]:null;
+      i18nAvisa(key, v==null?'no existeix al diccionari':'no esta traduida a '+LANG+' (surt en '+I18N_DEFAULT+')');
+    }
     if(v==null) return '';
-    if(typeof v==='function') return v(vars||{});
-    if(vars) v=v.replace(/\{(\w+)\}/g,function(m,k){ return vars[k]!=null?vars[k]:m; });
-    return v;
+    if(typeof v==='function') v=v(vars||{});
+    else if(vars) v=v.replace(/\{(\w+)\}/g,function(m,k){ return vars[k]!=null?vars[k]:m; });
+    return I18N_PSEUDO?'⟦'+v+'⟧':v;
   }
   function setLang(code){ if(I18N_SUPPORTED.indexOf(code)<0) return; LANG=code; try{ localStorage.setItem(LANG_KEY,code); document.documentElement.lang=code; }catch(_){} }
   // Prioritat d'idiomes per a Wikidata segons l'idioma actiu (p.ex. 'en' => 'en|ca|es').
@@ -2220,10 +2233,10 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     }
 
     function buildAndRender(){
-      if(!dataOk()){ root.innerHTML='<div class="err">Ens hem quedat sense història! N\'estem fabricant de nova. Torna demà 🛠️</div>'; return; }
+      if(!dataOk()){ root.innerHTML='<div class="err">'+t('err_no_data')+'</div>'; return; }
       const rng=mulberry32(seedFromStr('ord:'+todayStr()));
       const five=pickFive(rng);
-      if(!five){ root.innerHTML='<div class="err">Ens hem quedat sense història! N\'estem fabricant de nova. Torna demà 🛠️</div>'; return; }
+      if(!five){ root.innerHTML='<div class="err">'+t('err_no_data')+'</div>'; return; }
       byKey={}; five.forEach(it=>{ byKey[it.key]=it; });
       let o, guard=0; do{ o=shuffle(five.slice()); guard++; }while(isSorted(o)&&guard<25);
       order=o; locked=false; render();
@@ -2231,10 +2244,10 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
 
     // Reentrada un cop jugat avui: mostra SEMPRE els 5 elements amb el resultat marcat (per aprendre).
     function renderResolved(daily){
-      if(!dataOk()){ root.innerHTML='<div class="err">Ens hem quedat sense història! N\'estem fabricant de nova. Torna demà 🛠️</div>'; return; }
+      if(!dataOk()){ root.innerHTML='<div class="err">'+t('err_no_data')+'</div>'; return; }
       const rng=mulberry32(seedFromStr('ord:'+todayStr()));
       const five=pickFive(rng);
-      if(!five){ root.innerHTML='<div class="err">Ens hem quedat sense història! N\'estem fabricant de nova. Torna demà 🛠️</div>'; return; }
+      if(!five){ root.innerHTML='<div class="err">'+t('err_no_data')+'</div>'; return; }
       byKey={}; five.forEach(it=>{ byKey[it.key]=it; });
       let o=null;
       if(daily && daily.order && daily.order.length===five.length){ o=daily.order.map(k=>byKey[k]).filter(Boolean); if(o.length!==five.length) o=null; }

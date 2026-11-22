@@ -1100,7 +1100,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       <!-- Sense capcalera propia: les pestanyes ja diuen que hi ha a dins, i un titol
            «Configuracio» costava 40px dels 282 disponibles en landscape petit. -->
       <div class="cfgtabs" id="cfgtabs">
-        <button class="cfgx" id="cfgClose" type="button" aria-label="Tanca">✕</button>
+        <button class="cfgx" id="cfgClose" type="button" aria-label="Tanca" data-i18n-aria="close">✕</button>
       </div>
       <div class="cfgbody" id="cfgbody"></div>
     </div>
@@ -1213,6 +1213,7 @@ const I18N={
     cro_coll_cancel:'Cancel·la',
     cro_coll_needname:'Posa-li un nom abans de desar-la',
     cro_coll_opts:'Opcions de la col·lecció',
+    cro_bar_opts:'Opcions',   // el ⋮ de cada barra
     cro_coll_n: v => v.n===1 ? 'Col·lecció · 1 personatge' : 'Col·lecció · '+v.n+' personatges',
     cro_coll_empty_members:'Encara no hi ha ningú.',
     cro_coll_rm_member:'Treu-lo de la col·lecció',
@@ -1319,13 +1320,26 @@ function detectLang(){
 let LANG=detectLang();
 try{ document.documentElement.lang=LANG; }catch(_){}
 // t(clau[,vars]): valor de l'idioma actiu amb fallback a I18N_DEFAULT. Accepta funcions i {var}.
+// Si la clau falta a l'idioma actiu cau al catala, i si no hi es enlloc torna '' (alguns llocs
+// hi compten). En tots dos casos AVISA per consola, un sol cop per clau: un text que cau al
+// catala dins d'una pagina en castella no fa cap error i, sense l'avis, no es veuria.
+// Pseudotraduccio (?lang=xx): l'idioma real segueix sent el catala (Wikidata, ordre alfabetic),
+// pero tot el que passa per t() surt entre ⟦ ⟧ i el que passa per L() entre ⟪ ⟫. Qualsevol text
+// de la pantalla sense marca no passa pel diccionari. Eina de revisio, no un idioma.
+const I18N_PSEUDO=(function(){ try{ return /[?&]lang=xx(&|$)/.test(location.search); }catch(_){ return false; } })();
+const I18N_AVISAT={};
+function i18nAvisa(key,que){ if(I18N_AVISAT[key]) return; I18N_AVISAT[key]=1; try{ console.warn('[i18n] «'+key+'» '+que); }catch(_){} }
 function t(key,vars){
   const d=I18N[LANG]||I18N[I18N_DEFAULT];
-  let v=(d&&d[key]!=null)?d[key]:(I18N[I18N_DEFAULT]?I18N[I18N_DEFAULT][key]:null);
+  let v=(d&&d[key]!=null)?d[key]:null;
+  if(v==null){
+    v=I18N[I18N_DEFAULT]?I18N[I18N_DEFAULT][key]:null;
+    i18nAvisa(key, v==null?'no existeix al diccionari':'no esta traduida a '+LANG+' (surt en '+I18N_DEFAULT+')');
+  }
   if(v==null) return '';
-  if(typeof v==='function') return v(vars||{});
-  if(vars) v=v.replace(/\{(\w+)\}/g,function(m,k){ return vars[k]!=null?vars[k]:m; });
-  return v;
+  if(typeof v==='function') v=v(vars||{});
+  else if(vars) v=v.replace(/\{(\w+)\}/g,function(m,k){ return vars[k]!=null?vars[k]:m; });
+  return I18N_PSEUDO?'⟦'+v+'⟧':v;
 }
 function setLang(code){ if(I18N_SUPPORTED.indexOf(code)<0) return; LANG=code; try{ localStorage.setItem(LANG_KEY,code); document.documentElement.lang=code; }catch(_){} }
 // Prioritat d'idiomes per a Wikidata segons l'idioma actiu (p.ex. 'en' => 'en|ca|es').
@@ -1350,7 +1364,8 @@ function applyI18nStatic(scope){
 //   {name:'Prehistòria', ...}                          -> igual a totes les llengues
 //   {name:{ca:'Prehistòria',es:'Prehistoria'}, ...}     -> traduit
 // Fallback: idioma actiu -> I18N_DEFAULT -> primer valor que hi hagi.
-function L(v){
+function L(v){ const r=Lcru(v); return (I18N_PSEUDO&&r!=='')?'⟪'+r+'⟫':r; }
+function Lcru(v){
   if(v==null) return '';
   if(typeof v==='string') return v;
   if(v[LANG]!=null) return v[LANG];
@@ -1815,7 +1830,7 @@ function render(){
       const fade=alive?`<span class="fade" style="left:${pillW}px;width:${FUTURE_FADE}px;background:${col}"></span>`:'';   // future fade for the living
       const lblW=pillW-(_coarse?16:20);
       const lblStyle=lblW<28?'display:none':'max-width:'+lblW+'px;overflow:hidden;text-overflow:ellipsis';
-      return `<div class="bar${alive?' alive':''}${state.selected===p.id?' sel':''}" data-id="${p.id}" style="left:${p._startX}px;top:${top}px;width:${pillW}px;background:${col}">${fade}<span class="lbl" style="${lblStyle}">${esc(L(p.name))}</span><button class="menu" data-menu="${p.id}" title="Opcions">⋮</button></div>`;
+      return `<div class="bar${alive?' alive':''}${state.selected===p.id?' sel':''}" data-id="${p.id}" style="left:${p._startX}px;top:${top}px;width:${pillW}px;background:${col}">${fade}<span class="lbl" style="${lblStyle}">${esc(L(p.name))}</span><button class="menu" data-menu="${p.id}" title="${esc(t('cro_bar_opts'))}">⋮</button></div>`;
     }).join('');
   }else{
     barsLayer.innerHTML=`<div class="emptyState" style="top:6px">${t('cro_empty_canvas')}</div>`;
@@ -3398,8 +3413,8 @@ function toggleFav(p){
   else {
     // La foto nomes la te el joc; si ja hi era i la portava, no se li pren.
     const abans=llegeixFavorits().find(f=>f&&f.qid===qid);
-    a.push({qid, name:L(p.name), birth:p.birth==null?null:p.birth, death:p.death==null?null:p.death,
-            img:(abans&&abans.img)||null, desc:L(p.desc)||''});
+    a.push({qid, name:Lcru(p.name), birth:p.birth==null?null:p.birth, death:p.death==null?null:p.death,
+            img:(abans&&abans.img)||null, desc:Lcru(p.desc)||''});   // Lcru: es desa, no s'hi ha de colar la marca de ?lang=xx
   }
   try{ localStorage.setItem(FAV_LS,JSON.stringify(a)); }catch(ex){}
   return i<0;   // true = ara es favorit
@@ -3519,7 +3534,7 @@ function jocBar(items,source){
     if(item.kind==='person'){
       const p=item.p;
       if(showYears){
-        const y1=fmtY(p.birth);const y2=p.death!=null?fmtY(p.death):'avui';
+        const y1=fmtY(p.birth);const y2=p.death!=null?fmtY(p.death):t('cro_today');
         btn.textContent=L(p.name)+' ('+y1+'–'+y2+')';
       }else{btn.textContent=L(p.name);}
       btn.title=t('cro_pb_rehighlight');

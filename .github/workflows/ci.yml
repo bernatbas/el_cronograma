@@ -200,6 +200,81 @@ jobs:
           print("OK: %d col·leccions, cap passa de COLL_MAX=%d" % (len(seen), COLL_MAX))
           EOF
 
+      # Diccionari i18n. t() d'una clau que no existeix torna '' (un botó en blanc, sense cap
+      # error) i una clau que falta en un idioma cau al català sense dir res: tots dos buits són
+      # invisibles al navegador. Aquí: (1) cada clau que el codi fa servir existeix al català;
+      # (2) cada idioma té EXACTAMENT les mateixes claus que el català. El de text per pantalla
+      # (el que s'escapa del diccionari) el fa tests/i18n.spec.js amb la pseudotraducció.
+      - name: Diccionari i18n — claus
+        run: |
+          python3 - <<'EOF'
+          import re, sys
+
+          KEY = re.compile(r"(?m)(?:^\s*|[,{]\s*)([a-z][a-z0-9_]*)\s*:(?![:/])")
+          LANGHDR = re.compile(r"(?m)^\s*([a-z]{2,3}):\{\s*$")
+          fail = []
+          db = open('db.js', encoding='utf-8').read()
+          for f in ['index.html', 'joc.html']:
+              s = open(f, encoding='utf-8').read()
+              i = s.find('const I18N={'); j = s.find('function detectLang', i)
+              if i < 0 or j < 0:
+                  sys.exit("ERROR: no trobo 'const I18N={' ... 'function detectLang' a %s "
+                           "(s'ha renombrat? el check llegeix el diccionari d'alla)" % f)
+              blk = s[i:j]
+              hdr = list(LANGHDR.finditer(blk))
+              if not hdr or hdr[0].group(1) != 'ca':
+                  sys.exit("ERROR: %s: el primer idioma del diccionari hauria de ser 'ca'" % f)
+              langs = {}
+              for n, h in enumerate(hdr):
+                  seg = blk[h.end():(hdr[n + 1].start() if n + 1 < len(hdr) else len(blk))]
+                  ks = KEY.findall(seg)
+                  dup = sorted({k for k in ks if ks.count(k) > 1})
+                  if dup:
+                      fail.append("%s [%s]: claus repetides: %s" % (f, h.group(1), ', '.join(dup)))
+                  langs[h.group(1)] = set(ks)
+              ca = langs['ca']
+              if len(ca) < 50:
+                  sys.exit("ERROR: %s: només trobo %d claus al català; el parser s'ha quedat cec" % (f, len(ca)))
+
+              # (2) mateixes claus a tots els idiomes
+              for lg, ks in langs.items():
+                  if lg == 'ca':
+                      continue
+                  falten, sobren = sorted(ca - ks), sorted(ks - ca)
+                  if falten:
+                      fail.append("%s [%s]: falten %d claus: %s" % (f, lg, len(falten), ', '.join(falten[:30])))
+                  if sobren:
+                      fail.append("%s [%s]: claus que el català no té: %s" % (f, lg, ', '.join(sobren[:30])))
+
+              # (1) les que el codi fa servir, existeixen
+              code = s[:i] + s[j:]
+              usats = set(re.findall(r"\bt\('([a-z0-9_]+)'\s*[,)]", code))
+              usats |= set(re.findall(r'data-i18n(?:-title|-aria)?="([a-z0-9_]+)"', code))
+              usats |= set(re.findall(r"(?:titleKey|descKey)\s*:\s*'([a-z0-9_]+)'", code))
+              usats |= set(re.findall(r"pushUndo\('([a-z0-9_]+)'", code))
+              for k in sorted(usats - ca):
+                  fail.append("%s: el codi fa servir t('%s') i no existeix al diccionari" % (f, k))
+              # claus fetes a trossos: t('prefix'+x) -> ha d'haver-n'hi alguna amb el prefix
+              for p in sorted(set(re.findall(r"\bt\('([a-z0-9_]+)'\s*\+", code))):
+                  if not any(k.startswith(p) for k in ca):
+                      fail.append("%s: t('%s'+...) i cap clau comença per '%s'" % (f, p, p))
+              print("  %-10s %s · %d claus usades directament" % (
+                  f, ' · '.join('%s %d' % (lg, len(ks)) for lg, ks in langs.items()), len(usats)))
+
+              # categories: cada slug de CAT_COLORS ha de tenir la seva etiqueta (només a l'index)
+              if f == 'index.html':
+                  m = re.search(r"const CAT_COLORS\s*=\s*\{([^}]*)\}", db)
+                  if not m:
+                      sys.exit("ERROR: no trobo CAT_COLORS a db.js")
+                  for slug in re.findall(r"([a-z]+)\s*:", m.group(1)):
+                      if 'cat_' + slug not in ca:
+                          fail.append("index.html: falta l'etiqueta cat_%s (CAT_COLORS en té el slug)" % slug)
+
+          if fail:
+              sys.exit("ERROR i18n:\n- " + "\n- ".join(fail))
+          print("OK: diccionaris complets i coherents")
+          EOF
+
       - name: Sintaxi JS — claus equilibrades
         run: |
           python3 - <<'EOF'
