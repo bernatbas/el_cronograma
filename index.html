@@ -1576,7 +1576,9 @@ const LANG_PAGINES=['es'];
   try{
     const u=new URL(location.href);
     if(!/^https?:$/.test(u.protocol)) return;
-    u.searchParams.delete('lang');
+    // Nomes un idioma de veritat (amb diccionari): el ?lang=xx de la pseudotraduccio s'ha de quedar a
+    // la barra, que I18N_PSEUDO el llegeix mes avall (sense aixo, el CI va petar el 22/11/2026).
+    const lp=u.searchParams.get('lang'); if(lp&&I18N[lp]) u.searchParams.delete('lang');
     let p=u.pathname.replace(/^\/[a-z]{2}\//,'/');
     if(LANG_PAGINES.indexOf(LANG)>=0) p='/'+LANG+(p==='/'||p==='/index.html'?'/':p);
     u.pathname=p;
