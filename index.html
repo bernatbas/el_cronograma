@@ -1203,6 +1203,11 @@ const I18N={
     t_personatgedia:'Personatge del dia',
     // -- compartides: topbar, footer i titol del document --
     doc_title:'Babilinia · Cronograma',
+    // previsualització en compartir (metaIdioma): les etiquetes del <head>, en aquest idioma
+    doc_desc:'Línia de temps interactiva de la història: personatges, esdeveniments i èpoques per veure què passava alhora i qui va coincidir amb qui.',
+    doc_og_desc:'Tota la història en una línia. Descobreix qui va coincidir amb qui.',
+    doc_og_alt:'Babilinia: la web que no es va fer en un dia',
+    doc_locale:'ca_ES',
     nav_sections:'Seccions',
     nav_cronograma:'Cronograma',
     nav_jocs:'Jocs',
@@ -1377,6 +1382,11 @@ const I18N={
     t_personatgedia:'Personaje del día',
     // -- compartides: topbar, footer i titol del document --
     doc_title:'Babilinia · Cronograma',
+    // previsualització en compartir (metaIdioma): les etiquetes del <head>, en aquest idioma
+    doc_desc:'Línea de tiempo interactiva de la historia: personajes, acontecimientos y épocas para ver qué pasaba a la vez y quién coincidió con quién.',
+    doc_og_desc:'Toda la historia en una línea. Descubre quién coincidió con quién.',
+    doc_og_alt:'Babilinia: la web que no se hizo en un día',
+    doc_locale:'es_ES',
     nav_sections:'Secciones',
     nav_cronograma:'Cronograma',
     nav_jocs:'Juegos',
@@ -1627,6 +1637,28 @@ function applyI18nStatic(scope){
   s.querySelectorAll('[data-i18n-title]').forEach(function(el){ el.title=t(el.getAttribute('data-i18n-title')); });
   s.querySelectorAll('[data-i18n-aria]').forEach(function(el){ el.setAttribute('aria-label',t(el.getAttribute('data-i18n-aria'))); });
   try{ document.title=t('doc_title'); }catch(_){}
+  metaIdioma();
+}
+// Etiquetes de previsualitzacio en l'idioma actiu (22/11/2026). El boto de compartir del mobil NO torna
+// a demanar la pagina: fa la previsualitzacio amb les etiquetes del document CARREGAT, i a l'HTML son en
+// catala. Aqui es posen les de l'idioma actiu (textos al diccionari: doc_*), la imatge (og-<idioma>.png
+// si l'idioma te pagines propies) i l'adreça canonica, que ja porta el /es/ (veure «Adreça de l'idioma»).
+// _tools/gen_compartir.py llegeix els mateixos doc_* per a les pagines es/: un sol lloc per als textos.
+function metaIdioma(){
+  try{
+    const set=function(sel,attr,v){ const m=document.querySelector(sel); if(m&&v) m.setAttribute(attr,v); };
+    const propia=LANG_PAGINES.indexOf(LANG)>=0;
+    set('meta[name="description"]','content',t('doc_desc'));
+    set('meta[property="og:locale"]','content',t('doc_locale'));
+    set('meta[property="og:title"]','content',t('doc_title'));
+    set('meta[property="og:description"]','content',t('doc_og_desc'));
+    set('meta[property="og:image:alt"]','content',t('doc_og_alt'));
+    set('meta[property="og:image"]','content','https://www.babilinia.com/img/'+(propia?'og-'+LANG:'og')+'.png');
+    if(/^https?:$/.test(location.protocol)){
+      const url='https://www.babilinia.com'+location.pathname.replace(/\/index\.html$/,'/');
+      set('link[rel="canonical"]','href',url); set('meta[property="og:url"]','content',url);
+    }
+  }catch(_){}
 }
 // L(v): resol un camp de CONTINGUT de [1] DATA (noms d'eres, marcs, blocs i events).
 // Accepta una cadena (un sol idioma) o un objecte per idioma, aixi el contingut es

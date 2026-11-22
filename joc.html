@@ -1088,6 +1088,11 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       meta_death:'🕯️ mort',
       // -- capcalera / peu (compartit amb index) --
       doc_title:'Babilinia · Jocs',
+      // previsualització en compartir (metaIdioma): les etiquetes del <head>, en aquest idioma
+      doc_desc:'Reptes diaris d’història per jugar i aprendre: situa fets i personatges en el temps i descobreix-ne de nous cada dia.',
+      doc_og_desc:'Si sempre t’ha costat aprendre història no està tot perdut: ara també pots perdre el temps.',
+      doc_og_alt:'Babilinia: la web que no es va fer en un dia',
+      doc_locale:'ca_ES',
       nav_sections:'Seccions',
       nav_cronograma:'Cronograma',
       nav_jocs:'Jocs',
@@ -1204,6 +1209,11 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       meta_death:'🕯️ muerte',
       // -- capcalera / peu (compartit amb index) --
       doc_title:'Babilinia · Juegos',
+      // previsualització en compartir (metaIdioma): les etiquetes del <head>, en aquest idioma
+      doc_desc:'Retos diarios de historia para jugar y aprender: sitúa hechos y personajes en el tiempo y descubre otros nuevos cada día.',
+      doc_og_desc:'Si siempre te ha costado aprender historia, no está todo perdido: ahora también puedes perder el tiempo.',
+      doc_og_alt:'Babilinia: la web que no se hizo en un día',
+      doc_locale:'es_ES',
       nav_sections:'Secciones',
       nav_cronograma:'Cronograma',
       nav_jocs:'Juegos',
@@ -1385,6 +1395,28 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     s.querySelectorAll('[data-i18n-title]').forEach(function(el){ el.title=t(el.getAttribute('data-i18n-title')); });
     s.querySelectorAll('[data-i18n-aria]').forEach(function(el){ el.setAttribute('aria-label',t(el.getAttribute('data-i18n-aria'))); });
     try{ document.title=t('doc_title'); }catch(_){}
+    metaIdioma();
+  }
+  // Etiquetes de previsualitzacio en l'idioma actiu (22/11/2026). El boto de compartir del mobil NO torna
+  // a demanar la pagina: fa la previsualitzacio amb les etiquetes del document CARREGAT, i a l'HTML son en
+  // catala. Aqui es posen les de l'idioma actiu (textos al diccionari: doc_*), la imatge (og-<idioma>.png
+  // si l'idioma te pagines propies) i l'adreça canonica, que ja porta el /es/ (veure «Adreça de l'idioma»).
+  // _tools/gen_compartir.py llegeix els mateixos doc_* per a les pagines es/: un sol lloc per als textos.
+  function metaIdioma(){
+    try{
+      const set=function(sel,attr,v){ const m=document.querySelector(sel); if(m&&v) m.setAttribute(attr,v); };
+      const propia=LANG_PAGINES.indexOf(LANG)>=0;
+      set('meta[name="description"]','content',t('doc_desc'));
+      set('meta[property="og:locale"]','content',t('doc_locale'));
+      set('meta[property="og:title"]','content',t('doc_title'));
+      set('meta[property="og:description"]','content',t('doc_og_desc'));
+      set('meta[property="og:image:alt"]','content',t('doc_og_alt'));
+      set('meta[property="og:image"]','content','https://www.babilinia.com/img/'+(propia?'og-'+LANG:'og')+'.png');
+      if(/^https?:$/.test(location.protocol)){
+        const url='https://www.babilinia.com'+location.pathname.replace(/\/index\.html$/,'/');
+        set('link[rel="canonical"]','href',url); set('meta[property="og:url"]','content',url);
+      }
+    }catch(_){}
   }
   // Contingut de db.js en l'idioma actiu. Cada camp traduible te un GERMA amb sufix d'idioma
   // (name_es, desc_es, wiki_es): en arrencar, si l'idioma no es el catala i el germa hi es,

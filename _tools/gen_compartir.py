@@ -23,6 +23,7 @@ l'adreça de l'idioma actiu. Copiar l'adreça de la barra del navegador segueix 
 Un idioma nou = un bloc a TEXTOS i, a part, la imatge: sh _tools/og/gen_og.sh <idioma> "<lema>".
 """
 import os
+import re
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WEB = "https://www.babilinia.com"
@@ -41,14 +42,10 @@ TEXTOS = {
     },
     "es": {
         "locale": "es_ES", "img": "/img/og-es.png", "alt": "Babilinia: la web que no se hizo en un día",
-        # El cronograma: les mateixes que a index.html, en castellà (description = Google; og = WhatsApp).
-        "arrel": ("Babilinia · Cronograma",
-                  "Línea de tiempo interactiva de la historia: personajes, acontecimientos y épocas para ver qué pasaba a la vez y quién coincidió con quién.",
-                  "Toda la historia en una línea. Descubre quién coincidió con quién."),
-        # Els jocs: les mateixes que a joc.html, en castellà.
-        "joc": ("Babilinia · Juegos",
-                "Retos diarios de historia para jugar y aprender: sitúa hechos y personajes en el tiempo y descubre otros nuevos cada día.",
-                "Si siempre te ha costado aprender historia, no está todo perdido: ahora también puedes perder el tiempo."),
+        # El cronograma i els jocs (es/ i es/joc.html): els textos són els doc_* del diccionari de cada
+        # pàgina (els mateixos que hi posa metaIdioma() en arrencar), així no s'escriuen dues vegades.
+        "arrel": "index.html",
+        "joc": "joc.html",
         "jocs": {
             "ordena": ("Ordena la línea", "Reto diario de historia: pon en orden hechos y personajes, del más antiguo al más reciente."),
             "abansdespres": ("¿Antes o después?", "Reto diario de historia: ¿pasó antes o después? Aprende a situar hechos y personajes en el tiempo."),
@@ -58,6 +55,24 @@ TEXTOS = {
         },
     },
 }
+
+
+def dicc(fitxer, lang):
+    """Les claus doc_* del diccionari I18N[lang] d'una pàgina (cadenes entre cometes simples)."""
+    src = open(os.path.join(REPO, fitxer), encoding="utf-8").read()
+    i = src.index("const I18N={"); j = src.index("function detectLang", i)
+    blk = src[i:j]
+    m = re.search(r"(?m)^\s*" + lang + r":\{\s*$", blk)
+    if not m:
+        raise SystemExit("No trobo el diccionari '%s' a %s" % (lang, fitxer))
+    seg = blk[m.end():]
+    n = re.search(r"(?m)^\s*[a-z]{2}:\{\s*$", seg)
+    seg = seg[:n.start()] if n else seg
+    out = dict(re.findall(r"\b(doc_[a-z_]+)\s*:\s*'([^']*)'", seg))
+    for k in ("doc_title", "doc_desc", "doc_og_desc"):
+        if k not in out:
+            raise SystemExit("Falta %s a %s [%s]" % (k, fitxer, lang))
+    return out
 
 
 def esc(s):
@@ -121,7 +136,8 @@ def main():
                 f"Enllaç curt per compartir (babilinia.com/{pref}jocs/{joc}): porta directament al joc en "
                 f"aquest idioma. Els jocs viuen tots a joc.html i es trien pel #."))
         if "arrel" in t:
-            titol, desc, og_desc = t["arrel"]
+            d = dicc(t["arrel"], lang)
+            titol, desc, og_desc = d["doc_title"], d["doc_desc"], d["doc_og_desc"]
             # Passa el que porti l'adreça (?col=… d'una col·lecció compartida, #…) a la pàgina de veritat.
             js = (f"var q=location.search.replace(/^\\?/,'');"
                   f"location.replace('/?lang={lang}'+(q?'&'+q:'')+location.hash);")
@@ -130,7 +146,8 @@ def main():
                 f"El cronograma en aquest idioma, per compartir (babilinia.com/{pref}). Porta a /?lang={lang} "
                 f"i hi passa el que porti l'adreça (?col=… d'una col·lecció compartida)."))
         if "joc" in t:
-            titol, desc, og_desc = t["joc"]
+            d = dicc(t["joc"], lang)
+            titol, desc, og_desc = d["doc_title"], d["doc_desc"], d["doc_og_desc"]
             js = (f"var q=location.search.replace(/^\\?/,'');"
                   f"location.replace('/joc.html?lang={lang}'+(q?'&'+q:'')+location.hash);")
             escriu(f"{pref}joc.html", pagina(
