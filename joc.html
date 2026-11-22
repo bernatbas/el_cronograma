@@ -3306,6 +3306,16 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   btn.addEventListener('click',e=>{e.stopPropagation();const o=ls.classList.toggle('open');btn.setAttribute('aria-expanded',o?'true':'false');});
   document.addEventListener('click',e=>{if(!ls.contains(e.target))tanca();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')tanca();});
+  // Coherència entre pàgines: l'idioma és UN per a tota l'experiència (hb_lang és compartit). Però el
+  // botó enrere (i el «← Al joc», que fa history.back()) restaura la pàgina de la memòria del navegador
+  // (bfcache) TAL COM ERA, sense tornar-la a carregar: si mentrestant s'ha canviat l'idioma a l'altra
+  // pàgina, tornaria en l'idioma vell. Si no quadra, es recarrega (sense el ?lang de l'adreça, que és
+  // vell: el que mana ara és la tria de l'usuari).
+  window.addEventListener('pageshow',e=>{
+    if(!e.persisted)return;
+    let vol=null;try{vol=sessionStorage.getItem('hb_lang_sessio')||localStorage.getItem('hb_lang');}catch(_){}
+    if(vol&&vol!==act){const u=new URL(location.href);u.searchParams.delete('lang');location.replace(u.toString());}
+  });
 })();
 // ===== fi del bloc compartit =====
 </script>
