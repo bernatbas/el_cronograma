@@ -42,9 +42,10 @@ Pla acordat el 22/11/2026, **per fases** (cadascuna validada abans de la següen
    - `PD_PINNED` del joc: les descripcions estan escrites en català.
    - Als jocs els noms no passen per cap `L()`: el joc no en té, caldrà portar-l’hi.
    - Si no hi ha descripció en castellà: l’anglesa (decisió d’en Bernat, 22/11/2026).
-4. **Selector i idioma per defecte**: «CA · ES» al menú de la topbar o al peu (bloc compartit),
-   `?lang=es` a l’adreça, i per defecte `hb_lang` → `?lang` → idioma del navegador. Sense IP.
-   Les metadades del `<head>` (description, Open Graph) són estàtiques: WhatsApp no executa JS.
+4. **Selector i idioma per defecte** (en curs). ✅ (22/11/2026) «CA ▾» a la topbar (bloc compartit),
+   `es` actiu, idioma: `?lang` (recordat a la sessió) → `hb_lang` → idioma principal del navegador → català.
+   Falta: comprovar el disseny dels jocs en castellà (avisos de scroll), la guia en castellà, i decidir
+   les metadades/previsualitzacions (WhatsApp no executa JS), l’`og.png` i si es registra l’idioma a GA.
 5. **Rellevància regional** (més endavant): no esborrar ningú; pesar el que se *suggereix*
    (context, marcs per defecte) per l’article a la Viquipèdia de l’idioma. ⚠️ Els reptes diaris
    han de ser iguals per a tothom, o dos amics no podrien comparar resultats.

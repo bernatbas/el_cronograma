@@ -113,6 +113,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
      l'aire va entre el separador i el cercador. 180 = «Cercant a Wikidata…» en una línia. */
   .topbar-right .search{flex:1 1 auto;min-width:180px;max-width:420px;}
   @media (max-width:480px){ .topbar-right .search{min-width:120px;} }   /* pas 5: últim recurs */
+  /* Mòbil estret en vertical (360 i menys): amb el selector d'idioma (22/11/2026) a 120 el cercador
+     trepitjava la marca. Abans que trepitjar res, que s'encongeixi més (en tocar-lo, el text es llegeix igual). */
+  @media (max-width:400px){ .topbar-right .search{min-width:60px;} }
   .topbar.navopen .search{min-width:110px;}   /* amb el menú obert la marca creix: el cercador cedeix mentre estigui obert */
   .secnav{display:flex;align-items:center;gap:14px;min-width:0;}
   /* La marca és un <button> per poder obrir el desplegable. Es neutralitza NOMÉS el chrome
@@ -169,6 +172,27 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .secnav.hb .brand-short{display:inline;}
   .secnav.hb.open .brand-long{display:inline;}
   .secnav.hb.open .brand-short{display:none;}
+  /* --- Selector d'idioma (22/11/2026): a la dreta de la topbar, a les dues pàgines ---
+     Mides calcades de .mode a cada tram (38 / 32 a ≤860 / 30 a alçada ≤560 i en tàctil): tot el que
+     hi ha a la topbar ha de fer l'alçada de .btn o la barra fa un saltet en navegar. A ≤720 perd la
+     fletxa i queda quadrat (34px), com els botons d'acció en icona. El desplegable copia el del menú
+     plegat. Autosuficient: no depèn del codi de cap pàgina (al joc, aquest bloc viu FORA del mòdul). */
+  .langsel{position:relative;flex:0 0 auto;}
+  .langbtn{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:38px;min-height:38px;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);font-family:inherit;font-size:13px;font-weight:600;letter-spacing:.04em;line-height:1;color:#fff;cursor:pointer;transition:background .14s;}
+  .langbtn:hover{background:rgba(255,255,255,.22);}
+  .langsel.open .langbtn{background:#fff;border-color:#fff;color:#B23A2E;}
+  .langcaret{display:block;width:10px;height:10px;flex:0 0 auto;opacity:.85;transition:transform .15s;}
+  .langsel.open .langcaret{transform:rotate(180deg);}
+  @media (max-width:860px){ .langbtn{min-width:32px;min-height:32px;padding:4px 8px;} }
+  @media (max-height:560px){ .langbtn{min-width:30px;min-height:30px;padding:3px 8px;} }
+  @media (pointer:coarse){ .langbtn{min-width:30px;min-height:30px;padding:3px 8px;} }
+  @media (max-width:720px){ .langcaret{display:none;} .langbtn{width:34px;min-width:34px;padding:0;} }
+  .langmenu{display:none;position:absolute;top:calc(100% + 8px);right:0;flex-direction:column;align-items:stretch;gap:2px;min-width:160px;padding:6px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 28px rgba(40,44,60,.22);z-index:40;}
+  .langsel.open .langmenu{display:flex;}
+  .langopt{display:flex;align-items:center;gap:10px;padding:9px 10px;border:0;background:none;border-radius:6px;color:var(--text);font-family:inherit;font-size:14px;font-weight:500;line-height:1.2;text-align:left;cursor:pointer;}
+  .langopt:hover{background:var(--soft);}
+  .langopt.on{background:#F7E5E0;color:#B23A2E;font-weight:600;cursor:default;}
+  .langopt .lcode{min-width:20px;font-size:11px;font-weight:600;letter-spacing:.04em;opacity:.55;}
   /* ===== fi del bloc compartit ===== */
   .btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:6px 10px;font-size:14px;font-weight:500;min-width:38px;min-height:38px;cursor:pointer;transition:background .12s;font-family:inherit;}
   .btn:hover{background:rgba(255,255,255,.22);}
@@ -937,6 +961,8 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
      text s'aclareix. El text blanc sobre terracota es queda igual. */
   @media (prefers-color-scheme:dark){
     .secnav.navcollapsed .modeswitch{background:var(--canvas);}
+    .langmenu{background:var(--canvas);}   /* selector d'idioma: igual que el menu plegat */
+    .langopt.on{background:rgba(184,80,60,.22);color:#F0A493;}
     .secnav.navcollapsed .mode.on{background:rgba(184,80,60,.22);color:#F0A493;}
     .ordbar{color:#F0A493;}   /* «▲ més antic / ▼ més nou»: la terracota de fons clar, sobre fosc no es llegia */
     .badge,.err,.pchip,.pbtn.fav.on,.tagd{background:rgba(184,80,60,.22);color:#F0A493;}
@@ -993,6 +1019,15 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   </div>
   <div class="topbar-right">
     <!-- Aquí hi havia «Tots els jocs». Tret el 21/11/2026: ja hi porta la casa del final de cada joc, i «Jocs» del commutador. -->
+    <!-- Selector d'idioma: MATEIX markup a les dues pàgines (el comportament, al bloc compartit). Els noms
+         de cada idioma van en la seva llengua, com és costum: no es tradueixen. -->
+    <div class="langsel" data-i18n-skip>
+      <button class="langbtn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Idioma" data-i18n-aria="lang_label"><span class="langcur">CA</span><svg class="langcaret" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5"/></svg></button>
+      <div class="langmenu" role="menu">
+        <button class="langopt" type="button" role="menuitemradio" data-lang="ca" lang="ca"><span class="lcode">CA</span>Català</button>
+        <button class="langopt" type="button" role="menuitemradio" data-lang="es" lang="es"><span class="lcode">ES</span>Español</button>
+      </div>
+    </div>
   </div>
 </header>
 <main id="app"></main>
@@ -1015,13 +1050,13 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   // ---- Analitica: helper unic per a GA4 (unifica els events + guard contra gtag absent) ----
   function track(event, params){ try{ if(typeof gtag!=='undefined') gtag('event', event, params||{}); }catch(_){} }
 
-  // ===== i18n · internacionalitzacio (backend preparat; nomes 'ca' actiu) =====
+  // ===== i18n · internacionalitzacio (ca i es actius des del 22/11/2026) =====
   // Contracte compartit amb index.html (veure i18n_requirements.md):
   //   - clau localStorage 'hb_lang', codis ISO 639-1 ('ca'|'es'|'en').
-  //   - deteccio ACTIVA (navigator.language) pero CLAMPADA a I18N_SUPPORTED => avui sempre 'ca'.
+  //   - deteccio: ?lang > sessio > hb_lang (selector) > idioma PRINCIPAL del navegador > 'ca' (detectLang).
   // Per activar un idioma: afegir el codi a I18N_SUPPORTED, omplir I18N[codi] i validar-lo.
   const I18N_DEFAULT='ca';
-  const I18N_SUPPORTED=['ca'];   // idiomes ACTIUS (traduits + validats). Afegir 'es'/'en' aqui.
+  const I18N_SUPPORTED=['ca','es'];   // idiomes ACTIUS (traduits + validats). Castella actiu des del 22/11/2026.
   const LANG_KEY='hb_lang';
   const I18N={
     ca:{
@@ -1053,6 +1088,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       nav_jocs:'Jocs',
       back_all:'Tots els jocs',
       footer_source:'Dades de',
+      lang_label:'Idioma',
       // -- menu de jocs --
       badge_discover:'🌟 Descobreix',
       badge_daily:'Repte diari',   // la icona del calendari la posa ICO_CAL (21/11/2026)
@@ -1168,6 +1204,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       nav_jocs:'Juegos',
       back_all:'Todos los juegos',
       footer_source:'Datos de',
+      lang_label:'Idioma',
       // -- menu de jocs --
       badge_discover:'🌟 Descubre',
       badge_daily:'Reto diario',
@@ -1257,14 +1294,21 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   };
   function detectLang(){
     try{
-      // ?lang=es: PREVISUALITZACIO d'un idioma que te diccionari encara que no sigui a
-      // I18N_SUPPORTED. Nomes per a aquesta carrega: no es desa a hb_lang (fase 4, selector).
+      // Ordre (22/11/2026): 1) ?lang= a l'adreça · 2) el ?lang d'abans en aquesta pestanya ·
+      // 3) el que l'usuari ha triat al selector (hb_lang) · 4) el del navegador · 5) catala.
+      // El ?lang es recorda a sessionStorage perque no es perdi en navegar entre pagines, pero NO
+      // es desa a hb_lang: un enllaç compartit no ha de canviar la preferencia de qui l'obre.
+      // Accepta qualsevol idioma amb diccionari (tambe un d'encara no actiu, per previsualitzar-lo).
       const q=/[?&]lang=([a-z]{2})(&|$)/.exec(location.search);
-      if(q && I18N[q[1]]) return q[1];
+      if(q && I18N[q[1]]){ try{ sessionStorage.setItem('hb_lang_sessio',q[1]); }catch(_){} return q[1]; }
+      const ses=sessionStorage.getItem('hb_lang_sessio');
+      if(ses && I18N[ses]) return ses;
       const saved=localStorage.getItem(LANG_KEY);
       if(saved && I18N_SUPPORTED.indexOf(saved)>=0) return saved;
-      const navs=(navigator.languages&&navigator.languages.length)?navigator.languages:[navigator.language||''];
-      for(let i=0;i<navs.length;i++){ const c=String(navs[i]||'').slice(0,2).toLowerCase(); if(I18N_SUPPORTED.indexOf(c)>=0) return c; }
+      // NOMES l'idioma PRINCIPAL del navegador (decisio d'en Bernat, 22/11/2026): amb «en-US, es-ES»
+      // toca catala, no castella. Si el principal no el tenim, el default i prou.
+      const nav=String((navigator.languages&&navigator.languages[0])||navigator.language||'').slice(0,2).toLowerCase();
+      if(I18N_SUPPORTED.indexOf(nav)>=0) return nav;
     }catch(_){}
     return I18N_DEFAULT;
   }
@@ -3236,6 +3280,32 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   if(MQ.addEventListener)MQ.addEventListener('change',reavalua);   // el llindar tàctil pot canviar sense que el resize arribi a temps
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(reavalua);   // Oswald canvia l'amplada de la marca
   window.addEventListener('pageshow',e=>{if(e.persisted)reavalua();});   // bfcache: el back-button restaura la pàgina sense re-executar el JS; reavalua garanteix que la barreta es recalculi
+})();
+// --- Selector d'idioma (22/11/2026). Autosuficient a posta: al joc aquest bloc viu FORA del mòdul
+// on hi ha LANG i setLang(), així que llegeix l'idioma actiu de <html lang> (el posen totes dues
+// pàgines) i, en triar-ne un, el desa a hb_lang (la clau compartida), oblida el ?lang de la sessió
+// i recarrega: el contingut es tradueix NOMÉS en arrencar (localitza()).
+(function(){
+  const ls=document.querySelector('.langsel');
+  if(!ls)return;
+  const btn=ls.querySelector('.langbtn'), cur=ls.querySelector('.langcur');
+  const act=(document.documentElement.lang||'ca').slice(0,2);
+  if(cur)cur.textContent=act.toUpperCase();
+  ls.querySelectorAll('.langopt').forEach(o=>{
+    const on=o.dataset.lang===act;
+    o.classList.toggle('on',on);o.setAttribute('aria-checked',on?'true':'false');
+    o.addEventListener('click',e=>{
+      e.stopPropagation();
+      if(on){tanca();return;}
+      try{localStorage.setItem('hb_lang',o.dataset.lang);sessionStorage.removeItem('hb_lang_sessio');}catch(_){}
+      const u=new URL(location.href);u.searchParams.delete('lang');
+      location.replace(u.toString());
+    });
+  });
+  function tanca(){ls.classList.remove('open');btn.setAttribute('aria-expanded','false');}
+  btn.addEventListener('click',e=>{e.stopPropagation();const o=ls.classList.toggle('open');btn.setAttribute('aria-expanded',o?'true':'false');});
+  document.addEventListener('click',e=>{if(!ls.contains(e.target))tanca();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')tanca();});
 })();
 // ===== fi del bloc compartit =====
 </script>
