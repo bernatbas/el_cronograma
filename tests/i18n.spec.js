@@ -21,7 +21,7 @@ const PROPIS = /^(\[aria-label\] )?(BABIL|NIA|Babilinia|© 2026 Babilinia|Wikida
 // s'ha d'anar BUIDANT: el que hi quedi han de ser només dades de Wikidata, que ja arriben en
 // l'idioma actiu.
 const CONTINGUT = [
-  '.cname', 'h2.collh2', '.colldesc',                  // col·leccions (cronograma)
+  '.cname', 'h2.collh2', '.colldesc',                  // col·leccions: NO es tradueixen MAI (són com playlists)
   '.onm', '.nm', '.adnm', '.concrono',                 // noms als jocs
   'img.mem-img', '.pname', '.pdesc', '.pchip', 'img.pimg',
 ];

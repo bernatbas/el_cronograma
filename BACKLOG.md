@@ -25,14 +25,14 @@ Pla acordat el 22/11/2026, **per fases** (cadascuna validada abans de la següen
 2. **Diccionari en castellà**: esborrany meu, revisió d’en Bernat (la veu és seva).
 3. **Contingut** (en curs). ✅ Persones (22/11/2026): camps germans `name_es`/`desc_es`/`wiki_es`
    a les 128, el dashboard els omple sols, check del CI «Contingut en castellà», i les persones de
-   Wikidata desades al navegador es refresquen si eren d’un altre idioma. Falten: events, eres,
-   marcs i col·leccions del catàleg (descripcions d’eres i marcs per escriure), i els jocs.
+   Wikidata desades al navegador es refresquen si eren d’un altre idioma. ✅ Events, eres, marcs i
+   blocs (22/11/2026), amb el check del CI estès a tot. Falten els jocs.
    El que l’auditoria deixa a la llista de `CONTINGUT` de `tests/i18n.spec.js`, que
    s’ha d’anar buidant:
    - `PEOPLE`: noms i descripcions → `{ca,es}`, baixats de Wikidata pel dashboard (desats, no en viu).
    - `EVENTS`, `ERAS`, `MARCS` i blocs: noms i descripcions → `{ca,es}`.
-   - `COLLECTIONS` **del catàleg**: nom i descripció sí que són contingut d’autor i s’han de traduir
-     (les pròpies de cada usuari no).
+   - `COLLECTIONS`: **NO es tradueixen, cap** (decisió d’en Bernat, 22/11/2026). Són com playlists:
+     es respecta el nom i la descripció de qui les crea, que en el futur podran ser públiques.
    - Camp `wiki` de `db.js`: apunta a `ca.wikipedia`; en castellà hauria d’anar a `es.wikipedia`.
    - `PD_PINNED` del joc: les descripcions estan escrites en català.
    - Als jocs els noms no passen per cap `L()`: el joc no en té, caldrà portar-l’hi.

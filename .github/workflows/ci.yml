@@ -285,25 +285,35 @@ jobs:
           python3 - <<'EOF'
           import re, sys
           src = open('db.js', encoding='utf-8').read()
-          i = src.find('const PEOPLE=[')
-          if i < 0:
-              sys.exit("ERROR: no trobo 'const PEOPLE=[' a db.js")
-          j = src.find('\nconst ', i + 10)
-          blk = src[i:j if j > 0 else len(src)]
-          objs = re.findall(r"\{id:'[^']+'.*?\}(?=,?\s*(?:\n|$))", blk)
-          if len(objs) < 50:
-              sys.exit("ERROR: nomes trobo %d persones a PEOPLE; el parser s'ha quedat cec" % len(objs))
-          fail = []
-          for o in objs:
-              pid = re.search(r"\{id:'([^']+)'", o).group(1)
-              falten = [f + '_es' for f in ('name', 'desc', 'wiki')
-                        if re.search(r"\b" + f + r":'", o) and not re.search(r"\b" + f + r"_es:'", o)]
-              if falten:
-                  fail.append("%s: falta %s" % (pid, ', '.join(falten)))
+
+          def seccio(nom):
+              m = re.search(r"\nconst " + nom + r"\s*=\s*\[", src)
+              if not m:
+                  sys.exit("ERROR: no trobo 'const %s=[' a db.js" % nom)
+              j = src.find('\n];', m.start())
+              return src[m.start():j]
+
+          def falten(o):
+              return [f + '_es' for f in ('name', 'desc', 'wiki')
+                      if re.search(r"\b" + f + r":'", o) and not re.search(r"\b" + f + r"_es:'", o)]
+
+          fail, compte = [], {}
+          # Una linia = un objecte a PEOPLE, EVENTS, ERAS i MARCS (marc i blocs).
+          for nom in ('PEOPLE', 'EVENTS', 'ERAS', 'MARCS'):
+              objs = [l for l in seccio(nom).split('\n') if re.search(r"\bname:'", l)]
+              compte[nom] = len(objs)
+              for o in objs:
+                  qui = (re.search(r"\{id:'([^']+)'", o) or re.search(r"name:'([^']+)'", o)).group(1)
+                  if falten(o):
+                      fail.append("%s · %s: falta %s" % (nom, qui, ', '.join(falten(o))))
+          # Les COLLECTIONS no hi son a posta: son com playlists, es respecta el nom i la
+          # descripcio que els va posar qui les va crear, en el seu idioma (decisio d'en Bernat).
+          if compte['PEOPLE'] < 50 or compte['EVENTS'] < 20 or compte['ERAS'] < 3:
+              sys.exit("ERROR: el parser s'ha quedat cec: %r" % compte)
           if fail:
-              sys.exit("ERROR: persones sense castella (afegeix-les pel dashboard, que ho omple sol):\n- "
+              sys.exit("ERROR: contingut sense castella (les persones, pel dashboard, que ho omple sol):\n- "
                        + "\n- ".join(fail))
-          print("OK: %d persones, totes amb castella" % len(objs))
+          print("OK: tot el contingut amb castella · " + " · ".join("%s %d" % kv for kv in compte.items()))
           EOF
 
       - name: Sintaxi JS — claus equilibrades

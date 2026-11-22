@@ -1429,8 +1429,8 @@ const I18N={
     guia_p2_sh:'Mientras Shakespeare escribía, Galileo apuntaba el telescopio al cielo y Cervantes publicaba el Quijote.',
     guia_p2_gen:'Aquí tienes a quienes vivieron a la vez, de cualquier ámbito: el arte, la ciencia, la política… Seguro que encuentras alguna sorpresa.',
     guia_t3:'Colecciones',
-    guia_p3:'Aquí tienes colecciones de personajes para explorar. Prueba «La Ilustración» y los tendrás a todos de golpe. Y cuando quieras, crea las tuyas.',
-    guia_p3_mob:'Toca este botón: hay colecciones de personajes para explorar. Prueba «La Ilustración» y los tendrás a todos de golpe. Y cuando quieras, crea las tuyas.',
+    guia_p3:'Aquí tienes colecciones de personajes para explorar. Prueba «La Il·lustració» y los tendrás a todos de golpe. Y cuando quieras, crea las tuyas.',
+    guia_p3_mob:'Toca este botón: hay colecciones de personajes para explorar. Prueba «La Il·lustració» y los tendrás a todos de golpe. Y cuando quieras, crea las tuyas.',
     guia_p3_fet:'Aquí la tienes, toda de un vistazo. Y si quieres una tuya, créala con los personajes que quieras.',
     guia_t4:'Viaja por el tiempo',
     guia_p4:'Haz zoom y arrastra para ir adelante y atrás en el tiempo. Si te pierdes, «Vista global» te lo encaja todo en la pantalla.',
@@ -1561,7 +1561,8 @@ function Lcru(v){
 function localitza(o){ if(!o||LANG===I18N_DEFAULT) return o; ['name','desc','wiki'].forEach(function(k){ const v=o[k+'_'+LANG]; if(v!=null) o[k]=v; }); return o; }
 (function localitzaDades(){
   if(LANG===I18N_DEFAULT) return;
-  [PEOPLE,EVENTS,ERAS,COLLECTIONS].forEach(function(a){ a.forEach(localitza); });
+  // COLLECTIONS no, a posta: son com playlists, es respecta el nom de qui les crea (decisio d'en Bernat).
+  [PEOPLE,EVENTS,ERAS].forEach(function(a){ a.forEach(localitza); });
   MARCS.forEach(function(m){ localitza(m); (m.blocks||[]).forEach(localitza); });
 })();
 
