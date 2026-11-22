@@ -1561,6 +1561,9 @@ function detectLang(){
   return I18N_DEFAULT;
 }
 let LANG=detectLang();
+// Analytics: l'idioma com a PROPIETAT D'USUARI (22/11/2026), un cop decidit. A GA cal registrar la
+// dimensio personalitzada «idioma» (abast: usuari) per veure-la als informes i al dashboard.
+try{ if(typeof gtag!=='undefined') gtag('set','user_properties',{idioma:LANG}); }catch(_){}
 try{ document.documentElement.lang=LANG; }catch(_){}
 // t(clau[,vars]): valor de l'idioma actiu amb fallback a I18N_DEFAULT. Accepta funcions i {var}.
 // Si la clau falta a l'idioma actiu cau al catala, i si no hi es enlloc torna '' (alguns llocs

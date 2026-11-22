@@ -1318,6 +1318,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     return I18N_DEFAULT;
   }
   let LANG=detectLang();
+  // Analytics: l'idioma com a PROPIETAT D'USUARI (22/11/2026), un cop decidit. A GA cal registrar la
+  // dimensio personalitzada «idioma» (abast: usuari) per veure-la als informes i al dashboard.
+  try{ if(typeof gtag!=='undefined') gtag('set','user_properties',{idioma:LANG}); }catch(_){}
   try{ document.documentElement.lang=LANG; }catch(_){}
   // t(clau[,vars]): valor de l'idioma actiu amb fallback a I18N_DEFAULT. Accepta funcions i {var}.
   // Si la clau falta a l'idioma actiu cau al catala, i si no hi es enlloc torna '' (alguns llocs
@@ -2377,6 +2380,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       const days=bumpStreak(res.allCorrect);
       track('joc_completat',{joc:'ordena',mode:'default',encerts:5-res.wrong,errors:res.wrong,ratxa:days});
       writeLS(DAILY_KEY,{date:todayStr(),correct:res.allCorrect,order:order.map(x=>x.key)});
+      // .resolved compacta les files (60 -> 41px). Abans només la posava el camí de «ja jugat avui»
+      // i just després d'enviar el resultat feia scroll (52px a 1366×657) fins que recarregaves.
+      const rw=root.querySelector('.ordwrap'); if(rw) rw.classList.add('resolved');
       showBanner(res.allCorrect, res.wrong, res.marks);
     }
 
