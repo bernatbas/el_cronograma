@@ -1017,8 +1017,8 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     <div class="secnav">
       <button class="brand" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Babilinia"><span class="brand-long">BABIL<svg class="brand-i" viewBox="2 0 16 32" aria-hidden="true"><path d="M7 9h6v18.5h2.5V30H18v2H2v-2h2.5v-2.5H7z M5.5 9h9v2.5h-9z M8.25 3.2h3.5v3.5h-3.5z"/></svg>NIA</span><span class="brand-short"><svg class="brand-i" viewBox="2 0 16 32" aria-hidden="true"><path d="M7 9h6v18.5h2.5V30H18v2H2v-2h2.5v-2.5H7z M5.5 9h9v2.5h-9z M8.25 3.2h3.5v3.5h-3.5z"/></svg></span><svg class="brandcaret" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button>
       <nav class="modeswitch" aria-label="Seccions" data-i18n-aria="nav_sections">
-        <a class="mode" href="index.html" title="Cronograma" data-i18n-title="nav_cronograma"><svg class="mode-ic" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2.5 15h13"/><path d="M4 6h7"/><path d="M7 10.5h7.5"/></svg><span class="mode-tx" data-i18n="nav_cronograma">Cronograma</span></a>
-        <a class="mode on" href="joc.html" aria-current="page" title="Jocs" data-i18n-title="nav_jocs"><svg class="mode-ic" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.4" y="2.4" width="13.2" height="13.2" rx="3.4"/><circle cx="6" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg><span class="mode-tx" data-i18n="nav_jocs">Jocs</span></a>
+        <a class="mode" href="/index.html" title="Cronograma" data-i18n-title="nav_cronograma"><svg class="mode-ic" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2.5 15h13"/><path d="M4 6h7"/><path d="M7 10.5h7.5"/></svg><span class="mode-tx" data-i18n="nav_cronograma">Cronograma</span></a>
+        <a class="mode on" href="/joc.html" aria-current="page" title="Jocs" data-i18n-title="nav_jocs"><svg class="mode-ic" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.4" y="2.4" width="13.2" height="13.2" rx="3.4"/><circle cx="6" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg><span class="mode-tx" data-i18n="nav_jocs">Jocs</span></a>
       </nav>
     </div>
   </div>
@@ -1321,6 +1321,25 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   // Analytics: l'idioma com a PROPIETAT D'USUARI (22/11/2026), un cop decidit. A GA cal registrar la
   // dimensio personalitzada «idioma» (abast: usuari) per veure-la als informes i al dashboard.
   try{ if(typeof gtag!=='undefined') gtag('set','user_properties',{idioma:LANG}); }catch(_){}
+  // Adreça de l'idioma (22/11/2026): si la pagina va en un idioma amb pagines propies (/es/, les fa
+  // _tools/gen_compartir.py), la barra ho diu: /es/ i /es/joc.html. Aixi el boto de compartir del mobil
+  // (que comparteix la barra) dona l'adreça amb les metadades en aquell idioma, i WhatsApp la previsualitza
+  // be. Nomes es reescriu l'adreça (history.replaceState), no es recarrega res. Si es recarrega, la pagina
+  // /es/ porta aqui amb ?lang=es. ⚠️ Per aixo els enllaços que s'obren DESPRES d'aquest punt han de ser
+  // absoluts (/joc.html, /index.html): un de relatiu aniria a parar dins de /es/. Els fitxers de la
+  // capçalera (db.js, img/…) ja s'han carregat abans i no els afecta.
+  const LANG_PAGINES=['es'];
+  (function(){
+    try{
+      const u=new URL(location.href);
+      if(!/^https?:$/.test(u.protocol)) return;
+      u.searchParams.delete('lang');
+      let p=u.pathname.replace(/^\/[a-z]{2}\//,'/');
+      if(LANG_PAGINES.indexOf(LANG)>=0) p='/'+LANG+(p==='/'||p==='/index.html'?'/':p);
+      u.pathname=p;
+      if(u.href!==location.href) history.replaceState(history.state,'',u.href);
+    }catch(_){}
+  })();
   try{ document.documentElement.lang=LANG; }catch(_){}
   // t(clau[,vars]): valor de l'idioma actiu amb fallback a I18N_DEFAULT. Accepta funcions i {var}.
   // Si la clau falta a l'idioma actiu cau al catala, i si no hi es enlloc torna '' (alguns llocs
@@ -1514,7 +1533,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
     if(eventsList.length) payload.events=eventsList.map(function(e){ return {id:e.id,name:e.name||null,year:e.year!=null?e.year:null}; });
     try{ localStorage.setItem('hb_cronograma_ctx',JSON.stringify(payload)); }catch(_){}
     track('joc_2_cronograma',{joc:source});
-    location.href='index.html?from=joc';
+    location.href='/index.html?from=joc';   // absolut: amb l'adreça de l'idioma (/es/joc.html), un relatiu aniria a /es/index.html
   }
 
   // La casa dels botons del final (data-x="hub"): torna al hub.
@@ -3312,7 +3331,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
       e.stopPropagation();
       if(on){tanca();return;}
       try{localStorage.setItem('hb_lang',o.dataset.lang);sessionStorage.removeItem('hb_lang_sessio');}catch(_){}
-      const u=new URL(location.href);u.searchParams.delete('lang');
+      const u=new URL(location.href);u.searchParams.delete('lang');u.pathname=u.pathname.replace(/^\/[a-z]{2}\//,'/');
       location.replace(u.toString());
     });
   });
@@ -3328,7 +3347,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   window.addEventListener('pageshow',e=>{
     if(!e.persisted)return;
     let vol=null;try{vol=sessionStorage.getItem('hb_lang_sessio')||localStorage.getItem('hb_lang');}catch(_){}
-    if(vol&&vol!==act){const u=new URL(location.href);u.searchParams.delete('lang');location.replace(u.toString());}
+    if(vol&&vol!==act){const u=new URL(location.href);u.searchParams.delete('lang');u.pathname=u.pathname.replace(/^\/[a-z]{2}\//,'/');location.replace(u.toString());}
   });
 })();
 // ===== fi del bloc compartit =====

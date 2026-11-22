@@ -10,6 +10,11 @@ petites, amb les metadades en aquell idioma, que només redirigeixen a la pàgin
     jocs/<joc>/index.html        català    → /joc.html?lang=ca#/<joc>
     es/jocs/<joc>/index.html     castellà  → /joc.html?lang=es#/<joc>
     es/index.html                castellà  → /?lang=es (+ el que porti l'adreça: ?col=…, #…)
+    es/joc.html                  castellà  → /joc.html?lang=es (+ el que porti l'adreça: #/<joc>…)
+
+Les pàgines de veritat, quan van en castellà, reescriuen la barra a /es/ i /es/joc.html (veure «Adreça de
+l'idioma» a index.html i joc.html): així el botó de compartir del mòbil també dona l'adreça en castellà,
+i en recarregar, aquestes pàgines hi tornen a portar.
 
 Els botons «Comparteix» (joc.html: el text dels resultats; index.html: les col·leccions) fan servir
 l'adreça de l'idioma actiu. Copiar l'adreça de la barra del navegador segueix donant la catalana.
@@ -40,6 +45,10 @@ TEXTOS = {
         "arrel": ("Babilinia · Cronograma",
                   "Línea de tiempo interactiva de la historia: personajes, acontecimientos y épocas para ver qué pasaba a la vez y quién coincidió con quién.",
                   "Toda la historia en una línea. Descubre quién coincidió con quién."),
+        # Els jocs: les mateixes que a joc.html, en castellà.
+        "joc": ("Babilinia · Juegos",
+                "Retos diarios de historia para jugar y aprender: sitúa hechos y personajes en el tiempo y descubre otros nuevos cada día.",
+                "Si siempre te ha costado aprender historia, no está todo perdido: ahora también puedes perder el tiempo."),
         "jocs": {
             "ordena": ("Ordena la línea", "Reto diario de historia: pon en orden hechos y personajes, del más antiguo al más reciente."),
             "abansdespres": ("¿Antes o después?", "Reto diario de historia: ¿pasó antes o después? Aprende a situar hechos y personajes en el tiempo."),
@@ -120,6 +129,14 @@ def main():
                 lang, f"/{pref}", titol, desc, og_desc, f"/?lang={lang}", js, "Babilinia",
                 f"El cronograma en aquest idioma, per compartir (babilinia.com/{pref}). Porta a /?lang={lang} "
                 f"i hi passa el que porti l'adreça (?col=… d'una col·lecció compartida)."))
+        if "joc" in t:
+            titol, desc, og_desc = t["joc"]
+            js = (f"var q=location.search.replace(/^\\?/,'');"
+                  f"location.replace('/joc.html?lang={lang}'+(q?'&'+q:'')+location.hash);")
+            escriu(f"{pref}joc.html", pagina(
+                lang, f"/{pref}joc.html", titol, desc, og_desc, f"/joc.html?lang={lang}", js, "Babilinia",
+                f"Els jocs en aquest idioma (babilinia.com/{pref}joc.html): és l'adreça que posa a la barra joc.html "
+                f"quan va en aquest idioma. Porta a /joc.html?lang={lang} amb el #/<joc> que porti."))
 
 
 if __name__ == "__main__":
