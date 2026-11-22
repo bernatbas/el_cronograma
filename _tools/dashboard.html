@@ -71,14 +71,14 @@ section{margin-bottom:26px;scroll-margin-top:66px}
 .shead .hint.sub{margin-left:0}   /* subtitol enganxat al titol, no a la dreta */
 .shead .dsync{margin-left:auto;display:flex;align-items:center;gap:8px}
 .shead .dsync .hint{margin-left:0}
-#dsyncres{font-size:12px;line-height:1.5;margin:0 0 12px;padding:9px 11px;border-radius:var(--r);background:var(--soft,#F9F8F7);border:1px solid var(--border)}
+#dsyncres{font-size:12px;line-height:1.5;margin:0 0 12px;padding:9px 11px;border-radius:var(--r);background:var(--soft);border:1px solid var(--border)}
 #dsyncres[hidden]{display:none}
 #dsyncres .e{color:#B23A2E}
 /* Revisio de la BD: llista de canvis proposats, camp per camp */
 .rev-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}
 .rev-top .sp{flex:1}
-.rev-chip{font:inherit;font-size:11.5px;padding:3px 9px;border-radius:var(--r-pill);border:1px solid var(--border);background:var(--bg,#fff);color:inherit;cursor:pointer}
-.rev-chip.on{background:var(--text);color:var(--bg,#fff);border-color:var(--text)}
+.rev-chip{font:inherit;font-size:11.5px;padding:3px 9px;border-radius:var(--r-pill);border:1px solid var(--border);background:var(--canvas);color:inherit;cursor:pointer}
+.rev-chip.on{background:var(--text);color:var(--canvas);border-color:var(--text)}
 .rev-list{max-height:52vh;overflow:auto;border-top:1px solid var(--border);margin-top:6px}
 .rev-p{padding:8px 0;border-bottom:1px solid var(--border)}
 .rev-p h4{margin:0 0 4px;font-size:12.5px}
@@ -215,6 +215,11 @@ section{margin-bottom:26px;scroll-margin-top:66px}
 
 /* ===== editor ===== */
 .fields{display:grid;grid-template-columns:2fr 1fr;gap:9px;margin-bottom:11px}
+/* Requadre d'un idioma de traduccio dins del formulari de la BD */
+fieldset.lang{border:1px solid var(--border);border-radius:var(--r);padding:6px 12px 1px;margin:4px 0 14px;min-width:0;background:var(--soft)}
+fieldset.lang legend{display:flex;align-items:center;gap:7px;padding:0 6px;font-size:12px;font-weight:600}
+fieldset.lang .lcode{font:600 10px/1 var(--mono);letter-spacing:.04em;padding:3px 5px;border-radius:4px;background:var(--text);color:var(--canvas)}
+fieldset.lang .lhint{font-weight:400;color:var(--text3);font-size:11.5px}
 @media(max-width:640px){.fields{grid-template-columns:1fr}}
 input[type=text],select,textarea{font:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--border-strong);border-radius:var(--r);background:var(--canvas);color:var(--text);width:100%}
 input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blueSoft)}
@@ -408,17 +413,22 @@ input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:var
           <input type="text" id="ddesc"><div class="wmsg" id="m-ddesc" hidden></div></div>
       </div>
 
-      <!-- Castella: s'omple sol de Wikidata (veure _es_fields a dash.py). Es pot corregir. -->
-      <div class="fields dgrid" style="grid-template-columns:1fr 2fr">
-        <div class="f"><label for="dnom_es">Nom en castellà<button type="button" class="wm" id="w-dnom_es" hidden aria-label="Mostra l\'avís">⚠</button></label>
-          <input type="text" id="dnom_es"><div class="wmsg" id="m-dnom_es" hidden></div></div>
-        <div class="f"><label for="dwiki_es">Viquipèdia en castellà<button type="button" class="wm" id="w-dwiki_es" hidden aria-label="Mostra l\'avís">⚠</button></label>
-          <input type="text" id="dwiki_es"><div class="wmsg" id="m-dwiki_es" hidden></div></div>
-      </div>
-      <div class="fields dgrid" style="grid-template-columns:1fr">
-        <div class="f"><label for="ddesc_es">Descripció en castellà<button type="button" class="wm" id="w-ddesc_es" hidden aria-label="Mostra l\'avís">⚠</button></label>
-          <input type="text" id="ddesc_es"><div class="wmsg" id="m-ddesc_es" hidden></div></div>
-      </div>
+      <!-- Un requadre per idioma (22/11/2026): el que hi ha dins es la traduccio, el de fora es el
+           catala, que es la base. Un idioma nou = un altre .lang igual, amb els seus _xx.
+           Castella: s'omple sol de Wikidata (veure _es_fields a dash.py). Es pot corregir. -->
+      <fieldset class="lang">
+        <legend><span class="lcode">ES</span>Castellà <span class="lhint">s’omple sol de Wikidata</span></legend>
+        <div class="fields dgrid" style="grid-template-columns:1fr 2fr">
+          <div class="f"><label for="dnom_es">Nom<button type="button" class="wm" id="w-dnom_es" hidden aria-label="Mostra l\'avís">⚠</button></label>
+            <input type="text" id="dnom_es"><div class="wmsg" id="m-dnom_es" hidden></div></div>
+          <div class="f"><label for="dwiki_es">Enllaç a la Viquipèdia<button type="button" class="wm" id="w-dwiki_es" hidden aria-label="Mostra l\'avís">⚠</button></label>
+            <input type="text" id="dwiki_es"><div class="wmsg" id="m-dwiki_es" hidden></div></div>
+        </div>
+        <div class="fields dgrid" style="grid-template-columns:1fr">
+          <div class="f"><label for="ddesc_es">Descripció<button type="button" class="wm" id="w-ddesc_es" hidden aria-label="Mostra l\'avís">⚠</button></label>
+            <input type="text" id="ddesc_es"><div class="wmsg" id="m-ddesc_es" hidden></div></div>
+        </div>
+      </fieldset>
 
       <div class="gate">
         <span class="seal" id="dseal">Falten camps obligatoris</span>
