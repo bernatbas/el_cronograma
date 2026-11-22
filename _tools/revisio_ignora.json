@@ -1,0 +1,426 @@
+{
+ "abbasibnfirnas": {
+  "cats": [
+   "science",
+   "music"
+  ]
+ },
+ "abrahamlincoln": {
+  "cats": [
+   "politics",
+   "literature"
+  ]
+ },
+ "adamsmith": {
+  "cats": [
+   "philosophy",
+   "literature"
+  ]
+ },
+ "adolfhitler": {
+  "cats": [
+   "painting",
+   "politics"
+  ]
+ },
+ "aristotil": {
+  "cats": [
+   "science",
+   "literature"
+  ]
+ },
+ "atila": {
+  "cats": []
+ },
+ "bach": {
+  "name": "Johann Sebastian Bach"
+ },
+ "buda": {
+  "cats": [
+   "philosophy",
+   "literature"
+  ],
+  "name": "Siddharta Gautama"
+ },
+ "carleselcalb": {
+  "cats": [
+   "politics",
+   "literature"
+  ]
+ },
+ "caterinademedici": {
+  "cats": []
+ },
+ "cesar": {
+  "cats": [
+   "politics",
+   "literature"
+  ]
+ },
+ "charleschaplin": {
+  "cats": [
+   "cinema",
+   "music"
+  ]
+ },
+ "charlesdickens": {
+  "cats": [
+   "literature",
+   "science"
+  ]
+ },
+ "ciril": {
+  "cats": [
+   "literature",
+   "philosophy"
+  ]
+ },
+ "confuci": {
+  "cats": [
+   "philosophy",
+   "literature"
+  ]
+ },
+ "copernic": {
+  "cats": [
+   "science",
+   "philosophy"
+  ]
+ },
+ "cristoforcolom": {
+  "cats": [
+   "science"
+  ]
+ },
+ "danielrabinovich": {
+  "cats": [
+   "music",
+   "cinema"
+  ]
+ },
+ "darwin": {
+  "cats": [
+   "science",
+   "philosophy"
+  ],
+  "name": "Charles Robert Darwin"
+ },
+ "diogenes": {
+  "birth": -400,
+  "name": "Diògenes de Sinope"
+ },
+ "edwardsmith": {
+  "name": "Edward John Smith"
+ },
+ "einstein": {
+  "cats": [
+   "science",
+   "philosophy"
+  ]
+ },
+ "epictet": {
+  "cats": [
+   "philosophy",
+   "literature"
+  ]
+ },
+ "epicur": {
+  "birth": -342,
+  "cats": [
+   "philosophy",
+   "literature"
+  ]
+ },
+ "erasmederotterdam": {
+  "cats": [
+   "philosophy",
+   "literature"
+  ]
+ },
+ "fiodordostoievski": {
+  "cats": [
+   "literature",
+   "philosophy"
+  ]
+ },
+ "franklin": {
+  "cats": [
+   "politics",
+   "science"
+  ]
+ },
+ "friedrichengels": {
+  "cats": [
+   "philosophy",
+   "literature"
+  ]
+ },
+ "friedrichwilhelmnietzs": {
+  "cats": [
+   "philosophy",
+   "literature"
+  ]
+ },
+ "galileu": {
+  "cats": [
+   "science",
+   "philosophy"
+  ],
+  "name": "Galileo Galilei"
+ },
+ "gandhi": {
+  "cats": [
+   "politics",
+   "literature"
+  ],
+  "name": "Mohandas Gandhi"
+ },
+ "georgewashington": {
+  "cats": [
+   "politics",
+   "science"
+  ]
+ },
+ "gilbertogil": {
+  "cats": [
+   "music",
+   "politics"
+  ]
+ },
+ "giuseppeverdi": {
+  "cats": [
+   "music",
+   "literature"
+  ]
+ },
+ "gutenberg": {
+  "cats": [
+   "science",
+   "painting"
+  ]
+ },
+ "immanuelkant": {
+  "cats": [
+   "philosophy",
+   "science"
+  ]
+ },
+ "isaacasimov": {
+  "cats": [
+   "literature",
+   "cinema"
+  ]
+ },
+ "jesucrist": {
+  "cats": []
+ },
+ "johanneskepler": {
+  "cats": [
+   "science",
+   "philosophy"
+  ]
+ },
+ "johnlennon": {
+  "cats": [
+   "literature",
+   "cinema"
+  ]
+ },
+ "laozi": {
+  "cats": [
+   "philosophy",
+   "literature"
+  ]
+ },
+ "lordbyron": {
+  "cats": [
+   "literature",
+   "politics"
+  ]
+ },
+ "lovelace": {
+  "cats": [
+   "science",
+   "literature"
+  ]
+ },
+ "ludwigvanbeethoven": {
+  "cats": [
+   "music",
+   "literature"
+  ]
+ },
+ "madonna": {
+  "cats": [
+   "music",
+   "cinema"
+  ]
+ },
+ "mandela": {
+  "cats": [
+   "politics",
+   "cinema"
+  ]
+ },
+ "maozedong": {
+  "cats": [
+   "politics",
+   "literature"
+  ]
+ },
+ "marcopolo": {
+  "cats": [
+   "politics",
+   "literature"
+  ]
+ },
+ "mariaantonietadaustria": {
+  "cats": []
+ },
+ "martiluter": {
+  "cats": [
+   "philosophy",
+   "literature"
+  ]
+ },
+ "martinscorsese": {
+  "cats": [
+   "cinema",
+   "literature"
+  ]
+ },
+ "marx": {
+  "cats": [
+   "literature",
+   "philosophy"
+  ]
+ },
+ "miquelangel": {
+  "name": "Michelangelo Buonarroti"
+ },
+ "mozart": {
+  "name": "Wolfgang Amadeus Mozart"
+ },
+ "muhammadibnmussaalkhwa": {
+  "cats": [
+   "science",
+   "philosophy"
+  ]
+ },
+ "nefertiti": {
+  "cats": []
+ },
+ "neilarmstrong": {
+  "cats": []
+ },
+ "nero": {
+  "cats": [
+   "literature",
+   "politics"
+  ]
+ },
+ "newton": {
+  "birth": 1642,
+  "cats": [
+   "science",
+   "philosophy"
+  ]
+ },
+ "paracels": {
+  "cats": [
+   "science",
+   "philosophy"
+  ]
+ },
+ "picasso": {
+  "cats": [
+   "painting",
+   "cinema"
+  ]
+ },
+ "plato": {
+  "cats": [
+   "philosophy",
+   "literature"
+  ]
+ },
+ "plutarcdequeronea": {
+  "cats": [
+   "religion",
+   "literature"
+  ]
+ },
+ "ramonllull": {
+  "cats": [
+   "philosophy",
+   "literature"
+  ]
+ },
+ "ricardcordelleo": {
+  "cats": [
+   "literature",
+   "music"
+  ]
+ },
+ "robertcharlton": {
+  "name": "Robert Charlton"
+ },
+ "rubenblades": {
+  "cats": [
+   "music",
+   "politics"
+  ]
+ },
+ "safo": {
+  "cats": [
+   "literature",
+   "music"
+  ],
+  "name": "Safo"
+ },
+ "seneca": {
+  "cats": [
+   "literature",
+   "philosophy"
+  ]
+ },
+ "sigmundfreud": {
+  "cats": []
+ },
+ "simonedebeauvoir": {
+  "cats": [
+   "literature",
+   "philosophy"
+  ]
+ },
+ "socrates": {
+  "cats": [
+   "philosophy",
+   "literature"
+  ]
+ },
+ "stephenhawking": {
+  "cats": [
+   "science",
+   "literature"
+  ]
+ },
+ "tomasdaquino": {
+  "cats": [
+   "philosophy",
+   "literature"
+  ]
+ },
+ "vassilikandinski": {
+  "cats": [
+   "painting",
+   "literature"
+  ]
+ },
+ "winstonchurchill": {
+  "cats": [
+   "politics",
+   "literature"
+  ]
+ }
+}
