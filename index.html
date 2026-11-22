@@ -200,15 +200,20 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
      fletxa i queda quadrat (34px), com els botons d'acció en icona. El desplegable copia el del menú
      plegat. Autosuficient: no depèn del codi de cap pàgina (al joc, aquest bloc viu FORA del mòdul). */
   .langsel{position:relative;flex:0 0 auto;}
-  .langbtn{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:38px;min-height:38px;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);font-family:inherit;font-size:13px;font-weight:600;letter-spacing:.04em;line-height:1;color:#fff;cursor:pointer;transition:background .14s;}
+  .langbtn{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:38px;min-height:38px;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);font-family:inherit;font-size:14px;font-weight:400;line-height:1;color:#fff;cursor:pointer;transition:background .14s;}
   .langbtn:hover{background:rgba(255,255,255,.22);}
   .langsel.open .langbtn{background:#fff;border-color:#fff;color:#B23A2E;}
   .langcaret{display:block;width:10px;height:10px;flex:0 0 auto;opacity:.85;transition:transform .15s;}
   .langsel.open .langcaret{transform:rotate(180deg);}
-  @media (max-width:860px){ .langbtn{min-width:32px;min-height:32px;padding:4px 8px;} }
-  @media (max-height:560px){ .langbtn{min-width:30px;min-height:30px;padding:3px 8px;} }
-  @media (pointer:coarse){ .langbtn{min-width:30px;min-height:30px;padding:3px 8px;} }
+  @media (max-width:860px){ .langbtn{min-width:32px;min-height:32px;padding:4px 8px;font-size:13px;} }
+  @media (max-height:560px){ .langbtn{min-width:30px;min-height:30px;padding:3px 8px;font-size:13px;} }
+  @media (pointer:coarse){ .langbtn{min-width:30px;min-height:30px;padding:3px 8px;font-size:13px;} }
+  /* Al cronograma va just després dels botons d'acció i ha de quedar-ne a la MATEIXA distància (el gap
+     de .controls: 6px; en tàctil, 8 i 8). Sense això heretava el de .topbar-right, 14px. */
+  .controls+.langsel{margin-left:-8px;}
+  @media (pointer:coarse){ .controls+.langsel{margin-left:0;} }
   @media (max-width:720px){ .langcaret{display:none;} .langbtn{width:34px;min-width:34px;padding:0;} }
+  @media (max-width:720px) and (pointer:coarse){ .langbtn{width:36px;min-width:36px;} }   /* en tàctil els d'icona en fan 36 */
   .langmenu{display:none;position:absolute;top:calc(100% + 8px);right:0;flex-direction:column;align-items:stretch;gap:2px;min-width:160px;padding:6px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 28px rgba(40,44,60,.22);z-index:40;}
   .langsel.open .langmenu{display:flex;}
   .langopt{display:flex;align-items:center;gap:10px;padding:9px 10px;border:0;background:none;border-radius:6px;color:var(--text);font-family:inherit;font-size:14px;font-weight:500;line-height:1.2;text-align:left;cursor:pointer;}
