@@ -50,9 +50,32 @@ Pla acordat el 22/11/2026, **per fases** (cadascuna validada abans de la següen
    `es` actiu, idioma: `?lang` (recordat a la sessió) → `hb_lang` → idioma principal del navegador → català.
    Falta: comprovar el disseny dels jocs en castellà (avisos de scroll), la guia en castellà, i decidir
    les metadades/previsualitzacions (WhatsApp no executa JS), l’`og.png` i si es registra l’idioma a GA.
-5. **Rellevància regional** (més endavant): no esborrar ningú; pesar el que se *suggereix*
-   (context, marcs per defecte) per l’article a la Viquipèdia de l’idioma. ⚠️ Els reptes diaris
-   han de ser iguals per a tothom, o dos amics no podrien comparar resultats.
+5. **Rellevància regional**: ítem propi, «Rellevància regional (gent local)».
+
+## Rellevància regional (gent local)
+Fase 5 de l’i18n, pensada el 23/11/2026 i **aparcada**: el primer llançament és per a Catalunya i ja va bé
+així. Es revisa quan toqui escalar a Espanya.
+
+**Idea**: sense treure ningú, que cada usuari hi vegi també «els seus», dosificat (màxim 1 local per cada
+4 globals; sense gent local a la BD o sense saber d’on és l’usuari, cap toc local).
+
+**On**: (A) «Mostra context» hi afegeix 1–2 locals de l’època ⭐; (B) col·leccions regionals primer i marc
+«Espanya» actiu per a qui és d’Espanya; (C) Personatge del dia local un dia a la setmana. **No** als reptes
+competitius (Ordena, Abans o després?, Memory, Contemporanis): han de ser iguals per a tothom.
+
+**Granularitat realista** (sense IP):
+- País: bé (`es-MX`, `es-AR`, fus horari d’Amèrica).
+- Dins d’Espanya, el fus horari només separa **Canàries**; l’idioma del navegador (encara que no el traduïm)
+  dona **zona catalanoparlant** (no separa Catalunya/València/Balears), **Galícia** (`gl`) i **País Basc** (`eu`).
+- Més fi: un «La teva terra» opcional que triï l’usuari. La IP (Cloudflare proxy + Worker) no: canvia la
+  infraestructura i té cost de privacitat.
+
+**Dades**: camp `regio` a `db.js` en **ISO 3166-2** (`ES-CT`, `ES-VC`, `ES-IB`, `ES-GA`, `ES-PV`, `MX`…),
+jeràrquic (`ES-CT` també és `ES`), omplert pel dashboard des de Wikidata (P19 → P131, P27). «Local» = de la
+regió **i** poc conegut al món (pocs sitelinks). El límit real és el contingut: amb menys de 10–15 persones
+per regió el toc no sortiria gairebé mai.
+
+**Ordre**: 1) `regio` + detecció (invisible) · 2) A · 3) B · 4) C, si es vol.
 
 ## [TANCAT] Poblar la BD
 Més esdeveniments i marcs. És manual — els blocs de període no es poden cercar a Wikidata.
