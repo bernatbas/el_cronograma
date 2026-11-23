@@ -380,7 +380,6 @@ const COLLECTIONS=[
     'Q311745',    // Kohlberg             1927
     'Q157318',    // Kołakowski           1927
     'Q76357',     // Habermas             1929
-    'Q5928027',   // Javier Muguerza      1936
     'Q450412'     // Richard Sennett      1943
   ]}
 ];
