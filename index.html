@@ -3433,6 +3433,7 @@ $('#fitAll').onclick=()=>{
 $('#reset').onclick=()=>{if(typeof gtag!=='undefined')gtag('event','reset');pushUndo('cro_act_reset');state.present=new Set();state.pinned=new Set(SEED_PINNED);state.collections=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.hiddenCats=new Set();state.focus=null;state.selected=null;state.selectedEvent=null;state.expandedClusters=new Set();$('#detail').classList.remove('open');_pbarId=null;pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;if(PERSON_QID)history.replaceState(null,'',location.pathname);clearFitLatch();defaultView();};
 $('#sidebarToggle').onclick=e=>{
   sbCompensa();   // ABANS de canviar la classe: mesura l'amplada de sortida
+  clearFitLatch();   // «Vista global» enquadrava un altre espai: es desactiva per poder-la tornar a fer amb l'espai nou
   const collapsed=$('.body').classList.toggle('collapsed');
   e.currentTarget.textContent=collapsed?'›':'‹';
   e.currentTarget.title=collapsed?t('cro_sidebar_show'):t('cro_sidebar_hide');
