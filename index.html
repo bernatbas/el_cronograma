@@ -687,7 +687,9 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .reportpop .rp-card{position:relative;width:100%;max-width:380px;box-sizing:border-box;background:var(--canvas);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:22px 20px 20px;box-shadow:0 18px 48px rgba(0,0,0,.28);}
   .reportpop h2{font-size:16px;font-weight:600;margin:0 34px 14px 0;line-height:1.35;}
   .reportpop .rp-row{display:flex;gap:8px;}
-  .reportpop select{flex:1 1 auto;min-width:0;min-height:38px;border:1px solid var(--border-strong);background:var(--canvas);color:var(--text);border-radius:var(--r-card);padding:0 10px;font-size:14px;font-family:inherit;}
+  /* Fletxa pròpia: la del navegador quedava enganxada a la vora i descentrada. Gris mitjà (#8A877F),
+     que es llegeix igual sobre fons clar i fosc. */
+  .reportpop select{flex:1 1 auto;min-width:0;min-height:38px;border:1px solid var(--border-strong);background:var(--canvas) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238A877F' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center/12px 8px;color:var(--text);border-radius:var(--r-card);padding:0 36px 0 12px;font-size:14px;font-family:inherit;-webkit-appearance:none;appearance:none;cursor:pointer;}
   .reportpop .rp-send{flex:0 0 auto;min-height:38px;border:1px solid var(--topbar-bg);background:var(--topbar-bg);color:#fff;font-weight:600;border-radius:var(--r-card);padding:0 16px;font-size:14px;font-family:inherit;cursor:pointer;}
   .reportpop .rp-send:disabled{opacity:.45;cursor:default;}
   .reportpop .rp-x{position:absolute;top:12px;right:12px;width:32px;height:32px;border:0;border-radius:8px;background:none;color:var(--text2);font-size:20px;line-height:1;cursor:pointer;}
