@@ -336,6 +336,52 @@ const COLLECTIONS=[
     'Q41257',   // Heinrich Hertz      1857–1894
     'Q59736',   // Ignaz Semmelweis    1818–1865   (de la col·lecció local d'en Bernat)
     'Q937'      // Albert Einstein     1879–1955
+  ]},
+  // Ètica: els autors del temari d’Ètica 1 de la UNED. Q-ids resolts pel títol de l'article de la
+  // Viquipèdia i verificats amb l'any esperat i la mateixa SPARQL que byIds() (23/11/2026).
+  {id:'eticauned',name:'UNED: Ètica 1 - 2026',author:'Babilinia',created:'2026-11-23',updated:'2026-11-23',
+   desc:'Els autors del temari d’Ètica 1 de la UNED (curs 2026).',
+   wds:[
+    'Q80398',     // Pèricles             -495
+    'Q913',       // Sòcrates             -470
+    'Q859',       // Plató                -428
+    'Q868',       // Aristòtil            -384
+    'Q43216',     // Epicur               -341
+    'Q182128',    // Pico della Mirandola 1463
+    'Q37160',     // David Hume           1711
+    'Q6527',      // Rousseau             1712
+    'Q9312',      // Kant                 1724
+    'Q9235',      // Hegel                1770
+    'Q6512',      // Kierkegaard          1813
+    'Q9061',      // Marx                 1818
+    'Q144535',    // Herbert Spencer      1820
+    'Q9358',      // Nietzsche            1844
+    'Q9215',      // Freud                1856
+    'Q15948',     // Durkheim             1858
+    'Q9387',      // Max Weber            1864
+    'Q295393',    // Marcel Mauss         1872
+    'Q153020',    // Ortega y Gasset      1883
+    'Q57240',     // Ernst Bloch          1885
+    'Q318029',    // Karl Polanyi         1886
+    'Q9391',      // Wittgenstein         1889
+    'Q76823',     // Karl Mannheim        1893
+    'Q123190',    // Piaget               1896
+    'Q75812',     // Norbert Elias        1897
+    'Q152388',    // Adorno               1903
+    'Q9364',      // Sartre               1905
+    'Q128126',    // Lévi-Strauss         1908
+    'Q324542',    // Aranguren            1909
+    'Q299863',    // Louis Dumont         1911
+    'Q192066',    // Ricoeur              1913
+    'Q472206',    // Jean-Pierre Vernant  1914
+    'Q158030',    // Castoriadis          1922
+    'Q55989816',  // Gómez Caffarena      1925
+    'Q44272',     // Foucault             1926
+    'Q311745',    // Kohlberg             1927
+    'Q157318',    // Kołakowski           1927
+    'Q76357',     // Habermas             1929
+    'Q5928027',   // Javier Muguerza      1936
+    'Q450412'     // Richard Sennett      1943
   ]}
 ];
 
