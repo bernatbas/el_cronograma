@@ -331,16 +331,24 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .swatch{width:12px;height:12px;border-radius:3px;flex:0 0 auto;}
 
   /* ===== Category legend (below the timeline) =====
-     Passive reading aid, not a control: it lists only the categories actually painted on the
-     canvas right now, so it appears on the first search and empties again when you clear. */
+     Lists the categories of the people ON VIEW (state.present), so it appears on the first search and
+     empties again when you clear. Since 23/11/2026 each row is also a toggle: click one to hide
+     that category from the canvas (state.hiddenCats). A hidden row stays listed — hollow swatch,
+     dimmed — so it can be switched back on. */
   .legend{position:absolute;left:16px;bottom:calc(var(--axis-h) + 12px);z-index:8;display:flex;flex-direction:column;gap:6px;max-width:40vw;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-card);background:rgba(255,255,255,.84);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 4px 16px rgba(40,44,60,.13);transition:left .18s ease;pointer-events:none;}
   /* Floats over the canvas so it costs zero layout height — vertical space is the scarcest thing on
      a phone. Tucked against the sidebar (240–384px + gutter), which overlays the stage rather than
-     shrinking it, so it has to follow the sidebar open/closed. Always open and non-interactive:
-     pointer-events:none means it can never block a bar in a low lane that it happens to overlap. */
+     shrinking it, so it has to follow the sidebar open/closed. The card itself is pointer-events:none
+     (the padding never blocks a bar in a low lane); only the rows take clicks. */
   .legend:empty{display:none;}                 /* nothing painted → no floating card at all */
-  .legend .lgi{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);white-space:nowrap;}
+  .legend .lgi{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);white-space:nowrap;
+    pointer-events:auto;cursor:pointer;border:0;background:none;padding:0;margin:0;font-family:inherit;text-align:left;}
+  .legend .lgi:hover{color:var(--text);}
+  .legend .lgi:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:3px;}
+  .legend .lgi.off{opacity:.55;}
+  .legend .lgi.off .swatch{background:transparent!important;box-shadow:inset 0 0 0 1.5px var(--sw);}
   .legend .swatch{width:10px;height:10px;border-radius:3px;flex:0 0 auto;}
+  .onview .item.amagat{opacity:.45;}   /* a la vista, pero amb la categoria amagada a la llegenda */
 
   /* gap petit: les quatre icones van JUNTES i el que separa el nom del grup es el
      margin-left de la primera. Amb gap:8px uniforme s'hi menjaven ~32px d'amplada i
@@ -1735,7 +1743,7 @@ const FUTURE_FADE=72;          // px the living bars (and the era band) fade out
 const deathOf=p=>p.death==null?NOW_YEAR:p.death;
 const isAlive=p=>p.death==null;
 
-const state={present:new Set(),pinned:new Set(SEED_PINNED),collections:new Set(),marcs:new Set(DEFAULT_MARCS),showEvents:true,focus:null,selected:null,selectedEvent:null,selectedColl:null,expandedClusters:new Set()};   // focus = l'ORIGINAL (de qui es demana context): es manté al carril de dalt
+const state={present:new Set(),pinned:new Set(SEED_PINNED),collections:new Set(),marcs:new Set(DEFAULT_MARCS),showEvents:true,focus:null,selected:null,selectedEvent:null,selectedColl:null,expandedClusters:new Set(),hiddenCats:new Set()};   // focus = l'ORIGINAL (de qui es demana context): es manté al carril de dalt
 
 // ============================================================
 // [3] DOM REFS & SMALL HELPERS (coords, colours, formatting)
@@ -1752,7 +1760,7 @@ const SIDEBAR_LS='historiabasica.sidebar';
 let lsReady=false,saveTimer=null,restoredView=null;
 function saveNow(){
   if(!lsReady)return;
-  try{localStorage.setItem(LS_KEY,JSON.stringify({v:1,pinned:[...state.pinned],collections:[...state.collections],marcs:[...state.marcs],showEvents:state.showEvents,focus:state.focus,extraPeople:PEOPLE.filter(p=>p._session),view:{px:pxPerYear,left:scroll.scrollLeft}}));}catch(e){}
+  try{localStorage.setItem(LS_KEY,JSON.stringify({v:1,pinned:[...state.pinned],collections:[...state.collections],marcs:[...state.marcs],showEvents:state.showEvents,hiddenCats:[...state.hiddenCats],focus:state.focus,extraPeople:PEOPLE.filter(p=>p._session),view:{px:pxPerYear,left:scroll.scrollLeft}}));}catch(e){}
 }
 function scheduleSave(){if(!lsReady)return;clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,400);}   // debounced: render() and scroll fire often
 window.addEventListener('beforeunload',()=>{if(lsReady)saveNow();});   // flush debounce before navigating to joc.html or elsewhere
@@ -1773,6 +1781,7 @@ function restoreState(){
   state.collections=new Set(Array.isArray(d.collections)?d.collections:[]);
   state.marcs=new Set(Array.isArray(d.marcs)?d.marcs:DEFAULT_MARCS);
   state.showEvents=d.showEvents!==false;
+  state.hiddenCats=new Set(Array.isArray(d.hiddenCats)?d.hiddenCats:[]);
   state.focus=(typeof d.focus==='string')?d.focus:null;
   if(d.view&&typeof d.view.px==='number')restoredView=d.view;
   recomputePresent();
@@ -1798,7 +1807,7 @@ const UNDO_MAX=25;
 const undoStack=[];
 function undoSnap(){
   return {pinned:[...state.pinned],collections:[...state.collections],
-          marcs:[...state.marcs],showEvents:state.showEvents,focus:state.focus,
+          marcs:[...state.marcs],showEvents:state.showEvents,hiddenCats:[...state.hiddenCats],focus:state.focus,
           // ⚠️ Les DEFINICIONS de les colleccions propies tambe hi han d'anar. Sense aixo,
           // desfer un esborrat tornava l'id a state.collections pero no la colleccio a
           // COLLECTIONS: quedava un id actiu apuntant a res (comprovat, no es teoric).
@@ -1823,6 +1832,7 @@ function doUndo(){
   state.collections=new Set(e.snap.collections);
   state.marcs=new Set(e.snap.marcs);
   state.showEvents=e.snap.showEvents;
+  state.hiddenCats=new Set(e.snap.hiddenCats||[]);
   state.focus=e.snap.focus;
   // Restaura les colleccions propies tal com eren: les de serie no es toquen mai.
   if(e.snap.mine){
@@ -1866,6 +1876,19 @@ const totalW=()=>(YEAR_MAX-YEAR_MIN)*pxPerYear;    // full canvas width px
 
 const NOCAT_COLOR='#4FB0A6';                        // people with no category at all
 const hasCat=p=>Array.isArray(p.cats)&&p.cats.length>0;
+// Llegenda seleccionable (23/11/2026). Les categories que l'usuari ha desmarcat viuen a state.hiddenCats
+// ('none' = sense categoria). Una persona s'amaga NOMÉS si TOTES les seves categories ho estan: un
+// filòsof-científic segueix sortint si filosofia és visible (decisió d'en Bernat). Amagar no la treu
+// d'«A la vista» (hi surt atenuada): segueix a la vista, només que no es pinta.
+const catsDe=p=>hasCat(p)?p.cats:['none'];
+const amagat=p=>state.hiddenCats.size>0&&catsDe(p).every(c=>state.hiddenCats.has(c));
+// Qui demanes veure explícitament (cerca, favorit, clic a «A la vista», ve del joc) torna a sortir:
+// es tornen a mostrar les seves categories. Si no, l'afegiries i no apareixeria enlloc.
+function destapaCats(p){
+  if(!p||!amagat(p))return false;
+  catsDe(p).forEach(c=>state.hiddenCats.delete(c));
+  return true;
+}
 // Nota d'incertesa: la dada nomes guarda un CODI i el text viu al diccionari — es crom d'UI,
 // no contingut d'autor, i aixi es tradueix sol. Tres valors i prou; qualsevol altre no pinta
 // res (t() d'una clau que no existeix torna '' i deixaria una caixa buida).
@@ -1992,7 +2015,7 @@ function erasBlockH(){return ERAS_TOP+ERA_LABEL_H+marcLayout().totalH+MOV_PAD_BO
 function eventLabelTop(){return erasBlockH()+6;}
 function barsTop(){return eventLabelTop()+EVENT_LABEL_H+GAP_AFTER;}
 
-function visiblePeople(){return PEOPLE.filter(p=>state.present.has(p.id)&&typeof p.birth==='number');}   // sense birth no es pot situar a la linia: x(null) donaria l'any 0 i pintaria una barra fantasma fins a avui
+function visiblePeople(){return PEOPLE.filter(p=>state.present.has(p.id)&&typeof p.birth==='number'&&!amagat(p));}   // sense birth no es pot situar a la linia: x(null) donaria l'any 0 i pintaria una barra fantasma fins a avui
 // Stack people into rows. Living pills grow to fit the name; dead bars keep their real lifespan
 // (the label just overflows). Lanes pack by the bar, so overlapping names are allowed (click to disambiguate).
 function packLanes(people){
@@ -2186,8 +2209,12 @@ function renderLegend(){
   const live=new Set(present.flatMap(p=>hasCat(p)?p.cats:[]));
   const items=Object.keys(CAT_COLORS).filter(c=>live.has(c)).map(c=>[c,CAT_COLORS[c]]);
   if(present.some(p=>!hasCat(p)))items.push(['none',NOCAT_COLOR]);   // the teal bars need a key too
+  // Una categoria amagada que ja no porta ningú de la vista s'oblida: si no, en afegir-hi algú més
+  // endavant (una altra col·lecció, una cerca) sortiria amagat sense que ningú recordés per què.
+  [...state.hiddenCats].forEach(c=>{if(!items.some(([n])=>n===c))state.hiddenCats.delete(c);});
   if(!items.length){legendEl.innerHTML='';return;}   // :empty hides the card entirely
-  legendEl.innerHTML=items.map(([n,c])=>`<span class="lgi"><span class="swatch" style="background:${c}"></span>${t('cat_'+n)}</span>`).join('');
+  legendEl.innerHTML=items.map(([n,c])=>{const off=state.hiddenCats.has(n);
+    return `<button type="button" class="lgi${off?' off':''}" data-cat="${n}" aria-pressed="${!off}"><span class="swatch" style="background:${c};--sw:${c}"></span>${t('cat_'+n)}</button>`;}).join('');
   // The axis is sticky-bottom inside .scroll, but whenever the canvas is shorter than the viewport
   // it falls back into normal flow partway up — so its position is variable and has to be measured,
   // not assumed from --axis-h, or the card ends up sitting on top of the year ticks.
@@ -2225,7 +2252,7 @@ function renderSidebar(){
   }
   renderFavorits();
   const present=PEOPLE.filter(p=>state.present.has(p.id)).sort((a,b)=>L(a.name).localeCompare(L(b.name),LANG));   // always alphabetical, en l'idioma actiu
-  $('#onview').innerHTML=present.length?present.map(p=>`<div class="item"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}">${esc(L(p.name))}</button><button class="favb" data-favt="${p.id}" aria-label="${esc(esFav(favKey(p))?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(favKey(p))}">${favIco(esFav(favKey(p)))}</button>${p.wd?`<button class="addc" data-addc="${p.id}" aria-label="${t('cro_coll_addto')}">+</button>`:''}${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}" aria-label="${t('cro_report')}">⚠</button><button class="x" data-remove="${p.id}" aria-label="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
+  $('#onview').innerHTML=present.length?present.map(p=>`<div class="item${amagat(p)?' amagat':''}"><span class="swatch" style="background:${swatchBg(p)}"></span><button class="nm" data-goto="${p.id}">${esc(L(p.name))}</button><button class="favb" data-favt="${p.id}" aria-label="${esc(esFav(favKey(p))?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(favKey(p))}">${favIco(esFav(favKey(p)))}</button>${p.wd?`<button class="addc" data-addc="${p.id}" aria-label="${t('cro_coll_addto')}">+</button>`:''}${SEED_PINNED.includes(p.id)?'':`<button class="rp" data-report="${p.id}" aria-label="${t('cro_report')}">⚠</button><button class="x" data-remove="${p.id}" aria-label="${t('cro_remove')}">×</button>`}</div>`).join(''):`<div class="empty">${t('cro_empty_people')}</div>`;
   actualitzaComptes();
 }
 
@@ -2981,6 +3008,13 @@ function stickLabels(){
     name.style.transform=tx;if(years)years.style.transform=tx;
   });
 }
+legendEl.addEventListener('click',e=>{
+  const b=e.target.closest('[data-cat]');if(!b)return;
+  const c=b.dataset.cat;
+  pushUndo('cro_act_marc',{name:t('cat_'+c)});   // «Desfés: canviar «Ciència»», com un marc
+  if(state.hiddenCats.has(c))state.hiddenCats.delete(c);else state.hiddenCats.add(c);
+  render();
+});
 let _stickRAF=0;
 scroll.addEventListener('scroll',()=>{if(_stickRAF)return;_stickRAF=requestAnimationFrame(()=>{_stickRAF=0;stickLabels();});});
 document.addEventListener('keydown',e=>{
@@ -3036,7 +3070,7 @@ function flashBar(id){
   const b=barsLayer.querySelector(`.bar[data-id="${id}"]`);
   if(b){b.classList.remove('justAdded');void b.offsetWidth;b.classList.add('justAdded');setTimeout(()=>b.classList.remove('justAdded'),4100);}
 }
-function revealPerson(id){panToPerson(id);flashBar(id);}
+function revealPerson(id){if(destapaCats(PEOPLE.find(x=>x.id===id)))render();panToPerson(id);flashBar(id);}
 // --- Event equivalents of pan/flash/reveal (same effect + marking as people; scroll only, no zoom) ---
 function panToEvent(id){
   const e=EVENTS.find(ev=>ev.id===id);if(!e||e._x==null)return;
@@ -3329,11 +3363,9 @@ async function toggleCollection(cid){
   refreshStale(stale);                             // refresca també, en segon pla, els caducats que ja teníem
 }
 // Zoom + pan so everyone currently on the canvas fits.
-// The sidebar OVERLAYS the stage rather than shrinking it, so the leftmost strip of the canvas is
-// hidden: fitting against the full clientWidth would park the oldest person behind the sidebar
-// (exactly what happened with Sòcrates). Measure the occluded strip and start the content after it.
+// La barra lateral és al flux (encongeix el canvas), així que clientWidth ja és l'espai visible.
 function fitToPresent(){
-  const pp=PEOPLE.filter(p=>state.present.has(p.id)&&!SEED_PINNED.includes(p.id));
+  const pp=PEOPLE.filter(p=>state.present.has(p.id)&&!SEED_PINNED.includes(p.id)&&!amagat(p));
   if(!pp.length)return;                            // only the always-pinned ones → nothing you chose to frame, so don't move
   const y1=Math.min(...pp.map(p=>p.birth)), y2=Math.max(...pp.map(p=>deathOf(p)));
   const pad=Math.max(10,(y2-y1)*0.06);
@@ -3398,13 +3430,29 @@ $('#fitAll').onclick=()=>{
   fitToPresent();
   if(pxPerYear!==before.px||scroll.scrollLeft!==before.left){fitPrev=before;fitLatch(true);}   // only latch if it actually moved
 };
-$('#reset').onclick=()=>{if(typeof gtag!=='undefined')gtag('event','reset');pushUndo('cro_act_reset');state.present=new Set();state.pinned=new Set(SEED_PINNED);state.collections=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.focus=null;state.selected=null;state.selectedEvent=null;state.expandedClusters=new Set();$('#detail').classList.remove('open');_pbarId=null;pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;if(PERSON_QID)history.replaceState(null,'',location.pathname);clearFitLatch();defaultView();};
+$('#reset').onclick=()=>{if(typeof gtag!=='undefined')gtag('event','reset');pushUndo('cro_act_reset');state.present=new Set();state.pinned=new Set(SEED_PINNED);state.collections=new Set();state.marcs=new Set(DEFAULT_MARCS);state.showEvents=true;state.hiddenCats=new Set();state.focus=null;state.selected=null;state.selectedEvent=null;state.expandedClusters=new Set();$('#detail').classList.remove('open');_pbarId=null;pbar.textContent='';pbar.classList.remove('on');delete pbar.dataset.state;if(PERSON_QID)history.replaceState(null,'',location.pathname);clearFitLatch();defaultView();};
 $('#sidebarToggle').onclick=e=>{
+  sbCompensa();   // ABANS de canviar la classe: mesura l'amplada de sortida
   const collapsed=$('.body').classList.toggle('collapsed');
   e.currentTarget.textContent=collapsed?'›':'‹';
   e.currentTarget.title=collapsed?t('cro_sidebar_show'):t('cro_sidebar_hide');
   try{localStorage.setItem(SIDEBAR_LS,collapsed?'collapsed':'open');}catch(ex){}
 };
+// La barra TAPA el canvas, no l'empeny (23/11/2026). Fa lloc encongint el canvas per l'esquerra, i
+// sense res més tot el contingut es desplaçava amb ella. Mentre s'anima, l'scroll compensa cada píxel
+// que guanya o perd: els anys es queden quiets a la pantalla i la barra tapa (o destapa) la franja.
+// Es mesura a cada frame (dins del rAF, abans de pintar) perquè vagi amb la transició de l'amplada.
+// Plegant-la a tocar de l'inici del temps (scrollLeft < amplada) el navegador topa amb el 0: acceptat.
+let _sbAnim=0;
+function sbCompensa(){
+  const sb=$('.sidebar'),w0=sb.getBoundingClientRect().width,l0=scroll.scrollLeft,t0=performance.now();
+  cancelAnimationFrame(_sbAnim);
+  const pas=()=>{
+    scroll.scrollLeft=l0+(sb.getBoundingClientRect().width-w0);
+    if(performance.now()-t0<400)_sbAnim=requestAnimationFrame(pas);
+  };
+  _sbAnim=requestAnimationFrame(pas);
+}
 $('.sidebar').addEventListener('transitionend',e=>{if(e.propertyName==='width'){applyMetrics();setZoom(pxPerYear);scheduleSettle();}});
 
 // Trackpad pinch / ⌘+wheel → zoom. (Chrome/Firefox deliver pinch as ctrl+wheel.)
@@ -3837,6 +3885,7 @@ function mostraPersonatge(p,opts){
   }
   state.present.add(id);
   state.pinned.add(id);
+  destapaCats(PEOPLE.find(x=>x.id===id));   // l'has demanat: ha de sortir encara que la seva categoria estigués amagada
   scheduleSave();
   render();
   if(!opts||!opts.noBar) personBar('ok',L(p.name),L(p.desc)||'',p.img,opts&&opts.source,id);
