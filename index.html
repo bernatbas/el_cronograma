@@ -373,6 +373,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .favb:hover .favi{stroke:var(--fav);}
   .dbtn.favbtn{padding:0 7px;line-height:0;display:inline-flex;align-items:center;justify-content:center;}
   .dbtn.favbtn .favi{width:16px;height:16px;}
+  .dbtn.repbtn{line-height:1;font-size:14px;min-width:32px;color:var(--text2);}
   .favyr{flex:0 0 auto;font-size:11px;color:var(--text2);font-variant-numeric:tabular-nums;}
   .onview .item.favin{opacity:.55;}   /* ja es al canvas: segueix clicable, hi porta */
   .onview .item .nm{flex:1 1 auto;cursor:pointer;border:none;background:none;font:inherit;color:inherit;text-align:left;padding:2px 4px;margin-left:-4px;border-radius:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -678,6 +679,18 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   /* bottom 28 el deixava DINS del footer (30px) i gairebe no es llegia. Ara el sobrepassa,
      amb el safe-area del mobil comptat. */
   .toast{position:fixed;left:50%;bottom:calc(46px + env(safe-area-inset-bottom));transform:translate(-50%,12px);background:#2C2C2B;color:#fff;font-size:13px;padding:10px 18px;border-radius:var(--r-card);z-index:60;box-shadow:0 6px 20px rgba(0,0,0,.26);opacity:0;visibility:hidden;transition:opacity .18s,transform .18s,visibility 0s .18s;pointer-events:none;}
+  /* Reportar un error (23/11/2026): «Què falla de X?» i un botó per camp. En triar-ne un s'envia un
+     event de GA (report_error, amb el QID de la PERSONA i el camp, mai res de qui ho envia) i es tanca.
+     Tokens només: el mode fosc surt sol. */
+  .reportpop{position:fixed;inset:0;z-index:65;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(20,20,20,.32);}
+  .reportpop[hidden]{display:none;}
+  .reportpop .rp-card{position:relative;width:100%;max-width:380px;box-sizing:border-box;background:var(--canvas);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:22px 20px 20px;box-shadow:0 18px 48px rgba(0,0,0,.28);}
+  .reportpop h2{font-size:16px;font-weight:600;margin:0 34px 14px 0;line-height:1.35;}
+  .reportpop .rp-opts{display:flex;flex-wrap:wrap;gap:8px;}
+  .reportpop .rp-opt{border:1px solid var(--border-strong);background:var(--canvas);color:var(--text);border-radius:var(--r-pill);padding:7px 14px;font-size:14px;font-family:inherit;cursor:pointer;}
+  .reportpop .rp-opt:hover{background:var(--soft);border-color:var(--text2);}
+  .reportpop .rp-x{position:absolute;top:12px;right:12px;width:32px;height:32px;border:0;border-radius:8px;background:none;color:var(--text2);font-size:20px;line-height:1;cursor:pointer;}
+  .reportpop .rp-x:hover{background:var(--soft);color:var(--text);}
   .toast.on{opacity:1;visibility:visible;transform:translate(-50%,0);transition:opacity .18s,transform .18s,visibility 0s;}
   .bartip{position:fixed;display:none;background:#2C2C2B;color:#fff;font-size:12px;font-weight:500;padding:5px 10px;border-radius:var(--r-card);white-space:nowrap;z-index:40;pointer-events:none;box-shadow:0 3px 10px rgba(0,0,0,.24);}
   .bartip.on{display:block;}
@@ -1180,6 +1193,13 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
 <div class="barmenu" id="barmenu"></div>
 <div class="bartip" id="bartip"></div>
 <div class="toast" id="toast"></div>
+<div class="reportpop" id="reportPop" hidden>
+  <div class="rp-card" role="dialog" aria-modal="true" aria-labelledby="rpTitle">
+    <button class="rp-x" id="rpClose" type="button" data-i18n-aria="close" aria-label="Tanca">×</button>
+    <h2 id="rpTitle"></h2>
+    <div class="rp-opts" id="rpOpts"></div>
+  </div>
+</div>
 <div class="rotate-hint" id="portraitWall">
   <span class="p-icon">📱</span>
   <span class="rh-txt" data-i18n="cro_rotate">Gira el mòbil per veure millor el cronograma</span>
@@ -1206,7 +1226,10 @@ const I18N={
     bce:'aC',
     retry:'Torna-ho a provar',
     close:'Tanca',
-    toast_wip:'🚧 En construcció',
+    cro_rep_title: v => 'Què falla '+(/^[aeiouàèéíïòóúüh]/i.test(v.name)?'d’':'de ')+v.name+'?',   // «d’Adam Smith», «de Kant»
+    cro_rep_name:'Nom', cro_rep_birth:'Naixement', cro_rep_death:'Mort', cro_rep_desc:'Descripció',
+    cro_rep_cat:'Categoria', cro_rep_img:'Foto', cro_rep_other:'Altres',
+    cro_rep_thanks:'Gràcies! Ho revisarem.',
     searching_wikidata:'Cercant a Wikidata…',
     t_personatgedia:'Personatge del dia',
     // -- compartides: topbar, footer i titol del document --
@@ -1386,7 +1409,10 @@ const I18N={
     bce:'a. C.',
     retry:'Vuelve a intentarlo',
     close:'Cerrar',
-    toast_wip:'🚧 En construcción',
+    cro_rep_title: v => '¿Qué falla de '+v.name+'?',
+    cro_rep_name:'Nombre', cro_rep_birth:'Nacimiento', cro_rep_death:'Muerte', cro_rep_desc:'Descripción',
+    cro_rep_cat:'Categoría', cro_rep_img:'Foto', cro_rep_other:'Otros',
+    cro_rep_thanks:'¡Gracias! Lo revisaremos.',
     searching_wikidata:'Buscando en Wikidata…',
     t_personatgedia:'Personaje del día',
     // -- compartides: topbar, footer i titol del document --
@@ -1861,7 +1887,29 @@ let _settleT;   // ha d'anar aquí dalt: personBar() crida scheduleSettle() dura
 // havia un canvasBlind() per descomptar l'amplada de la barra lateral, pero des que la barra
 // va passar a estar en flux (canvi #41) ja no en tapa gens: retornava 0 sempre.
 function showToast(msg){toastEl.textContent=msg;toastEl.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('on'),2200);}
-const WIP=()=>showToast(t('toast_wip'));
+// Reportar un error d'una persona: event de GA, sense servidor. El QID és el de la PERSONA (els que no
+// en tenen, com en Bernat, van amb el seu id local); de qui ho envia no s'envia res. A GA cal registrar
+// `qid` i `camp` com a dimensions personalitzades d'event perquè surtin als informes.
+// Fora de babilinia.com gtag no existeix (no es carrega GA): surt el «Gràcies» igualment.
+const REP_CAMPS=['name','birth','death','desc','cat','img','other'];
+let _repId=null;
+function obreReport(id){
+  const p=PEOPLE.find(x=>x.id===id);if(!p)return;
+  _repId=id;
+  $('#rpTitle').textContent=t('cro_rep_title',{name:L(p.name)});
+  $('#rpOpts').innerHTML=REP_CAMPS.map(c=>`<button type="button" class="rp-opt" data-camp="${c}">${t('cro_rep_'+c)}</button>`).join('');
+  $('#reportPop').hidden=false;
+  const f=$('#rpOpts .rp-opt');if(f)f.focus();
+}
+function tancaReport(){$('#reportPop').hidden=true;_repId=null;}
+$('#reportPop').addEventListener('click',e=>{
+  if(e.target.id==='reportPop'||e.target.closest('#rpClose')){tancaReport();return;}
+  const b=e.target.closest('[data-camp]');if(!b||!_repId)return;
+  const p=PEOPLE.find(x=>x.id===_repId);
+  if(p&&typeof gtag!=='undefined')gtag('event','report_error',{qid:p.wd||p.id,camp:b.dataset.camp});
+  tancaReport();showToast(t('cro_rep_thanks'));
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#reportPop').hidden)tancaReport();});
 function hideDetail(){$('#detail').classList.remove('open');detailBackdrop.classList.remove('open');}
 $('#detailBackdrop').addEventListener('click',()=>{hideDetail();state.selected=null;state.selectedEvent=null;state.selectedColl=null;render();});
 // Bottom-sheet a mòbil: llisca cap avall (des de dalt del full) per tancar
@@ -2285,6 +2333,7 @@ function openDetail(p){
     <div class="actions">
       <button class="dbtn" data-act="context">${t('cro_context')}</button>
       <button class="dbtn favbtn" data-act="fav" aria-label="${esc(esFav(favKey(p))?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(favKey(p))}">${favIco(esFav(favKey(p)))}</button>
+      <button class="dbtn favbtn repbtn" data-act="report" aria-label="${t('cro_report')}">⚠</button>
       ${personQid(p.id)?`<button class="dbtn" data-act="addto">${t('cro_coll_addto')}</button>`:''}
       ${p.wiki?`<button class="dbtn" data-act="wiki">${linkLabel(p.wiki)} ↗</button>`:''}
       ${SEED_PINNED.includes(p.id)?'':`<button class="dbtn danger" data-act="remove">${t('cro_delete')}</button>`}
@@ -2301,6 +2350,7 @@ function openDetail(p){
       return;
     }
     if(act==='addto'){ev.stopPropagation();openAddToColl(p.id,btn);return;}
+    if(act==='report'){obreReport(p.id);return;}
     if(act==='remove')removePerson(p.id);
     else if(act==='wiki')window.open(p.wiki,'_blank','noopener,noreferrer');
     else{if(typeof gtag!=='undefined')gtag('event','mostra_context',{personatge:L(p.name)});showContext(p.id);}
@@ -2942,7 +2992,7 @@ $('#onview').addEventListener('click',e=>{
   }
   const ac=e.target.closest('[data-addc]');
   if(ac){e.stopPropagation();openAddToColl(ac.getAttribute('data-addc'),ac);return;}
-  if(e.target.closest('[data-report]')){WIP();return;}
+  if(e.target.closest('[data-report]')){obreReport(e.target.closest('[data-report]').dataset.report);return;}
   const b=e.target.closest('[data-remove]');if(!b)return;
   removePerson(b.getAttribute('data-remove'));
 });
@@ -3168,7 +3218,7 @@ barmenu.addEventListener('click',e=>{
   if(act==='addnew'){newCollWith(b.getAttribute('data-q'));return;}
   if(act==='remove')removePerson(id);
   else if(act==='detail'){const p=PEOPLE.find(x=>x.id===id);if(p)openDetail(p);}
-  else if(act==='report')WIP();
+  else if(act==='report')obreReport(id);
   else showContext(id);
   closeBarMenu();
 });
@@ -3849,7 +3899,7 @@ $('#favorits').addEventListener('mousemove',e=>{
   placeBartip(b.getAttribute('aria-label')||'',e.clientX,e.clientY);
 });
 $('#favorits').addEventListener('mouseleave',hideBartip);
-// I l'estrella de la fitxa, que es l'unic boto de la fitxa amb etiqueta i no text.
+// I l'estrella i el ⚠ de la fitxa, els unics botons de la fitxa amb etiqueta i no text (tots dos .favbtn).
 $('#detail').addEventListener('mousemove',e=>{
   const b=e.target.closest('.favbtn');
   if(!b){hideBartip();return;}
