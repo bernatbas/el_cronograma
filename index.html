@@ -624,7 +624,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .bar.alive{box-shadow:none;border-top-right-radius:0;border-bottom-right-radius:0;}
   @keyframes barPop{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(39,131,222,.6);}6%{transform:scale(1.12);}16%{transform:scale(1);box-shadow:0 0 0 12px rgba(39,131,222,0);}24%{box-shadow:0 0 0 0 rgba(39,131,222,.5);}40%{box-shadow:0 0 0 11px rgba(39,131,222,0);}50%{box-shadow:0 0 0 0 rgba(39,131,222,.42);}68%{box-shadow:0 0 0 11px rgba(39,131,222,0);}78%{box-shadow:0 0 0 0 rgba(39,131,222,.34);}100%{box-shadow:0 0 0 10px rgba(39,131,222,0);}}
   .bar.justAdded{animation:barPop 4s ease-out;z-index:9;}
-  .bar .menu{position:absolute;right:1px;top:50%;transform:translateY(-50%);display:none;width:20px;height:20px;padding:0;border:none;border-radius:5px;background:rgba(255,255,255,.92);color:var(--text);font-size:15px;line-height:1;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.25);}
+  .bar .menu{position:absolute;right:1px;top:50%;transform:translateY(-50%);display:none;width:20px;height:20px;padding:0;border:none;border-radius:5px;background:rgba(255,255,255,.92);color:#2C2C2B;font-size:15px;line-height:1;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.25);}   /* color FIX, no --text: la pastilla és blanca també en mode fosc */
   .bar:hover .menu{display:flex;align-items:center;justify-content:center;}
   .bar .fade{position:absolute;top:0;bottom:0;pointer-events:none;-webkit-mask-image:linear-gradient(to right,#000,transparent);mask-image:linear-gradient(to right,#000,transparent);}
   .emptyState{position:absolute;left:24px;font-size:14px;color:var(--text2);font-style:italic;pointer-events:none;}
@@ -686,9 +686,10 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .reportpop[hidden]{display:none;}
   .reportpop .rp-card{position:relative;width:100%;max-width:380px;box-sizing:border-box;background:var(--canvas);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:22px 20px 20px;box-shadow:0 18px 48px rgba(0,0,0,.28);}
   .reportpop h2{font-size:16px;font-weight:600;margin:0 34px 14px 0;line-height:1.35;}
-  .reportpop .rp-opts{display:flex;flex-wrap:wrap;gap:8px;}
-  .reportpop .rp-opt{border:1px solid var(--border-strong);background:var(--canvas);color:var(--text);border-radius:var(--r-pill);padding:7px 14px;font-size:14px;font-family:inherit;cursor:pointer;}
-  .reportpop .rp-opt:hover{background:var(--soft);border-color:var(--text2);}
+  .reportpop .rp-row{display:flex;gap:8px;}
+  .reportpop select{flex:1 1 auto;min-width:0;min-height:38px;border:1px solid var(--border-strong);background:var(--canvas);color:var(--text);border-radius:var(--r-card);padding:0 10px;font-size:14px;font-family:inherit;}
+  .reportpop .rp-send{flex:0 0 auto;min-height:38px;border:1px solid var(--topbar-bg);background:var(--topbar-bg);color:#fff;font-weight:600;border-radius:var(--r-card);padding:0 16px;font-size:14px;font-family:inherit;cursor:pointer;}
+  .reportpop .rp-send:disabled{opacity:.45;cursor:default;}
   .reportpop .rp-x{position:absolute;top:12px;right:12px;width:32px;height:32px;border:0;border-radius:8px;background:none;color:var(--text2);font-size:20px;line-height:1;cursor:pointer;}
   .reportpop .rp-x:hover{background:var(--soft);color:var(--text);}
   .toast.on{opacity:1;visibility:visible;transform:translate(-50%,0);transition:opacity .18s,transform .18s,visibility 0s;}
@@ -716,6 +717,11 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   .detail .close{position:absolute;top:14px;right:16px;border:none;background:none;font-size:22px;cursor:pointer;color:var(--text2);line-height:1;padding:2px 6px;border-radius:6px;}
   .detail .close:hover{background:var(--soft);}
   .detail h2{font-size:17px;font-weight:600;margin:0 0 4px;padding-right:32px;}
+  /* El nom porta a la Viquipèdia (23/11/2026): era un botó més a la fila d'accions i no hi cabia. */
+  .detail h2 a.dwiki{color:inherit;text-decoration:none;}
+  .detail h2 a.dwiki:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;}
+  .detail h2 .dwk{font-size:.72em;font-weight:400;color:var(--text2);margin-left:5px;vertical-align:1px;}
+  .detail h2 a.dwiki:hover .dwk{color:var(--blue);}
   .detail .life{color:var(--text2);font-size:12px;margin-bottom:14px;}
   .detail .chiprow{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
   .detail .dhead{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 14px;}
@@ -734,7 +740,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
      La fila de confirmar (.confirm) en queda FORA: alli el parell ha de ser [petit][primari],
      no dos botons iguals que semblarien la mateixa cosa. */
   @media (pointer:fine){
-    .detail .actions:not(.confirm) .dbtn{flex:1 1 0;min-width:0;}
+    .detail .actions:not(.confirm) .dbtn{flex:1 1 0;}   /* sense min-width:0: mai més estret que el text (en castellà «Mostrar contexto» desbordava); si no hi cap, salta de fila */
     /* ...menys l'estrella: es una icona, no una pastilla de text, i repartint a parts
        iguals es menjava una cinquena part de la fila i aixafava «Mostra context». */
     .detail .actions:not(.confirm) .dbtn.favbtn{flex:0 0 auto;}
@@ -1197,7 +1203,7 @@ if(/(^|\.)babilinia\.com$/.test(location.hostname)){
   <div class="rp-card" role="dialog" aria-modal="true" aria-labelledby="rpTitle">
     <button class="rp-x" id="rpClose" type="button" data-i18n-aria="close" aria-label="Tanca">×</button>
     <h2 id="rpTitle"></h2>
-    <div class="rp-opts" id="rpOpts"></div>
+    <div class="rp-row"><select id="rpSel" aria-labelledby="rpTitle"></select><button class="rp-send" id="rpSend" type="button" data-i18n="cro_rep_send" disabled>Envia</button></div>
   </div>
 </div>
 <div class="rotate-hint" id="portraitWall">
@@ -1230,6 +1236,7 @@ const I18N={
     cro_rep_name:'Nom', cro_rep_birth:'Naixement', cro_rep_death:'Mort', cro_rep_desc:'Descripció',
     cro_rep_cat:'Categoria', cro_rep_img:'Foto', cro_rep_other:'Altres',
     cro_rep_thanks:'Gràcies! Ho revisarem.',
+    cro_rep_pick:'Tria una opció', cro_rep_send:'Envia',
     searching_wikidata:'Cercant a Wikidata…',
     t_personatgedia:'Personatge del dia',
     // -- compartides: topbar, footer i titol del document --
@@ -1413,6 +1420,7 @@ const I18N={
     cro_rep_name:'Nombre', cro_rep_birth:'Nacimiento', cro_rep_death:'Muerte', cro_rep_desc:'Descripción',
     cro_rep_cat:'Categoría', cro_rep_img:'Foto', cro_rep_other:'Otros',
     cro_rep_thanks:'¡Gracias! Lo revisaremos.',
+    cro_rep_pick:'Elige una opción', cro_rep_send:'Enviar',
     searching_wikidata:'Buscando en Wikidata…',
     t_personatgedia:'Personaje del día',
     // -- compartides: topbar, footer i titol del document --
@@ -1897,16 +1905,18 @@ function obreReport(id){
   const p=PEOPLE.find(x=>x.id===id);if(!p)return;
   _repId=id;
   $('#rpTitle').textContent=t('cro_rep_title',{name:L(p.name)});
-  $('#rpOpts').innerHTML=REP_CAMPS.map(c=>`<button type="button" class="rp-opt" data-camp="${c}">${t('cro_rep_'+c)}</button>`).join('');
+  $('#rpSel').innerHTML=`<option value="" disabled selected>${t('cro_rep_pick')}</option>`+REP_CAMPS.map(c=>`<option value="${c}">${t('cro_rep_'+c)}</option>`).join('');
+  $('#rpSend').disabled=true;
   $('#reportPop').hidden=false;
-  const f=$('#rpOpts .rp-opt');if(f)f.focus();
+  $('#rpSel').focus();
 }
+$('#rpSel').addEventListener('change',()=>{$('#rpSend').disabled=!$('#rpSel').value;});
 function tancaReport(){$('#reportPop').hidden=true;_repId=null;}
 $('#reportPop').addEventListener('click',e=>{
   if(e.target.id==='reportPop'||e.target.closest('#rpClose')){tancaReport();return;}
-  const b=e.target.closest('[data-camp]');if(!b||!_repId)return;
+  if(!e.target.closest('#rpSend')||!_repId||!$('#rpSel').value)return;
   const p=PEOPLE.find(x=>x.id===_repId);
-  if(p&&typeof gtag!=='undefined')gtag('event','report_error',{qid:p.wd||p.id,camp:b.dataset.camp});
+  if(p&&typeof gtag!=='undefined')gtag('event','report_error',{qid:p.wd||p.id,camp:$('#rpSel').value});
   tancaReport();showToast(t('cro_rep_thanks'));
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#reportPop').hidden)tancaReport();});
@@ -2326,7 +2336,7 @@ function openDetail(p){
   state.selected=p.id;state.selectedEvent=null;
   const d=$('#detail');d.classList.add('open');detailBackdrop.classList.add('open');
   d.innerHTML=`<button class="close" id="closeDetail" aria-label="${t('close')}">×</button>
-    <h2>${esc(L(p.name))}</h2>
+    <h2>${p.wiki?`<a class="dwiki" href="${esc(p.wiki)}" target="_blank" rel="noopener noreferrer">${esc(L(p.name))}<span class="dwk" aria-hidden="true">↗</span></a>`:esc(L(p.name))}</h2>
     <div class="dhead"><span class="life">${approxText(p)?'~':''}${fmtY(p.birth)} – ${isAlive(p)?t('cro_present'):fmtY(p.death)}</span>${hasCat(p)?p.cats.map(a=>`<span class="chip"><span class="swatch" style="background:${CAT_COLORS[a]}"></span>${t('cat_'+a)}</span>`).join(''):`<span class="chip"><span class="swatch" style="background:${NOCAT_COLOR}"></span>${t('cat_none')}</span>`}<span class="chip era">${eraLabel(p.birth)}</span></div>
     ${approxText(p)?`<div class="approx">${esc(approxText(p))}</div>`:''}
     <div class="desc">${descHtml(L(p.desc))}</div>
@@ -2335,7 +2345,6 @@ function openDetail(p){
       <button class="dbtn favbtn" data-act="fav" aria-label="${esc(esFav(favKey(p))?t('cro_fav_unmark'):t('cro_fav_mark'))}" aria-pressed="${esFav(favKey(p))}">${favIco(esFav(favKey(p)))}</button>
       <button class="dbtn favbtn repbtn" data-act="report" aria-label="${t('cro_report')}">⚠</button>
       ${personQid(p.id)?`<button class="dbtn" data-act="addto">${t('cro_coll_addto')}</button>`:''}
-      ${p.wiki?`<button class="dbtn" data-act="wiki">${linkLabel(p.wiki)} ↗</button>`:''}
       ${SEED_PINNED.includes(p.id)?'':`<button class="dbtn danger" data-act="remove">${t('cro_delete')}</button>`}
     </div>`;
   $('#closeDetail').onclick=()=>{hideDetail();state.selected=null;render();};
@@ -2352,7 +2361,6 @@ function openDetail(p){
     if(act==='addto'){ev.stopPropagation();openAddToColl(p.id,btn);return;}
     if(act==='report'){obreReport(p.id);return;}
     if(act==='remove')removePerson(p.id);
-    else if(act==='wiki')window.open(p.wiki,'_blank','noopener,noreferrer');
     else{if(typeof gtag!=='undefined')gtag('event','mostra_context',{personatge:L(p.name)});showContext(p.id);}
   });
   render();
