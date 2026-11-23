@@ -14,7 +14,7 @@ const SCAN = fs.readFileSync('tests/i18n-scan.js', 'utf8');
 const WIKIDATA = /wikidata\.org|wikimedia\.org|wikipedia\.org/;
 
 // El que es veu igual a totes les llengües: marca, noms propis de les fonts i símbols.
-const PROPIS = /^(\[aria-label\] )?(BABIL|NIA|Babilinia|© 2026 Babilinia|Wikidata|CC0|VS|Wikipedia ↗|🔗 Wikipedia)$/;
+const PROPIS = /^(\[aria-label\] )?(BABIL|NIA|Babilinia|© 2026 Babilinia ·|Wikidata|CC0|VS|Wikipedia ↗|🔗 Wikipedia)$/;
 
 // Text que NO passa pel diccionari a posta, i per tant sense marca:
 //  - col·leccions: no es tradueixen MAI (són com playlists: es respecta el nom de qui les crea);
